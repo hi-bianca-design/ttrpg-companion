@@ -1,0 +1,25 @@
+# Worktrees
+.worktrees/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# Supabase
+supabase/.branches/
+supabase/.temp/
+
+# Brainstorm assets
+.superpowers/
+
+# OS
+.DS_Store
