@@ -121,8 +121,8 @@ create table public.characters (
 create table public.character_spells (
   id uuid primary key default gen_random_uuid(),
   character_id uuid references public.characters on delete cascade not null,
-  spell_id uuid references public.spells,
-  custom_content_id uuid references public.user_content,
+  spell_id uuid references public.spells on delete set null,
+  custom_content_id uuid references public.user_content on delete set null,
   is_prepared boolean default false,
   slots_expended jsonb default '{}',
   check (
@@ -134,8 +134,8 @@ create table public.character_spells (
 create table public.character_equipment (
   id uuid primary key default gen_random_uuid(),
   character_id uuid references public.characters on delete cascade not null,
-  equipment_id uuid references public.equipment,
-  custom_content_id uuid references public.user_content,
+  equipment_id uuid references public.equipment on delete set null,
+  custom_content_id uuid references public.user_content on delete set null,
   quantity integer not null default 1,
   is_equipped boolean not null default false,
   check (
@@ -173,7 +173,7 @@ create table public.sessions (
 -- Real-time subscriptions fire on this table
 create table public.session_characters (
   session_id uuid references public.sessions on delete cascade,
-  character_id uuid references public.characters,
+  character_id uuid references public.characters not null,
   hp_current integer not null,
   temp_hp integer not null default 0,
   conditions text[] default '{}',
@@ -184,3 +184,16 @@ create table public.session_characters (
   is_active_turn boolean default false,
   primary key (session_id, character_id)
 );
+
+-- Indexes for FK columns used in RLS policies and joins
+create index on public.subclasses (class_id);
+create index on public.user_content (user_id);
+create index on public.characters (user_id);
+create index on public.character_spells (character_id);
+create index on public.character_equipment (character_id);
+create index on public.campaign_members (user_id);
+create index on public.campaign_members (character_id);
+create index on public.campaigns (dm_id);
+create index on public.sessions (campaign_id);
+create index on public.session_characters (session_id);
+create index on public.session_characters (character_id);

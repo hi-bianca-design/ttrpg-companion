@@ -126,7 +126,11 @@ create or replace function public.handle_new_user()
 returns trigger as $$
 begin
   insert into public.users (id, email, username)
-  values (new.id, new.email, split_part(new.email, '@', 1));
+  values (
+    new.id,
+    new.email,
+    split_part(new.email, '@', 1) || '_' || substr(gen_random_uuid()::text, 1, 6)
+  );
   return new;
 end;
 $$ language plpgsql security definer;
