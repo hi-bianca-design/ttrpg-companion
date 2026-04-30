@@ -12,7 +12,7 @@ insert into public.classes (name, hit_die, primary_abilities, saving_throw_profi
   ('Ranger', 10, array['dexterity','wisdom'], array['strength','dexterity'], 'A warrior who combats threats on the edges of civilization.'),
   ('Rogue', 8, array['dexterity','intelligence'], array['dexterity','intelligence'], 'A scoundrel who uses stealth and trickery to overcome obstacles.'),
   ('Sorcerer', 6, array['constitution','charisma'], array['constitution','charisma'], 'A spellcaster who draws on inherent magic from a gift or bloodline.'),
-  ('Warlock', 8, array['wisdom','charisma'], array['wisdom','charisma'], 'A wielder of magic derived from a bargain with an extraplanar entity.'),
+  ('Warlock', 8, array['charisma'], array['wisdom','charisma'], 'A wielder of magic derived from a bargain with an extraplanar entity.'),
   ('Wizard', 6, array['intelligence','wisdom'], array['intelligence','wisdom'], 'A scholarly magic-user capable of manipulating the structures of reality.')
 ON CONFLICT DO NOTHING;
 
