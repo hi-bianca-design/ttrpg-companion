@@ -200,7 +200,7 @@ export interface Database {
           name: string
           category: string
           cost: string | null
-          weight: number | null
+          weight: string | null
           properties: Json
         }
         Insert: {
@@ -208,7 +208,7 @@ export interface Database {
           name: string
           category: string
           cost?: string | null
-          weight?: number | null
+          weight?: string | null
           properties?: Json
         }
         Update: {
@@ -216,7 +216,7 @@ export interface Database {
           name?: string
           category?: string
           cost?: string | null
-          weight?: number | null
+          weight?: string | null
           properties?: Json
         }
       }
