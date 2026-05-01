@@ -83,4 +83,15 @@ describe('createCharacter', () => {
     expect(supabase.from).toHaveBeenCalledWith('characters')
     expect(result.name).toBe('Aria')
   })
+
+  it('throws if spell insertion fails', async () => {
+    mockSingle.mockResolvedValue({ data: { id: 'c1', name: 'Aria' }, error: null })
+    mockSelect.mockReturnValue({ single: mockSingle })
+    mockInsert
+      .mockReturnValueOnce({ select: mockSelect })  // first call: character insert, chains to .select().single()
+      .mockResolvedValueOnce({ error: { message: 'spell insert failed' } })  // second call: spell insert
+
+    const draft = { ...INITIAL_DRAFT, name: 'Aria', class_id: 'cls1', hit_die: 10, selected_spell_ids: ['sp1'] }
+    await expect(createCharacter('user-1', draft)).rejects.toThrow('spell insert failed')
+  })
 })
