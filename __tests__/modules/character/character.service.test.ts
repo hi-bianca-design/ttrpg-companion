@@ -1,4 +1,5 @@
-import { getCharacters, updateCharacter, deleteCharacter } from '@/modules/character/character.service'
+import { getCharacters, updateCharacter, deleteCharacter, createCharacter } from '@/modules/character/character.service'
+import { INITIAL_DRAFT } from '@/modules/character/character.types'
 
 const mockSingle = jest.fn()
 const mockOrder  = jest.fn()
@@ -26,11 +27,12 @@ import { supabase } from '@/lib/supabase'
 
 beforeEach(() => {
   jest.clearAllMocks()
-  mockSelect.mockReturnValue({ eq: mockEq })
-  mockEq.mockReturnValue({ order: mockOrder, single: mockSingle, eq: mockEq })
+  mockEq.mockReturnValue({ order: mockOrder, single: mockSingle, eq: mockEq, select: mockSelect })
+  mockSelect.mockReturnValue({ eq: mockEq, single: mockSingle })
   mockOrder.mockResolvedValue({ data: [], error: null })
   mockUpdate.mockReturnValue({ eq: mockEq })
   mockDelete.mockReturnValue({ eq: mockEq })
+  mockInsert.mockResolvedValue({ data: [{ id: 'c1' }], error: null })
 })
 
 describe('getCharacters', () => {
@@ -50,8 +52,8 @@ describe('updateCharacter', () => {
   it('updates the record and returns the updated row', async () => {
     const updated = { id: 'c1', hp_current: 10 }
     mockSingle.mockResolvedValue({ data: updated, error: null })
-    mockEq.mockReturnValue({ single: mockSingle, eq: mockEq, select: mockSelect })
     mockUpdate.mockReturnValue({ eq: mockEq })
+    mockEq.mockReturnValue({ select: mockSelect, single: mockSingle, eq: mockEq, order: mockOrder })
     mockSelect.mockReturnValue({ single: mockSingle, eq: mockEq })
 
     const result = await updateCharacter('c1', { hp_current: 10 })
@@ -66,5 +68,19 @@ describe('deleteCharacter', () => {
     await deleteCharacter('c1')
     expect(supabase.from).toHaveBeenCalledWith('characters')
     expect(mockEq).toHaveBeenCalledWith('id', 'c1')
+  })
+})
+
+describe('createCharacter', () => {
+  it('inserts a character and returns the created row', async () => {
+    const created = { id: 'c1', name: 'Aria', level: 1 }
+    mockSingle.mockResolvedValue({ data: created, error: null })
+    mockSelect.mockReturnValue({ single: mockSingle })
+    mockInsert.mockReturnValue({ select: mockSelect })
+
+    const draft = { ...INITIAL_DRAFT, name: 'Aria', class_id: 'cls1', hit_die: 10 }
+    const result = await createCharacter('user-1', draft)
+    expect(supabase.from).toHaveBeenCalledWith('characters')
+    expect(result.name).toBe('Aria')
   })
 })

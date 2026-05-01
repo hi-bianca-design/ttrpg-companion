@@ -69,13 +69,14 @@ export async function createCharacter(userId: string, draft: WizardDraft) {
   if (error) throw new Error(error.message)
 
   if (draft.selected_spell_ids.length > 0) {
-    await supabase.from('character_spells').insert(
+    const { error: spellError } = await supabase.from('character_spells').insert(
       draft.selected_spell_ids.map((spell_id) => ({
         character_id: data.id,
         spell_id,
         is_prepared: true,
       }))
     )
+    if (spellError) throw new Error(spellError.message)
   }
 
   return data
