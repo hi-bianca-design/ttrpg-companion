@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { View, Text, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native'
 import { useRouter, useFocusEffect } from 'expo-router'
 import { getCharacters, deleteCharacter } from '@/modules/character/character.service'
@@ -23,14 +23,17 @@ export default function CharactersScreen() {
     try {
       const data = await getCharacters(user.id)
       setCharacters(data as CharacterSummary[])
-    } catch (e: any) {
-      Alert.alert('Error', e.message)
+    } catch (e) {
+      Alert.alert('Error', e instanceof Error ? e.message : 'An error occurred')
     } finally {
       setLoading(false)
     }
   }, [user])
 
-  useFocusEffect(useCallback(() => { load() }, [load]))
+  useFocusEffect(useCallback(() => {
+    load()
+    return () => {}
+  }, [load]))
 
   function confirmDelete(id: string, name: string) {
     Alert.alert('Delete Character', `Delete ${name}? This cannot be undone.`, [
@@ -41,8 +44,8 @@ export default function CharactersScreen() {
           try {
             await deleteCharacter(id)
             setCharacters((prev) => prev.filter((c) => c.id !== id))
-          } catch (e: any) {
-            Alert.alert('Error', e.message)
+          } catch (e) {
+            Alert.alert('Error', e instanceof Error ? e.message : 'An error occurred')
           }
         },
       },
@@ -89,6 +92,9 @@ export default function CharactersScreen() {
               className="bg-surface rounded-xl p-4 mb-3"
               onPress={() => router.push(`/(app)/characters/${item.id}`)}
               onLongPress={() => confirmDelete(item.id, item.name)}
+              accessibilityRole="button"
+              accessibilityLabel={`${item.name}, Level ${item.level} ${item.class?.name ?? ''}`}
+              accessibilityHint="Double tap to view. Long press to delete."
             >
               <Text className="text-lg font-bold text-text">{item.name}</Text>
               <Text className="text-muted mt-1 text-sm">
