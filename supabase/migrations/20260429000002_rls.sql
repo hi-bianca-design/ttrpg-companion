@@ -121,7 +121,18 @@ create policy "DMs can update any session_character" on public.session_character
     )
   );
 
+-- DM can insert session_characters when starting a session
+create policy "DMs can insert session_characters" on public.session_characters
+  for insert with check (
+    exists (
+      select 1 from public.sessions s
+      join public.campaigns c on c.id = s.campaign_id
+      where s.id = session_id and c.dm_id = auth.uid()
+    )
+  );
+
 -- Auto-create user profile on signup
+-- Uses username from auth metadata if provided, otherwise derives from email
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
@@ -129,7 +140,10 @@ begin
   values (
     new.id,
     new.email,
-    split_part(new.email, '@', 1) || '_' || substr(gen_random_uuid()::text, 1, 6)
+    coalesce(
+      new.raw_user_meta_data->>'username',
+      split_part(new.email, '@', 1) || '_' || substr(gen_random_uuid()::text, 1, 6)
+    )
   );
   return new;
 end;
