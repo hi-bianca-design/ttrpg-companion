@@ -7,18 +7,14 @@ jest.mock('@/lib/supabase', () => ({
       signInWithPassword: jest.fn(),
       signOut: jest.fn(),
     },
-    from: jest.fn(),
   },
 }))
 
 import { supabase } from '@/lib/supabase'
 
-const mockFrom = supabase.from as jest.Mock
-
 describe('auth.service', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockFrom.mockReturnValue({ insert: jest.fn().mockResolvedValue({ error: null }) })
   })
 
   describe('signUp', () => {
