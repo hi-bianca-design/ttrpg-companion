@@ -6,7 +6,7 @@
 
 **Architecture:** Expo Router v3 for file-based navigation with route groups separating auth and app screens. A root layout checks Supabase session state and redirects to `(auth)` or `(app)` accordingly. Auth logic is encapsulated in `src/modules/auth/` — a service layer over Supabase Auth, a React context provider, and a hook.
 
-**Tech Stack:** Expo SDK 52, Expo Router v3, React Native, TypeScript, Supabase JS v2, NativeWind v4, Zustand, Jest, @testing-library/react-native
+**Tech Stack:** Expo SDK 54, Expo Router v6, React Native, TypeScript, Supabase JS v2, NativeWind v4, Zustand, Jest, @testing-library/react-native
 
 ---
 
