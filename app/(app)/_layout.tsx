@@ -15,6 +15,10 @@ export default function AppLayout() {
         name="characters"
         options={{ title: 'Characters', tabBarLabel: 'Characters' }}
       />
+      <Tabs.Screen
+        name="content"
+        options={{ title: 'Content', tabBarLabel: 'Content' }}
+      />
     </Tabs>
   )
 }
