@@ -15,7 +15,7 @@ export interface SpeciesProperties {
 
 export interface BackgroundProperties {
   skill_proficiencies: string[]
-  feature: string
+  feature: string | null
 }
 
 export interface SpellProperties {
@@ -37,8 +37,8 @@ export interface FeatProperties {
 
 export interface EquipmentProperties {
   category: string
-  cost: string
-  weight: string
+  cost: string | null
+  weight: string | null
 }
 
 // Tags a SRD type with an optional is_custom marker for UI badge display.
