@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useCharacterStore } from '@/modules/character/character.store'
-import { AbilityScoreBlock } from '@/components/character/AbilityScoreBlock'
 import { ABILITY_KEYS, ABILITY_LABELS, STANDARD_ARRAY, AbilityKey } from '@/modules/character/character.types'
 import { getBackgrounds } from '@/modules/srd/srd.service'
 
@@ -19,13 +18,15 @@ export default function AbilityScoresStep() {
 
   useEffect(() => {
     if (!draft.background_id) return
-    getBackgrounds().then((bgs) => {
-      const bg = bgs.find((b) => b.id === draft.background_id)
-      if (bg) {
-        const opts = (bg.ability_score_options as { options?: string[][] } | null)?.options?.[0] ?? []
-        setBgEligible(opts)
-      }
-    })
+    getBackgrounds()
+      .then((bgs) => {
+        const bg = bgs.find((b) => b.id === draft.background_id)
+        if (bg) {
+          const opts = (bg.ability_score_options as { options?: string[][] } | null)?.options?.[0] ?? []
+          setBgEligible(opts)
+        }
+      })
+      .catch(() => {})
   }, [draft.background_id])
 
   const usedValues = Object.values(assignments).filter((v) => v !== null) as number[]
@@ -130,7 +131,7 @@ export default function AbilityScoresStep() {
                   className={`px-3 py-2 rounded-lg border ${bgBonusTwo === key ? 'bg-primary border-primary' : 'bg-surface border-overlay'}`}
                 >
                   <Text className={`font-medium ${bgBonusTwo === key ? 'text-base' : 'text-text'}`}>
-                    {ABILITY_LABELS[key as AbilityKey] ?? key} +2
+                    {(ABILITY_KEYS as readonly string[]).includes(key) ? ABILITY_LABELS[key as AbilityKey] : key} +2
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -145,7 +146,7 @@ export default function AbilityScoresStep() {
                   className={`px-3 py-2 rounded-lg border ${bgBonusOne === key ? 'bg-primary border-primary' : 'bg-surface border-overlay'}`}
                 >
                   <Text className={`font-medium ${bgBonusOne === key ? 'text-base' : 'text-text'}`}>
-                    {ABILITY_LABELS[key as AbilityKey] ?? key} +1
+                    {(ABILITY_KEYS as readonly string[]).includes(key) ? ABILITY_LABELS[key as AbilityKey] : key} +1
                   </Text>
                 </TouchableOpacity>
               ))}
