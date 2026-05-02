@@ -8,6 +8,10 @@ import {
   BackgroundProperties,
   SpellProperties,
 } from './user_content.types'
+import { Database } from '@/types/database.types'
+
+type UserContentInsert = Database['public']['Tables']['user_content']['Insert']
+type UserContentUpdate = Database['public']['Tables']['user_content']['Update']
 
 export async function getUserContent(userId: string): Promise<DBUserContent[]> {
   const { data, error } = await supabase
@@ -16,7 +20,7 @@ export async function getUserContent(userId: string): Promise<DBUserContent[]> {
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
   if (error) throw new Error(error.message)
-  return data as DBUserContent[]
+  return data
 }
 
 export async function createUserContent(
@@ -25,7 +29,7 @@ export async function createUserContent(
 ): Promise<DBUserContent> {
   const { data: row, error } = await supabase
     .from('user_content')
-    .insert({ ...data, user_id: userId } as DBUserContent)
+    .insert({ ...data, user_id: userId } satisfies UserContentInsert)
     .select()
     .single()
   if (error) throw new Error(error.message)
@@ -38,7 +42,7 @@ export async function updateUserContent(
 ): Promise<DBUserContent> {
   const { data: row, error } = await supabase
     .from('user_content')
-    .update(data as DBUserContent)
+    .update(data satisfies UserContentUpdate)
     .eq('id', id)
     .select()
     .single()
