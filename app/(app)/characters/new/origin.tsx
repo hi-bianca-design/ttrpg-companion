@@ -59,7 +59,7 @@ export default function OriginStep() {
         <Text className="text-lg font-bold text-text mt-4 mb-3">Species</Text>
         {species.map((sp) => {
           const isSelected = selectedSp?.id === sp.id
-          const traits = ((sp.traits as any)?.traits as string[]) ?? []
+          const traits = ((sp.traits as { traits?: string[] } | null)?.traits) ?? []
           return (
             <TouchableOpacity
               key={sp.id}
@@ -83,7 +83,7 @@ export default function OriginStep() {
           disabled={!canProceed}
         >
           <Text className={`font-semibold ${canProceed ? 'text-base' : 'text-muted'}`}>
-            {canProceed ? `${selectedBg!.name} · ${selectedSp!.name} →` : 'Select background and species'}
+            {canProceed && selectedBg && selectedSp ? `${selectedBg.name} · ${selectedSp.name} →` : 'Select background and species'}
           </Text>
         </TouchableOpacity>
       </View>
