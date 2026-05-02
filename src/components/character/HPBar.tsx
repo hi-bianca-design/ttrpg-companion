@@ -17,12 +17,14 @@ export function HPBar({ hpCurrent, hpMax, tempHP, onDamage, onHeal, onSetTempHP 
   const hpPercent = Math.max(0, hpCurrent / hpMax)
   const barColor = hpPercent >= 0.5 ? 'bg-green' : hpPercent >= 0.25 ? 'bg-yellow' : 'bg-red'
 
+  const parsedAmount = parseInt(inputValue, 10)
+  const isValidAmount = !isNaN(parsedAmount) && parsedAmount > 0
+
   function confirm() {
-    const amount = parseInt(inputValue, 10)
-    if (isNaN(amount) || amount <= 0) { setModalMode(null); return }
-    if (modalMode === 'damage') onDamage(amount)
-    else if (modalMode === 'heal') onHeal(amount)
-    else if (modalMode === 'temp') onSetTempHP(amount)
+    if (!isValidAmount) return
+    if (modalMode === 'damage') onDamage(parsedAmount)
+    else if (modalMode === 'heal') onHeal(parsedAmount)
+    else if (modalMode === 'temp') onSetTempHP(parsedAmount)
     setInputValue('')
     setModalMode(null)
   }
@@ -77,10 +79,11 @@ export function HPBar({ hpCurrent, hpMax, tempHP, onDamage, onHeal, onSetTempHP 
                 <Text className="text-muted">Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                className="flex-1 bg-primary rounded-xl py-2 items-center"
+                className={`flex-1 rounded-xl py-2 items-center ${isValidAmount ? 'bg-primary' : 'bg-overlay'}`}
                 onPress={confirm}
+                disabled={!isValidAmount}
               >
-                <Text className="text-base font-semibold">Confirm</Text>
+                <Text className={`font-semibold ${isValidAmount ? 'text-base' : 'text-muted'}`}>Confirm</Text>
               </TouchableOpacity>
             </View>
           </View>
