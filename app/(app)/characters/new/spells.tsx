@@ -18,7 +18,7 @@ export default function SpellsStep() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!draft.class_name) { router.replace('/(app)/characters/new/details'); return }
+    if (!draft.class_name) { router.replace('/(app)/characters/new/class'); return }
     if (!user) return
     getSpellsAll(user.id, draft.class_name).then((spells) => {
       const byLevel: Record<number, WithCustom<DBSpell>[]> = {}
