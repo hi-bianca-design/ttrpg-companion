@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react'
 import { View, Text, SectionList, TouchableOpacity, ActivityIndicator } from 'react-native'
 import { useRouter } from 'expo-router'
+import { useAuth } from '@/modules/auth/useAuth'
 import { useCharacterStore } from '@/modules/character/character.store'
-import { getSpellsForClass } from '@/modules/srd/srd.service'
 import { DBSpell } from '@/modules/character/character.types'
+import { WithCustom } from '@/modules/user_content/user_content.types'
+import { getSpellsAll } from '@/modules/user_content/user_content.service'
 
-type SpellSection = { title: string; data: DBSpell[] }
+type SpellSection = { title: string; data: WithCustom<DBSpell>[] }
 
 export default function SpellsStep() {
   const router = useRouter()
+  const { user } = useAuth()
   const { draft, setDraft } = useCharacterStore()
   const [sections, setSections] = useState<SpellSection[]>([])
   const [selected, setSelected] = useState<Set<string>>(new Set(draft.selected_spell_ids))
@@ -16,17 +19,20 @@ export default function SpellsStep() {
 
   useEffect(() => {
     if (!draft.class_name) { router.replace('/(app)/characters/new/details'); return }
-    getSpellsForClass(draft.class_name).then((spells) => {
-      const byLevel: Record<number, DBSpell[]> = {}
+    if (!user) return
+    getSpellsAll(user.id, draft.class_name).then((spells) => {
+      const byLevel: Record<number, WithCustom<DBSpell>[]> = {}
       spells.forEach((s) => { byLevel[s.level] ??= []; byLevel[s.level].push(s) })
       setSections(
-        Object.entries(byLevel).map(([level, data]) => ({
-          title: level === '0' ? 'Cantrips' : `Level ${level}`,
-          data,
-        }))
+        Object.entries(byLevel)
+          .sort(([a], [b]) => Number(a) - Number(b))
+          .map(([level, data]) => ({
+            title: level === '0' ? 'Cantrips' : `Level ${level}`,
+            data,
+          }))
       )
     }).finally(() => setLoading(false))
-  }, [draft.class_name])
+  }, [draft.class_name, user])
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -73,7 +79,12 @@ export default function SpellsStep() {
                 <Text className={`font-bold flex-1 mr-2 ${isSelected ? 'text-primary' : 'text-text'}`}>
                   {item.name}
                 </Text>
-                <View className="flex-row gap-2">
+                <View className="flex-row gap-2 items-center">
+                  {item.is_custom && (
+                    <View className="bg-overlay px-2 py-0.5 rounded-full">
+                      <Text className="text-muted text-xs">Custom</Text>
+                    </View>
+                  )}
                   {item.is_ritual && <Text className="text-yellow text-xs">R</Text>}
                   {item.requires_concentration && <Text className="text-red text-xs">C</Text>}
                 </View>
@@ -92,7 +103,9 @@ export default function SpellsStep() {
           onPress={handleNext}
         >
           <Text className="text-base font-semibold">
-            {selected.size > 0 ? `Continue with ${selected.size} spell${selected.size !== 1 ? 's' : ''} →` : 'Skip Spells →'}
+            {selected.size > 0
+              ? `Continue with ${selected.size} spell${selected.size !== 1 ? 's' : ''} →`
+              : 'Skip Spells →'}
           </Text>
         </TouchableOpacity>
       </View>
