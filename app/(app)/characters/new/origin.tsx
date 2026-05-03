@@ -1,24 +1,28 @@
 import { useEffect, useState } from 'react'
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native'
 import { useRouter } from 'expo-router'
-import { getBackgrounds, getSpecies } from '@/modules/srd/srd.service'
+import { useAuth } from '@/modules/auth/useAuth'
 import { useCharacterStore } from '@/modules/character/character.store'
 import { DBBackground, DBSpecies } from '@/modules/character/character.types'
+import { WithCustom } from '@/modules/user_content/user_content.types'
+import { getSpeciesAll, getBackgroundsAll } from '@/modules/user_content/user_content.service'
 
 export default function OriginStep() {
   const router = useRouter()
+  const { user } = useAuth()
   const { setDraft } = useCharacterStore()
-  const [backgrounds, setBackgrounds] = useState<DBBackground[]>([])
-  const [species, setSpecies] = useState<DBSpecies[]>([])
-  const [selectedBg, setSelectedBg] = useState<DBBackground | null>(null)
-  const [selectedSp, setSelectedSp] = useState<DBSpecies | null>(null)
+  const [backgrounds, setBackgrounds] = useState<WithCustom<DBBackground>[]>([])
+  const [species, setSpecies] = useState<WithCustom<DBSpecies>[]>([])
+  const [selectedBg, setSelectedBg] = useState<WithCustom<DBBackground> | null>(null)
+  const [selectedSp, setSelectedSp] = useState<WithCustom<DBSpecies> | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    Promise.all([getBackgrounds(), getSpecies()])
+    if (!user) return
+    Promise.all([getBackgroundsAll(user.id), getSpeciesAll(user.id)])
       .then(([bgs, sps]) => { setBackgrounds(bgs); setSpecies(sps) })
       .finally(() => setLoading(false))
-  }, [])
+  }, [user])
 
   function handleNext() {
     if (!selectedBg || !selectedSp) return
@@ -49,7 +53,14 @@ export default function OriginStep() {
               onPress={() => setSelectedBg(bg)}
               className={`rounded-xl p-4 mb-3 border-2 ${isSelected ? 'bg-surface border-primary' : 'bg-surface border-transparent'}`}
             >
-              <Text className={`font-bold ${isSelected ? 'text-primary' : 'text-text'}`}>{bg.name}</Text>
+              <View className="flex-row items-center gap-2">
+                <Text className={`font-bold flex-1 ${isSelected ? 'text-primary' : 'text-text'}`}>{bg.name}</Text>
+                {bg.is_custom && (
+                  <View className="bg-overlay px-2 py-0.5 rounded-full">
+                    <Text className="text-muted text-xs">Custom</Text>
+                  </View>
+                )}
+              </View>
               <Text className="text-muted text-sm mt-1">{bg.description}</Text>
               <Text className="text-green text-xs mt-1">Skills: {bg.skill_proficiencies.join(', ')}</Text>
             </TouchableOpacity>
@@ -66,7 +77,14 @@ export default function OriginStep() {
               onPress={() => setSelectedSp(sp)}
               className={`rounded-xl p-4 mb-3 border-2 ${isSelected ? 'bg-surface border-primary' : 'bg-surface border-transparent'}`}
             >
-              <Text className={`font-bold ${isSelected ? 'text-primary' : 'text-text'}`}>{sp.name}</Text>
+              <View className="flex-row items-center gap-2">
+                <Text className={`font-bold flex-1 ${isSelected ? 'text-primary' : 'text-text'}`}>{sp.name}</Text>
+                {sp.is_custom && (
+                  <View className="bg-overlay px-2 py-0.5 rounded-full">
+                    <Text className="text-muted text-xs">Custom</Text>
+                  </View>
+                )}
+              </View>
               <Text className="text-muted text-xs mt-1">Speed: {sp.speed} ft</Text>
               {traits.length > 0 && (
                 <Text className="text-yellow text-xs mt-1">Traits: {traits.join(', ')}</Text>
@@ -83,7 +101,9 @@ export default function OriginStep() {
           disabled={!canProceed}
         >
           <Text className={`font-semibold ${canProceed ? 'text-base' : 'text-muted'}`}>
-            {canProceed && selectedBg && selectedSp ? `${selectedBg.name} · ${selectedSp.name} →` : 'Select background and species'}
+            {canProceed && selectedBg && selectedSp
+              ? `${selectedBg.name} · ${selectedSp.name} →`
+              : 'Select background and species'}
           </Text>
         </TouchableOpacity>
       </View>
