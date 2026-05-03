@@ -70,6 +70,7 @@ export default function OriginStep() {
         <Text className="text-lg font-bold text-text mt-4 mb-3">Species</Text>
         {species.map((sp) => {
           const isSelected = selectedSp?.id === sp.id
+          // sp.traits is stored as { traits: string[] } in both the SRD DB and the custom species adapter
           const traits = ((sp.traits as { traits?: string[] } | null)?.traits) ?? []
           return (
             <TouchableOpacity
