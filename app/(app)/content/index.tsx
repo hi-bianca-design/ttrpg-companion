@@ -15,6 +15,7 @@ export default function ContentScreen() {
 
   const load = useCallback(async () => {
     if (!user) return
+    setLoading(true)
     try {
       const data = await getUserContent(user.id)
       setItems(data)
@@ -101,7 +102,6 @@ export default function ContentScreen() {
                   {item.description && (
                     <Text className="text-muted text-sm mt-1" numberOfLines={2}>{item.description}</Text>
                   )}
-                  <Text className="text-overlay text-xs mt-1">Long-press to delete</Text>
                 </TouchableOpacity>
               ))}
             </View>
