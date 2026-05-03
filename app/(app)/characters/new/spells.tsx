@@ -14,7 +14,12 @@ export default function SpellsStep() {
   const { user } = useAuth()
   const { draft, setDraft } = useCharacterStore()
   const [sections, setSections] = useState<SpellSection[]>([])
-  const [selected, setSelected] = useState<Set<string>>(new Set(draft.selected_spell_ids))
+  const [selectedSrd, setSelectedSrd] = useState<Set<string>>(
+    new Set(draft.selected_spell_ids)
+  )
+  const [selectedCustom, setSelectedCustom] = useState<Set<string>>(
+    new Set(draft.selected_custom_spell_ids ?? [])
+  )
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -34,16 +39,27 @@ export default function SpellsStep() {
     }).finally(() => setLoading(false))
   }, [draft.class_name, user])
 
-  function toggle(id: string) {
-    setSelected((prev) => {
-      const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
-      return next
-    })
+  function toggle(item: WithCustom<DBSpell>) {
+    if (item.is_custom) {
+      setSelectedCustom((prev) => {
+        const next = new Set(prev)
+        next.has(item.id) ? next.delete(item.id) : next.add(item.id)
+        return next
+      })
+    } else {
+      setSelectedSrd((prev) => {
+        const next = new Set(prev)
+        next.has(item.id) ? next.delete(item.id) : next.add(item.id)
+        return next
+      })
+    }
   }
 
   function handleNext() {
-    setDraft({ selected_spell_ids: Array.from(selected) })
+    setDraft({
+      selected_spell_ids: Array.from(selectedSrd),
+      selected_custom_spell_ids: Array.from(selectedCustom),
+    })
     router.push('/(app)/characters/new/details')
   }
 
@@ -58,7 +74,7 @@ export default function SpellsStep() {
         <Text className="text-muted mt-1 mb-1 text-sm">
           Select the spells your {draft.class_name} knows. You can change these later.
         </Text>
-        <Text className="text-primary text-sm">{selected.size} selected</Text>
+        <Text className="text-primary text-sm">{selectedSrd.size + selectedCustom.size} selected</Text>
       </View>
 
       <SectionList
@@ -69,10 +85,10 @@ export default function SpellsStep() {
           <Text className="text-muted text-xs font-bold py-2 bg-base">{section.title.toUpperCase()}</Text>
         )}
         renderItem={({ item }) => {
-          const isSelected = selected.has(item.id)
+          const isSelected = item.is_custom ? selectedCustom.has(item.id) : selectedSrd.has(item.id)
           return (
             <TouchableOpacity
-              onPress={() => toggle(item.id)}
+              onPress={() => toggle(item)}
               className={`rounded-xl p-3 mb-2 border ${isSelected ? 'bg-surface border-primary' : 'bg-surface border-transparent'}`}
             >
               <View className="flex-row justify-between items-start">
@@ -103,8 +119,8 @@ export default function SpellsStep() {
           onPress={handleNext}
         >
           <Text className="text-base font-semibold">
-            {selected.size > 0
-              ? `Continue with ${selected.size} spell${selected.size !== 1 ? 's' : ''} →`
+            {selectedSrd.size + selectedCustom.size > 0
+              ? `Continue with ${selectedSrd.size + selectedCustom.size} spell${selectedSrd.size + selectedCustom.size !== 1 ? 's' : ''} →`
               : 'Skip Spells →'}
           </Text>
         </TouchableOpacity>

@@ -39,6 +39,8 @@ export type WizardDraft = {
   // Step 2 — Origin
   species_id: string | null
   background_id: string | null
+  custom_species_id: string | null
+  custom_background_id: string | null
   // Step 3 — Ability Scores
   strength: number
   dexterity: number
@@ -56,6 +58,7 @@ export type WizardDraft = {
   flaw: string
   // Step 5 — Spells
   selected_spell_ids: string[]
+  selected_custom_spell_ids: string[]
   // Step 6 — Details
   name: string
   appearance: string
@@ -69,6 +72,8 @@ export const INITIAL_DRAFT: WizardDraft = {
   subclass_id: null,
   species_id: null,
   background_id: null,
+  custom_species_id: null,
+  custom_background_id: null,
   strength: 10,
   dexterity: 10,
   constitution: 10,
@@ -83,6 +88,7 @@ export const INITIAL_DRAFT: WizardDraft = {
   bond: '',
   flaw: '',
   selected_spell_ids: [],
+  selected_custom_spell_ids: [],
   name: '',
   appearance: '',
   backstory: '',

@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native'
 import { useRouter } from 'expo-router'
+import { useAuth } from '@/modules/auth/useAuth'
 import { useCharacterStore } from '@/modules/character/character.store'
 import { ABILITY_KEYS, ABILITY_LABELS, STANDARD_ARRAY, AbilityKey } from '@/modules/character/character.types'
-import { getBackgrounds } from '@/modules/srd/srd.service'
+import { getBackgroundsAll } from '@/modules/user_content/user_content.service'
 
 export default function AbilityScoresStep() {
   const router = useRouter()
+  const { user } = useAuth()
   const { draft, setDraft } = useCharacterStore()
 
   const [assignments, setAssignments] = useState<Record<AbilityKey, number | null>>(
@@ -17,17 +19,18 @@ export default function AbilityScoresStep() {
   const [bgBonusOne, setBgBonusOne] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!draft.background_id) return
-    getBackgrounds()
+    const bgId = draft.background_id ?? draft.custom_background_id
+    if (!bgId || !user) return
+    getBackgroundsAll(user.id)
       .then((bgs) => {
-        const bg = bgs.find((b) => b.id === draft.background_id)
+        const bg = bgs.find((b) => b.id === bgId)
         if (bg) {
           const opts = (bg.ability_score_options as { options?: string[][] } | null)?.options?.[0] ?? []
-          setBgEligible(opts)
+          setBgEligible(opts as AbilityKey[])
         }
       })
       .catch(() => {})
-  }, [draft.background_id])
+  }, [draft.background_id, draft.custom_background_id, user])
 
   const usedValues = Object.values(assignments).filter((v) => v !== null) as number[]
 

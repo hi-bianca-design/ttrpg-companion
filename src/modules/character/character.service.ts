@@ -48,8 +48,10 @@ export async function createCharacter(userId: string, draft: WizardDraft) {
       level: 1,
       class_id: draft.class_id,
       subclass_id: draft.subclass_id,
-      species_id: draft.species_id,
-      background_id: draft.background_id,
+      species_id: draft.custom_species_id ? null : draft.species_id,
+      background_id: draft.custom_background_id ? null : draft.background_id,
+      custom_species_id: draft.custom_species_id ?? null,
+      custom_background_id: draft.custom_background_id ?? null,
       alignment: draft.alignment || null,
       strength: draft.strength,
       dexterity: draft.dexterity,
@@ -68,14 +70,22 @@ export async function createCharacter(userId: string, draft: WizardDraft) {
     .single()
   if (error) throw new Error(error.message)
 
-  if (draft.selected_spell_ids.length > 0) {
-    const { error: spellError } = await supabase.from('character_spells').insert(
-      draft.selected_spell_ids.map((spell_id) => ({
-        character_id: data.id,
-        spell_id,
-        is_prepared: true,
-      }))
-    )
+  const spellRows = [
+    ...draft.selected_spell_ids.map((spell_id) => ({
+      character_id: data.id,
+      spell_id,
+      custom_content_id: null as string | null,
+      is_prepared: true,
+    })),
+    ...(draft.selected_custom_spell_ids ?? []).map((custom_content_id) => ({
+      character_id: data.id,
+      spell_id: null as string | null,
+      custom_content_id,
+      is_prepared: true,
+    })),
+  ]
+  if (spellRows.length > 0) {
+    const { error: spellError } = await supabase.from('character_spells').insert(spellRows)
     if (spellError) throw new Error(spellError.message)
   }
 

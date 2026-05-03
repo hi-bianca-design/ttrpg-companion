@@ -26,7 +26,12 @@ export default function OriginStep() {
 
   function handleNext() {
     if (!selectedBg || !selectedSp) return
-    setDraft({ background_id: selectedBg.id, species_id: selectedSp.id })
+    setDraft({
+      species_id: selectedSp.is_custom ? null : selectedSp.id,
+      custom_species_id: selectedSp.is_custom ? selectedSp.id : null,
+      background_id: selectedBg.is_custom ? null : selectedBg.id,
+      custom_background_id: selectedBg.is_custom ? selectedBg.id : null,
+    })
     router.push('/(app)/characters/new/ability-scores')
   }
 
