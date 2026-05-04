@@ -36,6 +36,8 @@ export default function InventoryTab() {
   const unequipped = items.filter((i) => !i.is_equipped)
 
   function renderItem(item: EquipmentRow) {
+    const itemName = item.equipment?.name ?? item.custom_equipment?.name ?? 'Unknown Item'
+    const isCustom = !!item.custom_content_id
     return (
       <TouchableOpacity
         key={item.id}
@@ -43,11 +45,18 @@ export default function InventoryTab() {
         className={`rounded-xl p-3 mb-2 flex-row justify-between items-center ${item.is_equipped ? 'bg-surface border border-primary' : 'bg-surface border border-transparent'}`}
       >
         <View className="flex-1">
-          <Text className={`font-medium ${item.is_equipped ? 'text-primary' : 'text-text'}`}>
-            {item.equipment?.name ?? 'Custom Item'}
-          </Text>
+          <View className="flex-row items-center gap-2">
+            <Text className={`font-medium ${item.is_equipped ? 'text-primary' : 'text-text'}`}>
+              {itemName}
+            </Text>
+            {isCustom && (
+              <View className="bg-overlay px-2 py-0.5 rounded-full">
+                <Text className="text-muted text-xs">Custom</Text>
+              </View>
+            )}
+          </View>
           <Text className="text-muted text-xs mt-0.5">
-            {item.equipment?.category} · qty: {item.quantity}
+            {item.equipment?.category ?? 'Custom'} · qty: {item.quantity}
           </Text>
         </View>
         <View className={`w-5 h-5 rounded-full border-2 ${item.is_equipped ? 'bg-primary border-primary' : 'border-overlay'}`} />
