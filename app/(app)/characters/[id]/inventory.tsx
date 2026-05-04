@@ -14,7 +14,7 @@ export default function InventoryTab() {
 
   useEffect(() => {
     getCharacter(id)
-      .then((data) => setItems((data as CharacterWithRelations).character_equipment))
+      .then((data) => setItems((data as CharacterWithRelations).character_equipment ?? []))
       .catch((e) => Alert.alert('Error', e instanceof Error ? e.message : 'An error occurred'))
       .finally(() => setLoading(false))
   }, [id])
