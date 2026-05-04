@@ -5,27 +5,28 @@ import { getCharacter } from '@/modules/character/character.service'
 import { getAbilityModifier, formatModifier, getProficiencyBonus } from '@/modules/character/character.utils'
 import { CharacterWithRelations, AbilityKey } from '@/modules/character/character.types'
 
-type Skill = { name: string; ability: AbilityKey }
+type Skill = { name: string; ability: AbilityKey; profKey: string }
 
+// profKey is the lowercase identifier stored in background.skill_proficiencies
 const SKILLS: Skill[] = [
-  { name: 'Acrobatics',      ability: 'dexterity' },
-  { name: 'Animal Handling', ability: 'wisdom' },
-  { name: 'Arcana',          ability: 'intelligence' },
-  { name: 'Athletics',       ability: 'strength' },
-  { name: 'Deception',       ability: 'charisma' },
-  { name: 'History',         ability: 'intelligence' },
-  { name: 'Insight',         ability: 'wisdom' },
-  { name: 'Intimidation',    ability: 'charisma' },
-  { name: 'Investigation',   ability: 'intelligence' },
-  { name: 'Medicine',        ability: 'wisdom' },
-  { name: 'Nature',          ability: 'intelligence' },
-  { name: 'Perception',      ability: 'wisdom' },
-  { name: 'Performance',     ability: 'charisma' },
-  { name: 'Persuasion',      ability: 'charisma' },
-  { name: 'Religion',        ability: 'intelligence' },
-  { name: 'Sleight of Hand', ability: 'dexterity' },
-  { name: 'Stealth',         ability: 'dexterity' },
-  { name: 'Survival',        ability: 'wisdom' },
+  { name: 'Acrobatics',      ability: 'dexterity',     profKey: 'acrobatics' },
+  { name: 'Animal Handling', ability: 'wisdom',        profKey: 'animal handling' },
+  { name: 'Arcana',          ability: 'intelligence',  profKey: 'arcana' },
+  { name: 'Athletics',       ability: 'strength',      profKey: 'athletics' },
+  { name: 'Deception',       ability: 'charisma',      profKey: 'deception' },
+  { name: 'History',         ability: 'intelligence',  profKey: 'history' },
+  { name: 'Insight',         ability: 'wisdom',        profKey: 'insight' },
+  { name: 'Intimidation',    ability: 'charisma',      profKey: 'intimidation' },
+  { name: 'Investigation',   ability: 'intelligence',  profKey: 'investigation' },
+  { name: 'Medicine',        ability: 'wisdom',        profKey: 'medicine' },
+  { name: 'Nature',          ability: 'intelligence',  profKey: 'nature' },
+  { name: 'Perception',      ability: 'wisdom',        profKey: 'perception' },
+  { name: 'Performance',     ability: 'charisma',      profKey: 'performance' },
+  { name: 'Persuasion',      ability: 'charisma',      profKey: 'persuasion' },
+  { name: 'Religion',        ability: 'intelligence',  profKey: 'religion' },
+  { name: 'Sleight of Hand', ability: 'dexterity',     profKey: 'sleight of hand' },
+  { name: 'Stealth',         ability: 'dexterity',     profKey: 'stealth' },
+  { name: 'Survival',        ability: 'wisdom',        profKey: 'survival' },
 ]
 
 export default function SkillsTab() {
@@ -45,10 +46,15 @@ export default function SkillsTab() {
   }
 
   const profBonus = getProficiencyBonus(character.level)
-  const bgSkills: string[] = character.background?.skill_proficiencies ?? []
+
+  // SRD backgrounds store skill_proficiencies as string[]; custom backgrounds store them in properties JSONB
+  const bgSkills: string[] = character.background?.skill_proficiencies
+    ?? (character.custom_background?.properties as { skill_proficiencies?: string[] } | null)?.skill_proficiencies
+    ?? []
+  const bgSkillsLower = bgSkills.map((s) => s.toLowerCase())
 
   const wisdomMod = getAbilityModifier(character.wisdom)
-  const perceptionProficient = bgSkills.includes('perception')
+  const perceptionProficient = bgSkillsLower.includes('perception')
   const passivePerception = 10 + wisdomMod + (perceptionProficient ? profBonus : 0)
 
   return (
@@ -60,7 +66,7 @@ export default function SkillsTab() {
 
       {SKILLS.map((skill) => {
         const abilityMod = getAbilityModifier(character[skill.ability])
-        const isProficient = bgSkills.includes(skill.name.toLowerCase().replace(/ /g, '-'))
+        const isProficient = bgSkillsLower.includes(skill.profKey)
         const total = abilityMod + (isProficient ? profBonus : 0)
         return (
           <View key={skill.name} className="flex-row items-center py-3 border-b border-overlay">
