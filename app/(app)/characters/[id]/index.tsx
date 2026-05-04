@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Modal } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { getCharacter, updateCharacter } from '@/modules/character/character.service'
 import { CharacterWithRelations, DBCharacter, ABILITY_KEYS, ABILITY_LABELS, AbilityKey } from '@/modules/character/character.types'
@@ -7,11 +7,18 @@ import { getAbilityModifier, formatModifier, getProficiencyBonus } from '@/modul
 import { HPBar } from '@/components/character/HPBar'
 import { ConditionBadge } from '@/components/character/ConditionBadge'
 
+const CONDITIONS = [
+  'Blinded', 'Charmed', 'Deafened', 'Exhausted', 'Frightened', 'Grappled',
+  'Incapacitated', 'Invisible', 'Paralyzed', 'Petrified', 'Poisoned',
+  'Prone', 'Restrained', 'Stunned', 'Unconscious',
+]
+
 export default function OverviewTab() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const [character, setCharacter] = useState<CharacterWithRelations | null>(null)
   const [loading, setLoading] = useState(true)
+  const [conditionPickerOpen, setConditionPickerOpen] = useState(false)
 
   useEffect(() => {
     getCharacter(id)
@@ -42,9 +49,17 @@ export default function OverviewTab() {
 
   async function removeCondition(condition: string) {
     if (!character) return
-    const newConditions = character.conditions.filter((c) => c !== condition)
+    const newConditions = (character.conditions ?? []).filter((c) => c !== condition)
     const updated = await updateCharacter(id, { conditions: newConditions }) as DBCharacter
     setCharacter((prev) => prev ? { ...prev, conditions: updated.conditions } : prev)
+  }
+
+  async function addCondition(condition: string) {
+    if (!character || (character.conditions ?? []).includes(condition)) return
+    const newConditions = [...(character.conditions ?? []), condition]
+    const updated = await updateCharacter(id, { conditions: newConditions }) as DBCharacter
+    setCharacter((prev) => prev ? { ...prev, conditions: updated.conditions } : prev)
+    setConditionPickerOpen(false)
   }
 
   if (loading || !character) {
@@ -52,6 +67,8 @@ export default function OverviewTab() {
   }
 
   const profBonus = getProficiencyBonus(character.level)
+  const speciesName = character.species?.name ?? character.custom_species?.name ?? '—'
+  const backgroundName = character.background?.name ?? character.custom_background?.name ?? '—'
 
   return (
     <ScrollView className="flex-1 bg-base" contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
@@ -62,7 +79,7 @@ export default function OverviewTab() {
             Level {character.level} {character.class?.name ?? '—'}
             {character.subclass ? ` (${character.subclass.name})` : ''}
           </Text>
-          <Text className="text-muted text-xs">{character.species?.name} · {character.background?.name}</Text>
+          <Text className="text-muted text-xs">{speciesName} · {backgroundName}</Text>
         </View>
         <TouchableOpacity
           className="bg-surface px-3 py-1 rounded-lg"
@@ -115,16 +132,51 @@ export default function OverviewTab() {
         </View>
       </View>
 
-      {character.conditions.length > 0 && (
-        <View className="bg-surface rounded-xl p-4">
-          <Text className="text-muted text-xs font-bold mb-2">CONDITIONS</Text>
+      <View className="bg-surface rounded-xl p-4">
+        <View className="flex-row justify-between items-center mb-2">
+          <Text className="text-muted text-xs font-bold">CONDITIONS</Text>
+          <TouchableOpacity onPress={() => setConditionPickerOpen(true)}>
+            <Text className="text-primary text-xs">+ Add</Text>
+          </TouchableOpacity>
+        </View>
+        {(character.conditions ?? []).length === 0 ? (
+          <Text className="text-muted text-xs">None</Text>
+        ) : (
           <View className="flex-row flex-wrap">
-            {character.conditions.map((c) => (
+            {(character.conditions ?? []).map((c) => (
               <ConditionBadge key={c} condition={c} onRemove={() => removeCondition(c)} />
             ))}
           </View>
+        )}
+      </View>
+
+      <Modal visible={conditionPickerOpen} transparent animationType="slide">
+        <View className="flex-1 justify-end bg-black/60">
+          <View className="bg-surface rounded-t-2xl p-4 pb-8">
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-text font-bold text-lg">Add Condition</Text>
+              <TouchableOpacity onPress={() => setConditionPickerOpen(false)}>
+                <Text className="text-muted">Cancel</Text>
+              </TouchableOpacity>
+            </View>
+            <View className="flex-row flex-wrap gap-2">
+              {CONDITIONS.map((c) => {
+                const active = (character.conditions ?? []).includes(c)
+                return (
+                  <TouchableOpacity
+                    key={c}
+                    onPress={() => addCondition(c)}
+                    disabled={active}
+                    className={`px-3 py-2 rounded-full border ${active ? 'border-overlay bg-overlay opacity-40' : 'border-red bg-red/20'}`}
+                  >
+                    <Text className={`text-sm ${active ? 'text-muted' : 'text-red'}`}>{c}</Text>
+                  </TouchableOpacity>
+                )
+              })}
+            </View>
+          </View>
         </View>
-      )}
+      </Modal>
     </ScrollView>
   )
 }
