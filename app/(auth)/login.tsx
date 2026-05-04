@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native'
 import { useRouter } from 'expo-router'
 import { signIn } from '@/modules/auth/auth.service'
 
@@ -7,15 +7,17 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   async function handleLogin() {
     if (!email || !password) return
     setLoading(true)
+    setError(null)
     try {
       await signIn(email.trim(), password)
     } catch (e: unknown) {
-      Alert.alert('Login failed', e instanceof Error ? e.message : 'Unknown error')
+      setError(e instanceof Error ? e.message : 'Unknown error')
     } finally {
       setLoading(false)
     }
@@ -43,6 +45,10 @@ export default function LoginScreen() {
         onChangeText={setPassword}
         secureTextEntry
       />
+
+      {error && (
+        <Text className="text-red mb-4 text-center">{error}</Text>
+      )}
 
       <TouchableOpacity
         className="bg-primary rounded-xl py-3 items-center mb-4"
