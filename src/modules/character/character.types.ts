@@ -8,14 +8,19 @@ export type DBBackground = Database['public']['Tables']['backgrounds']['Row']
 export type DBSpell    = Database['public']['Tables']['spells']['Row']
 export type DBEquipment = Database['public']['Tables']['equipment']['Row']
 
+type CustomContentRef = { id: string; name: string; properties: Record<string, unknown> }
+
 export type CharacterWithRelations = DBCharacter & {
   class: DBClass | null
   subclass: DBSubclass | null
   species: DBSpecies | null
   background: DBBackground | null
+  custom_species: CustomContentRef | null
+  custom_background: CustomContentRef | null
   character_spells: Array<{
     id: string
     spell_id: string | null
+    custom_content_id: string | null
     is_prepared: boolean
     slots_expended: Record<string, number>
     spell: DBSpell | null
@@ -23,9 +28,11 @@ export type CharacterWithRelations = DBCharacter & {
   character_equipment: Array<{
     id: string
     equipment_id: string | null
+    custom_content_id: string | null
     quantity: number
     is_equipped: boolean
     equipment: DBEquipment | null
+    custom_equipment: CustomContentRef | null
   }>
 }
 

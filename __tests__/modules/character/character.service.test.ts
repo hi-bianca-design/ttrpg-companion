@@ -1,4 +1,4 @@
-import { getCharacters, updateCharacter, deleteCharacter, createCharacter } from '@/modules/character/character.service'
+import { getCharacters, updateCharacter, deleteCharacter, createCharacter, getCharacter } from '@/modules/character/character.service'
 import { INITIAL_DRAFT } from '@/modules/character/character.types'
 
 const mockSingle = jest.fn()
@@ -93,5 +93,17 @@ describe('createCharacter', () => {
 
     const draft = { ...INITIAL_DRAFT, name: 'Aria', class_id: 'cls1', hit_die: 10, selected_spell_ids: ['sp1'] }
     await expect(createCharacter('user-1', draft)).rejects.toThrow('spell insert failed')
+  })
+})
+
+describe('getCharacter', () => {
+  it('selects custom_species, custom_background, and custom_equipment relations', async () => {
+    mockSingle.mockResolvedValue({ data: { id: 'c1' }, error: null })
+    mockEq.mockReturnValue({ single: mockSingle })
+    await getCharacter('c1')
+    const selectArg = mockSelect.mock.calls[0][0] as string
+    expect(selectArg).toContain('custom_species')
+    expect(selectArg).toContain('custom_background')
+    expect(selectArg).toContain('custom_equipment')
   })
 })
