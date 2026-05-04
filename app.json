@@ -6,7 +6,7 @@
     "scheme": "dnd-companion",
     "web": {
       "bundler": "metro",
-      "output": "static"
+      "output": "single"
     },
     "plugins": ["expo-router"],
     "experiments": {
