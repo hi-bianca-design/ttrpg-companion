@@ -42,7 +42,7 @@ export type CreateCampaignItemInput = {
   requires_attunement?: boolean
   attunement_condition?: string
   description?:         string
-  properties?:          Record<string, unknown>
+  properties?:          Json
 }
 
 // Fields that can be updated on a DM campaign item
