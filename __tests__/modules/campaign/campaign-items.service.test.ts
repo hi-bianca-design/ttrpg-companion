@@ -96,6 +96,13 @@ describe('updateCampaignItem', () => {
     expect(mockEq).toHaveBeenCalledWith('id', 'item-1')
     expect(result.name).toBe('Sword of Plot (Updated)')
   })
+
+  it('throws on error', async () => {
+    mockSingle.mockResolvedValue({ data: null, error: { message: 'update failed' } })
+    mockEq.mockReturnValue({ select: mockSelect, single: mockSingle, eq: mockEq })
+    mockSelect.mockReturnValue({ single: mockSingle })
+    await expect(updateCampaignItem('item-1', { name: 'X' })).rejects.toThrow('update failed')
+  })
 })
 
 describe('deleteCampaignItem', () => {
