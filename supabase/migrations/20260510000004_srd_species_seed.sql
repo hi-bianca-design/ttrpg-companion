@@ -1,0 +1,120 @@
+-- supabase/migrations/20260510000004_srd_species_seed.sql
+BEGIN;
+
+INSERT INTO public.species (name, speed, size, creature_type, traits, ability_score_bonuses) VALUES
+('Dragonborn', 30, 'Medium', 'Humanoid', '{
+  "traits": [
+    {"name": "Draconic Ancestry", "description": "Your lineage stems from a dragon progenitor. Choose a dragon type (Black, Blue, Brass, Bronze, Copper, Gold, Green, Red, Silver, or White). This determines your Breath Weapon damage type and Damage Resistance."},
+    {"name": "Breath Weapon", "description": "When you take the Attack action, you can replace one attack with a 15-foot Cone or 30-foot Line (5 feet wide) breath. Each creature makes a Dexterity save (DC = 8 + Constitution modifier + Proficiency Bonus). Fail: 1d10 damage of your ancestry type; Success: half. Scales: 2d10 at level 5, 3d10 at level 11, 4d10 at level 17. Uses equal to Proficiency Bonus; recharge on Long Rest."},
+    {"name": "Damage Resistance", "description": "You have Resistance to the damage type determined by your Draconic Ancestry."},
+    {"name": "Darkvision", "description": "You have Darkvision with a range of 60 feet."},
+    {"name": "Draconic Flight", "description": "Starting at character level 5, as a Bonus Action you sprout spectral wings for 10 minutes, gaining a Fly Speed equal to your Speed. Once per Long Rest."}
+  ]
+}'::jsonb, '{}')
+ON CONFLICT (name) DO UPDATE SET
+  speed = EXCLUDED.speed, size = EXCLUDED.size, creature_type = EXCLUDED.creature_type,
+  traits = EXCLUDED.traits, ability_score_bonuses = EXCLUDED.ability_score_bonuses;
+
+INSERT INTO public.species (name, speed, size, creature_type, traits, ability_score_bonuses) VALUES
+('Dwarf', 30, 'Medium', 'Humanoid', '{
+  "traits": [
+    {"name": "Darkvision", "description": "You have Darkvision with a range of 120 feet."},
+    {"name": "Dwarven Resilience", "description": "You have Resistance to Poison damage and Advantage on saving throws to avoid or end the Poisoned condition."},
+    {"name": "Dwarven Toughness", "description": "Your Hit Point maximum increases by 1, and it increases by 1 again whenever you gain a level."},
+    {"name": "Stonecunning", "description": "As a Bonus Action, you gain Tremorsense with a range of 60 feet for 10 minutes while on or touching a stone surface. Uses equal to Proficiency Bonus; recharge on Long Rest."}
+  ]
+}'::jsonb, '{}')
+ON CONFLICT (name) DO UPDATE SET
+  speed = EXCLUDED.speed, size = EXCLUDED.size, creature_type = EXCLUDED.creature_type,
+  traits = EXCLUDED.traits, ability_score_bonuses = EXCLUDED.ability_score_bonuses;
+
+INSERT INTO public.species (name, speed, size, creature_type, traits, ability_score_bonuses) VALUES
+('Elf', 30, 'Medium', 'Humanoid', '{
+  "traits": [
+    {"name": "Darkvision", "description": "You have Darkvision with a range of 60 feet (Drow lineage extends this to 120 feet)."},
+    {"name": "Elven Lineage", "description": "Choose a lineage: Drow (Darkvision 120 ft, Dancing Lights cantrip; Faerie Fire at level 3; Darkness at level 5), High Elf (Prestidigitation cantrip, swap each Long Rest; Detect Magic at level 3; Misty Step at level 5), or Wood Elf (Speed 35, Druidcraft cantrip; Longstrider at level 3; Pass without Trace at level 5). Spell DC uses your chosen INT, WIS, or CHA."},
+    {"name": "Fey Ancestry", "description": "You have Advantage on saving throws to avoid or end the Charmed condition."},
+    {"name": "Keen Senses", "description": "You have proficiency in the Insight, Perception, or Survival skill (your choice)."},
+    {"name": "Trance", "description": "You don''t need to sleep and magic can''t put you to sleep. You can finish a Long Rest in 4 hours of trancelike meditation."}
+  ]
+}'::jsonb, '{}')
+ON CONFLICT (name) DO UPDATE SET
+  speed = EXCLUDED.speed, size = EXCLUDED.size, creature_type = EXCLUDED.creature_type,
+  traits = EXCLUDED.traits, ability_score_bonuses = EXCLUDED.ability_score_bonuses;
+
+INSERT INTO public.species (name, speed, size, creature_type, traits, ability_score_bonuses) VALUES
+('Gnome', 30, 'Small', 'Humanoid', '{
+  "traits": [
+    {"name": "Darkvision", "description": "You have Darkvision with a range of 60 feet."},
+    {"name": "Gnomish Cunning", "description": "You have Advantage on Intelligence, Wisdom, and Charisma saving throws."},
+    {"name": "Gnomish Lineage", "description": "Choose a lineage. Forest Gnome: Minor Illusion cantrip + Speak with Animals (always prepared, cast without slot equal to Proficiency Bonus times per Long Rest). Rock Gnome: Mending and Prestidigitation cantrips + can craft a Tiny clockwork device (AC 5, 1 HP) with 10 min casting; up to 3 devices exist at once, falling apart after 8 hours. Spell DC uses your chosen INT, WIS, or CHA."}
+  ]
+}'::jsonb, '{}')
+ON CONFLICT (name) DO UPDATE SET
+  speed = EXCLUDED.speed, size = EXCLUDED.size, creature_type = EXCLUDED.creature_type,
+  traits = EXCLUDED.traits, ability_score_bonuses = EXCLUDED.ability_score_bonuses;
+
+INSERT INTO public.species (name, speed, size, creature_type, traits, ability_score_bonuses) VALUES
+('Goliath', 35, 'Medium', 'Humanoid', '{
+  "traits": [
+    {"name": "Giant Ancestry", "description": "Choose one supernatural benefit (uses equal to Proficiency Bonus; recharge Long Rest): Cloud''s Jaunt — teleport 30 ft as Bonus Action; Fire''s Burn — deal +1d10 Fire damage on a hit; Frost''s Chill — deal +1d6 Cold damage on a hit and reduce Speed by 10 ft until your next turn; Hill''s Tumble — give Prone condition to a Large or smaller creature on a hit; Stone''s Endurance — Reaction to roll 1d12 + CON modifier and reduce incoming damage by that total; Storm''s Thunder — Reaction to deal 1d8 Thunder to a creature within 60 ft that damaged you."},
+    {"name": "Large Form", "description": "Starting at character level 5, as a Bonus Action you change your size to Large for 10 minutes (if space allows), gaining Advantage on Strength checks and +10 ft Speed. Once per Long Rest."},
+    {"name": "Powerful Build", "description": "You have Advantage on checks to end the Grappled condition and count as one size larger for carrying capacity."}
+  ]
+}'::jsonb, '{}')
+ON CONFLICT (name) DO UPDATE SET
+  speed = EXCLUDED.speed, size = EXCLUDED.size, creature_type = EXCLUDED.creature_type,
+  traits = EXCLUDED.traits, ability_score_bonuses = EXCLUDED.ability_score_bonuses;
+
+INSERT INTO public.species (name, speed, size, creature_type, traits, ability_score_bonuses) VALUES
+('Halfling', 30, 'Small', 'Humanoid', '{
+  "traits": [
+    {"name": "Brave", "description": "You have Advantage on saving throws to avoid or end the Frightened condition."},
+    {"name": "Halfling Nimbleness", "description": "You can move through the space of any creature that is a size larger than you, but can''t stop in the same space."},
+    {"name": "Luck", "description": "When you roll a 1 on the d20 of a D20 Test, you can reroll the die and must use the new roll."},
+    {"name": "Naturally Stealthy", "description": "You can take the Hide action even when obscured only by a creature that is at least one size larger than you."}
+  ]
+}'::jsonb, '{}')
+ON CONFLICT (name) DO UPDATE SET
+  speed = EXCLUDED.speed, size = EXCLUDED.size, creature_type = EXCLUDED.creature_type,
+  traits = EXCLUDED.traits, ability_score_bonuses = EXCLUDED.ability_score_bonuses;
+
+INSERT INTO public.species (name, speed, size, creature_type, traits, ability_score_bonuses) VALUES
+('Human', 30, 'Medium or Small', 'Humanoid', '{
+  "traits": [
+    {"name": "Resourceful", "description": "You gain Heroic Inspiration whenever you finish a Long Rest."},
+    {"name": "Skillful", "description": "You gain proficiency in one skill of your choice."},
+    {"name": "Versatile", "description": "You gain an Origin feat of your choice. Skilled is recommended."}
+  ],
+  "size_note": "Choose Medium (about 4-7 feet tall) or Small (about 2-4 feet tall) when you select this species."
+}'::jsonb, '{}')
+ON CONFLICT (name) DO UPDATE SET
+  speed = EXCLUDED.speed, size = EXCLUDED.size, creature_type = EXCLUDED.creature_type,
+  traits = EXCLUDED.traits, ability_score_bonuses = EXCLUDED.ability_score_bonuses;
+
+INSERT INTO public.species (name, speed, size, creature_type, traits, ability_score_bonuses) VALUES
+('Orc', 30, 'Medium', 'Humanoid', '{
+  "traits": [
+    {"name": "Adrenaline Rush", "description": "You can take the Dash action as a Bonus Action, gaining Temporary Hit Points equal to your Proficiency Bonus. Uses equal to Proficiency Bonus; recharge on Short or Long Rest."},
+    {"name": "Darkvision", "description": "You have Darkvision with a range of 120 feet."},
+    {"name": "Relentless Endurance", "description": "When reduced to 0 Hit Points but not killed outright, you can drop to 1 Hit Point instead. Once per Long Rest."}
+  ]
+}'::jsonb, '{}')
+ON CONFLICT (name) DO UPDATE SET
+  speed = EXCLUDED.speed, size = EXCLUDED.size, creature_type = EXCLUDED.creature_type,
+  traits = EXCLUDED.traits, ability_score_bonuses = EXCLUDED.ability_score_bonuses;
+
+INSERT INTO public.species (name, speed, size, creature_type, traits, ability_score_bonuses) VALUES
+('Tiefling', 30, 'Medium or Small', 'Humanoid', '{
+  "traits": [
+    {"name": "Darkvision", "description": "You have Darkvision with a range of 60 feet."},
+    {"name": "Fiendish Legacy", "description": "Choose a legacy: Abyssal (Poison Resistance; Poison Spray cantrip; Ray of Sickness at level 3; Hold Person at level 5), Chthonic (Necrotic Resistance; Chill Touch cantrip; False Life at level 3; Ray of Enfeeblement at level 5), or Infernal (Fire Resistance; Fire Bolt cantrip; Hellish Rebuke at level 3; Darkness at level 5). Spell DC uses your chosen INT, WIS, or CHA."},
+    {"name": "Otherworldly Presence", "description": "You know the Thaumaturgy cantrip, using the same spellcasting ability as your Fiendish Legacy trait."}
+  ],
+  "size_note": "Choose Medium (about 4-7 feet tall) or Small (about 3-4 feet tall) when you select this species."
+}'::jsonb, '{}')
+ON CONFLICT (name) DO UPDATE SET
+  speed = EXCLUDED.speed, size = EXCLUDED.size, creature_type = EXCLUDED.creature_type,
+  traits = EXCLUDED.traits, ability_score_bonuses = EXCLUDED.ability_score_bonuses;
+
+COMMIT;
