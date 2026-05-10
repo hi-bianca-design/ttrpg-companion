@@ -1,4 +1,7 @@
 import { Database, Json } from '@/types/database.types'
+// Safe circular import: character.types imports DBMagicItem/DBCampaignItem from here;
+// we import DBEquipment/CustomContentRef from there. Both export only `type` aliases —
+// no runtime values cross the boundary, so Metro/Node never see a circular dependency.
 import { DBEquipment, CustomContentRef } from '@/modules/character/character.types'
 
 // Raw DB row types from generated types

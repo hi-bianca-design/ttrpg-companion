@@ -105,5 +105,6 @@ describe('getCharacter', () => {
     expect(selectArg).toContain('custom_species')
     expect(selectArg).toContain('custom_background')
     expect(selectArg).toContain('custom_equipment')
+    expect(selectArg).toContain('character_inventory')
   })
 })

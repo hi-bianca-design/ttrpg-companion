@@ -1,4 +1,7 @@
 import { Database } from '@/types/database.types'
+// Safe circular import: inventory.types imports DBEquipment/CustomContentRef from here;
+// we import DB row types from there. Both files export only `type` aliases — no runtime
+// values cross the boundary, so Metro/Node never see a circular dependency.
 import { DBMagicItem, DBCampaignItem } from '@/modules/inventory/inventory.types'
 
 export type DBCharacter = Database['public']['Tables']['characters']['Row']
