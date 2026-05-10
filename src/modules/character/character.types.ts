@@ -1,4 +1,5 @@
 import { Database } from '@/types/database.types'
+import { DBMagicItem, DBCampaignItem } from '@/modules/inventory/inventory.types'
 
 export type DBCharacter = Database['public']['Tables']['characters']['Row']
 export type DBClass    = Database['public']['Tables']['classes']['Row']
@@ -33,6 +34,22 @@ export type CharacterWithRelations = DBCharacter & {
     is_equipped: boolean
     equipment: DBEquipment | null
     custom_equipment: CustomContentRef | null
+  }>
+  character_inventory: Array<{
+    id: string
+    equipment_id: string | null
+    magic_item_id: string | null
+    campaign_item_id: string | null
+    custom_content_id: string | null
+    quantity: number
+    is_equipped: boolean
+    is_attuned: boolean
+    notes: string
+    acquired_at: string | null
+    equipment: DBEquipment | null
+    magic_item: DBMagicItem | null
+    campaign_item: DBCampaignItem | null
+    custom_item: CustomContentRef | null
   }>
 }
 

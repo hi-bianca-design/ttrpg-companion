@@ -14,7 +14,8 @@ const SHEET_SELECT = `
   custom_species:user_content!characters_custom_species_id_fkey(id, name, properties),
   custom_background:user_content!characters_custom_background_id_fkey(id, name, properties),
   character_spells(id, spell_id, custom_content_id, is_prepared, slots_expended, spell:spells(*)),
-  character_equipment(id, equipment_id, custom_content_id, quantity, is_equipped, equipment:equipment(*), custom_equipment:user_content!character_equipment_custom_content_id_fkey(id, name, properties))
+  character_equipment(id, equipment_id, custom_content_id, quantity, is_equipped, equipment:equipment(*), custom_equipment:user_content!character_equipment_custom_content_id_fkey(id, name, properties)),
+  character_inventory(id, equipment_id, magic_item_id, campaign_item_id, custom_content_id, quantity, is_equipped, is_attuned, notes, acquired_at, equipment:equipment(*), magic_item:magic_items(*), campaign_item:campaign_items(*), custom_item:user_content!character_inventory_custom_content_id_fkey(id, name, properties))
 `
 
 export async function getCharacters(userId: string) {
