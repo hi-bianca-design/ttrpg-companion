@@ -18,28 +18,88 @@ export type Database = {
         Row: {
           ability_score_options: Json | null
           description: string | null
-          feature: string | null
           id: string
           name: string
+          origin_feat: string | null
           skill_proficiencies: string[]
+          tool_proficiency: string | null
         }
         Insert: {
           ability_score_options?: Json | null
           description?: string | null
-          feature?: string | null
           id?: string
           name: string
+          origin_feat?: string | null
           skill_proficiencies: string[]
+          tool_proficiency?: string | null
         }
         Update: {
           ability_score_options?: Json | null
           description?: string | null
-          feature?: string | null
           id?: string
           name?: string
+          origin_feat?: string | null
           skill_proficiencies?: string[]
+          tool_proficiency?: string | null
         }
         Relationships: []
+      }
+      campaign_items: {
+        Row: {
+          attunement_condition: string | null
+          campaign_id: string
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          item_type: string
+          name: string
+          properties: Json
+          rarity: string | null
+          requires_attunement: boolean
+        }
+        Insert: {
+          attunement_condition?: string | null
+          campaign_id: string
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          item_type: string
+          name: string
+          properties?: Json
+          rarity?: string | null
+          requires_attunement?: boolean
+        }
+        Update: {
+          attunement_condition?: string | null
+          campaign_id?: string
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          item_type?: string
+          name?: string
+          properties?: Json
+          rarity?: string | null
+          requires_attunement?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_items_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_items_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       campaign_members: {
         Row: {
@@ -161,6 +221,84 @@ export type Database = {
             columns: ["equipment_id"]
             isOneToOne: false
             referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      character_inventory: {
+        Row: {
+          acquired_at: string | null
+          campaign_item_id: string | null
+          character_id: string
+          custom_content_id: string | null
+          equipment_id: string | null
+          id: string
+          is_attuned: boolean
+          is_equipped: boolean
+          magic_item_id: string | null
+          notes: string
+          quantity: number
+        }
+        Insert: {
+          acquired_at?: string | null
+          campaign_item_id?: string | null
+          character_id: string
+          custom_content_id?: string | null
+          equipment_id?: string | null
+          id?: string
+          is_attuned?: boolean
+          is_equipped?: boolean
+          magic_item_id?: string | null
+          notes?: string
+          quantity?: number
+        }
+        Update: {
+          acquired_at?: string | null
+          campaign_item_id?: string | null
+          character_id?: string
+          custom_content_id?: string | null
+          equipment_id?: string | null
+          id?: string
+          is_attuned?: boolean
+          is_equipped?: boolean
+          magic_item_id?: string | null
+          notes?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "character_inventory_campaign_item_id_fkey"
+            columns: ["campaign_item_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "character_inventory_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "character_inventory_custom_content_id_fkey"
+            columns: ["custom_content_id"]
+            isOneToOne: false
+            referencedRelation: "user_content"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "character_inventory_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "character_inventory_magic_item_id_fkey"
+            columns: ["magic_item_id"]
+            isOneToOne: false
+            referencedRelation: "magic_items"
             referencedColumns: ["id"]
           },
         ]
@@ -438,6 +576,39 @@ export type Database = {
         }
         Relationships: []
       }
+      magic_items: {
+        Row: {
+          attunement_condition: string | null
+          description: string
+          id: string
+          item_type: string
+          name: string
+          properties: Json
+          rarity: string
+          requires_attunement: boolean
+        }
+        Insert: {
+          attunement_condition?: string | null
+          description: string
+          id?: string
+          item_type: string
+          name: string
+          properties?: Json
+          rarity: string
+          requires_attunement?: boolean
+        }
+        Update: {
+          attunement_condition?: string | null
+          description?: string
+          id?: string
+          item_type?: string
+          name?: string
+          properties?: Json
+          rarity?: string
+          requires_attunement?: boolean
+        }
+        Relationships: []
+      }
       session_characters: {
         Row: {
           character_id: string
@@ -530,22 +701,28 @@ export type Database = {
       species: {
         Row: {
           ability_score_bonuses: Json | null
+          creature_type: string
           id: string
           name: string
+          size: string
           speed: number
           traits: Json | null
         }
         Insert: {
           ability_score_bonuses?: Json | null
+          creature_type?: string
           id?: string
           name: string
+          size?: string
           speed?: number
           traits?: Json | null
         }
         Update: {
           ability_score_bonuses?: Json | null
+          creature_type?: string
           id?: string
           name?: string
+          size?: string
           speed?: number
           traits?: Json | null
         }
@@ -731,13 +908,13 @@ export type Tables<
     : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
         DefaultSchema["Views"])
-  ? (DefaultSchema["Tables"] &
-      DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-      Row: infer R
-    }
-    ? R
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
     : never
-  : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
@@ -757,12 +934,12 @@ export type TablesInsert<
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-      Insert: infer I
-    }
-    ? I
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
     : never
-  : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
@@ -782,12 +959,12 @@ export type TablesUpdate<
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-      Update: infer U
-    }
-    ? U
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
     : never
-  : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
@@ -803,8 +980,8 @@ export type Enums<
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-  : never
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
@@ -820,8 +997,8 @@ export type CompositeTypes<
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-  : never
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
 
 export const Constants = {
   public: {
