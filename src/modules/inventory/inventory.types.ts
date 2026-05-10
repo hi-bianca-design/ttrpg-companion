@@ -1,12 +1,10 @@
 import { Database } from '@/types/database.types'
-import { DBEquipment } from '@/modules/character/character.types'
+import { DBEquipment, CustomContentRef } from '@/modules/character/character.types'
 
 // Raw DB row types from generated types
 export type DBMagicItem    = Database['public']['Tables']['magic_items']['Row']
 export type DBCampaignItem = Database['public']['Tables']['campaign_items']['Row']
 export type DBInventoryRow = Database['public']['Tables']['character_inventory']['Row']
-
-type CustomContentRef = { id: string; name: string; properties: Record<string, unknown> }
 
 // A fully-joined inventory row (what getInventory returns)
 export type InventoryItem = DBInventoryRow & {

@@ -8,7 +8,7 @@ export type DBBackground = Database['public']['Tables']['backgrounds']['Row']
 export type DBSpell    = Database['public']['Tables']['spells']['Row']
 export type DBEquipment = Database['public']['Tables']['equipment']['Row']
 
-type CustomContentRef = { id: string; name: string; properties: Record<string, unknown> }
+export type CustomContentRef = { id: string; name: string; properties: Record<string, unknown> }
 
 export type CharacterWithRelations = DBCharacter & {
   class: DBClass | null
