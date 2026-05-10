@@ -106,5 +106,8 @@ describe('getCharacter', () => {
     expect(selectArg).toContain('custom_background')
     expect(selectArg).toContain('custom_equipment')
     expect(selectArg).toContain('character_inventory')
+    expect(selectArg).toContain('magic_item:magic_items(*)')
+    expect(selectArg).toContain('campaign_item:campaign_items(*)')
+    expect(selectArg).toContain('character_inventory_custom_content_id_fkey')
   })
 })

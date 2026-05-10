@@ -41,9 +41,13 @@ do $$
 begin
   if exists (
     select 1 from public.character_equipment
-    where equipment_id is null and custom_content_id is null
+    where
+      -- both null: violates "at least one" side of XOR
+      (equipment_id is null and custom_content_id is null)
+      -- both non-null: violates "at most one" side of XOR
+      or (equipment_id is not null and custom_content_id is not null)
   ) then
-    raise exception 'character_equipment has rows with both FKs null; clean up before migrating';
+    raise exception 'character_equipment has rows that violate the XOR constraint; clean up before migrating';
   end if;
 end $$;
 

@@ -4,6 +4,12 @@ import { Database, Json } from '@/types/database.types'
 // no runtime values cross the boundary, so Metro/Node never see a circular dependency.
 import { DBEquipment, CustomContentRef } from '@/modules/character/character.types'
 
+// Rarity values — mirrors the CHECK constraint in the campaign_items schema.
+// Use this instead of `string` so TypeScript catches invalid values at compile time.
+export type ItemRarity =
+  | 'Common' | 'Uncommon' | 'Rare' | 'Very Rare'
+  | 'Legendary' | 'Artifact' | 'Varies'
+
 // Raw DB row types from generated types
 export type DBMagicItem    = Database['public']['Tables']['magic_items']['Row']
 export type DBCampaignItem = Database['public']['Tables']['campaign_items']['Row']
@@ -41,7 +47,7 @@ export type UpdateInventoryItemInput = {
 export type CreateCampaignItemInput = {
   name:                 string
   item_type:            string
-  rarity?:              DBCampaignItem['rarity']
+  rarity?:              ItemRarity | null
   requires_attunement?: boolean
   attunement_condition?: string
   description?:         string
@@ -52,7 +58,7 @@ export type CreateCampaignItemInput = {
 export type UpdateCampaignItemInput = {
   name?:                string
   item_type?:           string
-  rarity?:              DBCampaignItem['rarity']
+  rarity?:              ItemRarity | null
   requires_attunement?: boolean
   attunement_condition?: string
   description?:         string

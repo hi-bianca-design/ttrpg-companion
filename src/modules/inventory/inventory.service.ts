@@ -31,6 +31,12 @@ export async function addInventoryItem(
   characterId: string,
   input: AddInventoryItemInput
 ): Promise<InventoryItem> {
+  const sourcesProvided = [
+    input.equipment_id, input.magic_item_id,
+    input.campaign_item_id, input.custom_content_id,
+  ].filter(Boolean).length
+  if (sourcesProvided !== 1) throw new Error('Exactly one item source must be provided')
+
   const { data, error } = await supabase
     .from('character_inventory')
     .insert({

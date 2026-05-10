@@ -109,6 +109,16 @@ describe('addInventoryItem', () => {
     )
   })
 
+  it('throws when zero sources provided', async () => {
+    await expect(addInventoryItem('char-1', {})).rejects.toThrow('Exactly one item source must be provided')
+  })
+
+  it('throws when multiple sources provided', async () => {
+    await expect(
+      addInventoryItem('char-1', { equipment_id: 'eq-1', magic_item_id: 'mi-1' })
+    ).rejects.toThrow('Exactly one item source must be provided')
+  })
+
   it('throws on error', async () => {
     mockSingle.mockResolvedValue({ data: null, error: { message: 'insert failed' } })
     mockSelect.mockReturnValue({ single: mockSingle })
