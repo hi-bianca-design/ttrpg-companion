@@ -44,6 +44,9 @@ describe('getInventory', () => {
     await getInventory('char-1')
     expect(supabase.from).toHaveBeenCalledWith('character_inventory')
     expect(mockSelect).toHaveBeenCalledWith(expect.stringContaining('equipment:equipment(*)'))
+    expect(mockSelect).toHaveBeenCalledWith(expect.stringContaining('magic_item:magic_items(*)'))
+    expect(mockSelect).toHaveBeenCalledWith(expect.stringContaining('campaign_item:campaign_items(*)'))
+    expect(mockSelect).toHaveBeenCalledWith(expect.stringContaining('character_inventory_custom_content_id_fkey'))
     expect(mockEq).toHaveBeenCalledWith('character_id', 'char-1')
     expect(mockOrder).toHaveBeenCalledWith('acquired_at', { ascending: true })
   })
@@ -92,6 +95,17 @@ describe('addInventoryItem', () => {
     await addInventoryItem('char-1', { campaign_item_id: 'ci-1' })
     expect(mockInsert).toHaveBeenCalledWith(
       expect.objectContaining({ campaign_item_id: 'ci-1' })
+    )
+  })
+
+  it('inserts with custom_content_id', async () => {
+    const created = { id: 'inv-4', character_id: 'char-1', custom_content_id: 'cc-1' }
+    mockSingle.mockResolvedValue({ data: created, error: null })
+    mockSelect.mockReturnValue({ single: mockSingle })
+
+    await addInventoryItem('char-1', { custom_content_id: 'cc-1' })
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({ custom_content_id: 'cc-1' })
     )
   })
 
