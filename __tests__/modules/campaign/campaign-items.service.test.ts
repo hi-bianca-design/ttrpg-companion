@@ -43,7 +43,9 @@ describe('getCampaignItems', () => {
   it('queries campaign_items filtered by campaign_id', async () => {
     await getCampaignItems('campaign-1')
     expect(supabase.from).toHaveBeenCalledWith('campaign_items')
+    expect(mockSelect).toHaveBeenCalledWith('*')
     expect(mockEq).toHaveBeenCalledWith('campaign_id', 'campaign-1')
+    expect(mockOrder).toHaveBeenCalledWith('created_at', { ascending: false })
   })
 
   it('throws on error', async () => {

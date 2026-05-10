@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { Database } from '@/types/database.types'
-import { DBCampaignItem, CreateCampaignItemInput } from '@/modules/inventory/inventory.types'
+import { DBCampaignItem, CreateCampaignItemInput, UpdateCampaignItemInput } from '@/modules/inventory/inventory.types'
 
 type CampaignItemInsert = Database['public']['Tables']['campaign_items']['Insert']
 type CampaignItemUpdate = Database['public']['Tables']['campaign_items']['Update']
@@ -41,11 +41,11 @@ export async function createCampaignItem(
 
 export async function updateCampaignItem(
   id: string,
-  updates: Partial<CreateCampaignItemInput>
+  updates: UpdateCampaignItemInput
 ): Promise<DBCampaignItem> {
   const { data, error } = await supabase
     .from('campaign_items')
-    .update(updates as CampaignItemUpdate)
+    .update(updates satisfies CampaignItemUpdate)
     .eq('id', id)
     .select()
     .single()

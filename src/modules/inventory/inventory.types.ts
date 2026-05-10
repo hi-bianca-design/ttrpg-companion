@@ -1,4 +1,4 @@
-import { Database } from '@/types/database.types'
+import { Database, Json } from '@/types/database.types'
 import { DBEquipment, CustomContentRef } from '@/modules/character/character.types'
 
 // Raw DB row types from generated types
@@ -43,4 +43,15 @@ export type CreateCampaignItemInput = {
   attunement_condition?: string
   description?:         string
   properties?:          Record<string, unknown>
+}
+
+// Fields that can be updated on a DM campaign item
+export type UpdateCampaignItemInput = {
+  name?:                string
+  item_type?:           string
+  rarity?:              DBCampaignItem['rarity']
+  requires_attunement?: boolean
+  attunement_condition?: string
+  description?:         string
+  properties?:          Json
 }
