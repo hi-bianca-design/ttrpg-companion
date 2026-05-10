@@ -31,6 +31,9 @@ create policy "Users manage own character inventory"
   on public.character_inventory for all
   using (
     exists (select 1 from public.characters where id = character_id and user_id = auth.uid())
+  )
+  with check (
+    exists (select 1 from public.characters where id = character_id and user_id = auth.uid())
   );
 
 create policy "DMs can read campaign character inventory"

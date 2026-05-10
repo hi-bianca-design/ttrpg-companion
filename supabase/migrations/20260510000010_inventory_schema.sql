@@ -2,7 +2,7 @@
 create table public.campaign_items (
   id               uuid primary key default gen_random_uuid(),
   campaign_id      uuid references public.campaigns on delete cascade not null,
-  created_by       uuid references public.users not null,
+  created_by       uuid references public.users on delete restrict not null,
   name             text not null,
   item_type        text not null,
   rarity           text check (rarity in ('Common','Uncommon','Rare','Very Rare','Legendary','Artifact','Varies')),
@@ -28,13 +28,24 @@ create table public.character_inventory (
   is_attuned        boolean not null default false,
   notes             text not null default '',
   acquired_at       timestamptz default now(),
-  check (
+  constraint exactly_one_item_source check (
     (equipment_id      is not null)::int +
     (magic_item_id     is not null)::int +
     (campaign_item_id  is not null)::int +
     (custom_content_id is not null)::int = 1
   )
 );
+
+-- Pre-flight guard: ensure no rows violate the XOR constraint before migrating.
+do $$
+begin
+  if exists (
+    select 1 from public.character_equipment
+    where equipment_id is null and custom_content_id is null
+  ) then
+    raise exception 'character_equipment has rows with both FKs null; clean up before migrating';
+  end if;
+end $$;
 
 -- Migrate existing character_equipment rows into character_inventory.
 -- character_equipment guarantees exactly one of (equipment_id, custom_content_id) is set,
@@ -47,7 +58,6 @@ from public.character_equipment;
 
 -- Indexes
 create index on public.campaign_items (campaign_id);
-create index on public.campaign_items (created_by);
 create index on public.character_inventory (character_id);
 create index on public.character_inventory (equipment_id)      where equipment_id      is not null;
 create index on public.character_inventory (magic_item_id)     where magic_item_id     is not null;
