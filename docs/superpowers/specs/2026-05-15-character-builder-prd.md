@@ -236,14 +236,21 @@ Scrollable view with collapsible sections:
 
 ### Inventory Tab
 
-Scrollable list with collapsible sections:
-- *Equipped* — items currently equipped; each card shows name, type, weight, relevant stats (damage dice/type for weapons, AC for armor); tap to expand full details; toggle to unequip
-- *Backpack* — unequipped items; same card format; toggle to equip
-- *Custom Items* — manually added items with a "Custom" badge; editable and deletable
-- *Currency* — GP, SP, CP, EP, PP with inline increment/decrement controls
-- *Encumbrance bar* — pinned to the top of the Inventory tab; shows current carry weight vs. capacity (STR × 15); color-coded green / yellow / red as the limit approaches
+The **encumbrance bar** is pinned to the top of the Inventory tab (current carry weight vs. STR × 15 capacity; color-coded green / yellow / red).
 
-Adding items opens a bottom sheet: search SRD equipment or create a custom item inline.
+Two **sub-tabs**: **Equipped** and **Backpack**.
+
+Items are categorised into four types across both sub-tabs: **Equipment** (weapons, armor, gear), **Consumables** (potions, scrolls, ammunition), **Effect** (items with ongoing effects), and **Other**. Each sub-tab shows items grouped by category with collapsible category headers.
+
+**Equipped sub-tab** — items currently equipped. Each card shows name, category, weight, and relevant stats (damage dice/type for weapons, AC for armor). Tap to expand full details. Toggle to unequip (moves item to Backpack).
+
+**Backpack sub-tab** — unequipped items. Same card format. Toggle to equip (moves item to Equipped). Custom items show a "Custom" badge and can be edited or deleted. Items received from other players during a session appear here automatically on confirmed transfer.
+
+**Currency** — GP, SP, CP, EP, PP with inline increment/decrement controls, shown at the bottom of the Backpack sub-tab.
+
+**Adding items** opens a bottom sheet with two options:
+- *Search SRD database* — searchable list of all SRD items categorised by type; selecting one adds it to the Backpack with pre-filled stats
+- *Create custom item* — manual entry with name, category, weight, and description fields; saved with a "Custom" badge
 
 ### Campaign Tab
 

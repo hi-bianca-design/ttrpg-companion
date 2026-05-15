@@ -70,6 +70,9 @@ The Session Console is the live session experience for both players and the DM. 
 - **DM disconnection handling** — session stays active; players can update their own stats and apply healing to allies; session-level actions unavailable until DM reconnects
   - *AC:* Players retain full self-edit and ally healing access during DM disconnection; initiative advancement and rest controls are unavailable
 
+- **Item gifting** — player selects "Give Item" from an ally's action menu; bottom sheet shows their Backpack (equipped items excluded); receiver gets a confirmation modal; transfer applies on confirm; held pending if receiver is disconnected
+  - *AC:* Equipped items do not appear in the Give Item sheet; items transfer correctly between inventories on confirmation; pending transfers are held and shown on receiver reconnect; session end cancels pending transfers
+
 ### P1 — Nice to Have
 
 - **Mid-session late arrival flow** — DM prompt when a player joins during an active session; DM can admit now or defer to next session
@@ -132,6 +135,14 @@ All subscribers receive updates within ~100ms. On reconnect, the client re-fetch
 - 3 successes: character is stabilised; death tracker clears; HP stays at 0
 - 3 failures: character is dead; player controls lock
 
+**Item gifting:**
+- During a session, tapping an ally's party member card in the Campaign tab opens an action menu with "Heal" and "Give Item"
+- Tapping "Give Item" opens a bottom sheet showing the player's own Backpack; equipped items are not giftable — the player must unequip first
+- The player selects one or more items and taps "Give"
+- The receiving player sees a confirmation modal: *"You have received [item name]"* or *"You have received X items"* with a recap of each item; they must tap "Confirm" to accept
+- On confirmation, items move from the giver's Backpack to the receiver's Backpack and sync via Supabase Realtime
+- If the receiving player is disconnected, the transfer is held pending until they reconnect and confirm
+
 **Spell slots:**
 - Tracked live via Supabase Realtime; tap-to-expend per slot level in the Actions tab
 - Restore on rest per class rules
@@ -181,3 +192,7 @@ The DM's campaign page in session mode, reorganised into three sections:
 | NPC with HP tracking reduced to 0 | No automatic death state for NPCs; DM removes them from the initiative tracker manually |
 | Rest confirmation not responded to by a player | After a timeout, the default rest outcome is applied (full HP restored on long rest; no Hit Dice spent on short rest) |
 | Session ended while a player is disconnected | Session ends normally; disconnected player sees session-ended state on reconnect |
+| Player attempts to give an equipped item | "Give Item" sheet only shows Backpack items; equipped items are not listed; player must unequip first |
+| Receiving player is disconnected when gift is sent | Transfer held as pending; confirmation modal appears when receiver reconnects |
+| Session ends while a gift transfer is pending | Pending transfer is cancelled; items remain in the giver's inventory |
+| Player gives all copies of a stacked item (e.g. 10 arrows) | Quantity selector appears; player chooses how many to give; remaining quantity stays in their Backpack |
