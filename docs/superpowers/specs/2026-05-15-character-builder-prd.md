@@ -106,7 +106,7 @@ Explicitly out of scope for v1 but should be kept in mind during architecture de
 | Question | Owner | Blocking? |
 |---|---|---|
 | How is XP awarded — does the player manually enter it, or can the DM push XP from the Session Console? | Product | No — player manual entry ships first; DM award is P2 |
-| Can a character belong to more than one campaign simultaneously? | Product | Yes — needs a decision before Campaign tab design is finalized |
+| Can a character belong to more than one campaign simultaneously? | Product | ~~Yes~~ **Resolved: one campaign at a time.** Campaign tab shows a single active campaign; joining a new campaign requires leaving the current one. |
 | Is there a "delete character" action, and what are the guards? (e.g. block deletion if character is in an active session) | Product | No — but must be resolved before character list screen is built |
 | What happens to a Draft character that is never finalized — is there a cleanup or expiry mechanism? | Product | No |
 | How are custom content class features surfaced in the Actions tab — does the user manually enter them, or does the custom content system populate them? | Engineering | No — needed before Actions tab implementation |
