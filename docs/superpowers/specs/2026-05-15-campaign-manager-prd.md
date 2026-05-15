@@ -102,7 +102,7 @@ The Campaign Manager covers everything a DM needs to run a campaign: creating an
 | Question | Owner | Blocking? |
 |---|---|---|
 | Can a DM regenerate the invite link mid-session without disrupting active players? | Engineering | No |
-| Is there a maximum party size per campaign? | Product | No — but worth deciding before launch |
+| Is there a maximum party size per campaign? | Product | **Resolved: maximum 6 players per campaign.** |
 | Can a player be in multiple campaigns (with different characters)? | Product | **Resolved in Character Builder PRD:** one campaign per character; a player can have multiple characters each in different campaigns |
 | What happens to the campaign if the DM deletes their account? | Product | **Resolved in Auth PRD:** campaign persists with DM shown as "[Deleted User]"; no automatic DM transfer in v1 |
 | Should the DM be able to lock the initiative order (prevent reordering mid-combat)? | Product | No |
