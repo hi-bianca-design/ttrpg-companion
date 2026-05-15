@@ -15,7 +15,6 @@ The Character Builder covers three connected flows: the **Creation Wizard** (gui
 
 These are explicitly out of scope for v1:
 
-- **Multiclassing** — combining two classes on a single character; too complex to model correctly in v1 wizard and sheet logic
 - **Dice roller** — attack and spell rolls show formulas only; no in-app rolling mechanic in the Character Builder (may be added later in Session Console)
 - **Mid-session leveling** — the Level Up flow is disabled during an active session; XP can be edited but leveling up requires leaving or ending the session
 - **Character sharing / export** — characters are private to the owning user; no PDF export, share link, or transfer to another account
@@ -33,6 +32,7 @@ These are explicitly out of scope for v1:
 - As a player mid-wizard who gets interrupted, I want my progress auto-saved as a draft so that I can resume exactly where I left off without losing any choices
 - As a player who changes their mind about their class, I want a clear warning of exactly what will be cleared before confirming so that I don't accidentally lose choices I want to keep
 - As a player using homebrew rules, I want to finalize my character even with incomplete required fields so that I'm not blocked by rules the app can't model
+- As a player multiclassing into a second class, I want to add a second class to my character and allocate levels between them so that my multiclass character is correctly built with features from both classes
 
 ### Player using the character sheet
 
@@ -76,6 +76,8 @@ These are required for the Character Builder to be usable. Nothing ships without
   - *AC:* Level Up prompt appears when XP crosses threshold; all level-appropriate choices are shown; level increments correctly on completion
 - **Post-creation editing** — Edit button on character sheet reopens wizard in edit mode with pre-filled values
   - *AC:* All existing values are pre-filled; saving updates the character in place with no new draft created
+- **Multiclassing** — Step 1 supports adding a second (or third) class via "Add another class"; the user picks the additional class and allocates levels between classes; combined spell slots calculated automatically from the PHB multiclass table with user override allowed
+  - *AC:* A character with Fighter 3 / Wizard 2 shows features and proficiencies from both classes; combined spell slots match the PHB multiclass table; overriding a slot count shows a soft warning; class features in Actions tab are correctly attributed per class
 
 ### P1 — Nice to Have
 
@@ -93,7 +95,6 @@ These significantly improve the experience but the core use case works without t
 
 Explicitly out of scope for v1 but should be kept in mind during architecture decisions.
 
-- **Multiclassing** — would require significant wizard and sheet logic changes; design for extensibility in the class data model
 - **Dice roller integration** — attack cards and spell cards should expose a formula interface that a future roller can hook into
 - **Character export (PDF)** — character sheet layout should be structured in a way that maps cleanly to a printable format
 - **Homebrew rules templates** — soft enforcement groundwork is already laid; future work would add structured rule overrides per character or campaign
@@ -137,13 +138,13 @@ Navigation is **fully non-destructive** — going back or jumping to a previous 
 
 **Rules enforcement is soft throughout.** Invalid or unmet choices (feat prerequisites, spell slot counts, proficiency requirements) remain visible and selectable but show an inline warning chip — e.g. *"Requires STR 13 · current: 10"*. No choices are blocked; the user can proceed with warnings present. This covers homebrew scenarios where standard rules don't apply.
 
-**Spells step** appears only when a spellcasting class is selected. It adapts per class: cantrip count, spells known vs. prepared distinction, and available spell list all reflect the chosen class and level.
+**Spells step** appears only when at least one spellcasting class is selected. It adapts per class: cantrip count, spells known vs. prepared distinction, and available spell list all reflect the chosen class and level. For multiclass characters with two spellcasting classes, combined spell slots are calculated automatically from the PHB multiclass table and shown with a per-class breakdown; individual slot counts can be overridden with a soft warning.
 
 ### Steps
 
 | Step | Content |
 |---|---|
-| 1 | Choose a Class — hit die, proficiencies, primary abilities; starting level selection |
+| 1 | Choose a Class — hit die, proficiencies, primary abilities; starting level selection; optional "Add another class" for multiclassing with level allocation between classes |
 | 2 | Determine Origin — Background and Species; both affect ability scores |
 | 3 | Ability Scores — Standard Array / Point Buy / Roll; source breakdown per score |
 | 4 | Alignment & Personality — alignment, traits, ideals, bonds, flaws |
@@ -303,3 +304,6 @@ All choices follow the same soft-enforce rules as the creation wizard. The Level
 | XP jumps multiple level thresholds | Player chooses one-at-a-time or all-at-once level-up |
 | Level Up triggered during active session | Level Up button disabled; available after session ends |
 | Illustration URL invalid | Inline error shown immediately; upload blocked until valid URL provided |
+| Second class added via multiclassing | Level allocation UI appears in Step 1; spells step shows combined slot table if both classes cast spells |
+| Multiclass spell slot count overridden | Soft warning shown; override is preserved and not blocked |
+| Second class removed after multiclass choices made | Cascade warning lists what will clear (second class features, reallocated levels); confirm required |
