@@ -11,6 +11,109 @@ The Character Builder covers three connected flows: the **Creation Wizard** (gui
 
 ---
 
+## Non-Goals
+
+These are explicitly out of scope for v1:
+
+- **Multiclassing** — combining two classes on a single character; too complex to model correctly in v1 wizard and sheet logic
+- **Dice roller** — attack and spell rolls show formulas only; no in-app rolling mechanic in the Character Builder (may be added later in Session Console)
+- **Mid-session leveling** — the Level Up flow is disabled during an active session; XP can be edited but leveling up requires leaving or ending the session
+- **Character sharing / export** — characters are private to the owning user; no PDF export, share link, or transfer to another account
+- **Offline mode** — all reads and writes require a network connection; no local-first sync
+- **Homebrew rules templates** — the app accommodates homebrew through soft enforcement and "Create Anyway" affordances, but does not provide structured tools for defining or sharing house rules
+
+---
+
+## User Stories
+
+### Player creating a character
+
+- As a new player, I want a guided step-by-step wizard so that I can create my first character without needing to know the rules in advance
+- As a player starting a campaign above level 1, I want to set my starting level at the beginning of the wizard so that all level-appropriate choices (subclass, ASI, spells) are surfaced inline
+- As a player mid-wizard who gets interrupted, I want my progress auto-saved as a draft so that I can resume exactly where I left off without losing any choices
+- As a player who changes their mind about their class, I want a clear warning of exactly what will be cleared before confirming so that I don't accidentally lose choices I want to keep
+- As a player using homebrew rules, I want to finalize my character even with incomplete required fields so that I'm not blocked by rules the app can't model
+
+### Player using the character sheet
+
+- As a player in a session, I want my HP, conditions, and spell slots in a dedicated Combat view so that I can find and update them instantly without scrolling past reference information
+- As a player outside a session, I want to edit my HP with a warning that it won't sync so that I can manage solo play or corrections without confusion
+- As a player, I want my collapsible section states to persist across tab switches so that I don't have to re-open the same sections every time I navigate
+- As a player, I want to see my party members' basic stats and conditions from my character sheet so that I have party context without switching to a separate screen
+- As a player, I want to write private and shared notes on my campaign tab so that I can track personal reminders and share session recaps with my party
+
+### Player leveling up
+
+- As a player whose XP has hit the next level threshold, I want a contextual prompt to level up so that I don't miss the milestone
+- As a player who skips several levels at once, I want to choose between leveling up one at a time or all at once so that I can review each level's choices at my own pace
+- As a player increasing HP on level-up, I want to either roll an animated die or take the fixed average so that leveling up feels rewarding
+
+---
+
+## Requirements
+
+### P0 — Must Have
+
+These are required for the Character Builder to be usable. Nothing ships without these.
+
+- **7-step creation wizard** with all steps per PHB 2024 order, starting level selection in Step 1, and level-divided inline expansion for higher starting levels
+  - *AC:* All 7 steps render with correct required fields per class and level; spells step appears only for spellcasting classes
+- **Non-destructive navigation** — progress bar with 3 completion states (not started / in progress / complete); slide-out step drawer; tapping any step jumps without clearing data
+  - *AC:* Navigating between steps never clears existing choices; progress bar updates correctly as fields are filled
+- **Auto-save as draft** — wizard progress persists continuously; drafts appear in character list; resuming reopens at last visited step
+  - *AC:* Killing the app mid-wizard and reopening resumes correctly with all prior choices intact
+- **Cascade warnings** — changing class or ability score method shows a bottom sheet naming what will be cleared; requires explicit confirm before clearing
+  - *AC:* No data is cleared without a confirmation tap; dismissing the sheet leaves all data intact
+- **Soft rules enforcement** — invalid choices show inline warning chips but are never blocked
+  - *AC:* A feat with unmet prerequisites can be selected; the warning chip is visible but does not prevent selection
+- **Character sheet — 4 tabs** (Character, Actions, Inventory, Campaign) with correct content per section
+  - *AC:* All tab content renders accurately from character data; tabs are navigable without data loss
+- **In-session / out-of-session modes** — HP controls accessible in both modes; out-of-session edit requires confirmation warning
+  - *AC:* Out-of-session HP change shows warning sheet; change only applies after confirm
+- **Session restore on entry** — banner on session start; HP and conditions restored from last saved values for all party members
+  - *AC:* Entering a session shows the restore banner and all party member HP/conditions match last session values
+- **Level-Up flow** — triggered by XP threshold; surfaces HP increase (roll or average), class features, subclass, ASI/feat, spells per level
+  - *AC:* Level Up prompt appears when XP crosses threshold; all level-appropriate choices are shown; level increments correctly on completion
+- **Post-creation editing** — Edit button on character sheet reopens wizard in edit mode with pre-filled values
+  - *AC:* All existing values are pre-filled; saving updates the character in place with no new draft created
+
+### P1 — Nice to Have
+
+These significantly improve the experience but the core use case works without them.
+
+- **Live preview bottom sheet** — sticky bottom sheet in wizard shows relevant stats for current step; expandable to full character preview
+- **Animated dice roll** on HP increase during level-up
+- **Character illustrations** — profile view and full body view upload slots in Step 6; URL validation; full-screen modal on character sheet
+- **Death save tracker** — replaces HP bar at 0 HP in-session; syncs between player and DM
+- **Encumbrance bar** — carry weight vs. capacity, color-coded, pinned to Inventory tab
+- **Multi-level jump choice** — prompt when XP skips multiple thresholds; one-at-a-time or all-at-once options
+- **Collapsible section persistence** — collapse state saved across tab switches and app backgrounding
+
+### P2 — Future Considerations
+
+Explicitly out of scope for v1 but should be kept in mind during architecture decisions.
+
+- **Multiclassing** — would require significant wizard and sheet logic changes; design for extensibility in the class data model
+- **Dice roller integration** — attack cards and spell cards should expose a formula interface that a future roller can hook into
+- **Character export (PDF)** — character sheet layout should be structured in a way that maps cleanly to a printable format
+- **Homebrew rules templates** — soft enforcement groundwork is already laid; future work would add structured rule overrides per character or campaign
+- **XP awarded by DM in-session** — currently XP is player-edited; a future version could let the DM award XP directly from the Session Console
+
+---
+
+## Open Questions
+
+| Question | Owner | Blocking? |
+|---|---|---|
+| How is XP awarded — does the player manually enter it, or can the DM push XP from the Session Console? | Product | No — player manual entry ships first; DM award is P2 |
+| Can a character belong to more than one campaign simultaneously? | Product | Yes — needs a decision before Campaign tab design is finalized |
+| Is there a "delete character" action, and what are the guards? (e.g. block deletion if character is in an active session) | Product | No — but must be resolved before character list screen is built |
+| What happens to a Draft character that is never finalized — is there a cleanup or expiry mechanism? | Product | No |
+| How are custom content class features surfaced in the Actions tab — does the user manually enter them, or does the custom content system populate them? | Engineering | No — needed before Actions tab implementation |
+| What is the maximum number of notes per character/campaign, if any? | Engineering | No |
+
+---
+
 ## Creation Wizard
 
 ### Navigation & Structure
