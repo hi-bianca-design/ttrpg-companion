@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '@/lib/query-client'
 import type { NewCharacter, ResourceValue } from '@/systems/types'
 import {
@@ -70,9 +70,18 @@ export function useUpdateItem(characterId: string, options: ItemMutationOptions 
   const qc = useQueryClient()
   const onErrorRef = useLatest(options.onError)
   return useMutation({
+    mutationKey: ['character-items', characterId],
     onError: (e) => onErrorRef.current?.(e),
     mutationFn: ({ itemId, patch }: { itemId: string; patch: ItemPatch }) => updateItem(itemId, patch),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.character(characterId) }),
+  })
+}
+
+/** Ids of items with an in-flight update, so controls can block overlapping edits of one item. */
+export function usePendingItemIds(characterId: string): string[] {
+  return useMutationState({
+    filters: { mutationKey: ['character-items', characterId], status: 'pending' },
+    select: (m) => (m.state.variables as { itemId: string }).itemId,
   })
 }
 

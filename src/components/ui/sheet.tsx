@@ -1,5 +1,5 @@
 import * as DialogPrimitive from '@rn-primitives/dialog'
-import { View } from 'react-native'
+import { ScrollView, useWindowDimensions, View } from 'react-native'
 import { cn } from '@/lib/utils'
 
 // Bottom sheet built on the Dialog primitive (portal + overlay + focus handling).
@@ -40,4 +40,17 @@ function SheetTitle({
   return <DialogPrimitive.Title className={cn('font-display text-heading text-foreground', className)} {...props} />
 }
 
-export { Sheet, SheetTrigger, SheetClose, SheetContent, SheetHeader, SheetTitle }
+// Scrollable body capped to a share of the window: the dialog wrapper has no definite height
+// (on web it is an unsized div), so a percentage or flex-1 height cannot bound it.
+const BODY_MAX_SHARE = 0.4
+
+function SheetBody({ className, children }: { className?: string; children: React.ReactNode }) {
+  const { height } = useWindowDimensions()
+  return (
+    <ScrollView style={{ maxHeight: height * BODY_MAX_SHARE }} contentContainerClassName={cn('gap-2', className)}>
+      {children}
+    </ScrollView>
+  )
+}
+
+export { Sheet, SheetBody, SheetTrigger, SheetClose, SheetContent, SheetHeader, SheetTitle }

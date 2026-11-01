@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Text } from '@/components/ui/text'
 import type { ItemWithContent } from '@/features/characters/characters.api'
-import { useCharacter, useRemoveItem, useUpdateItem } from '@/features/characters/characters.queries'
+import { useCharacter, usePendingItemIds, useRemoveItem, useUpdateItem } from '@/features/characters/characters.queries'
 import { AddItemSheet } from '@/features/characters/sheet/AddItemSheet'
 import { filterItems, InventoryList, type InventorySegment } from '@/features/characters/sheet/InventoryList'
 import { getSystem } from '@/systems/registry'
@@ -31,6 +31,7 @@ export default function InventoryTab() {
   const onError = (e: unknown) => setSaveError(e instanceof Error ? e.message : 'Couldn’t save. Try again.')
   const update = useUpdateItem(id, { onError })
   const remove = useRemoveItem(id, { onError })
+  const pendingIds = usePendingItemIds(id)
 
   if (isLoading) {
     return (
@@ -101,11 +102,12 @@ export default function InventoryTab() {
           items={shown}
           allItems={character.items}
           maxAttuned={system.rules.maxAttuned}
+          pendingIds={pendingIds}
           onChange={(itemId, patch) => { setSaveError(null); update.mutate({ itemId, patch }) }}
           onRemove={setRemoving}
         />
       )}
-      <AddItemSheet open={adding} onOpenChange={setAdding} characterId={character.id} systemId={character.system_id} onError={onError} />
+      <AddItemSheet open={adding} onOpenChange={setAdding} characterId={character.id} systemId={character.system_id} />
       <Dialog open={removing !== null} onOpenChange={(o) => { if (!o) setRemoving(null) }}>
         <DialogContent>
           <DialogHeader>

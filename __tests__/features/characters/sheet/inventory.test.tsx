@@ -1,7 +1,7 @@
 import '@testing-library/jest-native/extend-expect'
 import { PortalHost } from '@rn-primitives/portal'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react-native'
 import InventoryTab from '../../../../app/(app)/characters/[id]/inventory'
 import type { CharacterFull } from '@/features/characters/characters.api'
 import * as charApi from '@/features/characters/characters.api'
@@ -141,4 +141,49 @@ test('a failed write shows a caption', async () => {
   setup(character([owned('a', 'Ring A', false)]))
   fireEvent.press(await screen.findByRole('button', { name: 'Equip Ring A' }))
   expect(await screen.findByText('Something went wrong. Please try again.')).toBeTruthy()
+})
+
+test('the picker renders every result, not just the first few', async () => {
+  const many = Array.from({ length: 12 }, (_, i) => row(`c-m${i}`, 'item', `Marble ${i}`))
+  ;(listContent as jest.Mock).mockImplementation(async ({ kind }: { kind: string }) => (kind === 'item' ? many : []))
+  setup(character([]))
+  fireEvent.press(await screen.findByRole('button', { name: 'Add item' }))
+  expect(await screen.findByRole('button', { name: 'Marble 11' })).toBeTruthy()
+  expect(screen.getAllByRole('button', { name: /^Marble / })).toHaveLength(12)
+})
+
+test('a failed add shows the error inside the sheet and keeps it open', async () => {
+  ;(charApi.addItem as jest.Mock).mockRejectedValue(new Error('Could not add that item.'))
+  setup(character([]))
+  fireEvent.press(await screen.findByRole('button', { name: 'Add item' }))
+  fireEvent.press(await screen.findByRole('button', { name: 'Rope' }))
+  fireEvent.press(screen.getByRole('button', { name: 'Add to inventory' }))
+  // The caption must live in the same container as the primary button (the sheet), not on the screen behind it.
+  const caption = await screen.findByText('Could not add that item.')
+  let box = caption.parent
+  while (box && !within(box).queryByRole('button', { name: 'Add to inventory' })) box = box.parent
+  expect(box).toBeTruthy()
+  expect(within(box!).queryByText('Mira')).toBeNull()
+})
+
+test('a failed remove shows a caption', async () => {
+  ;(charApi.removeItem as jest.Mock).mockRejectedValue(new Error('Could not remove that item.'))
+  setup(character([owned('a', 'Ring A', false)]))
+  fireEvent.press(await screen.findByRole('button', { name: 'Remove Ring A' }))
+  await screen.findByText('Remove item?')
+  fireEvent.press(screen.getAllByRole('button', { name: 'Remove' }).at(-1)!)
+  expect(await screen.findByText('Could not remove that item.')).toBeTruthy()
+})
+
+test('a second quantity tap is blocked while the first write is pending (no lost increments)', async () => {
+  let resolve!: () => void
+  ;(charApi.updateItem as jest.Mock).mockImplementation(() => new Promise<void>((r) => { resolve = r }))
+  setup(character([owned('a', 'Ring A', false)]))
+  const plus = await screen.findByRole('button', { name: 'Increase Ring A quantity' })
+  fireEvent.press(plus)
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Increase Ring A quantity' })).toBeDisabled())
+  fireEvent.press(screen.getByRole('button', { name: 'Increase Ring A quantity' }))
+  expect(charApi.updateItem).toHaveBeenCalledTimes(1)
+  expect(charApi.updateItem).toHaveBeenCalledWith('a', { quantity: 2 })
+  resolve()
 })

@@ -37,12 +37,14 @@ type InventoryListProps = {
   allItems: ItemWithContent[]
   /** Attunement cap from the system; undefined = no limit. */
   maxAttuned?: number
+  /** Items whose update is in flight; their quantity stepper is blocked so taps can't overwrite each other. */
+  pendingIds?: string[]
   onChange: (itemId: string, patch: ItemPatch) => void
   onRemove: (item: ItemWithContent) => void
 }
 
 /** One card per item with quantity stepper, equip / attune toggles and remove. */
-export function InventoryList({ items, allItems, maxAttuned, onChange, onRemove }: InventoryListProps) {
+export function InventoryList({ items, allItems, maxAttuned, pendingIds = [], onChange, onRemove }: InventoryListProps) {
   const { colorScheme } = useColorScheme()
   const iconColor = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light'].foreground
   const attunedCount = allItems.filter((i) => i.attuned).length
@@ -63,6 +65,7 @@ export function InventoryList({ items, allItems, maxAttuned, onChange, onRemove 
           ...(item.equipped ? ['Equipped'] : []),
           ...(item.attuned ? ['Attuned'] : []),
         ]
+        const saving = pendingIds.includes(item.id)
         const blocked = !item.attuned && atLimit
         return (
           <View key={item.id} className="gap-2">
@@ -73,7 +76,7 @@ export function InventoryList({ items, allItems, maxAttuned, onChange, onRemove 
                   size="icon"
                   variant="outline"
                   accessibilityLabel={`Decrease ${name} quantity`}
-                  disabled={item.quantity <= 1}
+                  disabled={saving || item.quantity <= 1}
                   onPress={() => onChange(item.id, { quantity: item.quantity - 1 })}
                 >
                   <Minus size={16} color={iconColor} />
@@ -83,7 +86,7 @@ export function InventoryList({ items, allItems, maxAttuned, onChange, onRemove 
                   size="icon"
                   variant="outline"
                   accessibilityLabel={`Increase ${name} quantity`}
-                  disabled={item.quantity >= MAX_QUANTITY}
+                  disabled={saving || item.quantity >= MAX_QUANTITY}
                   onPress={() => onChange(item.id, { quantity: item.quantity + 1 })}
                 >
                   <Plus size={16} color={iconColor} />
