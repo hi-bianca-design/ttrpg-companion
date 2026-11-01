@@ -18,7 +18,7 @@ const SPACING_STEPS = new Set(['0', '1', '2', '3', '4', '6', '8', '11'])
 const HEX = /#[0-9a-fA-F]{3,8}\b/
 const RGB = /rgba?\(/
 const STYLE_OPEN = /style=\{\{/
-const STYLE_PROPS = /\b(color|backgroundColor|fontSize|padding|margin|gap|borderRadius)\s*:/
+const STYLE_PROPS = /\b(color|backgroundColor|fontSize|padding\w*|margin\w*|\w*[gG]ap|border\w*Radius)\s*:/
 const ARBITRARY = /-\[/
 const SPACING_UTILS = [
   'px', 'py', 'pt', 'pb', 'pl', 'pr', 'ps', 'pe', 'p',
