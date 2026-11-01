@@ -12,3 +12,8 @@ test('no gluestack scales or safelist', () => {
   expect(config.safelist).toBeUndefined()
   expect(JSON.stringify(config.theme)).not.toContain('--color-typography')
 })
+test('label colour is label-foreground (text-label stays the font-size role)', () => {
+  const colors = config.theme.extend.colors
+  expect(colors['label-foreground']).toBeDefined()
+  expect(colors.label).toBeUndefined()
+})

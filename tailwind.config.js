@@ -52,7 +52,7 @@ module.exports = {
         foreground: token('foreground'),
         card: { DEFAULT: token('card'), foreground: token('card-foreground') },
         muted: { DEFAULT: token('muted'), foreground: token('muted-foreground') },
-        label: token('label'),
+        'label-foreground': token('label-foreground'),
         border: token('border'),
         rule: token('rule'),
         input: token('input'),

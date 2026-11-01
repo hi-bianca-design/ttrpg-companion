@@ -17,10 +17,8 @@ SplashScreen.preventAutoHideAsync()
 // Theme follows the OS colour scheme.
 colorScheme.set('system')
 
-// Enforce minimum font size of 12px — prevent system accessibility scaling from
-// shrinking text below design spec. maxFontSizeMultiplier=2 still allows enlarging.
-// Cap system font scaling at 2× — smallest text (text-xs = 12px) stays readable,
-// and we never shrink below design spec regardless of system accessibility settings.
+// Cap system font scaling at 2x so layouts hold; the smallest type role (label, 11px)
+// is never scaled below spec because maxFontSizeMultiplier only limits enlarging.
 if (!Text.defaultProps) Text.defaultProps = {}
 Text.defaultProps.maxFontSizeMultiplier = 2
 

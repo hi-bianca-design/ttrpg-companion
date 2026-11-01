@@ -14,14 +14,14 @@
     --muted: #F0EAE0;
     /* spec value #7A6F5E fails AA on card (4.12:1); darkened to #726755 (4.63:1 on card) */
     --muted-foreground: #726755;
-    --label: #9B8F7C;
+    --label-foreground: #736858;
     --border: rgba(63, 122, 84, 0.16);
     --rule: #E5DDD0;
     --input: #E9E1D3;
     --ring: #3F7A54;
     --primary: #3F7A54;
     --primary-foreground: #FBF8F3;
-    --accent-foreground: #3F7A54;
+    --accent-foreground: #3C7551;
     --highlight: #E8B547;
     --highlight-foreground: #1E1A12;
     --destructive: #D96A47;
@@ -41,13 +41,13 @@
     --card-foreground: #F5E4C3;
     --muted: rgba(245, 228, 195, 0.06);
     --muted-foreground: #A9BFB4;
-    --label: #8FB3A6;
+    --label-foreground: #8FB3A6;
     --border: rgba(245, 228, 195, 0.10);
     --rule: rgba(245, 228, 195, 0.14);
     --input: rgba(245, 228, 195, 0.10);
     --ring: #5B9268;
     --primary: #5B9268;
-    --primary-foreground: #112D28;
+    --primary-foreground: #0D221E;
     --accent-foreground: #B5C995;
     --highlight: #ECC15B;
     --highlight-foreground: #1E1A12;
