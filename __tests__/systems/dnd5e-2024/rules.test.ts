@@ -11,7 +11,7 @@ import {
 } from '@/systems/dnd5e-2024/rules'
 import { dnd5eBuilder } from '@/systems/dnd5e-2024/builder'
 import { getSystem, SYSTEMS } from '@/systems/registry'
-import type { CharacterRecord, PickRecord, SlotsValue } from '@/systems/types'
+import type { CharacterRecord, PickRecord, SlotsValue, SystemId } from '@/systems/types'
 
 // ── Ported from __tests__/modules/character/character.utils.test.ts ──
 
@@ -220,7 +220,7 @@ test('AC: heavy armor ignores DEX; unequipped armor is ignored', () => {
 test('registry returns the D&D module and throws on unknown ids', () => {
   expect(getSystem('dnd5e-2024').id).toBe('dnd5e-2024')
   expect(SYSTEMS.map((s) => s.id)).toContain('dnd5e-2024')
-  expect(() => getSystem('daggerheart')).toThrow('Unknown game system: daggerheart')
+  expect(() => getSystem('nope' as SystemId)).toThrow('Unknown game system: nope')
 })
 
 test('definition values', () => {
