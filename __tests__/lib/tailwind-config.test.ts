@@ -20,3 +20,8 @@ test('label colour is label-foreground (text-label stays the font-size role)', (
 test('overlay colour token exists', () => {
   expect(config.theme.extend.colors.overlay).toBe('var(--overlay)')
 })
+test.each(['sky', 'plum', 'sage', 'ochre'])('resource-%s has a glow token', (tint) => {
+  const c = config.theme.extend.colors[`resource-${tint}`]
+  expect(c.DEFAULT).toBe(`var(--resource-${tint})`)
+  expect(c.glow).toBe(`var(--resource-${tint}-glow)`)
+})

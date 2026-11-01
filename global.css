@@ -31,6 +31,9 @@
     --resource-plum: #8B4A5E;
     --resource-sage: #7A9A55;
     --resource-ochre: #E8B547;
+    --resource-plum-glow: rgba(139, 74, 94, 0.55);
+    --resource-sage-glow: rgba(122, 154, 85, 0.55);
+    --resource-ochre-glow: rgba(232, 181, 71, 0.55);
     --overlay: rgba(14, 12, 8, 0.6);
   }
 
@@ -59,6 +62,9 @@
     --resource-plum: #D79AAE;
     --resource-sage: #B5C995;
     --resource-ochre: #ECC15B;
+    --resource-plum-glow: rgba(215, 154, 174, 0.7);
+    --resource-sage-glow: rgba(181, 201, 149, 0.7);
+    --resource-ochre-glow: rgba(236, 193, 91, 0.7);
     --overlay: rgba(0, 0, 0, 0.6);
   }
 }

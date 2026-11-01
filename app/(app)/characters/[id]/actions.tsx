@@ -4,7 +4,7 @@ import { useLocalSearchParams } from 'expo-router'
 import { getCharacter } from '@/modules/character/character.service'
 import { CharacterWithRelations } from '@/modules/character/character.types'
 import { getAbilityModifier, formatModifier, getProficiencyBonus } from '@/modules/character/character.utils'
-import { CollapsibleSection } from '@/components/ui/CollapsibleSection'
+import { SectionHeader } from '@/components/game/SectionHeader'
 
 const STANDARD_ACTIONS = [
   { name: 'Attack',    description: 'Make one melee or ranged attack.' },
@@ -57,7 +57,7 @@ export default function ActionsTab() {
   return (
     <ScrollView className="flex-1 bg-legacy-base" contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
       {equippedWeapons.length > 0 && (
-        <CollapsibleSection sectionKey={`${id}:weapons`} title="WEAPONS">
+        <SectionHeader collapsible id={`${id}:weapons`} title="WEAPONS">
           {equippedWeapons.map((w) => {
             const attackBonus = profBonus + Math.max(strMod, dexMod)
             const name = w.equipment?.name ?? w.custom_item?.name ?? 'Weapon'
@@ -68,20 +68,20 @@ export default function ActionsTab() {
               </View>
             )
           })}
-        </CollapsibleSection>
+        </SectionHeader>
       )}
 
-      <CollapsibleSection sectionKey={`${id}:standard-actions`} title="ACTIONS">
+      <SectionHeader collapsible id={`${id}:standard-actions`} title="ACTIONS">
         {STANDARD_ACTIONS.map((action) => (
           <View key={action.name} className="bg-legacy-overlay rounded-xl p-3 mb-2">
             <Text className="text-legacy-text font-bold">{action.name}</Text>
             <Text className="text-legacy-muted text-sm mt-1">{action.description}</Text>
           </View>
         ))}
-      </CollapsibleSection>
+      </SectionHeader>
 
       {spellLevels.length > 0 && (
-        <CollapsibleSection sectionKey={`${id}:spells`} title="SPELLS">
+        <SectionHeader collapsible id={`${id}:spells`} title="SPELLS">
           {spellLevels.map((level) => (
             <View key={level} className="mb-3">
               <Text className="text-legacy-muted text-xs font-bold mb-2">
@@ -109,7 +109,7 @@ export default function ActionsTab() {
               })}
             </View>
           ))}
-        </CollapsibleSection>
+        </SectionHeader>
       )}
     </ScrollView>
   )

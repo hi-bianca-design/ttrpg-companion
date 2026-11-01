@@ -14,7 +14,7 @@ import {
 } from '@/modules/character/character.utils'
 import { HPBar } from '@/components/character/HPBar'
 import { ConditionBadge } from '@/components/character/ConditionBadge'
-import { CollapsibleSection } from '@/components/ui/CollapsibleSection'
+import { SectionHeader } from '@/components/game/SectionHeader'
 
 const CONDITIONS = [
   'Blinded', 'Charmed', 'Deafened', 'Exhausted', 'Frightened', 'Grappled',
@@ -150,7 +150,7 @@ export default function CharacterTab() {
       {/* Combat sub-tab */}
       {subTab === 'combat' && (
         <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>
-          <CollapsibleSection sectionKey={`${id}:hp`} title="HIT POINTS">
+          <SectionHeader collapsible id={`${id}:hp`} title="HIT POINTS">
             <HPBar
               hpCurrent={character.hp_current}
               hpMax={character.hp_max}
@@ -159,9 +159,9 @@ export default function CharacterTab() {
               onHeal={applyHeal}
               onSetTempHP={setTempHP}
             />
-          </CollapsibleSection>
+          </SectionHeader>
 
-          <CollapsibleSection sectionKey={`${id}:combat-stats`} title="COMBAT STATS">
+          <SectionHeader collapsible id={`${id}:combat-stats`} title="COMBAT STATS">
             <View className="flex-row gap-3">
               {[
                 { label: 'AC', value: character.armor_class },
@@ -175,9 +175,9 @@ export default function CharacterTab() {
                 </View>
               ))}
             </View>
-          </CollapsibleSection>
+          </SectionHeader>
 
-          <CollapsibleSection sectionKey={`${id}:conditions`} title="CONDITIONS">
+          <SectionHeader collapsible id={`${id}:conditions`} title="CONDITIONS">
             <View className="flex-row justify-end mb-2">
               <TouchableOpacity onPress={() => setConditionPickerOpen(true)}>
                 <Text className="text-legacy-primary text-xs">+ Add</Text>
@@ -192,7 +192,7 @@ export default function CharacterTab() {
                 ))}
               </View>
             )}
-          </CollapsibleSection>
+          </SectionHeader>
         </ScrollView>
       )}
 
@@ -234,14 +234,14 @@ export default function CharacterTab() {
             </View>
           )}
 
-          <CollapsibleSection sectionKey={`${id}:character-info`} title="CHARACTER INFO">
+          <SectionHeader collapsible id={`${id}:character-info`} title="CHARACTER INFO">
             <Text className="text-legacy-text"><Text className="text-legacy-muted">Class: </Text>{character.class?.name ?? '—'}</Text>
             <Text className="text-legacy-text mt-1"><Text className="text-legacy-muted">Species: </Text>{speciesName}</Text>
             <Text className="text-legacy-text mt-1"><Text className="text-legacy-muted">Background: </Text>{backgroundName}</Text>
             <Text className="text-legacy-text mt-1"><Text className="text-legacy-muted">Alignment: </Text>{character.alignment ?? '—'}</Text>
-          </CollapsibleSection>
+          </SectionHeader>
 
-          <CollapsibleSection sectionKey={`${id}:ability-scores`} title="ABILITY SCORES">
+          <SectionHeader collapsible id={`${id}:ability-scores`} title="ABILITY SCORES">
             <View className="flex-row flex-wrap gap-2">
               {ABILITY_KEYS.map((key) => {
                 const score = character[key]
@@ -255,9 +255,9 @@ export default function CharacterTab() {
                 )
               })}
             </View>
-          </CollapsibleSection>
+          </SectionHeader>
 
-          <CollapsibleSection sectionKey={`${id}:saving-throws`} title="SAVING THROWS">
+          <SectionHeader collapsible id={`${id}:saving-throws`} title="SAVING THROWS">
             {ABILITY_KEYS.map((key) => {
               const mod = getAbilityModifier(character[key])
               const isProficient = savingThrowProfs.includes(key)
@@ -274,19 +274,19 @@ export default function CharacterTab() {
                 </View>
               )
             })}
-          </CollapsibleSection>
+          </SectionHeader>
 
-          <CollapsibleSection sectionKey={`${id}:personality`} title="PERSONALITY TRAITS">
+          <SectionHeader collapsible id={`${id}:personality`} title="PERSONALITY TRAITS">
             {(character as any).personality_trait
               ? <Text className="text-legacy-text text-sm">{(character as any).personality_trait}</Text>
               : <Text className="text-legacy-muted text-sm">None recorded</Text>}
-          </CollapsibleSection>
+          </SectionHeader>
 
-          <CollapsibleSection sectionKey={`${id}:backstory`} title="BACKSTORY">
+          <SectionHeader collapsible id={`${id}:backstory`} title="BACKSTORY">
             {character.notes
               ? <Text className="text-legacy-text text-sm">{character.notes}</Text>
               : <Text className="text-legacy-muted text-sm">None recorded</Text>}
-          </CollapsibleSection>
+          </SectionHeader>
         </ScrollView>
       )}
 

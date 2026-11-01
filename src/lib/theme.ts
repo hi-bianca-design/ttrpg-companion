@@ -28,6 +28,9 @@ export const THEME_COLORS: Record<'light' | 'dark', Record<string, string>> = {
     resourcePlum: '#8B4A5E',
     resourceSage: '#7A9A55',
     resourceOchre: '#E8B547',
+    resourcePlumGlow: 'rgba(139, 74, 94, 0.55)',
+    resourceSageGlow: 'rgba(122, 154, 85, 0.55)',
+    resourceOchreGlow: 'rgba(232, 181, 71, 0.55)',
     overlay: 'rgba(14, 12, 8, 0.6)',
   },
   dark: {
@@ -55,6 +58,9 @@ export const THEME_COLORS: Record<'light' | 'dark', Record<string, string>> = {
     resourcePlum: '#D79AAE',
     resourceSage: '#B5C995',
     resourceOchre: '#ECC15B',
+    resourcePlumGlow: 'rgba(215, 154, 174, 0.7)',
+    resourceSageGlow: 'rgba(181, 201, 149, 0.7)',
+    resourceOchreGlow: 'rgba(236, 193, 91, 0.7)',
     overlay: 'rgba(0, 0, 0, 0.6)',
   },
 }

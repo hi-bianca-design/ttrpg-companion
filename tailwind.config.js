@@ -63,9 +63,9 @@ module.exports = {
         highlight: { DEFAULT: token('highlight'), foreground: token('highlight-foreground') },
         destructive: { DEFAULT: token('destructive'), foreground: token('destructive-foreground') },
         'resource-sky': { DEFAULT: token('resource-sky'), glow: token('resource-sky-glow') },
-        'resource-plum': token('resource-plum'),
-        'resource-sage': token('resource-sage'),
-        'resource-ochre': token('resource-ochre'),
+        'resource-plum': { DEFAULT: token('resource-plum'), glow: token('resource-plum-glow') },
+        'resource-sage': { DEFAULT: token('resource-sage'), glow: token('resource-sage-glow') },
+        'resource-ochre': { DEFAULT: token('resource-ochre'), glow: token('resource-ochre-glow') },
         // Old Catppuccin names for un-migrated screens. Deleted in Task 20.
         legacy: {
           base: '#1e1e2e',
