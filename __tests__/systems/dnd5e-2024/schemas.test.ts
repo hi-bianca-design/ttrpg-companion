@@ -1,5 +1,6 @@
 import {
   dnd5eContentSchemas,
+  dnd5eDetailsSchema,
   dnd5eStatsSchema,
   dnd5eResourcesSchema,
 } from '@/systems/dnd5e-2024/schemas'
@@ -103,4 +104,9 @@ test('every content kind on the system has a schema', () => {
   expect(sys.contentKinds.subclass.parentKind).toBe('class')
   expect(sys.contentKinds.class.homebrew).toBe(false)
   expect(Object.values(sys.contentKinds).filter((k) => k.kind !== 'class').every((k) => k.homebrew)).toBe(true)
+})
+
+test('details alignment uses SRD 5.2 naming ("Neutral", not "True Neutral")', () => {
+  expect(dnd5eDetailsSchema.safeParse({ alignment: 'Neutral' }).success).toBe(true)
+  expect(dnd5eDetailsSchema.safeParse({ alignment: 'True Neutral' }).success).toBe(false)
 })

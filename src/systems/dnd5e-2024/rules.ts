@@ -26,22 +26,26 @@ export const SPELLCASTING_CLASSES = [
   'Bard', 'Cleric', 'Druid', 'Paladin', 'Ranger', 'Sorcerer', 'Warlock', 'Wizard',
 ]
 
-// Cantrips known by class at each level (index 0 = level 1)
-const CANTRIPS_KNOWN: Partial<Record<string, number[]>> = {
-  Bard:     [2,2,2,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4,4,4],
-  Cleric:   [3,3,3,4,4,4,4,4,4,5,5,5,5,5,5,5,5,5,5,5],
-  Druid:    [2,2,2,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4,4,4],
-  Sorcerer: [4,4,4,5,5,5,5,5,5,6,6,6,6,6,6,6,6,6,6,6],
-  Warlock:  [2,2,2,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4,4,4],
-  Wizard:   [3,3,3,4,4,4,4,4,4,5,5,5,5,5,5,5,5,5,5,5],
+// SRD 5.2 class tables (index 0 = level 1), keyed lowercase.
+// Cantrips known: 3 tiers (levels 1–3, 4–9, 10–20); Paladin and Ranger have none.
+const CANTRIP_TIERS: Record<string, [number, number, number]> = {
+  bard: [2, 3, 4], cleric: [3, 4, 5], druid: [2, 3, 4],
+  sorcerer: [4, 5, 6], warlock: [2, 3, 4], wizard: [3, 4, 5],
 }
 
-// Spells known by class at each level (index 0 = level 1); null = prepared caster
-const SPELLS_KNOWN: Partial<Record<string, number[]>> = {
-  Bard:    [4,5,6,7,8,9,10,11,12,14,15,15,16,18,19,19,20,22,22,22],
-  Sorcerer:[2,3,4,5,6,7,8,9,10,11,12,12,13,13,14,14,15,15,15,15],
-  Warlock: [2,3,4,5,6,7,8,9,10,10,11,11,12,12,13,13,14,14,15,15],
-  Ranger:  [0,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11],
+const FULL_PREPARED = [4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 16, 16, 17, 17, 18, 18, 19, 20, 21, 22]
+const HALF_PREPARED = [2, 3, 4, 5, 6, 6, 7, 7, 9, 9, 10, 10, 11, 11, 12, 12, 14, 14, 15, 15]
+
+// Prepared spells per level (the 2024 rules replace "spells known" with a fixed prepared count).
+const PREPARED_SPELLS: Record<string, number[]> = {
+  bard: FULL_PREPARED,
+  cleric: FULL_PREPARED,
+  druid: FULL_PREPARED,
+  paladin: HALF_PREPARED,
+  ranger: HALF_PREPARED,
+  sorcerer: [2, 4, 6, 7, 9, 10, 11, 12, 14, 15, 16, 16, 17, 17, 18, 18, 19, 20, 21, 22],
+  warlock: [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15],
+  wizard: [4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 16, 16, 17, 18, 19, 21, 22, 23, 24, 25],
 }
 
 // Highest spell slot level available to a class at a given character level.
@@ -87,20 +91,21 @@ export function getMaxHPMulticlass(
   return primaryHP + secondaryHP
 }
 
+/**
+ * Cantrips known and spells prepared for a single-class character (SRD 5.2). Case-insensitive;
+ * the level is clamped to 1–20. `abilityMod` is unused (2024 prepared counts are fixed per level)
+ * and kept for signature compatibility.
+ */
 export function getSpellLimits(
   className: string,
   level: number,
-  abilityMod: number = 0,
+  _abilityMod: number = 0,
 ): { maxCantrips: number; maxSpells: number } {
-  const idx = Math.min(Math.max(level, 1), 20) - 1
-  const maxCantrips = CANTRIPS_KNOWN[className]?.[idx] ?? 0
-
-  const known = SPELLS_KNOWN[className]
-  if (known) return { maxCantrips, maxSpells: known[idx] }
-
-  // Prepared casters: ability modifier + level (min 1)
-  const prepared = Math.max(1, abilityMod + level)
-  return { maxCantrips, maxSpells: prepared }
+  const cls = className.toLowerCase()
+  const lvl = Math.min(Math.max(Math.floor(level), 1), 20)
+  const tiers = CANTRIP_TIERS[cls]
+  const maxCantrips = tiers ? tiers[lvl < 4 ? 0 : lvl < 10 ? 1 : 2] : 0
+  return { maxCantrips, maxSpells: PREPARED_SPELLS[cls]?.[lvl - 1] ?? 0 }
 }
 
 // ── Spell slots ──────────────────────────────────────────────

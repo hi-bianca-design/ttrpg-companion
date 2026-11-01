@@ -19,9 +19,10 @@ export const ABILITY_LABELS: Record<AbilityKey, string> = {
 
 export const STANDARD_ARRAY = [15, 14, 13, 12, 10, 8]
 
+/** SRD 5.2 alignments in 3×3 grid order (rows good → evil, columns lawful → chaotic). */
 export const ALIGNMENTS = [
   'Lawful Good', 'Neutral Good', 'Chaotic Good',
-  'Lawful Neutral', 'True Neutral', 'Chaotic Neutral',
+  'Lawful Neutral', 'Neutral', 'Chaotic Neutral',
   'Lawful Evil', 'Neutral Evil', 'Chaotic Evil',
 ] as const
 

@@ -5,6 +5,7 @@ import {
   getMaxHP,
   SPELLCASTING_CLASSES,
   getMaxSpellLevel,
+  getSpellLimits,
   slotsFor,
   derived,
   rest,
@@ -94,6 +95,32 @@ describe('getMaxSpellLevel agrees with slotsFor', () => {
   })
   it('is case-insensitive', () => expect(getMaxSpellLevel('ranger', 5)).toBe(2))
 })
+describe('getSpellLimits (SRD 5.2 cantrips + prepared spells)', () => {
+  it.each([
+    ['Bard', 1, 2, 4], ['Bard', 4, 3, 7], ['Bard', 10, 4, 15], ['Bard', 20, 4, 22],
+    ['Cleric', 1, 3, 4], ['Cleric', 5, 4, 9], ['Cleric', 10, 5, 15], ['Cleric', 20, 5, 22],
+    ['Druid', 1, 2, 4], ['Druid', 4, 3, 7], ['Druid', 10, 4, 15], ['Druid', 20, 4, 22],
+    ['Paladin', 1, 0, 2], ['Paladin', 5, 0, 6], ['Paladin', 9, 0, 9], ['Paladin', 20, 0, 15],
+    ['Ranger', 1, 0, 2], ['Ranger', 2, 0, 3], ['Ranger', 17, 0, 14], ['Ranger', 20, 0, 15],
+    ['Sorcerer', 1, 4, 2], ['Sorcerer', 2, 4, 4], ['Sorcerer', 4, 5, 7], ['Sorcerer', 10, 6, 15], ['Sorcerer', 20, 6, 22],
+    ['Warlock', 1, 2, 2], ['Warlock', 4, 3, 5], ['Warlock', 10, 4, 10], ['Warlock', 20, 4, 15],
+    ['Wizard', 1, 3, 4], ['Wizard', 4, 4, 7], ['Wizard', 10, 5, 15], ['Wizard', 16, 5, 21], ['Wizard', 20, 5, 25],
+  ])('%s %i → %i cantrips, %i prepared', (cls, level, maxCantrips, maxSpells) => {
+    expect(getSpellLimits(cls, level)).toEqual({ maxCantrips, maxSpells })
+  })
+
+  it('ignores the ability modifier (2024 prepared counts are fixed per level)', () => {
+    expect(getSpellLimits('Cleric', 1, 4)).toEqual({ maxCantrips: 3, maxSpells: 4 })
+  })
+
+  it('is case-insensitive and clamps the level', () => {
+    expect(getSpellLimits('wizard', 0)).toEqual({ maxCantrips: 3, maxSpells: 4 })
+    expect(getSpellLimits('Wizard', 25)).toEqual({ maxCantrips: 5, maxSpells: 25 })
+  })
+
+  it('non-casters get nothing', () => expect(getSpellLimits('Fighter', 5)).toEqual({ maxCantrips: 0, maxSpells: 0 }))
+})
+
 test('fighter has no slots', () => expect(slotsFor('Fighter', 10).tiers).toEqual({}))
 
 // ── Fixtures ──
@@ -266,6 +293,27 @@ test('pruneDraft leaves spells and subclass alone when class is unchanged', () =
   const draft = { ...dnd5eBuilder.initialDraft(), class_id: 'wiz', class_name: 'Wizard', subclass_id: 'evoker', spell_ids: ['s2'], spell_classes: { s2: ['wizard'] } }
   const next = dnd5eBuilder.pruneDraft(draft, { name: 'Elminster' })
   expect(next).toMatchObject({ name: 'Elminster', subclass_id: 'evoker', spell_ids: ['s2'] })
+})
+
+test('pruneDraft clears the background ability bonuses when the background changes', () => {
+  const draft = { ...dnd5eBuilder.initialDraft(), background_id: 'acolyte', bg_bonus_two: 'wisdom', bg_bonus_one: 'charisma' }
+  expect(dnd5eBuilder.pruneDraft(draft, { background_id: 'soldier' })).toMatchObject({ bg_bonus_two: null, bg_bonus_one: null })
+  expect(dnd5eBuilder.pruneDraft(draft, { background_id: 'acolyte' })).toMatchObject({ bg_bonus_two: 'wisdom', bg_bonus_one: 'charisma' })
+})
+
+test('ability-scores step needs the standard array assigned plus two distinct background bonuses', () => {
+  const step = dnd5eBuilder.steps.find((s) => s.id === 'ability-scores')!
+  const scores = { strength: 8, dexterity: 14, constitution: 13, intelligence: 15, wisdom: 12, charisma: 10 }
+  const bonuses = { bg_bonus_two: 'intelligence', bg_bonus_one: 'constitution' }
+  expect(step.isComplete(dnd5eBuilder.initialDraft())).toBe(false)
+  expect(step.isComplete({ ...dnd5eBuilder.initialDraft(), ...bonuses })).toBe(false)
+  expect(step.isComplete({ ...dnd5eBuilder.initialDraft(), ...scores })).toBe(false)
+  expect(step.isComplete({ ...dnd5eBuilder.initialDraft(), ...scores, ...bonuses })).toBe(true)
+  expect(step.isComplete({ ...dnd5eBuilder.initialDraft(), ...scores, strength: 15, ...bonuses })).toBe(false)
+})
+
+test('toCharacter treats unassigned abilities as 10', () => {
+  expect(dnd5eBuilder.toCharacter(dnd5eBuilder.initialDraft()).stats).toMatchObject({ strength: 10, charisma: 10 })
 })
 
 test('toCharacter builds a valid level-1 wizard', () => {
