@@ -53,9 +53,8 @@
     --background: #173832;
     --glow: #5A5F36;
     /* glow gradient stops (mockup): mid at 38%, background at 70% and beyond. The mockup's darker 100% edge
-       (glow-fade) is not drawn: it left a tonal step above the tab bar (background). Kept for parity. */
+       (#112D28) is not drawn: it left a tonal step above the tab bar (background). glow-fade is light-only. */
     --glow-mid: #24433D;
-    --glow-fade: #112D28;
     --foreground: #F5E4C3;
     --card: rgba(245, 228, 195, 0.06);
     --card-foreground: #F5E4C3;

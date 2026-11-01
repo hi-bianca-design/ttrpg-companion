@@ -45,7 +45,6 @@ export const THEME_COLORS: Record<'light' | 'dark', Record<string, string>> = {
     background: '#173832',
     glow: '#5A5F36',
     glowMid: '#24433D',
-    glowFade: '#112D28',
     foreground: '#F5E4C3',
     card: 'rgba(245, 228, 195, 0.06)',
     cardForeground: '#F5E4C3',
@@ -83,7 +82,7 @@ export const THEME_COLORS: Record<'light' | 'dark', Record<string, string>> = {
 
 // Top-of-screen glow stops [offset, THEME_COLORS key]: the approved mockup's
 // radial-gradient(120% 45% at 50% 0%, …) in each mode (blend-v4.html). Both end on `background`:
-// the mockup's dark 100% stop (glowFade, darker) held below the ellipse and left a tonal step
+// the mockup's dark 100% stop (#112D28, darker; token removed) held below the ellipse and left a tonal step
 // where the tab bar (background) starts, so dark stops at background from 70% on.
 export const GLOW_STOPS: Record<'light' | 'dark', Array<[number, string]>> = {
   light: [[0, 'glow'], [0.22, 'glowMid'], [0.5, 'glowFade'], [0.75, 'background']],
@@ -94,7 +93,7 @@ export const GLOW_STOPS: Record<'light' | 'dark', Array<[number, string]>> = {
 // the bottom inset; on web (no inset) the 24pt icon and 16pt label don't fit inside its padding and
 // the label is squeezed and clipped, so the bar's content height is 56pt.
 export const TAB_LABEL_STYLE = { fontFamily: 'Inter_400Regular', fontSize: 12, lineHeight: 16 } as const
-const TAB_BAR_CONTENT_HEIGHT = 56
+export const TAB_BAR_CONTENT_HEIGHT = 56
 
 export function tabBarStyle(mode: 'light' | 'dark', bottomInset: number) {
   const c = THEME_COLORS[mode]

@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Text } from '@/components/ui/text'
 import { THEME_COLORS } from '@/lib/theme'
+import { cn } from '@/lib/utils'
 
 export type ResourceTint = 'sky' | 'plum' | 'sage' | 'ochre' | 'terracotta'
 /** remaining (default): filled pips are what is left to spend (spell slots). marked: filled pips are what has
@@ -84,32 +85,40 @@ function Pip({ available, tint }: { available: boolean; tint: ResourceTint }) {
   )
 }
 
+// Static class names per tint (Tailwind can't see interpolated ones).
+const TINT_BORDER: Record<ResourceTint, string> = {
+  sky: 'border-resource-sky',
+  plum: 'border-resource-plum',
+  sage: 'border-resource-sage',
+  ochre: 'border-resource-ochre',
+  terracotta: 'border-resource-terracotta',
+}
+
+type CircleTone = { kind: 'destructive' } | { kind: 'primary' } | { kind: 'neutral' } | { kind: 'tint'; tint: ResourceTint }
+
 function CircleButton({
   icon,
   label,
-  variant,
+  tone,
   disabled,
   onPress,
 }: {
   icon: 'minus' | 'plus'
   label: string
-  variant: 'destructive' | 'primary'
+  tone: CircleTone
   disabled: boolean
   onPress: () => void
 }) {
   const { colorScheme } = useColorScheme()
   const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
-  const color = variant === 'destructive' ? colors.destructive : colors.accentForeground
+  const { color, border } =
+    tone.kind === 'destructive' ? { color: colors.destructive, border: 'border-destructive' }
+    : tone.kind === 'neutral' ? { color: colors.mutedForeground, border: 'border-border' }
+    : tone.kind === 'tint' ? { color: colors[`resource${tone.tint[0].toUpperCase()}${tone.tint.slice(1)}`], border: TINT_BORDER[tone.tint] }
+    : { color: colors.accentForeground, border: 'border-primary' }
   const Icon = icon === 'minus' ? Minus : Plus
   return (
-    <Button
-      variant="outline"
-      size="icon"
-      accessibilityLabel={label}
-      disabled={disabled}
-      onPress={onPress}
-      className={variant === 'destructive' ? 'border-destructive' : 'border-primary'}
-    >
+    <Button variant="outline" size="icon" accessibilityLabel={label} disabled={disabled} onPress={onPress} className={border}>
       <Icon testID={`icon-${icon}`} size={16} color={color} weight="bold" />
     </Button>
   )
@@ -123,17 +132,18 @@ export function ResourceTracker(props: ResourceTrackerProps) {
     const name = unit ? `${label} ${unit}` : label
     const summary = `${name}, ${filled} of ${max} ${marked ? 'marked' : 'available'}`
     // remaining: − spends (used+1), + restores. marked: + marks (used+1), − clears.
+    // marked: + is the tracker's own colour (sage successes, terracotta failures), − a neutral outline.
     const minus = marked
-      ? { label: `Clear ${label}`, disabled: used <= 0, onPress: onRestore }
-      : { label: `Spend ${label}`, disabled: filled === 0, onPress: onSpend }
+      ? { label: `Clear ${label}`, disabled: used <= 0, onPress: onRestore, tone: { kind: 'neutral' } as const }
+      : { label: `Spend ${label}`, disabled: filled === 0, onPress: onSpend, tone: { kind: 'destructive' } as const }
     const plus = marked
-      ? { label: `Mark ${label}`, disabled: used >= max, onPress: onSpend }
-      : { label: `Restore ${label}`, disabled: used === 0, onPress: onRestore }
+      ? { label: `Mark ${label}`, disabled: used >= max, onPress: onSpend, tone: { kind: 'tint', tint } as const }
+      : { label: `Restore ${label}`, disabled: used === 0, onPress: onRestore, tone: { kind: 'primary' } as const }
     return (
       <Card compact className="flex-row items-center justify-between gap-3">
         <View className="flex-1 gap-2">
           <View className="flex-row items-baseline gap-2">
-            <Text variant="subhead" numberOfLines={1} className="shrink">{label}</Text>
+            <Text variant="label" numberOfLines={1} className="shrink">{label}</Text>
             <Text variant="label">{`${filled}/${max}`}</Text>
           </View>
           <View className="flex-row gap-3" accessible accessibilityLabel={summary}>
@@ -143,8 +153,8 @@ export function ResourceTracker(props: ResourceTrackerProps) {
           </View>
         </View>
         <View className="flex-row gap-2">
-          <CircleButton icon="minus" variant="destructive" {...minus} />
-          <CircleButton icon="plus" variant="primary" {...plus} />
+          <CircleButton icon="minus" {...minus} />
+          <CircleButton icon="plus" {...plus} />
         </View>
       </Card>
     )
@@ -153,6 +163,7 @@ export function ResourceTracker(props: ResourceTrackerProps) {
   if (props.display === 'bar') {
     const { label, current, max, temp, onAdjust } = props
     const pct = max > 0 ? (current / max) * 100 : 0
+    const empty = current === 0
     return (
       <Pressable
         role="button"
@@ -160,15 +171,15 @@ export function ResourceTracker(props: ResourceTrackerProps) {
         accessibilityHint={`Adjust ${label}`}
         onPress={onAdjust}
       >
-        <Card compact className="gap-2">
+        <Card compact className={cn('gap-2', empty && 'border-destructive')}>
           <View className="flex-row items-baseline justify-between">
             <Text variant="label">{label}</Text>
-            <Text variant="stat" numberOfLines={1}>
+            <Text variant="stat" tone={empty ? 'destructive' : 'default'} numberOfLines={1}>
               {current}/{max}
               {temp ? ` +${temp}` : ''}
             </Text>
           </View>
-          <Progress value={pct} />
+          <Progress value={pct} indicatorClassName={empty ? 'bg-destructive' : undefined} />
         </Card>
       </Pressable>
     )

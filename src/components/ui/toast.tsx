@@ -3,12 +3,14 @@ import { AccessibilityInfo, Animated, Platform, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { create } from 'zustand'
 import { Text } from '@/components/ui/text'
+import { TAB_BAR_CONTENT_HEIGHT } from '@/lib/theme'
 
 /** How long a toast stays readable before it fades. */
 export const TOAST_MS = 3000
 const FADE_MS = 250
-// Clears the tab bars (56pt content, see theme.tabBarStyle) plus a 16pt gap.
-const BOTTOM_OFFSET = 72
+// The Toaster sits at the app root, outside any tab navigator (useBottomTabBarHeight would throw
+// there), so it uses the tab bar's own height from the theme: bar + safe-area inset + an 8pt gap.
+const GAP_ABOVE_TAB_BAR = 8
 
 type ToastState = { message: string | null; seq: number; show: (message: string) => void; hide: (seq: number) => void }
 
@@ -46,19 +48,22 @@ export function Toaster() {
 
   if (!message) return null
   return (
-    <Animated.View
+    <View
       pointerEvents="none"
-      style={{ opacity, position: 'absolute', left: 16, right: 16, bottom: insets.bottom + BOTTOM_OFFSET }}
+      className="absolute left-4 right-4"
+      style={{ bottom: insets.bottom + TAB_BAR_CONTENT_HEIGHT + GAP_ABOVE_TAB_BAR }}
     >
-      <View
-        role="status"
-        accessible
-        accessibilityLabel={message}
-        accessibilityLiveRegion="polite"
-        className="self-center rounded-card bg-foreground px-4 py-3"
-      >
-        <Text variant="body-sm" className="text-center text-background">{message}</Text>
-      </View>
-    </Animated.View>
+      <Animated.View style={{ opacity }}>
+        <View
+          role="status"
+          accessible
+          accessibilityLabel={message}
+          accessibilityLiveRegion="polite"
+          className="self-center rounded-card bg-foreground px-4 py-3"
+        >
+          <Text variant="body-sm" className="text-center text-background">{message}</Text>
+        </View>
+      </Animated.View>
+    </View>
   )
 }

@@ -1,6 +1,6 @@
 import '@testing-library/jest-native/extend-expect'
 import { PortalHost } from '@rn-primitives/portal'
-import { act, fireEvent, render, screen } from '@testing-library/react-native'
+import { act, fireEvent, render, screen, within } from '@testing-library/react-native'
 import ActionsTab from '../../../../app/(app)/characters/[id]/actions'
 import type { CharacterFull } from '@/features/characters/characters.api'
 import { useCharacter, useResourceMutation } from '@/features/characters/characters.queries'
@@ -57,6 +57,8 @@ function setup(c: CharacterFull | null, state: Record<string, unknown> = {}) {
 beforeEach(() => {
   jest.clearAllMocks()
   ;(useResourceMutation as jest.Mock).mockReturnValue({ mutate: mockMutate })
+  // Writes succeed by default; tests that need a pending write override this.
+  mockMutate.mockImplementation((_v: unknown, o?: { onSuccess?: () => void }) => o?.onSuccess?.())
 })
 
 test('Use on a level-1 spell spends tier 1 when available', () => {
@@ -168,6 +170,40 @@ test('long rest confirms, then is ONE write that resets every tier and refills h
   expect(showToast).toHaveBeenCalledWith('Long rest: Hit Points 20/20, Spell Slots restored.')
 })
 
+test('the rest toast waits for the write to succeed', () => {
+  mockMutate.mockImplementation(() => {})
+  setup(character(slots(2, 1)))
+  fireEvent.press(screen.getByRole('button', { name: 'Long rest' }))
+  fireEvent.press(screen.getByRole('button', { name: 'Confirm long rest' }))
+  expect(mockMutate).toHaveBeenCalledTimes(1)
+  expect(showToast).not.toHaveBeenCalled()
+  act(() => mockMutate.mock.calls[0][1].onSuccess())
+  expect(showToast).toHaveBeenCalledTimes(1)
+})
+
+test('at 0 HP the Actions bar is destructive and the death-save trackers show under it', () => {
+  const c = character(slots(0))
+  setup({
+    ...c,
+    resources: {
+      ...c.resources,
+      hp: { current: 0, max: 20, temp: 0 },
+      death_saves_success: { tiers: { '1': { max: 3, used: 1 } } },
+      death_saves_failure: { tiers: { '1': { max: 3, used: 0 } } },
+    },
+  } as CharacterFull)
+  const bar = screen.getByRole('button', { name: 'Hit Points 0/20' })
+  expect(within(bar).getByText('0/20').props.className).toContain('text-destructive')
+  expect(screen.getByLabelText('Death Save Successes, 1 of 3 marked')).toBeTruthy()
+  fireEvent.press(screen.getByRole('button', { name: 'Mark Death Save Failures' }))
+  expect(mockMutate.mock.calls.at(-1)[0].key).toBe('death_saves_failure')
+})
+
+test('above 0 HP the Actions tab has no death-save trackers', () => {
+  setup(character(slots(0)))
+  expect(screen.queryByLabelText(/Death Save/)).toBeNull()
+})
+
 test('a short rest with nothing to recharge says so in a toast', () => {
   setup(character(slots(2, 1)))
   fireEvent.press(screen.getByRole('button', { name: 'Short rest' }))
@@ -200,4 +236,10 @@ test('error state offers Try again', () => {
   setup(null, { isError: true, refetch })
   fireEvent.press(screen.getByRole('button', { name: 'Try again' }))
   expect(refetch).toHaveBeenCalled()
+})
+
+test('the rest buttons are followed by room for the toast band, so a rest toast never covers them', () => {
+  setup(character(slots(0)))
+  const json = JSON.stringify(screen.toJSON())
+  expect(json.indexOf('toast-clearance')).toBeGreaterThan(json.indexOf('Long rest'))
 })

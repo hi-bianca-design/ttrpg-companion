@@ -7,11 +7,16 @@ import { findDerived, formatDerived } from './format'
 
 const CLASS_LINE_KINDS = ['class', 'subclass', 'background']
 
-/** Under the sheet header on the Character tab: class line, species / level / proficiency chips and (when tracked) an XP bar. */
+const pickName = (character: CharacterFull, kind: string) => character.picks.find((p) => p.kind === kind)?.content?.name
+
+/** "Wizard · Evoker · Sage": the sheet header's subtitle on the Character tab. */
+export function classLine(character: CharacterFull): string {
+  return CLASS_LINE_KINDS.map((k) => pickName(character, k)).filter(Boolean).join(' · ')
+}
+
+/** Under the sheet header on the Character tab: species / level / proficiency chips and (when tracked) an XP bar. */
 export function CharacterSummary({ character }: { character: CharacterFull }) {
-  const pickName = (kind: string) => character.picks.find((p) => p.kind === kind)?.content?.name
-  const classLine = CLASS_LINE_KINDS.map(pickName).filter(Boolean).join(' · ')
-  const species = pickName('species')
+  const species = pickName(character, 'species')
   const prof = findDerived(character.derived, 'proficiency')
   const xp = typeof character.details.xp === 'number' ? character.details.xp : null
   const xpProgress = findDerived(character.derived, 'xp_progress')
@@ -19,7 +24,6 @@ export function CharacterSummary({ character }: { character: CharacterFull }) {
 
   return (
     <View className="gap-3">
-      {classLine ? <Text variant="body-sm" tone="muted">{classLine}</Text> : null}
       <View className="flex-row flex-wrap gap-2">
         {species ? <Badge>{species}</Badge> : null}
         <Badge>{`Level ${character.level}`}</Badge>

@@ -12,6 +12,7 @@ import { useCharacter, useResourceMutation } from '@/features/characters/charact
 import { toRuleInput } from '@/features/characters/picks'
 import { ActionsList, lowestBlockedLevel, lowestTier, type Segment } from '@/features/characters/sheet/ActionsList'
 import { ConditionChips } from '@/features/characters/sheet/ConditionChips'
+import { EmptyPoolTrackers } from '@/features/characters/sheet/EmptyPoolTrackers'
 import { HpSheet } from '@/features/characters/sheet/HpSheet'
 import { RestButtons } from '@/features/characters/sheet/RestButtons'
 import { restSummary } from '@/features/characters/sheet/restSummary'
@@ -88,8 +89,12 @@ export default function ActionsTab() {
   const rest = (kind: 'short' | 'long') => {
     setSaveError(null)
     // One atomic write: rules.rest computes from the latest cached resources.
-    mutation.mutate({ applyAll: (resources) => system.rules.rest({ ...character, resources }, kind, picks) })
-    showToast(restSummary(system.resources, kind, character.resources, system.rules.rest(character, kind, picks)))
+    const summary = restSummary(system.resources, kind, character.resources, system.rules.rest(character, kind, picks))
+    mutation.mutate(
+      { applyAll: (resources) => system.rules.rest({ ...character, resources }, kind, picks) },
+      // Confirm only once the write lands; a failure shows the error caption instead.
+      { onSuccess: () => showToast(summary) },
+    )
   }
 
   // The system's bar-display pools (D&D: hit points), compact, each opening the HP sheet.
@@ -115,6 +120,7 @@ export default function ActionsTab() {
               onAdjust={() => { setSaveError(null); setHpKey(def.key) }}
             />
           ))}
+          <EmptyPoolTrackers defs={system.resources} resources={character.resources} onChangeResource={change} />
           <ConditionChips conditions={character.conditions} />
         </View>
       ) : null}
@@ -144,11 +150,15 @@ export default function ActionsTab() {
         onEmptyAction={() => (segment === 'actions' ? router.push(`/(app)/characters/${id}/inventory`) : setSegment('actions'))}
       />
       <RestButtons onRest={rest} />
+      {/* At the end of the scroll the rest buttons would sit under the toast band (tab bar + 8 + toast);
+          this keeps them clear of the confirmation they trigger. */}
+      <View testID="toast-clearance" className="h-6" />
       {hpOpen ? (
         <HpSheet
           characterId={character.id}
           pool={hpOpen.v}
           resourceKey={hpOpen.def.key}
+          resourceDefs={system.resources}
           open
           onOpenChange={(open) => { if (!open) setHpKey(null) }}
           onError={onError}

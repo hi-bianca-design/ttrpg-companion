@@ -68,8 +68,7 @@ test('HpSheet: typed 8 on {10/20, bonus 5} previews and Damage applies it at onc
   expect(useResourceMutation).toHaveBeenCalledWith('ch1', expect.any(Object))
   expect(mockResourceMutate).toHaveBeenCalledTimes(1)
   const change = mockResourceMutate.mock.calls[0][0]
-  expect(change.key).toBe('hp')
-  expect(change.apply(pool)).toEqual({ current: 7, max: 20, temp: 0 })
+  expect(change.applyAll({ hp: pool })).toEqual({ hp: { current: 7, max: 20, temp: 0 } })
   expect(onOpenChange).toHaveBeenCalledWith(false)
 })
 
@@ -80,7 +79,7 @@ test('HpSheet: Heal applies the typed amount, clamped to max', () => {
   expect(screen.getByText('10 → 20')).toBeTruthy()
   fireEvent.press(screen.getByRole('button', { name: 'Heal 15' }))
   expect(mockResourceMutate).toHaveBeenCalledTimes(1)
-  expect(mockResourceMutate.mock.calls[0][0].apply(pool)).toEqual({ current: 20, max: 20, temp: 0 })
+  expect(mockResourceMutate.mock.calls[0][0].applyAll({ hp: pool }).hp).toEqual({ current: 20, max: 20, temp: 0 })
 })
 
 test('HpSheet: a change that would do nothing is disabled with a reason, never silently dropped', () => {
@@ -89,6 +88,28 @@ test('HpSheet: a change that would do nothing is disabled with a reason, never s
   expect(screen.getByRole('button', { name: 'Heal 4' })).toBeDisabled()
   expect(screen.getByText('Already at full HP.')).toBeTruthy()
   expect(screen.getByRole('button', { name: 'Take 4 damage' })).not.toBeDisabled()
+})
+
+test('HpSheet: healing from 0 clears the system’s death saves in the same write', () => {
+  const defs = getSystem('dnd5e-2024').resources
+  renderHp({ current: 0, max: 20 }, { resourceDefs: defs })
+  fireEvent.changeText(screen.getByLabelText('Amount'), '3')
+  fireEvent.press(screen.getByRole('button', { name: 'Heal 3' }))
+  expect(mockResourceMutate).toHaveBeenCalledTimes(1)
+  const marked = (used: number) => ({ tiers: { '1': { max: 3, used } } })
+  const next = mockResourceMutate.mock.calls[0][0].applyAll({
+    hp: { current: 0, max: 20 }, death_saves_success: marked(2), death_saves_failure: marked(1),
+  })
+  expect(next.hp).toEqual({ current: 3, max: 20 })
+  expect(next.death_saves_success).toEqual(marked(0))
+  expect(next.death_saves_failure).toEqual(marked(0))
+})
+
+test('HpSheet at 0 HP: damage is disabled with the system’s empty-pool hint', () => {
+  renderHp({ current: 0, max: 20 }, { resourceDefs: getSystem('dnd5e-2024').resources })
+  fireEvent.changeText(screen.getByLabelText('Amount'), '3')
+  expect(screen.getByRole('button', { name: 'Take 3 damage' })).toBeDisabled()
+  expect(screen.getByText('At 0 HP: mark a death-save failure instead.')).toBeTruthy()
 })
 
 test('HpSheet passes mutation failures to onError', () => {
@@ -107,8 +128,8 @@ test('HpSheet bonus mode sets temporary HP (no stacking) and explains a lower va
   expect(screen.getByText('Bonus HP 3 → 6')).toBeTruthy()
   fireEvent.press(screen.getByRole('button', { name: 'Set bonus HP to 6' }))
   const change = mockResourceMutate.mock.calls[0][0]
-  expect(change.apply(pool)).toEqual({ current: 10, max: 20, temp: 6 })
-  expect(change.apply({ current: 10, max: 20, temp: 9 })).toEqual({ current: 10, max: 20, temp: 9 })
+  expect(change.applyAll({ hp: pool }).hp).toEqual({ current: 10, max: 20, temp: 6 })
+  expect(change.applyAll({ hp: { current: 10, max: 20, temp: 9 } }).hp).toEqual({ current: 10, max: 20, temp: 9 })
 })
 
 test('HpSheet bonus mode: a lower value is disabled with the no-stacking reason', () => {
@@ -379,4 +400,21 @@ test('shared sheet header: caret Back leaves the sheet; Level up opens the level
 test('compact chips in the conditions sheet', () => {
   render(<><ConditionsSheet open onOpenChange={jest.fn()} options={['blinded', 'prone']} value={[]} onApply={jest.fn()} /><PortalHost /></>)
   expect(screen.getByRole('button', { name: 'Blinded' }).props.className).toContain('h-8')
+})
+
+test('vitals order: Bonus HP sits directly under the tiles, before the resource cards', () => {
+  renderTab()
+  const json = JSON.stringify(screen.toJSON())
+  expect(json.indexOf('+ Bonus HP')).toBeLessThan(json.indexOf('Hit Dice'))
+})
+
+test('header: the class line sits 4px under the name (same tight group)', () => {
+  renderTab()
+  const sub = screen.getByText('Wizard · Sage')
+  const name = screen.getByText('Mira Thistledown')
+  type N = { parent: N | null; props: { className?: string } }
+  const group = (n: N) => { let b = n.parent; while (b && !String(b.props.className ?? '').includes('gap-')) b = b.parent; return b }
+  const box = group(sub as unknown as N)
+  expect(box).toBe(group(name as unknown as N))
+  expect(String(box!.props.className)).toContain('gap-1')
 })

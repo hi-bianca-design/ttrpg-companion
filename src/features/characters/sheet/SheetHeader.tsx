@@ -12,6 +12,8 @@ type SheetHeaderProps = {
   name?: string
   /** Small accent label above the name. */
   eyebrow?: string
+  /** One muted line tightly under the name (4px), e.g. the class line. */
+  subtitle?: string
   /** Shows the Level up action (Character tab). */
   onLevelUp?: () => void
   /** Extra lines under the name (class line, chips, XP on the Character tab). */
@@ -23,7 +25,7 @@ type SheetHeaderProps = {
  * open), optional Level up, then eyebrow + name. The nav row is separate from the name, so a long
  * name can't push the actions off screen.
  */
-export function SheetHeader({ name, eyebrow, onLevelUp, children }: SheetHeaderProps) {
+export function SheetHeader({ name, eyebrow, subtitle, onLevelUp, children }: SheetHeaderProps) {
   const router = useRouter()
   const { colorScheme } = useColorScheme()
   const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
@@ -47,6 +49,7 @@ export function SheetHeader({ name, eyebrow, onLevelUp, children }: SheetHeaderP
         <View className="gap-1">
           {eyebrow ? <Text variant="label" tone="accent">{eyebrow}</Text> : null}
           <Text variant="title" numberOfLines={2}>{name}</Text>
+          {subtitle ? <Text variant="body-sm" tone="muted">{subtitle}</Text> : null}
         </View>
       ) : null}
       {children}

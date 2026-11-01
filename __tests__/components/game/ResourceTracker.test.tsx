@@ -76,3 +76,30 @@ test('counter without onAdjust is a static, labelled card', () => {
   expect(screen.getByLabelText('Hit Dice 2/3')).toBeTruthy()
   expect(screen.queryByRole('button')).toBeNull()
 })
+
+test('every variant titles itself with the mono label role', () => {
+  render(
+    <>
+      <ResourceTracker display="pips" label="Level 1" max={2} used={0} onSpend={jest.fn()} onRestore={jest.fn()} />
+      <ResourceTracker display="bar" label="Hit Points" current={5} max={10} onAdjust={jest.fn()} />
+      <ResourceTracker display="counter" label="Hit Dice" current={2} max={3} />
+    </>,
+  )
+  for (const t of ['Level 1', 'Hit Points', 'Hit Dice']) expect(screen.getByText(t).props.className).toContain('text-label')
+})
+
+test('marked mode: + takes the tracker tint, − is a neutral outline', () => {
+  render(<ResourceTracker display="pips" count="marked" tint="terracotta" label="Failures" max={3} used={1} onSpend={jest.fn()} onRestore={jest.fn()} />)
+  expect(screen.getByRole('button', { name: 'Mark Failures' }).props.className).toContain('border-resource-terracotta')
+  const clear = screen.getByRole('button', { name: 'Clear Failures' }).props.className
+  expect(clear).toContain('border-border')
+  expect(clear).not.toContain('border-destructive')
+})
+
+test('bar at 0: destructive value and fill; the track is visible on cards (bg-rule)', () => {
+  render(<ResourceTracker display="bar" label="HP" current={0} max={10} onAdjust={jest.fn()} />)
+  expect(screen.getByText('0/10').props.className).toContain('text-destructive')
+  const json = JSON.stringify(screen.toJSON())
+  expect(json).toContain('bg-rule')
+  expect(json).toContain('bg-destructive')
+})

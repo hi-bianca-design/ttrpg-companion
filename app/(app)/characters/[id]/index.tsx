@@ -10,7 +10,7 @@ import { toRuleInput } from '@/features/characters/picks'
 import { ConditionsSection } from '@/features/characters/sheet/ConditionsSection'
 import { ConditionsSheet } from '@/features/characters/sheet/ConditionsSheet'
 import { HpSheet } from '@/features/characters/sheet/HpSheet'
-import { CharacterSummary } from '@/features/characters/sheet/CharacterSummary'
+import { CharacterSummary, classLine } from '@/features/characters/sheet/CharacterSummary'
 import { SheetHeader } from '@/features/characters/sheet/SheetHeader'
 import { StatsSection } from '@/features/characters/sheet/StatsSection'
 import { VitalsSection } from '@/features/characters/sheet/VitalsSection'
@@ -79,7 +79,7 @@ export default function CharacterTab() {
 
   return (
     <ScreenBackground scroll>
-      <SheetHeader name={character.name} eyebrow="Your character" onLevelUp={levelUp}>
+      <SheetHeader name={character.name} eyebrow="Your character" subtitle={classLine(character) || undefined} onLevelUp={levelUp}>
         <CharacterSummary character={character} />
       </SheetHeader>
       {saveError ? <Text variant="caption" tone="destructive">{saveError}</Text> : null}
@@ -100,8 +100,8 @@ export default function CharacterTab() {
 
       {hp ? (
         <>
-          <HpSheet characterId={character.id} pool={hp} open={sheet === 'hp'} onOpenChange={closeSheet} onError={onSaveError.onError} />
-          <HpSheet characterId={character.id} pool={hp} mode="temp" open={sheet === 'bonus'} onOpenChange={closeSheet} onError={onSaveError.onError} />
+          <HpSheet characterId={character.id} pool={hp} resourceDefs={system.resources} open={sheet === 'hp'} onOpenChange={closeSheet} onError={onSaveError.onError} />
+          <HpSheet characterId={character.id} pool={hp} resourceDefs={system.resources} mode="temp" open={sheet === 'bonus'} onOpenChange={closeSheet} onError={onSaveError.onError} />
         </>
       ) : null}
       <ConditionsSheet

@@ -40,3 +40,17 @@ test('the toast uses the inverse ink surface (readable over any screen)', () => 
   act(() => showToast('Saved'))
   expect(screen.getByText('Saved').props.className).toContain('text-background')
 })
+
+test('sits above the tab bar: bottom = inset + tab bar height + 8; style holds only opacity and bottom', () => {
+  const { TAB_BAR_CONTENT_HEIGHT } = jest.requireActual('@/lib/theme')
+  renderToaster()
+  act(() => showToast('Placed'))
+  const positioned = screen.UNSAFE_root.findAll((n: { props: { style?: unknown } }) => {
+    const st = n.props.style as Record<string, unknown> | undefined
+    return !!st && typeof st === 'object' && !Array.isArray(st) && 'bottom' in st
+  })
+  expect(positioned.length).toBeGreaterThan(0)
+  const style = positioned[0].props.style as Record<string, unknown>
+  expect(style.bottom).toBe(34 + TAB_BAR_CONTENT_HEIGHT + 8)
+  expect(Object.keys(style).filter((k) => k !== 'bottom' && k !== 'opacity')).toEqual([])
+})

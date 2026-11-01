@@ -4,18 +4,20 @@ import { cn } from '@/lib/utils'
 
 function Progress({
   className,
+  indicatorClassName,
   value,
   ...props
-}: ProgressPrimitive.RootProps & React.RefAttributes<ProgressPrimitive.RootRef>) {
+}: ProgressPrimitive.RootProps & React.RefAttributes<ProgressPrimitive.RootRef> & { indicatorClassName?: string }) {
   const pct = Math.min(100, Math.max(0, value ?? 0))
   return (
     <ProgressPrimitive.Root
       value={value}
-      className={cn('h-2 w-full overflow-hidden rounded-full bg-muted', className)}
+      // rule, not muted: muted equals the card colour, so the empty track vanished on cards.
+      className={cn('h-2 w-full overflow-hidden rounded-full bg-rule', className)}
       {...props}
     >
       <ProgressPrimitive.Indicator asChild>
-        <View className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+        <View className={cn('h-full rounded-full bg-primary', indicatorClassName)} style={{ width: `${pct}%` }} />
       </ProgressPrimitive.Indicator>
     </ProgressPrimitive.Root>
   )

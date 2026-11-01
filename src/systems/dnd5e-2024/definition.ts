@@ -58,7 +58,7 @@ export const DND_STATS: StatDef[] = ABILITY_KEYS.map((key) => ({
 }))
 
 export const DND_RESOURCES: ResourceDef[] = [
-  { key: 'hp', label: 'Hit Points', kind: 'pool', display: 'bar' },
+  { key: 'hp', label: 'Hit Points', kind: 'pool', display: 'bar', emptyHint: 'At 0 HP: mark a death-save failure instead.' },
   { key: 'spell_slots', label: 'Spell Slots', kind: 'slots', display: 'pips', tierLabel: (tier) => `Level ${tier}`, tint: 'sky' },
   { key: 'hit_dice', label: 'Hit Dice', kind: 'pool', display: 'counter' },
   // Counted up from empty, and only relevant while the character is down (0 HP).

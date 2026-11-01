@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Text } from '@/components/ui/text'
-import { adjustPool, setTemp } from '@/systems/resources'
-import type { PoolValue } from '@/systems/types'
+import { adjustPool, applyPoolChange, setTemp } from '@/systems/resources'
+import type { PoolValue, ResourceDef } from '@/systems/types'
 import { useResourceMutation } from '../characters.queries'
 
 type HpSheetProps = {
@@ -16,6 +16,8 @@ type HpSheetProps = {
   /** 'adjust' (default): damage / heal by an amount. 'temp': grant bonus (temporary) HP. */
   mode?: 'adjust' | 'temp'
   resourceKey?: string
+  /** The system's resources: reviving from 0 clears its showWhenEmpty trackers; the pool's emptyHint explains disabled damage. */
+  resourceDefs?: ResourceDef[]
   /** Called for every failed write (the mutation has already rolled the cache back). */
   onError?: (error: unknown) => void
 }
@@ -46,7 +48,9 @@ function Preview({ label, from, to, bonus }: { label: string; from: number; to: 
  * would change nothing, so input is never silently dropped. Damage eats bonus HP first; healing
  * caps at max. Bonus mode sets temporary HP, which doesn't stack.
  */
-export function HpSheet({ characterId, pool, open, onOpenChange, mode = 'adjust', resourceKey = 'hp', onError }: HpSheetProps) {
+const NO_DEFS: ResourceDef[] = []
+
+export function HpSheet({ characterId, pool, open, onOpenChange, mode = 'adjust', resourceKey = 'hp', resourceDefs = NO_DEFS, onError }: HpSheetProps) {
   const mutation = useResourceMutation(characterId, { onError })
   const [amount, setAmount] = useState('')
   const n = parseAmount(amount)
@@ -57,7 +61,8 @@ export function HpSheet({ characterId, pool, open, onOpenChange, mode = 'adjust'
     onOpenChange(next)
   }
   const apply = (change: (cur: PoolValue) => PoolValue) => {
-    mutation.mutate({ key: resourceKey, apply: (cur) => change(cur as PoolValue) })
+    // One atomic write from the latest cached resources, so a heal from 0 also clears death saves.
+    mutation.mutate({ applyAll: (resources) => applyPoolChange(resources, resourceDefs, resourceKey, change) })
     close(false)
   }
 
@@ -79,10 +84,12 @@ export function HpSheet({ characterId, pool, open, onOpenChange, mode = 'adjust'
     const healed = adjustPool(pool, n)
     const canDamage = n > 0 && !samePool(pool, damaged)
     const canHeal = n > 0 && !samePool(pool, healed)
+    const def = resourceDefs.find((d) => d.key === resourceKey)
+    const emptyHint = def?.kind === 'pool' ? def.emptyHint : undefined
     const reason = n === 0
       ? 'Enter an amount. Damage uses bonus HP first.'
       : !canHeal ? 'Already at full HP.'
-      : !canDamage ? 'Already at 0 HP.'
+      : !canDamage ? (emptyHint ?? 'Already at 0 HP.')
       : 'Damage uses bonus HP first.'
     body = (
       <>

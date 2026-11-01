@@ -126,6 +126,10 @@ Source: the Moss Design System and character-sheet screens in Figma
 | `highlight-text` *(ochre for text, e.g. the HP number)* | `#8F5E0E` (4.65:1 on card; mockup `#C88A1E` is 2.47:1) | `#ECC15B` (6.44:1 on card) |
 | `destructive` | Terracotta `#D96A47` | `#E68763` |
 | `resource` tints | Sky `#4F8FB8`, Plum `#8B4A5E`, Sage, Ochre… | Sky `#BFE0F2` (+glow), lifted variants |
+| `resource-terracotta` (+`-glow`) *(death-save failures; the destructive hue as a resource tint)* | `#D96A47` / `rgba(217,106,71,.55)` | `#E68763` / `rgba(230,135,99,.7)` |
+| `tinted` *(tinted badge surface: active conditions)* | Plum @ 10% `rgba(139,74,94,.10)` | Plum lifted @ 14% `rgba(215,154,174,.14)` |
+| `tinted-foreground` | Plum `#8B4A5E` (5.4:1 on `tinted` over background) | `#D79AAE` (4.8:1) |
+| `tinted-border` | Plum @ 35% `rgba(139,74,94,.35)` | `rgba(215,154,174,.35)` |
 
 Exact dark-mode surface values for `card`, `popover`, `input` etc. are the builder's to derive
 from these, checked against WCAG AA for text.

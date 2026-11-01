@@ -23,3 +23,34 @@ test('setTemp does not stack: keeps the larger value', () => {
   expect(setTemp({ current: 10, max: 20, temp: 5 }, 8).temp).toBe(8)
 })
 test('setTemp floors at 0', () => expect(setTemp({ current: 10, max: 20 }, -4).temp).toBe(0))
+
+// ── applyPoolChange: reviving clears the system's showWhenEmpty trackers ──
+import { applyPoolChange } from '@/systems/resources'
+import type { ResourceDef } from '@/systems/types'
+
+const DEFS: ResourceDef[] = [
+  { key: 'life', label: 'Life', kind: 'pool', display: 'bar' },
+  { key: 'downA', label: 'A', kind: 'slots', display: 'pips', count: 'marked', showWhenEmpty: 'life' },
+  { key: 'downB', label: 'B', kind: 'slots', display: 'pips', count: 'marked', showWhenEmpty: 'life' },
+  { key: 'other', label: 'O', kind: 'slots', display: 'pips' },
+]
+const marked = (used: number) => ({ tiers: { '1': { max: 3, used } } })
+const base = (current: number) => ({ life: { current, max: 10 }, downA: marked(2), downB: marked(1), other: marked(1) })
+
+test('healing from 0 to above 0 clears every showWhenEmpty tracker of that pool, in the same result', () => {
+  const next = applyPoolChange(base(0), DEFS, 'life', (p) => adjustPool(p, 4))
+  expect(next.life).toEqual({ current: 4, max: 10 })
+  expect(next.downA).toEqual(marked(0))
+  expect(next.downB).toEqual(marked(0))
+  expect(next.other).toEqual(marked(1))
+})
+
+test('changes that do not revive leave the trackers alone', () => {
+  expect(applyPoolChange(base(5), DEFS, 'life', (p) => adjustPool(p, 2)).downA).toEqual(marked(2))
+  expect(applyPoolChange(base(0), DEFS, 'life', (p) => adjustPool(p, -2)).downA).toEqual(marked(2))
+})
+
+test('an unknown pool key is a no-op', () => {
+  const r = base(0)
+  expect(applyPoolChange(r, DEFS, 'nope', (p) => adjustPool(p, 4))).toBe(r)
+})

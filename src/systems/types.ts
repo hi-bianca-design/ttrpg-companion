@@ -14,7 +14,15 @@ export type SlotsValue = { tiers: Record<string, { max: number; used: number }> 
 export type ResourceValue = PoolValue | SlotsValue
 
 export type ResourceDef =
-  | { key: string; label: string; kind: 'pool'; display: 'bar' | 'counter'; tint?: ResourceTint }
+  | {
+      key: string
+      label: string
+      kind: 'pool'
+      display: 'bar' | 'counter'
+      tint?: ResourceTint
+      /** Why damage is unavailable once this pool is at 0 (e.g. D&D: mark a death-save failure instead). */
+      emptyHint?: string
+    }
   | {
       key: string
       label: string

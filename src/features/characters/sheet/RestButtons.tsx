@@ -17,13 +17,17 @@ export function RestButtons({ onRest }: { onRest: (kind: RestKind) => void }) {
   const copy = pending ? COPY[pending] : null
 
   return (
-    <View className="flex-row gap-2">
-      <Button variant="outline" className="flex-1" accessibilityLabel="Short rest" onPress={() => setPending('short')}>
-        <Text>Short rest</Text>
-      </Button>
-      <Button className="flex-1" accessibilityLabel="Long rest" onPress={() => setPending('long')}>
-        <Text>Long rest</Text>
-      </Button>
+    // The dialog sits outside the button row (in a gapless wrapper): as a third flex child of the row
+    // it took a gap and left the row 8px short of the card width.
+    <View>
+      <View className="flex-row gap-2">
+        <Button variant="outline" className="flex-1" accessibilityLabel="Short rest" onPress={() => setPending('short')}>
+          <Text>Short rest</Text>
+        </Button>
+        <Button className="flex-1" accessibilityLabel="Long rest" onPress={() => setPending('long')}>
+          <Text>Long rest</Text>
+        </Button>
+      </View>
 
       <Dialog open={pending !== null} onOpenChange={(open) => { if (!open) setPending(null) }}>
         <DialogContent>
