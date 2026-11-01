@@ -36,6 +36,7 @@ export function useJoinCampaign() {
       qc.invalidateQueries({ queryKey: qk.characters }),
       qc.invalidateQueries({ queryKey: ['character-campaign'] }),
       qc.invalidateQueries({ queryKey: ['campaign'] }),
+      qc.invalidateQueries({ queryKey: ['content'] }),
     ]),
   })
 }

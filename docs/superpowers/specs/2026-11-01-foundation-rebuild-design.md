@@ -409,3 +409,9 @@ deferred rather than open.
 - Web browser-Back from the wizard skips the discard prompt (React Navigation limitation).
 - iOS swipe-back from a campaign detail opened from a sheet: alignment unverified on device.
 - The Account button lives only on the Characters tab.
+
+**Final review re-review**
+- `on delete restrict` on picked/held content also blocks deleting a campaign, or a GM's account, while players still hold that campaign's items. No UI reaches either today.
+- iOS on-device checks still owed: HpSheet keyboard avoidance (simulator had a hardware keyboard), and the stale Campaigns-tab detail after iOS swipe-back.
+- Item update/remove don't yet treat zero affected rows as an error (M8 covered characters only).
+- `@rn-primitives/select` is an unused dependency left to avoid a lockfile change.
