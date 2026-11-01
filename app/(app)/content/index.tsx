@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native'
 import { useRouter, useFocusEffect } from 'expo-router'
-import { useAuth } from '@/modules/auth/useAuth'
+import { useAuth } from '@/features/auth/useAuth'
 import { getUserContent, deleteUserContent } from '@/modules/user_content/user_content.service'
 import { DBUserContent, ContentType, CONTENT_TYPE_LABELS } from '@/modules/user_content/user_content.types'
 

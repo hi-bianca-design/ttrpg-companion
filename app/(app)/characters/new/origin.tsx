@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native'
 import { useRouter } from 'expo-router'
-import { useAuth } from '@/modules/auth/useAuth'
+import { useAuth } from '@/features/auth/useAuth'
 import { useCharacterStore } from '@/modules/character/character.store'
 import { DBBackground, DBSpecies } from '@/modules/character/character.types'
 import { WithCustom } from '@/modules/user_content/user_content.types'

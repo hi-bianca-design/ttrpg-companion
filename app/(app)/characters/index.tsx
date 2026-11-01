@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { View, Text, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native'
 import { useRouter, useFocusEffect } from 'expo-router'
 import { getCharacters, deleteCharacter } from '@/modules/character/character.service'
-import { useAuth } from '@/modules/auth/useAuth'
+import { useAuth } from '@/features/auth/useAuth'
 
 type CharacterSummary = {
   id: string

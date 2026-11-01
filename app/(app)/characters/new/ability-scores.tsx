@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native'
 import { useRouter } from 'expo-router'
-import { useAuth } from '@/modules/auth/useAuth'
+import { useAuth } from '@/features/auth/useAuth'
 import { useCharacterStore } from '@/modules/character/character.store'
 import { ABILITY_KEYS, ABILITY_LABELS, STANDARD_ARRAY, AbilityKey } from '@/modules/character/character.types'
 import { getBackgroundsAll } from '@/modules/user_content/user_content.service'

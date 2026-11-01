@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native'
 import { useRouter } from 'expo-router'
-import { signUp } from '@/modules/auth/auth.service'
+import { signUp } from '@/features/auth/auth.api'
 
 export default function SignupScreen() {
   const [email, setEmail] = useState('')

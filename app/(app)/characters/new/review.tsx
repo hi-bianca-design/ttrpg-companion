@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } fr
 import { useRouter } from 'expo-router'
 import { useCharacterStore } from '@/modules/character/character.store'
 import { createCharacter } from '@/modules/character/character.service'
-import { useAuth } from '@/modules/auth/useAuth'
+import { useAuth } from '@/features/auth/useAuth'
 import { getAbilityModifier, formatModifier, getMaxHP } from '@/modules/character/character.utils'
 import { ABILITY_KEYS, ABILITY_LABELS, AbilityKey } from '@/modules/character/character.types'
 

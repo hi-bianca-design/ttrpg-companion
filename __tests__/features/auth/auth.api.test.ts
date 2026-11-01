@@ -1,4 +1,4 @@
-import { signUp, signIn, signOut } from '@/modules/auth/auth.service'
+import { signUp, signIn, signOut } from '@/features/auth/auth.api'
 
 jest.mock('@/lib/supabase', () => ({
   supabase: {
@@ -12,7 +12,7 @@ jest.mock('@/lib/supabase', () => ({
 
 import { supabase } from '@/lib/supabase'
 
-describe('auth.service', () => {
+describe('auth.api', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })

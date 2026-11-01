@@ -1,7 +1,7 @@
 import React from 'react'
 import { renderHook, act } from '@testing-library/react-native'
-import { AuthProvider } from '@/modules/auth/AuthProvider'
-import { useAuth } from '@/modules/auth/useAuth'
+import { AuthProvider } from '@/features/auth/AuthProvider'
+import { useAuth } from '@/features/auth/useAuth'
 
 const mockUnsubscribe = jest.fn()
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { View, Text, ScrollView, TextInput, TouchableOpacity, Switch, Alert, ActivityIndicator } from 'react-native'
 import { useRouter } from 'expo-router'
-import { useAuth } from '@/modules/auth/useAuth'
+import { useAuth } from '@/features/auth/useAuth'
 import { createUserContent } from '@/modules/user_content/user_content.service'
 import { ContentType, CONTENT_TYPE_LABELS } from '@/modules/user_content/user_content.types'
 import { getClasses } from '@/modules/srd/srd.service'
