@@ -48,7 +48,7 @@ function SelectContent({
     <SelectPrimitive.Portal hostName={portalHost}>
       <SelectPrimitive.Overlay className="absolute inset-0">
         <SelectPrimitive.Content
-            className={cn('w-full overflow-hidden rounded-card border border-border bg-background p-1', className)}
+            className={cn('overflow-hidden rounded-card border border-border bg-background p-1', className)}
             position="popper"
             {...props}
           >
