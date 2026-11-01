@@ -103,3 +103,23 @@ test('editing prefills, saves with the id and can delete after confirming', asyn
   await waitFor(() => expect(deleteHomebrew).toHaveBeenCalledWith('c1'))
   await waitFor(() => expect(onDeleted).toHaveBeenCalled())
 })
+
+const featRow = (data: unknown) => ({ id: 'f1', name: 'Tough Guy', description: null, parent_id: null, data }) as never
+
+test('editing keeps nested data keys the form does not expose', async () => {
+  ;(saveHomebrew as jest.Mock).mockResolvedValue({ id: 'f1' })
+  renderForm({ kind: 'feat', initial: featRow({ benefits: 'More HP', prerequisites: { level: 4 }, ability_score_bonuses: { constitution: 1 } }) })
+  fireEvent.changeText(screen.getByLabelText('Benefits'), 'Even more HP')
+  fireEvent.press(screen.getByRole('button', { name: 'Save' }))
+  await waitFor(() => expect(saveHomebrew).toHaveBeenCalledTimes(1))
+  expect((saveHomebrew as jest.Mock).mock.calls[0][0].data).toEqual({
+    benefits: 'Even more HP', prerequisites: { level: 4 }, ability_score_bonuses: { constitution: 1 },
+  })
+})
+
+test('a schema issue outside the visible fields blocks the save with a form error', async () => {
+  renderForm({ kind: 'feat', initial: featRow({ benefits: 'More HP', prerequisites: 'bad' }) })
+  fireEvent.press(screen.getByRole('button', { name: 'Save' }))
+  await waitFor(() => expect(screen.getByTestId('form-error')).toBeTruthy())
+  expect(saveHomebrew).not.toHaveBeenCalled()
+})

@@ -1,3 +1,4 @@
+import { AppError } from '@/features/errors'
 import { saveHomebrew, listContent, deleteHomebrew } from '@/features/content/content.api'
 
 jest.mock('@/lib/supabase', () => ({
@@ -18,6 +19,16 @@ function builder(result: unknown) {
 beforeEach(() => {
   jest.clearAllMocks()
   ;(supabase.auth.getSession as jest.Mock).mockResolvedValue({ data: { session: { user: { id: 'u1' } } } })
+})
+
+describe('saveHomebrew duplicates', () => {
+  it('maps a unique violation on save to a duplicate AppError', async () => {
+    ;(supabase.from as jest.Mock).mockReturnValue(builder({ data: null, error: { code: '23505', message: 'duplicate key' } }))
+    const data = { hit_die: 8, primary_abilities: [], saving_throw_proficiencies: [] }
+    const err = await saveHomebrew({ systemId: 'dnd5e-2024', kind: 'class', name: 'X', data }).catch((e) => e)
+    expect(err).toBeInstanceOf(AppError)
+    expect(err.code).toBe('duplicate')
+  })
 })
 
 describe('saveHomebrew', () => {

@@ -31,12 +31,12 @@ const isNumeric = (s: string) => s !== '' && !Number.isNaN(Number(s))
 const isEmpty = (v: unknown) => v === undefined || v === null || v === '' || (Array.isArray(v) && v.length === 0)
 
 /** Builds the kind's `data` from the form values: numbers parsed, blanks omitted, booleans always present. */
-function toData(fields: FieldDef[], values: Values): Values {
-  const data: Values = {}
+function toData(fields: FieldDef[], values: Values, base: Values = {}): Values {
+  const data: Values = { ...base } // keeps nested keys the form doesn't expose
   for (const f of fields) {
     const v = values[f.key]
     if (f.type === 'boolean') { data[f.key] = v === true; continue }
-    if (isEmpty(v)) continue
+    if (isEmpty(v)) { delete data[f.key]; continue }
     if (f.type === 'number') data[f.key] = Number(v)
     else if (f.type === 'select' && f.options?.every(isNumeric)) data[f.key] = Number(v)
     else data[f.key] = v
@@ -109,15 +109,16 @@ export function ContentForm({ systemId, kind, initial, onSaved, onDeleted }: Con
     setErrors((e) => { const { [key]: _drop, ...rest } = e; return rest })
   }
 
-  const validate = (): { errors: Errors; data: Values } => {
+  const validate = (): { errors: Errors; data: Values; formError: string | null } => {
     const found: Errors = {}
+    let general: string | null = null
     const name = String(values[NAME_KEY] ?? '').trim()
     if (!name) found[NAME_KEY] = 'Name is required'
     if (parentDef && !values[PARENT_KEY]) found[PARENT_KEY] = `${parentDef.label} is required`
     for (const f of def.fields) {
       if (f.required && f.type !== 'boolean' && isEmpty(values[f.key])) found[f.key] = `${f.label} is required`
     }
-    const data = toData(def.fields, values)
+    const data = toData(def.fields, values, (initial?.data ?? {}) as Values)
     if (Object.keys(found).length === 0) {
       const parsed = def.schema.safeParse(data)
       if (!parsed.success) {
@@ -125,18 +126,19 @@ export function ContentForm({ systemId, kind, initial, onSaved, onDeleted }: Con
           const key = String(issue.path[0] ?? '')
           const label = def.fields.find((f) => f.key === key)?.label
           if (label && !found[key]) found[key] = `${label} is invalid`
-          else if (!label && !found[NAME_KEY]) setFormError(issue.message)
+          else if (!label && !general) general = `${issue.path.join('.') || 'Data'}: ${issue.message}`
         }
       }
     }
-    return { errors: found, data }
+    return { errors: found, data, formError: general }
   }
 
   const submit = () => {
     setFormError(null)
-    const { errors: found, data } = validate()
+    const { errors: found, data, formError: general } = validate()
     setErrors(found)
-    if (Object.keys(found).length > 0) return
+    if (general) setFormError(general)
+    if (general || Object.keys(found).length > 0) return
     save.mutate(
       {
         id: initial?.id,
@@ -278,7 +280,7 @@ export function ContentForm({ systemId, kind, initial, onSaved, onDeleted }: Con
         />
       </FieldBlock>
 
-      {formError ? <Text variant="caption" tone="destructive">{formError}</Text> : null}
+      {formError ? <Text variant="caption" tone="destructive" testID="form-error">{formError}</Text> : null}
 
       <View className="gap-2">
         <Button variant="primary" disabled={save.isPending} accessibilityLabel="Save" onPress={submit}>

@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabase'
 import type { Database, Json } from '@/types/database.types'
 import { getSystem } from '@/systems/registry'
 import type { SystemId } from '@/systems/types'
-import { check, unwrap } from '@/features/errors'
+import { AppError, check, unwrap } from '@/features/errors'
 import { currentUserId } from '@/features/session'
 import type { ContentScope } from '@/lib/query-client'
 
@@ -57,13 +57,21 @@ export async function saveHomebrew(input: SaveHomebrewInput): Promise<ContentRow
     parent_id: input.parentId ?? null,
   }
   const table = supabase.from('content')
-  if (input.id) {
-    return unwrap(await table.update(fields).eq('id', input.id).select('*').single())
+  try {
+    if (input.id) {
+      return unwrap(await table.update(fields).eq('id', input.id).select('*').single())
+    }
+    const owner_id = await currentUserId()
+    return unwrap(
+      await table.insert({ ...fields, owner_id, system_id: input.systemId, kind: input.kind }).select('*').single(),
+    )
+  } catch (e) {
+    // content_owner_slug_key: this user already has homebrew of this kind with that name
+    if (e instanceof AppError && (e.cause as { code?: string } | undefined)?.code === '23505') {
+      throw new AppError('duplicate', { cause: e.cause })
+    }
+    throw e
   }
-  const owner_id = await currentUserId()
-  return unwrap(
-    await table.insert({ ...fields, owner_id, system_id: input.systemId, kind: input.kind }).select('*').single(),
-  )
 }
 
 export async function deleteHomebrew(id: string): Promise<void> {

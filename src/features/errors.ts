@@ -35,7 +35,6 @@ export function toAppError(e: unknown): AppError {
   const err = (typeof e === 'object' && e !== null ? e : {}) as { code?: unknown; message?: unknown }
   const message = typeof err.message === 'string' ? err.message : typeof e === 'string' ? e : ''
   if (err.code === 'P0001' && RPC_CODES.has(message)) return new AppError(message as AppErrorCode, { cause: e })
-  if (err.code === '23505') return new AppError('duplicate', { cause: e }) // unique violation (e.g. homebrew slug)
   if (NETWORK_PATTERN.test(message)) return new AppError('network', { cause: e })
   return new AppError('unknown', { cause: e })
 }
