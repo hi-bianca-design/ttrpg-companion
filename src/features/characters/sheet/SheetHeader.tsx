@@ -21,7 +21,7 @@ export function SheetHeader({ character }: { character: CharacterFull }) {
     <View className="gap-3">
       <View className="gap-1">
         <Text variant="label">Your character</Text>
-        <Text variant="title">{character.name}</Text>
+        <Text variant="title" numberOfLines={2}>{character.name}</Text>
         {classLine ? <Text variant="body-sm" tone="muted">{classLine}</Text> : null}
       </View>
       <View className="flex-row flex-wrap gap-2">

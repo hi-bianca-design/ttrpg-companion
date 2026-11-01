@@ -26,6 +26,7 @@ const mockUpdateMutate = jest.fn()
 
 beforeEach(() => {
   jest.clearAllMocks()
+  mockResourceMutate.mockReset()
   ;(useResourceMutation as jest.Mock).mockReturnValue({ mutate: mockResourceMutate })
   ;(useUpdateCharacter as jest.Mock).mockReturnValue({ mutate: mockUpdateMutate, isPending: false })
 })
@@ -56,6 +57,16 @@ test('HpSheet: heal is clamped to max and Reset clears the pending change', () =
   expect(screen.getByText('10 → 10')).toBeTruthy()
   fireEvent.press(screen.getByRole('button', { name: 'Confirm' }))
   expect(mockResourceMutate).not.toHaveBeenCalled()
+})
+
+test('HpSheet passes mutation failures to onError', () => {
+  const onError = jest.fn()
+  mockResourceMutate.mockImplementation((_change, opts) => opts?.onError?.(new Error('Network down')))
+  render(<><HpSheet characterId="ch1" pool={{ current: 10, max: 20 }} open onOpenChange={jest.fn()} onError={onError} /><PortalHost /></>)
+  fireEvent.changeText(screen.getByLabelText('Amount'), '2')
+  fireEvent.press(screen.getByRole('button', { name: 'Damage' }))
+  fireEvent.press(screen.getByRole('button', { name: 'Confirm' }))
+  expect(onError).toHaveBeenCalledWith(expect.objectContaining({ message: 'Network down' }))
 })
 
 test('HpSheet bonus mode sets temporary HP (no stacking)', () => {
@@ -201,6 +212,50 @@ test('D&D proficiencies section: Sage skills and Wizard saves are marked profici
   expect(screen.getByLabelText('Athletics -1')).toBeTruthy()
   expect(screen.getByLabelText('Intelligence save +5, proficient')).toBeTruthy()
   expect(screen.getByLabelText('Strength save -1')).toBeTruthy()
+})
+
+test('a failed HP change shows in the sheet error caption', () => {
+  mockResourceMutate.mockImplementation((_change, opts) => opts?.onError?.(new Error('Network down')))
+  renderTab()
+  fireEvent.press(screen.getByRole('button', { name: 'HP' }))
+  fireEvent.changeText(screen.getByLabelText('Amount'), '2')
+  fireEvent.press(screen.getByRole('button', { name: 'Heal' }))
+  fireEvent.press(screen.getByRole('button', { name: 'Confirm' }))
+  expect(screen.getByText('Network down')).toBeTruthy()
+})
+
+test('a failed bonus HP change shows in the sheet error caption', () => {
+  mockResourceMutate.mockImplementation((_change, opts) => opts?.onError?.(new Error('Bonus failed')))
+  renderTab()
+  fireEvent.press(screen.getByRole('button', { name: '+ Bonus HP' }))
+  fireEvent.changeText(screen.getByLabelText('Amount'), '4')
+  fireEvent.press(screen.getByRole('button', { name: 'Confirm' }))
+  expect(screen.getByText('Bonus failed')).toBeTruthy()
+})
+
+test('the D&D profile section renders after proficiencies', () => {
+  renderTab({ alignment: 'Neutral', backstory: 'Raised in a library.' })
+  expect(screen.getByText('Profile')).toBeTruthy()
+  expect(screen.getByText('Raised in a library.')).toBeTruthy()
+})
+
+test('long name and big HP: the name wraps to two lines max, HP value fits on one line', () => {
+  const long = 'Aelindra Voss of the Silver Thornwood Hal' // 41 chars
+  const c = makeCharacter()
+  ;(useCharacter as jest.Mock).mockReturnValue({
+    data: { ...c, name: long, resources: { ...c.resources, hp: { current: 120, max: 120, temp: 15 } } },
+    isLoading: false, isError: false, refetch: jest.fn(),
+  })
+  render(<><CharacterTab /><PortalHost /></>)
+  expect(screen.getByText(long)).toHaveProp('numberOfLines', 2)
+  const hpTile = screen.getByRole('button', { name: 'HP' })
+  const value = within(hpTile).getByText('120')
+  expect(value).toHaveProp('numberOfLines', 1)
+  expect(value).toHaveProp('adjustsFontSizeToFit', true)
+  expect(within(hpTile).getByText('/120 +15')).toHaveProp('numberOfLines', 1)
+  // nav actions live in their own row above the header, so a long name can't push them off
+  expect(screen.getByRole('button', { name: 'Back' })).toBeTruthy()
+  expect(screen.getByRole('button', { name: 'Level up' })).toBeTruthy()
 })
 
 test('loading shows skeleton cards; error shows Try again', () => {

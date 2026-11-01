@@ -14,6 +14,7 @@ import { NAV_THEME } from '@/lib/theme'
 import { queryClient } from '@/lib/query-client'
 import { AuthProvider } from '@/features/auth/AuthProvider'
 import { useAuth } from '@/features/auth/useAuth'
+import { useDarkClassOnWeb } from '@/lib/web-theme'
 
 SplashScreen.preventAutoHideAsync()
 // Theme follows the OS colour scheme.
@@ -44,6 +45,7 @@ function RootRedirect() {
 
 export default function RootLayout() {
   const { colorScheme: scheme } = useColorScheme()
+  useDarkClassOnWeb(scheme)
   const [fontsLoaded, fontError] = useFonts({
     Fraunces_600SemiBold,
     Inter_400Regular,

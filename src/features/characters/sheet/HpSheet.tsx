@@ -17,6 +17,8 @@ type HpSheetProps = {
   /** 'adjust' (default): damage / heal by an amount. 'temp': grant bonus (temporary) HP. */
   mode?: 'adjust' | 'temp'
   resourceKey?: string
+  /** Called when the write fails (the mutation has already rolled the cache back). */
+  onError?: (error: unknown) => void
 }
 
 function parseAmount(text: string): number {
@@ -28,7 +30,7 @@ function parseAmount(text: string): number {
  * Hit points sheet. In adjust mode − / + fold the amount into a pending change (damage eats
  * bonus HP first; healing is capped at max); Confirm writes it through the resource mutation.
  */
-export function HpSheet({ characterId, pool, open, onOpenChange, mode = 'adjust', resourceKey = 'hp' }: HpSheetProps) {
+export function HpSheet({ characterId, pool, open, onOpenChange, mode = 'adjust', resourceKey = 'hp', onError }: HpSheetProps) {
   const mutation = useResourceMutation(characterId)
   const [amount, setAmount] = useState('')
   const [delta, setDelta] = useState(0)
@@ -43,9 +45,9 @@ export function HpSheet({ characterId, pool, open, onOpenChange, mode = 'adjust'
   const confirm = () => {
     if (mode === 'adjust' && delta !== 0) {
       const change = delta
-      mutation.mutate({ key: resourceKey, apply: (cur) => adjustPool(cur as PoolValue, change) })
+      mutation.mutate({ key: resourceKey, apply: (cur) => adjustPool(cur as PoolValue, change) }, { onError })
     } else if (mode === 'temp' && n > 0) {
-      mutation.mutate({ key: resourceKey, apply: (cur) => setTemp(cur as PoolValue, n) })
+      mutation.mutate({ key: resourceKey, apply: (cur) => setTemp(cur as PoolValue, n) }, { onError })
     }
     close(false)
   }

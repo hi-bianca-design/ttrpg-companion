@@ -35,7 +35,7 @@ export function VitalsSection({ character, onEditHp, onBonusHp, onSpendInspirati
               <StatTile
                 label="HP"
                 value={hp.current}
-                sub={temp > 0 ? `of ${hp.max} +${temp}` : `of ${hp.max}`}
+                sub={temp > 0 ? `/${hp.max} +${temp}` : `/${hp.max}`}
                 tone="highlight"
                 onPress={onEditHp}
               />

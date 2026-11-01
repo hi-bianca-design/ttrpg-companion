@@ -34,6 +34,7 @@ export default function CharacterTab() {
 
   const onSaveError = { onError: (e: unknown) => setSaveError(e instanceof Error ? e.message : 'Couldn’t save. Try again.') }
   const closeSheet = (open: boolean) => { if (!open) setSheet(null) }
+  const openSheet = (next: OpenSheet) => { setSaveError(null); setSheet(next) }
 
   const nav = (
     <View className="flex-row items-center justify-between">
@@ -80,6 +81,7 @@ export default function CharacterTab() {
 
   const system = getSystem(character.system_id)
   const Proficiencies = system.sheet?.sections?.proficiencies
+  const Profile = system.sheet?.sections?.profile
   const hp = character.resources.hp as PoolValue | undefined
 
   return (
@@ -89,8 +91,8 @@ export default function CharacterTab() {
       {saveError ? <Text variant="caption" tone="destructive">{saveError}</Text> : null}
       <VitalsSection
         character={character}
-        onEditHp={() => setSheet('hp')}
-        onBonusHp={() => setSheet('bonus')}
+        onEditHp={() => openSheet('hp')}
+        onBonusHp={() => openSheet('bonus')}
         onSpendInspiration={() => {
           setSaveError(null)
           update.mutate({ details: { ...character.details, inspiration: false } }, onSaveError)
@@ -99,11 +101,12 @@ export default function CharacterTab() {
       <ConditionsSection character={character} onEdit={() => setSheet('conditions')} />
       <StatsSection character={character} />
       {Proficiencies ? <Proficiencies character={character} picks={picks} /> : null}
+      {Profile ? <Profile character={character} picks={picks} /> : null}
 
       {hp ? (
         <>
-          <HpSheet characterId={character.id} pool={hp} open={sheet === 'hp'} onOpenChange={closeSheet} />
-          <HpSheet characterId={character.id} pool={hp} mode="temp" open={sheet === 'bonus'} onOpenChange={closeSheet} />
+          <HpSheet characterId={character.id} pool={hp} open={sheet === 'hp'} onOpenChange={closeSheet} onError={onSaveError.onError} />
+          <HpSheet characterId={character.id} pool={hp} mode="temp" open={sheet === 'bonus'} onOpenChange={closeSheet} onError={onSaveError.onError} />
         </>
       ) : null}
       <ConditionsSheet
