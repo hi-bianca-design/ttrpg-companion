@@ -1,15 +1,27 @@
 import { useColorScheme } from 'nativewind'
-import type { ReactNode } from 'react'
+import { useId, type ReactNode } from 'react'
 import { ScrollView, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg'
-import { THEME_COLORS } from '@/lib/theme'
+import { GLOW_STOPS, THEME_COLORS } from '@/lib/theme'
 import { cn } from '@/lib/utils'
 
 type ScreenBackgroundProps = { children: ReactNode; scroll?: boolean }
 
+// Mockup: radial-gradient(120% 45% at 50% 0%). Browsers ignore rx/ry on <radialGradient>, so the
+// ellipse is a unit circle at top-centre scaled in bounding-box space instead.
+const GLOW_TRANSFORM = 'translate(0.5 0) scale(1.2 0.45) translate(-0.5 0)'
+
+/**
+ * Screen root: background colour, the top glow (painted under the status bar), and the safe-area
+ * top inset applied to the content. Each instance owns its gradient id — web keeps several screens
+ * mounted, and a shared id would resolve to a hidden screen's gradient.
+ */
 export function ScreenBackground({ children, scroll = false }: ScreenBackgroundProps) {
   const { colorScheme } = useColorScheme()
-  const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
+  const mode = colorScheme === 'dark' ? 'dark' : 'light'
+  const colors = THEME_COLORS[mode]
+  const gradientId = `screen-glow-${useId().replace(/[^A-Za-z0-9_-]/g, '')}`
   // Fixed screens fill the height so a child can flex (e.g. a scroll area between header and footer).
   const content = <View className={cn('gap-6 px-4 pb-8 pt-6', !scroll && 'flex-1')}>{children}</View>
 
@@ -18,15 +30,25 @@ export function ScreenBackground({ children, scroll = false }: ScreenBackgroundP
       <View className="absolute inset-0" pointerEvents="none">
         <Svg width="100%" height="100%">
           <Defs>
-            <RadialGradient id="screen-glow" cx="50%" cy="0%" rx="120%" ry="45%" gradientUnits="objectBoundingBox">
-              <Stop offset="0" stopColor={colors.glow} stopOpacity={1} />
-              <Stop offset="1" stopColor={colors.background} stopOpacity={1} />
+            <RadialGradient
+              id={gradientId}
+              cx="0.5"
+              cy="0"
+              r="1"
+              gradientUnits="objectBoundingBox"
+              gradientTransform={GLOW_TRANSFORM}
+            >
+              {GLOW_STOPS[mode].map(([offset, key]) => (
+                <Stop key={offset} offset={offset} stopColor={colors[key]} stopOpacity={1} />
+              ))}
             </RadialGradient>
           </Defs>
-          <Rect x="0" y="0" width="100%" height="100%" fill="url(#screen-glow)" />
+          <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${gradientId})`} />
         </Svg>
       </View>
-      {scroll ? <ScrollView>{content}</ScrollView> : content}
+      <SafeAreaView edges={['top']} className="flex-1">
+        {scroll ? <ScrollView>{content}</ScrollView> : content}
+      </SafeAreaView>
     </View>
   )
 }

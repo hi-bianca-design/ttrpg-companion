@@ -20,7 +20,7 @@ export function SheetHeader({ character }: { character: CharacterFull }) {
   return (
     <View className="gap-3">
       <View className="gap-1">
-        <Text variant="label">Your character</Text>
+        <Text variant="label" tone="accent">Your character</Text>
         <Text variant="title" numberOfLines={2}>{character.name}</Text>
         {classLine ? <Text variant="body-sm" tone="muted">{classLine}</Text> : null}
       </View>

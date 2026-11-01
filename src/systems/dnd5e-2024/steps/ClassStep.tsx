@@ -58,11 +58,11 @@ function LevelPicker({ level, onChange }: { level: number; onChange: (level: num
       </View>
       <View className="flex-row items-center gap-3">
         <Button variant="outline" size="icon" accessibilityLabel="Lower level" disabled={level <= 1} onPress={() => onChange(level - 1)}>
-          <Minus size={16} color={colors.foreground} />
+          <Minus size={16} color={colors.accentForeground} />
         </Button>
         <Text variant="stat" accessibilityLabel={`Level ${level}`}>{level}</Text>
         <Button variant="outline" size="icon" accessibilityLabel="Raise level" disabled={level >= 20} onPress={() => onChange(level + 1)}>
-          <Plus size={16} color={colors.foreground} />
+          <Plus size={16} color={colors.accentForeground} />
         </Button>
       </View>
     </Card>

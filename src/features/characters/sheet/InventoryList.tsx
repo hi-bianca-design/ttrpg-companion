@@ -46,7 +46,7 @@ type InventoryListProps = {
 /** One card per item with quantity stepper, equip / attune toggles and remove. */
 export function InventoryList({ items, allItems, maxAttuned, pendingIds = [], onChange, onRemove }: InventoryListProps) {
   const { colorScheme } = useColorScheme()
-  const iconColor = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light'].foreground
+  const iconColor = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light'].accentForeground
   const attunedCount = allItems.filter((i) => i.attuned).length
   const atLimit = maxAttuned !== undefined && attunedCount >= maxAttuned
 
@@ -71,7 +71,7 @@ export function InventoryList({ items, allItems, maxAttuned, pendingIds = [], on
           <View key={item.id} className="gap-2">
             <ContentCard title={name} meta={metaFor(item)} tags={tags} />
             <View className="flex-row flex-wrap items-center gap-2">
-              <View className="flex-row items-center gap-2">
+              <View className="flex-row items-center gap-3">
                 <Button
                   size="icon"
                   variant="outline"

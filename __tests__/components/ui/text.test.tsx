@@ -28,3 +28,8 @@ test('defaults to body with foreground tone; tone overrides colour', () => {
   expect(screen.getByText('Plain').props.className).toContain('text-foreground')
   expect(screen.getByText('Quiet').props.className).toContain('text-muted-foreground')
 })
+
+test('highlight tone uses the AA-safe highlight-text token', () => {
+  render(<Text variant="stat" tone="highlight">38</Text>)
+  expect(screen.getByText('38').props.className).toContain('text-highlight-text')
+})

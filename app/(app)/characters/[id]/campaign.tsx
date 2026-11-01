@@ -1,6 +1,7 @@
 import { View } from 'react-native'
 import { useRouter } from 'expo-router'
-import { ScreenBackground } from '@/components/game'
+import { Scroll } from 'phosphor-react-native'
+import { EmptyState, ScreenBackground, SectionHeader } from '@/components/game'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
@@ -54,13 +55,13 @@ export default function CampaignTab() {
   if (!membership.data || !campaign.data) {
     return (
       <ScreenBackground>
-        <View className="items-start gap-3 pt-4">
-          <Text variant="display">No campaign yet</Text>
-          <Text variant="body-sm" tone="muted">Join your group’s campaign with the code from your GM.</Text>
-          <Button onPress={() => router.push({ pathname: '/(app)/campaigns/join', params: { characterId: id } })}>
-            <Text>Join a campaign</Text>
-          </Button>
-        </View>
+        <EmptyState
+          icon={Scroll}
+          title="No campaign yet"
+          body="Join your group’s campaign with the code from your GM."
+          actionLabel="Join a campaign"
+          onAction={() => router.push({ pathname: '/(app)/campaigns/join', params: { characterId: id } })}
+        />
       </ScreenBackground>
     )
   }
@@ -73,10 +74,9 @@ export default function CampaignTab() {
         isGm={c.gm_id === user?.id}
         onPress={() => router.push({ pathname: '/(app)/campaigns/[id]', params: { id: c.id } })}
       />
-      <View className="gap-2">
-        <Text variant="heading">Members</Text>
+      <SectionHeader id={`campaign:${c.id}:members`} title="Members">
         <MemberList members={c.members} />
-      </View>
+      </SectionHeader>
     </ScreenBackground>
   )
 }

@@ -123,6 +123,7 @@ Source: the Moss Design System and character-sheet screens in Figma
 | `primary` / `primary-foreground` | Moss `#3F7A54` / cream | Moss lifted `#5B9268` / `#112D28` |
 | `accent-foreground` (green text) | Moss `#3F7A54` | Sage `#B5C995` |
 | `highlight` / `-foreground` *(new, one hero action per screen)* | Ochre `#E8B547` / ink | Ochre `#ECC15B` / ink |
+| `highlight-text` *(ochre for text, e.g. the HP number)* | `#8F5E0E` (4.65:1 on card; mockup `#C88A1E` is 2.47:1) | `#ECC15B` (6.44:1 on card) |
 | `destructive` | Terracotta `#D96A47` | `#E68763` |
 | `resource` tints | Sky `#4F8FB8`, Plum `#8B4A5E`, Sage, Ochre… | Sky `#BFE0F2` (+glow), lifted variants |
 
@@ -161,6 +162,9 @@ Tailwind's font-size scale is replaced by these roles, exposed as `<Text variant
 
 Nothing below 11px. *(My calls: headings use Fraunces rather than the Moss preview's Inter, to
 match the screens; stat numbers use tabular figures.)*
+
+Invite codes use `stat` with the Plex Mono family (`font-plex`) so the code reads as a fixed-width
+value at stat size; no separate code role.
 
 ### 4.5 Components
 - **Base layer:** react-native-reusables (shadcn/ui for React Native, on NativeWind +

@@ -14,3 +14,9 @@ test('onPress fires', () => {
   fireEvent.press(screen.getByLabelText('AC'))
   expect(onPress).toHaveBeenCalledTimes(1)
 })
+
+test('highlight tone colours the number, not the tile border', () => {
+  render(<StatTile label="HP" value={38} tone="highlight" />)
+  expect(screen.getByText('38').props.className).toContain('text-highlight-text')
+  expect(JSON.stringify(screen.toJSON())).not.toContain('border-highlight')
+})

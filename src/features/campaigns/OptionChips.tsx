@@ -1,6 +1,5 @@
 import { View } from 'react-native'
-import { Button } from '@/components/ui/button'
-import { Text } from '@/components/ui/text'
+import { ToggleChip } from '@/components/ui/toggle-chip'
 
 export type Option = { value: string; label: string }
 
@@ -16,16 +15,13 @@ export function OptionChips({ label, options, value, onChange }: OptionChipsProp
   return (
     <View className="flex-row flex-wrap gap-2" accessibilityRole="radiogroup" accessibilityLabel={label}>
       {options.map((o) => (
-        <Button
+        <ToggleChip
           key={o.value}
-          size="sm"
-          variant={o.value === value ? 'primary' : 'outline'}
+          label={o.label}
+          selected={o.value === value}
           accessibilityLabel={`${label} ${o.label}`}
-          accessibilityState={{ selected: o.value === value }}
           onPress={() => onChange(o.value)}
-        >
-          <Text>{o.label}</Text>
-        </Button>
+        />
       ))}
     </View>
   )

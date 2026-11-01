@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { ScreenBackground } from '@/components/game'
+import { Sword } from 'phosphor-react-native'
+import { EmptyState, ScreenBackground } from '@/components/game'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Text } from '@/components/ui/text'
@@ -76,13 +77,13 @@ export default function JoinCampaignScreen() {
             </Button>
           </View>
         ) : list.length === 0 ? (
-          <View className="items-start gap-3">
-            <Text variant="display">No characters yet</Text>
-            <Text variant="body-sm" tone="muted">Create a character to bring to the campaign.</Text>
-            <Button onPress={() => router.push('/(app)/characters/new')}>
-              <Text>New character</Text>
-            </Button>
-          </View>
+          <EmptyState
+            icon={Sword}
+            title="No characters yet"
+            body="Create a character to bring to the campaign."
+            actionLabel="New character"
+            onAction={() => router.push('/(app)/characters/new')}
+          />
         ) : (
           <OptionChips
             label="Character"

@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { View } from 'react-native'
 import { AdjustSheet } from '@/components/game/AdjustSheet'
-import { Button } from '@/components/ui/button'
-import { Text } from '@/components/ui/text'
+import { ToggleChip } from '@/components/ui/toggle-chip'
 import { titleCase } from './format'
 
 type ConditionsSheetProps = {
@@ -13,8 +12,6 @@ type ConditionsSheetProps = {
   value: string[]
   onApply: (next: string[]) => void
 }
-
-const CHIP_HIT_SLOP = { top: 6, bottom: 6 }
 
 /** Multi-select of the system's conditions; "Apply (n)" saves the selection in option order. */
 export function ConditionsSheet({ open, onOpenChange, options, value, onApply }: ConditionsSheetProps) {
@@ -44,17 +41,7 @@ export function ConditionsSheet({ open, onOpenChange, options, value, onApply }:
           const on = selected.includes(key)
           const label = titleCase(key)
           return (
-            <Button
-              key={key}
-              size="sm"
-              variant={on ? 'primary' : 'outline'}
-              accessibilityLabel={label}
-              accessibilityState={{ selected: on }}
-              hitSlop={CHIP_HIT_SLOP}
-              onPress={() => toggle(key)}
-            >
-              <Text>{label}</Text>
-            </Button>
+            <ToggleChip key={key} label={label} selected={on} onPress={() => toggle(key)} />
           )
         })}
       </View>

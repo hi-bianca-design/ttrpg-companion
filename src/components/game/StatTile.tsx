@@ -1,7 +1,6 @@
 import { Pressable } from 'react-native'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
-import { cn } from '@/lib/utils'
 
 type StatTileProps = {
   label: string
@@ -13,9 +12,9 @@ type StatTileProps = {
 
 export function StatTile({ label, value, sub, tone = 'default', onPress }: StatTileProps) {
   const body = (
-    <Card compact className={cn('items-center gap-1', tone === 'highlight' && 'border-highlight')}>
+    <Card compact className="items-center gap-1">
       <Text variant="label">{label}</Text>
-      <Text variant="stat" numberOfLines={1} adjustsFontSizeToFit>
+      <Text variant="stat" tone={tone === 'highlight' ? 'highlight' : 'default'} numberOfLines={1} adjustsFontSizeToFit>
         {value}
       </Text>
       {sub ? (

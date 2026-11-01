@@ -15,7 +15,7 @@ export function CampaignCard({ campaign, isGm, onPress }: CampaignCardProps) {
   const count = campaign.member_count
   const body = (
     <Card className="gap-3">
-      <Text variant="heading" numberOfLines={1}>{campaign.name}</Text>
+      <Text variant="subhead" numberOfLines={1}>{campaign.name}</Text>
       {campaign.description ? (
         <Text variant="body-sm" tone="muted" numberOfLines={2}>{campaign.description}</Text>
       ) : null}

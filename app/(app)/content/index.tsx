@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useColorScheme } from 'nativewind'
-import { Plus } from 'phosphor-react-native'
-import { ContentCard, ScreenBackground } from '@/components/game'
+import { BookOpen, Plus } from 'phosphor-react-native'
+import { ContentCard, EmptyState, ScreenBackground } from '@/components/game'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
+import { ToggleChip } from '@/components/ui/toggle-chip'
 import { useContentSearch } from '@/features/content/content.queries'
 import { homebrewKinds, KindPicker } from '@/features/content/KindPicker'
 import { THEME_COLORS } from '@/lib/theme'
@@ -44,16 +45,7 @@ export default function ContentScreen() {
       {systems.length > 1 ? (
         <View className="flex-row flex-wrap gap-2">
           {systems.map((s) => (
-            <Button
-              key={s.id}
-              size="sm"
-              variant={s.id === systemId ? 'primary' : 'outline'}
-              accessibilityLabel={s.name}
-              accessibilityState={{ selected: s.id === systemId }}
-              onPress={() => changeSystem(s.id)}
-            >
-              <Text>{s.name}</Text>
-            </Button>
+            <ToggleChip key={s.id} label={s.name} selected={s.id === systemId} onPress={() => changeSystem(s.id)} />
           ))}
         </View>
       ) : null}
@@ -77,15 +69,13 @@ export default function ContentScreen() {
           </Button>
         </View>
       ) : rows.length === 0 ? (
-        <View className="items-start gap-3 pt-4">
-          <Text variant="display">No homebrew yet</Text>
-          <Text variant="body-sm" tone="muted">
-            Make your own spells, species, items and more. They show up next to the SRD when you build characters.
-          </Text>
-          <Button onPress={create}>
-            <Text>Create</Text>
-          </Button>
-        </View>
+        <EmptyState
+          icon={BookOpen}
+          title="No homebrew yet"
+          body="Make your own spells, species, items and more. They show up next to the SRD when you build characters."
+          actionLabel="Create"
+          onAction={create}
+        />
       ) : (
         <View className="gap-2">
           {rows.map((r) => (

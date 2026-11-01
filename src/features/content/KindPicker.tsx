@@ -1,6 +1,5 @@
 import { View } from 'react-native'
-import { Button } from '@/components/ui/button'
-import { Text } from '@/components/ui/text'
+import { ToggleChip } from '@/components/ui/toggle-chip'
 import { getSystem } from '@/systems/registry'
 import type { ContentKindDef, SystemId } from '@/systems/types'
 
@@ -25,16 +24,7 @@ export function KindPicker({ systemId, value, onChange, allowAll = false }: Kind
   return (
     <View className="flex-row flex-wrap gap-2">
       {chips.map((c) => (
-        <Button
-          key={c.key ?? 'all'}
-          size="sm"
-          variant={value === c.key ? 'primary' : 'outline'}
-          accessibilityLabel={c.label}
-          accessibilityState={{ selected: value === c.key }}
-          onPress={() => onChange(c.key)}
-        >
-          <Text>{c.label}</Text>
-        </Button>
+        <ToggleChip key={c.key ?? 'all'} label={c.label} selected={value === c.key} onPress={() => onChange(c.key)} />
       ))}
     </View>
   )

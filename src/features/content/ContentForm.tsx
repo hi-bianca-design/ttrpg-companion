@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Text } from '@/components/ui/text'
+import { ToggleChip } from '@/components/ui/toggle-chip'
 import { AppError } from '@/features/errors'
 import { THEME_COLORS } from '@/lib/theme'
 import { getSystem } from '@/systems/registry'
@@ -59,17 +60,7 @@ function toValues(fields: FieldDef[], initial?: ContentRow): Values {
 }
 
 function Chip({ label, group, selected, onPress }: { label: string; group: string; selected: boolean; onPress: () => void }) {
-  return (
-    <Button
-      size="sm"
-      variant={selected ? 'primary' : 'outline'}
-      accessibilityLabel={`${group} ${label}`}
-      accessibilityState={{ selected }}
-      onPress={onPress}
-    >
-      <Text>{label}</Text>
-    </Button>
-  )
+  return <ToggleChip label={label} selected={selected} accessibilityLabel={`${group} ${label}`} onPress={onPress} />
 }
 
 function FieldBlock({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
@@ -204,7 +195,11 @@ export function ContentForm({ systemId, kind, initial, onSaved, onDeleted }: Con
               value={value === true}
               onValueChange={(v) => set(f.key, v)}
               accessibilityLabel={f.label}
-              trackColor={{ true: colors.primary, false: colors.muted }}
+              // Off track uses the rule token: muted is near-invisible on the dark teal background.
+              trackColor={{ true: colors.primary, false: colors.rule }}
+              ios_backgroundColor={colors.rule}
+              // Cream thumb in both modes: primary-foreground is cream in light but near-black in dark.
+              thumbColor={colorScheme === 'dark' ? colors.foreground : colors.primaryForeground}
             />
           </View>
         )
@@ -300,10 +295,10 @@ export function ContentForm({ systemId, kind, initial, onSaved, onDeleted }: Con
             <DialogDescription>It’s removed from your homebrew and can’t be picked for new characters. This can’t be undone.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" size="sm" accessibilityLabel="Cancel" onPress={() => setConfirmingDelete(false)}>
+            <Button variant="outline" accessibilityLabel="Cancel" onPress={() => setConfirmingDelete(false)}>
               <Text>Cancel</Text>
             </Button>
-            <Button variant="destructive" size="sm" accessibilityLabel="Delete" onPress={confirmDelete}>
+            <Button variant="destructive" accessibilityLabel="Delete" onPress={confirmDelete}>
               <Text>Delete</Text>
             </Button>
           </DialogFooter>

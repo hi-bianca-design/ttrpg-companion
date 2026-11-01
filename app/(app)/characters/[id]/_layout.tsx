@@ -2,22 +2,25 @@ import { Tabs, useLocalSearchParams } from 'expo-router'
 import { useColorScheme } from 'nativewind'
 import { User, Sword, Backpack, Scroll } from 'phosphor-react-native'
 import { CharacterRouteIdContext } from '@/features/characters/useCharacterRouteId'
-import { THEME_COLORS } from '@/lib/theme'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { TAB_LABEL_STYLE, THEME_COLORS, tabBarStyle } from '@/lib/theme'
 
 export default function CharacterSheetLayout() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { colorScheme } = useColorScheme()
   const dark = colorScheme === 'dark'
   const colors = THEME_COLORS[dark ? 'dark' : 'light']
+  const insets = useSafeAreaInsets()
 
   return (
     <CharacterRouteIdContext.Provider value={id}>
       <Tabs
         screenOptions={{
-          tabBarStyle: { backgroundColor: colors.background, borderTopColor: colors.rule },
+          tabBarStyle: tabBarStyle(dark ? 'dark' : 'light', insets.bottom),
           // Primary green is too dim on the dark teal bar; accent-foreground keeps the active tab legible.
           tabBarActiveTintColor: dark ? colors.accentForeground : colors.primary,
           tabBarInactiveTintColor: colors.mutedForeground,
+          tabBarLabelStyle: TAB_LABEL_STYLE,
           headerShown: false,
         }}
       >

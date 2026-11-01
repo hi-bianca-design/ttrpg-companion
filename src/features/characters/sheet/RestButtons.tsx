@@ -32,11 +32,10 @@ export function RestButtons({ onRest }: { onRest: (kind: RestKind) => void }) {
             <DialogDescription>{copy?.description ?? ''}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" size="sm" accessibilityLabel="Cancel" onPress={() => setPending(null)}>
+            <Button variant="outline" accessibilityLabel="Cancel" onPress={() => setPending(null)}>
               <Text>Cancel</Text>
             </Button>
             <Button
-              size="sm"
               accessibilityLabel={`Confirm ${copy?.label.toLowerCase() ?? 'rest'}`}
               onPress={() => {
                 if (pending) onRest(pending)

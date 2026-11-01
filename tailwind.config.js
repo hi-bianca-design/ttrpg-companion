@@ -49,7 +49,7 @@ module.exports = {
     extend: {
       colors: {
         background: token('background'),
-        glow: token('glow'),
+        glow: { DEFAULT: token('glow'), mid: token('glow-mid'), fade: token('glow-fade') },
         foreground: token('foreground'),
         card: { DEFAULT: token('card'), foreground: token('card-foreground') },
         muted: { DEFAULT: token('muted'), foreground: token('muted-foreground') },
@@ -61,7 +61,7 @@ module.exports = {
         overlay: token('overlay'),
         primary: { DEFAULT: token('primary'), foreground: token('primary-foreground') },
         accent: { foreground: token('accent-foreground') },
-        highlight: { DEFAULT: token('highlight'), foreground: token('highlight-foreground') },
+        highlight: { DEFAULT: token('highlight'), foreground: token('highlight-foreground'), text: token('highlight-text') },
         destructive: { DEFAULT: token('destructive'), foreground: token('destructive-foreground') },
         'resource-sky': { DEFAULT: token('resource-sky'), glow: token('resource-sky-glow') },
         'resource-plum': { DEFAULT: token('resource-plum'), glow: token('resource-plum-glow') },

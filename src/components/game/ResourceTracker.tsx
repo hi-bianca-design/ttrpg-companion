@@ -1,8 +1,8 @@
 import { useColorScheme } from 'nativewind'
-import { useMemo } from 'react'
+import { useId, useMemo } from 'react'
 import { Minus, Plus } from 'phosphor-react-native'
-import { Pressable, View, type ViewStyle } from 'react-native'
-import Svg, { Polygon } from 'react-native-svg'
+import { Platform, Pressable, View, type ViewStyle } from 'react-native'
+import Svg, { Defs, FeGaussianBlur, Filter, Polygon } from 'react-native-svg'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
@@ -24,7 +24,7 @@ type ResourceTrackerProps =
   | { display: 'bar'; label: string; current: number; max: number; temp?: number; onAdjust: () => void }
   | { display: 'counter'; label: string; current: number; max?: number; onAdjust: () => void }
 
-const PIP_SIZE = 10
+const PIP_SIZE = 12
 const DIAMOND = `${PIP_SIZE / 2},0 ${PIP_SIZE},${PIP_SIZE / 2} ${PIP_SIZE / 2},${PIP_SIZE} 0,${PIP_SIZE / 2}`
 
 function useTintColors(tint: ResourceTint) {
@@ -40,15 +40,32 @@ function useTintColors(tint: ResourceTint) {
       shadowRadius: 6,
       shadowOffset: { width: 0, height: 0 },
     }
-    return { fill, glowStyle }
+    return { fill, glow, glowStyle }
   }, [colors, key])
 }
 
+// Native draws the glow as an iOS shadow (spec §4.5). React Native Web turns that shadow into a
+// box-shadow on the square box, which barely shows, so web blurs a copy of the diamond in SVG instead.
+const SVG_GLOW = Platform.OS === 'web'
+// Lets the blurred glow spill past the pip's 12px box.
+const SVG_OVERFLOW = { overflow: 'visible' } as const
+
 function Pip({ available, tint }: { available: boolean; tint: ResourceTint }) {
-  const { fill, glowStyle } = useTintColors(tint)
+  const { fill, glow, glowStyle } = useTintColors(tint)
+  const filterId = `pip-glow-${useId().replace(/[^A-Za-z0-9_-]/g, '')}`
   return (
-    <View testID={available ? 'pip-available' : 'pip-spent'} style={available ? glowStyle : undefined}>
-      <Svg width={PIP_SIZE} height={PIP_SIZE} viewBox={`0 0 ${PIP_SIZE} ${PIP_SIZE}`}>
+    <View testID={available ? 'pip-available' : 'pip-spent'} style={available && !SVG_GLOW ? glowStyle : undefined}>
+      <Svg width={PIP_SIZE} height={PIP_SIZE} viewBox={`0 0 ${PIP_SIZE} ${PIP_SIZE}`} style={SVG_OVERFLOW}>
+        {available && SVG_GLOW ? (
+          <>
+            <Defs>
+              <Filter id={filterId} x="-150%" y="-150%" width="400%" height="400%">
+                <FeGaussianBlur stdDeviation={3} />
+              </Filter>
+            </Defs>
+            <Polygon points={DIAMOND} fill={glow} filter={`url(#${filterId})`} />
+          </>
+        ) : null}
         {available ? (
           <Polygon points={DIAMOND} fill={fill} />
         ) : (

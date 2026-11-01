@@ -7,7 +7,7 @@ const buttonVariants = cva('flex-row items-center justify-center gap-2 rounded-f
   variants: {
     variant: {
       primary: 'bg-primary active:opacity-90',
-      outline: 'border border-border bg-transparent active:bg-muted',
+      outline: 'border-[1.5px] border-primary bg-transparent active:bg-muted',
       ghost: 'bg-transparent active:bg-muted',
       highlight: 'bg-highlight active:opacity-90',
       destructive: 'bg-destructive active:opacity-90',
@@ -25,7 +25,7 @@ const buttonTextVariants = cva('font-sans-semibold', {
   variants: {
     variant: {
       primary: 'text-primary-foreground',
-      outline: 'text-foreground',
+      outline: 'text-accent-foreground',
       ghost: 'text-foreground',
       highlight: 'text-highlight-foreground',
       destructive: 'text-destructive-foreground',
@@ -39,8 +39,8 @@ const buttonTextVariants = cva('font-sans-semibold', {
   defaultVariants: { variant: 'primary', size: 'default' },
 })
 
-// icon buttons are 32px visually; hitSlop pads the touch target to 44px.
-const ICON_HIT_SLOP = { top: 6, bottom: 6, left: 6, right: 6 }
+// sm and icon buttons are 32px tall; hitSlop pads the touch target to 44px.
+const SMALL_HIT_SLOP = { top: 6, bottom: 6, left: 6, right: 6 }
 
 type ButtonProps = React.ComponentProps<typeof Pressable> &
   VariantProps<typeof buttonVariants> & { className?: string }
@@ -52,7 +52,7 @@ function Button({ className, variant, size, disabled, hitSlop, ...props }: Butto
         className={cn(buttonVariants({ variant, size }), disabled && 'opacity-50', className)}
         role="button"
         disabled={disabled}
-        hitSlop={hitSlop ?? (size === 'icon' ? ICON_HIT_SLOP : undefined)}
+        hitSlop={hitSlop ?? (size === 'icon' || size === 'sm' ? SMALL_HIT_SLOP : undefined)}
         {...props}
       />
     </TextClassContext.Provider>

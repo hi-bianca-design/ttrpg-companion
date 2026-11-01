@@ -9,6 +9,7 @@ import type { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
+import { ToggleChip } from '@/components/ui/toggle-chip'
 import { useContentList } from '@/features/content/content.queries'
 import { THEME_COLORS } from '@/lib/theme'
 import { cn } from '@/lib/utils'
@@ -123,26 +124,7 @@ type ChipProps = {
   className?: string
 }
 
-/** Pill toggle with a 44pt touch target. */
-export function Chip({ label, selected = false, disabled = false, onPress, accessibilityLabel, accessibilityHint, className }: ChipProps) {
-  return (
-    <Pressable
-      role="button"
-      accessibilityLabel={accessibilityLabel ?? label}
-      accessibilityHint={accessibilityHint}
-      accessibilityState={{ selected, disabled }}
-      disabled={disabled}
-      onPress={onPress}
-      className={cn(
-        'h-11 items-center justify-center rounded-full border px-4',
-        selected ? 'border-primary bg-primary' : 'border-border bg-input',
-        disabled && 'opacity-50',
-        className,
-      )}
-    >
-      <Text variant="body-sm" className={cn('font-sans-semibold', selected && 'text-primary-foreground')}>
-        {label}
-      </Text>
-    </Pressable>
-  )
+/** Builder steps' selectable pill: the shared ToggleChip. */
+export function Chip(props: ChipProps) {
+  return <ToggleChip {...props} />
 }

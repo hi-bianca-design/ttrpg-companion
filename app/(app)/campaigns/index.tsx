@@ -1,6 +1,7 @@
 import { View } from 'react-native'
 import { useRouter } from 'expo-router'
-import { ScreenBackground } from '@/components/game'
+import { UsersThree } from 'phosphor-react-native'
+import { EmptyState, ScreenBackground } from '@/components/game'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
@@ -45,12 +46,11 @@ export default function CampaignsIndex() {
           </Button>
         </View>
       ) : !data || data.length === 0 ? (
-        <View className="items-start gap-3 pt-4">
-          <Text variant="display">No campaigns yet</Text>
-          <Text variant="body-sm" tone="muted">
-            Run a game as the GM, or join your group’s campaign with the code they share.
-          </Text>
-        </View>
+        <EmptyState
+          icon={UsersThree}
+          title="No campaigns yet"
+          body="Run a game as the GM, or join your group’s campaign with the code they share."
+        />
       ) : (
         <View className="gap-2">
           {data.map((c) => (

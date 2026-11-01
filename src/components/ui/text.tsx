@@ -22,6 +22,8 @@ const textVariants = cva('', {
       muted: 'text-muted-foreground',
       accent: 'text-accent-foreground',
       destructive: 'text-destructive',
+      // Ochre for text, AA on card/background in both modes (the `highlight` fill is for buttons).
+      highlight: 'text-highlight-text',
     },
   },
   defaultVariants: { variant: 'body' },

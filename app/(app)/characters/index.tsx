@@ -3,7 +3,7 @@ import { Pressable, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useColorScheme } from 'nativewind'
 import { Plus, Sword } from 'phosphor-react-native'
-import { ScreenBackground } from '@/components/game'
+import { EmptyState, ScreenBackground } from '@/components/game'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import {
@@ -94,18 +94,13 @@ export default function CharactersScreen() {
           </Button>
         </View>
       ) : characters.length === 0 ? (
-        <View className="items-center gap-4 pt-8">
-          <Sword size={48} color={colors.accentForeground} weight="duotone" />
-          <View className="items-center gap-2">
-            <Text variant="display" className="text-center">No characters yet</Text>
-            <Text variant="body-sm" tone="muted" className="text-center">
-              Build your first hero: choose a class, an origin and abilities. The adventure starts here.
-            </Text>
-          </View>
-          <Button className="w-full" onPress={create}>
-            <Text>Create character</Text>
-          </Button>
-        </View>
+        <EmptyState
+          icon={Sword}
+          title="No characters yet"
+          body="Build your first hero: choose a class, an origin and abilities. The adventure starts here."
+          actionLabel="Create character"
+          onAction={create}
+        />
       ) : (
         <View className="gap-2">
           {characters.map((c) => (
@@ -128,12 +123,11 @@ export default function CharactersScreen() {
             <DialogDescription>This removes the character and everything on their sheet. It can’t be undone.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" size="sm" accessibilityLabel="Cancel" onPress={() => setPendingDelete(null)}>
+            <Button variant="outline" accessibilityLabel="Cancel" onPress={() => setPendingDelete(null)}>
               <Text>Cancel</Text>
             </Button>
             <Button
               variant="destructive"
-              size="sm"
               accessibilityLabel="Delete"
               onPress={() => {
                 if (!pendingDelete) return

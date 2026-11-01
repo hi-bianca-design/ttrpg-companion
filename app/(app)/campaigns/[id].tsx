@@ -1,6 +1,6 @@
 import { View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { ScreenBackground } from '@/components/game'
+import { ScreenBackground, SectionHeader } from '@/components/game'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -61,10 +61,9 @@ export default function CampaignDetailScreen() {
       </View>
       {data.description ? <Text variant="body-sm" tone="muted">{data.description}</Text> : null}
       {isGm ? <InviteCode code={data.invite_code} /> : null}
-      <View className="gap-2">
-        <Text variant="heading">Members</Text>
+      <SectionHeader id={`campaign:${data.id}:members`} title="Members">
         <MemberList members={data.members} />
-      </View>
+      </SectionHeader>
     </ScreenBackground>
   )
 }

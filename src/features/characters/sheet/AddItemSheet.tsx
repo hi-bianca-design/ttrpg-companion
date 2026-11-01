@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Text } from '@/components/ui/text'
+import { ToggleChip } from '@/components/ui/toggle-chip'
 import { useCharacterCampaign } from '@/features/campaigns/campaigns.queries'
 import { useContentSearch } from '@/features/content/content.queries'
 import type { ContentScope } from '@/lib/query-client'
@@ -33,7 +34,7 @@ function asRecord(v: unknown): Record<string, unknown> {
 /** Search the system's items (SRD, own homebrew, campaign) and add one with a quantity. */
 export function AddItemSheet({ open, onOpenChange, characterId, systemId }: AddItemSheetProps) {
   const { colorScheme } = useColorScheme()
-  const iconColor = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light'].foreground
+  const iconColor = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light'].accentForeground
   const { data: campaign } = useCharacterCampaign(characterId)
   const [search, setSearch] = useState('')
   const [source, setSource] = useState<SourceKey>('srd')
@@ -80,16 +81,12 @@ export function AddItemSheet({ open, onOpenChange, characterId, systemId }: AddI
         />
         <View className="flex-row flex-wrap gap-2">
           {sources.map((s) => (
-            <Button
+            <ToggleChip
               key={s.key}
-              size="sm"
-              variant={source === s.key ? 'primary' : 'outline'}
-              accessibilityLabel={s.label}
-              accessibilityState={{ selected: source === s.key }}
+              label={s.label}
+              selected={source === s.key}
               onPress={() => { setSource(s.key); setSelectedId(null) }}
-            >
-              <Text>{s.label}</Text>
-            </Button>
+            />
           ))}
         </View>
         <SheetBody>

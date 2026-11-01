@@ -35,10 +35,10 @@ export function InviteCode({ code }: { code: string }) {
       <View className="flex-row items-center justify-between gap-3">
         <View className="gap-1">
           <Text variant="label">Invite code</Text>
-          <Text variant="label" tone="default" selectable className="text-heading tracking-widest">{code}</Text>
+          <Text variant="stat" selectable className="font-plex">{code}</Text>
         </View>
         <Button size="sm" variant="outline" accessibilityLabel={copied ? 'Copied' : 'Copy invite code'} onPress={copy}>
-          {copied ? <Check size={16} color={colors.foreground} weight="bold" /> : <Copy size={16} color={colors.foreground} />}
+          {copied ? <Check size={16} color={colors.accentForeground} weight="bold" /> : <Copy size={16} color={colors.accentForeground} />}
           <Text>{copied ? 'Copied' : 'Copy'}</Text>
         </Button>
       </View>

@@ -6,6 +6,8 @@ export const THEME_COLORS: Record<'light' | 'dark', Record<string, string>> = {
   light: {
     background: '#FBF8F3',
     glow: '#F3DDA0',
+    glowMid: '#EDE6C8',
+    glowFade: '#F6F1E6',
     foreground: '#1E1A12',
     card: '#F0EAE0',
     cardForeground: '#1E1A12',
@@ -21,6 +23,7 @@ export const THEME_COLORS: Record<'light' | 'dark', Record<string, string>> = {
     accentForeground: '#3C7551',
     highlight: '#E8B547',
     highlightForeground: '#1E1A12',
+    highlightText: '#8F5E0E',
     destructive: '#D96A47',
     destructiveForeground: '#1E1A12',
     resourceSky: '#4F8FB8',
@@ -36,6 +39,8 @@ export const THEME_COLORS: Record<'light' | 'dark', Record<string, string>> = {
   dark: {
     background: '#173832',
     glow: '#5A5F36',
+    glowMid: '#24433D',
+    glowFade: '#112D28',
     foreground: '#F5E4C3',
     card: 'rgba(245, 228, 195, 0.06)',
     cardForeground: '#F5E4C3',
@@ -51,6 +56,7 @@ export const THEME_COLORS: Record<'light' | 'dark', Record<string, string>> = {
     accentForeground: '#B5C995',
     highlight: '#ECC15B',
     highlightForeground: '#1E1A12',
+    highlightText: '#ECC15B',
     destructive: '#E68763',
     destructiveForeground: '#1E1A12',
     resourceSky: '#BFE0F2',
@@ -63,6 +69,24 @@ export const THEME_COLORS: Record<'light' | 'dark', Record<string, string>> = {
     resourceOchreGlow: 'rgba(236, 193, 91, 0.7)',
     overlay: 'rgba(0, 0, 0, 0.6)',
   },
+}
+
+// Top-of-screen glow stops [offset, THEME_COLORS key], exactly the approved mockup's
+// radial-gradient(120% 45% at 50% 0%, …) in each mode (blend-v4.html).
+export const GLOW_STOPS: Record<'light' | 'dark', Array<[number, string]>> = {
+  light: [[0, 'glow'], [0.22, 'glowMid'], [0.5, 'glowFade'], [0.75, 'background']],
+  dark: [[0, 'glow'], [0.38, 'glowMid'], [0.7, 'background'], [1, 'glowFade']],
+}
+
+// Tab bar labels get the caption role's 12/16 metrics. React Navigation's default bar is 49pt plus
+// the bottom inset; on web (no inset) the 24pt icon and 16pt label don't fit inside its padding and
+// the label is squeezed and clipped, so the bar's content height is 56pt.
+export const TAB_LABEL_STYLE = { fontFamily: 'Inter_400Regular', fontSize: 12, lineHeight: 16 } as const
+const TAB_BAR_CONTENT_HEIGHT = 56
+
+export function tabBarStyle(mode: 'light' | 'dark', bottomInset: number) {
+  const c = THEME_COLORS[mode]
+  return { backgroundColor: c.background, borderTopColor: c.rule, height: TAB_BAR_CONTENT_HEIGHT + bottomInset }
 }
 
 const fonts: Theme['fonts'] = {
