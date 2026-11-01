@@ -276,7 +276,10 @@ export function hitDieOf(picks: PickRecord[]): number {
 
 /** HP gained on level up: average (floor(die/2)+1) or the roll, plus CON mod; never below 1. */
 export function hpGain(hitDie: number, conMod: number, input: Pick<LevelUpInput, 'hpMethod' | 'roll'>): number {
-  const base = input.hpMethod === 'roll' ? input.roll ?? 0 : Math.floor(hitDie / 2) + 1
+  const average = Math.floor(hitDie / 2) + 1
+  // An invalid roll (NaN, out of range) falls back to the average rather than producing NaN.
+  const validRoll = typeof input.roll === 'number' && Number.isInteger(input.roll) && input.roll >= 1 && input.roll <= hitDie
+  const base = input.hpMethod === 'roll' && validRoll ? (input.roll as number) : average
   return Math.max(1, base + conMod)
 }
 

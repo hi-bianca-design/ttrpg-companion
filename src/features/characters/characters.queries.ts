@@ -48,8 +48,8 @@ export function useUpdateCharacter(id: string) {
 export function useLevelUp(id: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ patch, subclassId }: { patch: Pick<CharacterRecord, 'level' | 'resources'>; subclassId?: string }) =>
-      levelUpCharacter(id, patch, subclassId),
+    mutationFn: ({ patch, input }: { patch: Pick<CharacterRecord, 'level' | 'resources'>; input: Record<string, unknown> }) =>
+      levelUpCharacter(id, patch, input),
     onSuccess: () => Promise.all([
       qc.invalidateQueries({ queryKey: qk.character(id) }),
       qc.invalidateQueries({ queryKey: qk.characters }),

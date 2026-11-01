@@ -1,4 +1,4 @@
-import { levelUp, SUBCLASS_LEVEL } from '@/systems/dnd5e-2024/rules'
+import { hpGain, levelUp, SUBCLASS_LEVEL } from '@/systems/dnd5e-2024/rules'
 import { getSystem } from '@/systems/registry'
 import type { CharacterRecord, PickRecord, PoolValue, SlotsValue } from '@/systems/types'
 
@@ -70,4 +70,17 @@ describe('dnd5e levelUp', () => {
   })
 
   it('exposes the default subclass level', () => expect(SUBCLASS_LEVEL).toBe(3))
+})
+
+describe('invalid roll', () => {
+  it('hpGain never returns NaN: falls back to the average', () => {
+    expect(hpGain(6, 2, { hpMethod: 'roll', roll: NaN })).toBe(6)
+    expect(hpGain(6, 2, { hpMethod: 'roll', roll: 99 })).toBe(6)
+    expect(hpGain(6, 2, { hpMethod: 'roll' })).toBe(6)
+  })
+
+  it('levelUp with a NaN roll yields a finite hp max', () => {
+    const next = levelUp(wizard(4, lvl4Slots), picks, { hpMethod: 'roll', roll: NaN })
+    expect((next.resources.hp as PoolValue).max).toBe(26)
+  })
 })

@@ -71,10 +71,20 @@ export type NewCharacter = Omit<CharacterRecord, 'id'> & {
   picks: Array<Pick<PickRecord, 'content_id' | 'kind' | 'state' | 'acquired_at_level'>>
 }
 
+/** Props every sheet section receives. `onChange` is only passed to the `levelUp` section: it reports the
+ * system-specific level-up input and whether that input is complete (the Level up button waits for it). */
+export type SheetSectionProps = {
+  character: CharacterRecord
+  picks: PickRecord[]
+  onChange?: (input: Record<string, unknown>, ready: boolean) => void
+}
+
 export interface GameSystem {
   id: SystemId
   name: string
   hidden?: boolean
+  /** Highest character level; the level-up screen shows a max-level state from here on. */
+  maxLevel?: number
   stats: StatDef[]
   resources: ResourceDef[]
   conditions: string[]
@@ -94,5 +104,5 @@ export interface GameSystem {
     maxAttuned?: number
   }
   // Per-system sheet sections, e.g. D&D 'proficiencies'
-  sheet?: { sections?: Record<string, React.ComponentType<{ character: CharacterRecord; picks: PickRecord[] }>> }
+  sheet?: { sections?: Record<string, React.ComponentType<SheetSectionProps>> }
 }
