@@ -67,7 +67,7 @@ create trigger campaign_members_set_updated_at
 --  * role changes only by the campaign's GM;
 --  * only the member themselves attaches/changes their character or accepts an invite
 --    (invited -> active); a row a GM creates for someone else is forced to
---    status 'invited' with no character;
+--    role 'player', status 'invited' and no character;
 --  * an attached character must belong to the member and match the campaign's system.
 -- Skipped for privileged callers with no auth.uid() (service role, migrations, seed).
 create or replace function public.campaign_members_guard()
@@ -87,6 +87,7 @@ begin
 
   if tg_op = 'INSERT' then
     if new.user_id <> v_uid then
+      new.role := 'player';
       new.status := 'invited';
       new.character_id := null;
     end if;

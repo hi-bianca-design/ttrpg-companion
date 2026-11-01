@@ -94,7 +94,7 @@ select throws_ok(
 set local request.jwt.claims to '{"sub":"a2000000-0000-0000-0000-00000000000a","role":"authenticated"}';
 select lives_ok(
   $$insert into public.campaign_members (campaign_id, user_id, role, status, character_id) values
-    ('d2000000-0000-0000-0000-00000000000d', 'b2000000-0000-0000-0000-0000000000b3', 'player', 'active',
+    ('d2000000-0000-0000-0000-00000000000d', 'b2000000-0000-0000-0000-0000000000b3', 'gm', 'active',
      'f2000000-0000-0000-0000-000000000003')$$,
   'GM can invite another user');
 select throws_ok(
@@ -125,9 +125,9 @@ reset role;
 select is((select count(*)::int from public.campaign_members
            where campaign_id = 'd2000000-0000-0000-0000-00000000000d' and user_id = 'e2000000-0000-0000-0000-00000000000e'),
   0, 'attacker did not end up in the victim campaign');
-select is((select status || '/' || coalesce(character_id::text, 'none') from public.campaign_members
+select is((select role || '/' || status || '/' || coalesce(character_id::text, 'none') from public.campaign_members
            where campaign_id = 'd2000000-0000-0000-0000-00000000000d' and user_id = 'b2000000-0000-0000-0000-0000000000b3'),
-  'invited/none', 'a GM-created row for another user is forced to invited with no character');
+  'player/invited/none', 'a GM-created row for another user is forced to player/invited with no character');
 
 select * from finish();
 rollback;

@@ -64,6 +64,28 @@ as $$
    where i.character_id in (select public.campaign_visible_character_ids());
 $$;
 
+-- True when the caller may put this content on a sheet: official, their own homebrew, or
+-- campaign-scoped content of a campaign they are GM or a member of. Deliberately excludes
+-- the sheet-derived visibility in content_select, so a pick/item can't be used to read
+-- someone else's private homebrew (FK checks alone bypass RLS).
+create or replace function public.can_reference_content(p_content_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.content c
+     where c.id = p_content_id
+       and (
+         c.owner_id is null
+         or c.owner_id = auth.uid()
+         or (c.campaign_id is not null and public.is_campaign_member(c.campaign_id))
+       )
+  );
+$$;
+
 -- True when the caller owns the character.
 create or replace function public.owns_character(p_character_id uuid)
 returns boolean
@@ -84,10 +106,12 @@ revoke execute on function public.campaign_visible_character_ids() from public, 
 revoke execute on function public.can_view_character(uuid) from public, anon;
 revoke execute on function public.campaign_sheet_content_ids() from public, anon;
 revoke execute on function public.owns_character(uuid) from public, anon;
+revoke execute on function public.can_reference_content(uuid) from public, anon;
 grant execute on function public.campaign_visible_character_ids() to authenticated, service_role;
 grant execute on function public.can_view_character(uuid) to authenticated, service_role;
 grant execute on function public.campaign_sheet_content_ids() to authenticated, service_role;
 grant execute on function public.owns_character(uuid) to authenticated, service_role;
+grant execute on function public.can_reference_content(uuid) to authenticated, service_role;
 
 -- profiles: any signed-in user can read (usernames show in campaigns); edit only your own.
 create policy profiles_select on public.profiles
@@ -150,26 +174,29 @@ create policy characters_delete on public.characters
   for delete to authenticated
   using (owner_id = (select auth.uid()));
 
--- character_picks / character_items follow their character.
+-- character_picks / character_items follow their character; writes may only reference
+-- content the owner can read directly (can_reference_content).
 create policy character_picks_select on public.character_picks
   for select to authenticated using (public.can_view_character(character_id));
 create policy character_picks_insert on public.character_picks
-  for insert to authenticated with check (public.owns_character(character_id));
+  for insert to authenticated
+  with check (public.owns_character(character_id) and public.can_reference_content(content_id));
 create policy character_picks_update on public.character_picks
   for update to authenticated
   using (public.owns_character(character_id))
-  with check (public.owns_character(character_id));
+  with check (public.owns_character(character_id) and public.can_reference_content(content_id));
 create policy character_picks_delete on public.character_picks
   for delete to authenticated using (public.owns_character(character_id));
 
 create policy character_items_select on public.character_items
   for select to authenticated using (public.can_view_character(character_id));
 create policy character_items_insert on public.character_items
-  for insert to authenticated with check (public.owns_character(character_id));
+  for insert to authenticated
+  with check (public.owns_character(character_id) and public.can_reference_content(content_id));
 create policy character_items_update on public.character_items
   for update to authenticated
   using (public.owns_character(character_id))
-  with check (public.owns_character(character_id));
+  with check (public.owns_character(character_id) and public.can_reference_content(content_id));
 create policy character_items_delete on public.character_items
   for delete to authenticated using (public.owns_character(character_id));
 

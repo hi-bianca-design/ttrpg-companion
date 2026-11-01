@@ -2,7 +2,7 @@
 begin;
 set local client_min_messages to warning;
 create extension if not exists pgtap with schema extensions;
-select plan(20);
+select plan(25);
 
 -- Fixtures (as the superuser; RLS bypassed)
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -17,7 +17,8 @@ insert into public.content (id, system_id, kind, name, slug, data) values
 -- the owner's homebrew: one on the sheet, one not
 insert into public.content (id, system_id, kind, name, slug, data, owner_id) values
   ('e1000000-0000-0000-0000-000000000003', 'dnd5e-2024', 'spell', 'Picked Homebrew', 'pgtap-picked-hb', '{}', 'a1000000-0000-0000-0000-00000000000a'),
-  ('e1000000-0000-0000-0000-000000000004', 'dnd5e-2024', 'spell', 'Private Homebrew', 'pgtap-private-hb', '{}', 'a1000000-0000-0000-0000-00000000000a');
+  ('e1000000-0000-0000-0000-000000000004', 'dnd5e-2024', 'spell', 'Private Homebrew', 'pgtap-private-hb', '{}', 'a1000000-0000-0000-0000-00000000000a'),
+  ('e1000000-0000-0000-0000-000000000005', 'dnd5e-2024', 'spell', 'Secret HB', 'pgtap-secret-hb', '{}', 'c1000000-0000-0000-0000-00000000000c');
 
 insert into public.characters (id, owner_id, system_id, name) values
   ('f1000000-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-00000000000a', 'dnd5e-2024', 'Hero');
@@ -34,6 +35,9 @@ insert into public.campaign_members (campaign_id, user_id, role, status, charact
   ('d1000000-0000-0000-0000-00000000000d', 'b1000000-0000-0000-0000-00000000000b', 'gm', 'active', null),
   ('d1000000-0000-0000-0000-00000000000d', 'a1000000-0000-0000-0000-00000000000a', 'player', 'active', 'f1000000-0000-0000-0000-000000000001'),
   ('d1000000-0000-0000-0000-00000000000d', 'a1000000-0000-0000-0000-0000000000a1', 'player', 'invited', null);
+insert into public.content (id, system_id, kind, name, slug, data, owner_id, campaign_id) values
+  ('e1000000-0000-0000-0000-000000000006', 'dnd5e-2024', 'item', 'Campaign Relic', 'pgtap-relic', '{}',
+   'b1000000-0000-0000-0000-00000000000b', 'd1000000-0000-0000-0000-00000000000d');
 
 -- As the owner
 set local role authenticated;
@@ -55,6 +59,27 @@ select lives_ok(
   $$insert into public.character_picks (character_id, content_id, kind) values
     ('f1000000-0000-0000-0000-000000000002', 'e1000000-0000-0000-0000-000000000001', 'feat')$$,
   'owner can add picks to own character');
+-- picks/items may only reference content the owner can already read
+select lives_ok(
+  $$insert into public.character_picks (character_id, content_id, kind) values
+    ('f1000000-0000-0000-0000-000000000002', 'e1000000-0000-0000-0000-000000000004', 'spell')$$,
+  'owner can pick their own homebrew');
+select lives_ok(
+  $$insert into public.character_items (character_id, content_id) values
+    ('f1000000-0000-0000-0000-000000000002', 'e1000000-0000-0000-0000-000000000006')$$,
+  'owner can carry a campaign item of a campaign they are in');
+select throws_ok(
+  $$insert into public.character_picks (character_id, content_id, kind) values
+    ('f1000000-0000-0000-0000-000000000002', 'e1000000-0000-0000-0000-000000000005', 'spell')$$,
+  '42501', null, 'owner cannot pick someone else''s private homebrew');
+select throws_ok(
+  $$insert into public.character_items (character_id, content_id) values
+    ('f1000000-0000-0000-0000-000000000001', 'e1000000-0000-0000-0000-000000000005')$$,
+  '42501', null, 'owner cannot carry someone else''s private homebrew');
+select throws_ok(
+  $$update public.character_picks set content_id = 'e1000000-0000-0000-0000-000000000005'
+    where character_id = 'f1000000-0000-0000-0000-000000000001' and content_id = 'e1000000-0000-0000-0000-000000000001'$$,
+  '42501', null, 'owner cannot repoint a pick at someone else''s private homebrew');
 delete from public.characters where id = 'f1000000-0000-0000-0000-000000000002';
 select is((select count(*)::int from public.characters), 1, 'owner can delete own character');
 
