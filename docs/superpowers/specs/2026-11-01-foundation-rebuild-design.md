@@ -362,3 +362,50 @@ src/
 Hope, Evasion, GM Fear; content kinds ancestry, community, class, subclass, domain card; builder
 steps), its SRD content seed, and any system-specific sheet sections (domain-card loadout/vault).
 No schema changes should be needed — if some are, the model in §5 has failed its test.
+
+## Deferred
+Recorded at the end of the foundation rebuild (final fix wave, 2026-11-01). Each line is a known gap
+left for later, with the reason. Items marked *user's call* need the user's OK before they count as
+deferred rather than open.
+
+**From the final review**
+- I4, D&D vocabulary in `src/features` and routes (spell slots, `subclass` pick in `levelUpCharacter`, summary pick kinds, `xp_` prefix): proposed as the first task of the Daggerheart project, since no current flow breaks and it is a large refactor — *awaiting the user's OK*.
+- M2, spending Hit Dice on a short rest: the Hit Dice card is static; a new interaction, not a regression (long rest now regains all Hit Dice per SRD 5.2).
+- M5, one campaign per character and switching characters: needs a schema rule (unique active membership) or a multi-campaign Campaign tab, plus `join_campaign` changes; no current flow breaks.
+- M9, unused `characters.notes`: decide between surfacing it in Details and dropping the column; nothing reads or writes it.
+
+**Left deferred by the final review (ledger)**
+- `system_id` of a character or campaign is editable via the API after joining: no UI path changes it.
+- Concurrent 23505 on join or on username: very rare race; the username check now also runs before sign-up.
+- HP sheet nets damage and healing instead of applying them in sequence: a design choice.
+- Rapid double-attune can briefly exceed the attunement cap: rare, and fixed by the next refetch.
+- Level up writes the subclass pick and the character row non-atomically: the pick is removed again on failure.
+- Token-checker parser gaps (multi-line styles, `*Color` props): literals are still caught by the hex/rgb rules.
+- Test-coverage gaps listed in the ledger (seed slugs, MemberList, InviteCode copy failure and similar).
+
+**Task 22 UX review Lows**
+- UX-11, delete a character only by long-press: add a "Delete character" button on the Character tab.
+- UX-12, placeholders read as values: prefix with "e.g.".
+- UX-13, homebrew filtered empty state and "+ New" disappearing, Create/New verbs, card meta (level · school).
+- UX-14, remaining part: character chips on join need a "Level 2 Wizard" sub-line (the Back caret and the return to the sheet were fixed in batch C).
+- UX-15, auth errors show raw Supabase text except "That username is taken."; map the rest via `toAppError` and add a password hint.
+- UX-16, wizard details: "+2 · +1 bg" review tiles, spell counters that scroll away, no reason shown for a disabled Continue.
+- UX-17, "Apply (0)" label, exhaustion levels, repeated "No spell slots left" lines.
+- UX-18, "D&D Companion" branding versus a generic TTRPG name — *the user's call*.
+
+**Task 22 UI review Lows**
+- UI-19, homebrew list cards show only the kind as bare text: pass meta and render the kind as a chip.
+- UI-20, quantity numbers use `stat` in the add-item sheet but `subhead` in the inventory row.
+- UI-21, HP sheet −/+ are outline text glyphs rather than the slot CircleButtons.
+- UI-22, ghost text buttons are ink-coloured rather than `text-accent-foreground`.
+- UI-23, section-header rows vary in height: `min-h-11` on every header row.
+- UI-24, loading skeletons are copied inline in about 13 files: extract a Skeleton/CardSkeleton.
+- UI-25, drop the HP ochre border once only the inspiration button should carry ochre.
+
+**Task 22 batch B/C ledger Lows**
+- Hit Dice card's static styling reads as tappable (UX N5); tied to M2.
+- Inventory "Remove" button wraps on narrow rows (UI N7).
+- Opposite-meaning reds stacked at 0 HP (destructive HP tile and failure pips): needs an iOS glance.
+- Web browser-Back from the wizard skips the discard prompt (React Navigation limitation).
+- iOS swipe-back from a campaign detail opened from a sheet: alignment unverified on device.
+- The Account button lives only on the Characters tab.
