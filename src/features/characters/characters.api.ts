@@ -2,9 +2,9 @@ import { supabase } from '@/lib/supabase'
 import type { Database, Json } from '@/types/database.types'
 import { getSystem } from '@/systems/registry'
 import type {
-  CharacterRecord, DerivedValue, NewCharacter, ResourceValue, SystemId,
+  CharacterRecord, DerivedValue, LevelUpPatch, NewCharacter, ResourceValue, SystemId,
 } from '@/systems/types'
-import { check, unwrap } from '@/features/errors'
+import { AppError, check, unwrap } from '@/features/errors'
 import { currentUserId } from '@/features/session'
 import { toRuleInput, type ItemWithContent, type PickWithContent } from './picks'
 
@@ -116,19 +116,31 @@ export async function createCharacter(input: NewCharacter): Promise<string> {
   return id
 }
 
+/**
+ * A write by id that RLS filtered out (not the owner) or that hit a deleted row changes nothing and
+ * returns no error, so the affected rows are selected back and none counts as a failure.
+ */
+function expectRow(res: { data: { id: string }[] | null; error: unknown }, code: 'save_failed' | 'unknown'): void {
+  check(res)
+  if (!res.data?.length) throw new AppError(code, { cause: 'no_rows' })
+}
+
 /** Deletes a character; picks and items go with it (ON DELETE CASCADE). */
 export async function deleteCharacter(id: string): Promise<void> {
-  check(await supabase.from('characters').delete().eq('id', id))
+  expectRow(await supabase.from('characters').delete().eq('id', id).select('id'), 'unknown')
 }
 
 export async function updateResources(id: string, resources: Record<string, ResourceValue>): Promise<void> {
-  check(await supabase.from('characters').update({ resources: resources as unknown as Json }).eq('id', id))
+  expectRow(await supabase.from('characters').update({ resources: resources as unknown as Json }).eq('id', id).select('id'), 'save_failed')
 }
 
 export type CharacterPatch = Partial<Pick<CharacterRecord, 'name' | 'level' | 'stats' | 'conditions' | 'details' | 'resources'>>
 
 export async function updateCharacter(id: string, patch: CharacterPatch): Promise<void> {
-  check(await supabase.from('characters').update(patch as Database['public']['Tables']['characters']['Update']).eq('id', id))
+  expectRow(
+    await supabase.from('characters').update(patch as Database['public']['Tables']['characters']['Update']).eq('id', id).select('id'),
+    'save_failed',
+  )
 }
 
 export async function addItem(characterId: string, contentId: string, quantity: number): Promise<void> {
@@ -146,12 +158,13 @@ export async function removeItem(itemId: string): Promise<void> {
 }
 
 /**
- * Applies a level-up: saves the subclass pick (if `input.subclassId` is set), then the new level and resources.
+ * Applies a level-up: saves the subclass pick (if `input.subclassId` is set), then the new level,
+ * resources and stats (an Ability Score Improvement changes stats).
  * If the character write fails the pick is removed again, so a retry doesn't hit a duplicate.
  */
 export async function levelUpCharacter(
   id: string,
-  patch: Pick<CharacterRecord, 'level' | 'resources'>,
+  patch: LevelUpPatch,
   input: Record<string, unknown> = {},
 ): Promise<void> {
   const subclassId = typeof input.subclassId === 'string' ? input.subclassId : undefined

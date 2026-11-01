@@ -7,9 +7,13 @@ import { Text } from '@/components/ui/text'
 import { THEME_COLORS } from '@/lib/theme'
 
 /**
- * Leave affordances, one per kind of screen, always at the leading edge of a 44pt nav row:
- * - pushed screens (sheet, campaign detail, level up, wizard steps): BackButton, a ghost caret;
- * - modal-like flows (join, new campaign, homebrew forms): CancelButton, ghost "Cancel" text.
+ * Leave affordances on a 44pt nav row, one per kind of screen:
+ * - pushed screens (sheet, campaign detail, level up, wizard steps): BackButton, a ghost caret at the
+ *   leading edge;
+ * - modal-like flows (join, new campaign, homebrew forms): CancelButton, ghost "Cancel" text at the
+ *   leading edge;
+ * - the character wizard from step 2 has both: Back leading (previous step) and a trailing Cancel
+ *   (`edge="trailing"`) that leaves the whole wizard.
  */
 export function NavRow({ children, testID }: { children: ReactNode; testID?: string }) {
   return (

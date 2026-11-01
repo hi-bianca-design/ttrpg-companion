@@ -5,6 +5,8 @@ export type AppErrorCode =
   | 'system_mismatch'
   | 'not_your_character'
   | 'duplicate'
+  | 'in_use'
+  | 'username_taken'
   | 'network'
   | 'load_failed'
   | 'save_failed'
@@ -16,6 +18,8 @@ export const ERROR_COPY: Record<AppErrorCode, string> = {
   system_mismatch: 'That character is from a different game system than this campaign.',
   not_your_character: 'You can only join with your own characters.',
   duplicate: 'You already have one with this name.',
+  in_use: 'This is used by a character. Remove it from them first.',
+  username_taken: 'That username is taken.',
   network: "Can't reach the server. Check your connection and try again.",
   load_failed: 'Couldn’t load this. Check your connection and try again.',
   save_failed: 'Couldn’t save. Try again.',

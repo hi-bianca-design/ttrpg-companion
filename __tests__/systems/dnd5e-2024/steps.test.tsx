@@ -15,6 +15,7 @@ import { filterSpells, SpellsStep } from '@/systems/dnd5e-2024/steps/SpellsStep'
 import type { Draft } from '@/systems/types'
 
 jest.mock('@/features/content/content.api', () => ({ listContent: jest.fn() }))
+jest.mock('@/features/session', () => ({ currentUserId: jest.fn(async () => 'me') }))
 jest.mock('@/features/characters/characters.api', () => ({ createCharacter: jest.fn() }))
 const mockParams: { step: string } = { step: 'review' }
 const mockRouter = { push: jest.fn(), back: jest.fn(), replace: jest.fn(), dismissTo: jest.fn(), dismissAll: jest.fn() }
@@ -65,6 +66,7 @@ const CONTENT: Record<string, unknown[]> = {
 
 function renderWithQuery(ui: ReactElement) {
   const client = makeTestQueryClient()
+  client.setQueryData(['session', 'uid'], 'me') // the signed-in user, as useCurrentUserId caches it
   return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>)
 }
 
@@ -189,6 +191,26 @@ describe('Origin step', () => {
     fireEvent.press(await screen.findByRole('button', { name: 'Sage' }))
     expect(useBuilderStore.getState().draft).toMatchObject({ background_id: 'sage', bg_abilities: ['constitution', 'intelligence', 'wisdom'] })
   })
+
+  test('builder lists use the pickable scope (no sheet-only homebrew of fellow members)', async () => {
+    renderWithQuery(<Bound Step={OriginStep} />)
+    await screen.findByRole('button', { name: 'Sage' })
+    for (const [arg] of mockList.mock.calls) expect(arg).toMatchObject({ scope: 'pickable' })
+  })
+
+  test('the Homebrew badge marks only my own rows, not a campaign row someone else owns', async () => {
+    mockList.mockImplementation(async ({ kind }: { kind: string }) => kind === 'background'
+      ? [
+          { ...CONTENT.background[1] as object, owner_id: 'me' },
+          { ...row('background', 'camp-bg', 'Guild Runner', { skill_proficiencies: ['insight'], ability_score_options: {} }), owner_id: 'gm', campaign_id: 'camp' },
+        ]
+      : CONTENT[kind] ?? [])
+    renderWithQuery(<Bound Step={OriginStep} />)
+    await screen.findByRole('button', { name: 'Guild Runner' })
+    await waitFor(() => expect(screen.getAllByText('Homebrew')).toHaveLength(1))
+    expect(screen.getByRole('button', { name: 'Wanderer' })).toHaveTextContent(/Homebrew/)
+    expect(screen.getByRole('button', { name: 'Guild Runner' })).not.toHaveTextContent(/Homebrew/)
+  })
 })
 
 describe('Ability scores step', () => {
@@ -206,6 +228,7 @@ describe('Ability scores step', () => {
     renderWithQuery(<Bound Step={AbilityScoresStep} />)
     expect(await screen.findByText('Wanderer grants no ability score bonuses.')).toBeTruthy()
     expect(screen.queryByText('+2')).toBeNull()
+    await act(async () => {})
   })
 })
 

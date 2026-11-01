@@ -1,5 +1,5 @@
 import {
-  createCharacter, deleteCharacter, getCharacter, listCharacters, addItem, updateItem, removeItem, updateResources, levelUpCharacter,
+  createCharacter, deleteCharacter, getCharacter, listCharacters, addItem, updateItem, removeItem, updateResources, levelUpCharacter, updateCharacter,
 } from '@/features/characters/characters.api'
 import type { NewCharacter } from '@/systems/types'
 
@@ -112,11 +112,18 @@ describe('listCharacters', () => {
 
 describe('updates and items', () => {
   it('updateResources writes the resources column', async () => {
-    const b = builder({ error: null })
+    const b = builder({ data: [{ id: 'ch1' }], error: null })
     ;(supabase.from as jest.Mock).mockReturnValue(b)
     await updateResources('ch1', resources)
     expect(b.update).toHaveBeenCalledWith({ resources })
     expect(b.eq).toHaveBeenCalledWith('id', 'ch1')
+    expect(b.select).toHaveBeenCalledWith('id')
+  })
+
+  it('an update that matches no row (RLS-filtered or gone) is an error, not a silent success', async () => {
+    ;(supabase.from as jest.Mock).mockReturnValue(builder({ data: [], error: null }))
+    await expect(updateResources('ch1', resources)).rejects.toMatchObject({ code: 'save_failed' })
+    await expect(updateCharacter('ch1', { name: 'X' })).rejects.toMatchObject({ code: 'save_failed' })
   })
 
   it('addItem / updateItem / removeItem hit character_items', async () => {
@@ -134,12 +141,18 @@ describe('updates and items', () => {
 
 describe('deleteCharacter', () => {
   it('deletes the character row by id', async () => {
-    const b = builder({ error: null })
+    const b = builder({ data: [{ id: 'ch1' }], error: null })
     ;(supabase.from as jest.Mock).mockReturnValue(b)
     await deleteCharacter('ch1')
     expect(supabase.from).toHaveBeenCalledWith('characters')
     expect(b.delete).toHaveBeenCalled()
     expect(b.eq).toHaveBeenCalledWith('id', 'ch1')
+    expect(b.select).toHaveBeenCalledWith('id')
+  })
+
+  it('a delete that matches no row is an error', async () => {
+    ;(supabase.from as jest.Mock).mockReturnValue(builder({ data: [], error: null }))
+    await expect(deleteCharacter('ch1')).rejects.toMatchObject({ code: 'unknown' })
   })
 
   it('throws when the delete fails', async () => {
@@ -149,10 +162,10 @@ describe('deleteCharacter', () => {
 })
 
 describe('levelUpCharacter', () => {
-  const patch = { level: 3, resources }
+  const patch = { level: 3, resources, stats }
 
-  it('inserts the subclass pick then updates level and resources', async () => {
-    const chars = builder({ error: null })
+  it('inserts the subclass pick then updates level, resources and stats (ASI)', async () => {
+    const chars = builder({ data: [{ id: 'ch1' }], error: null })
     const picks = builder({ error: null })
     ;(supabase.from as jest.Mock).mockImplementation((t: string) => (t === 'characters' ? chars : picks))
     await levelUpCharacter('ch1', patch, { subclassId: 'sub1' })
@@ -162,7 +175,7 @@ describe('levelUpCharacter', () => {
   })
 
   it('skips the pick when no subclass is chosen', async () => {
-    const chars = builder({ error: null })
+    const chars = builder({ data: [{ id: 'ch1' }], error: null })
     ;(supabase.from as jest.Mock).mockReturnValue(chars)
     await levelUpCharacter('ch1', patch)
     expect(supabase.from).toHaveBeenCalledTimes(1)

@@ -98,6 +98,9 @@ export type SheetSectionProps = {
   onChange?: (input: Record<string, unknown>, ready: boolean) => void
 }
 
+/** What a level up changes on the character row. */
+export type LevelUpPatch = Pick<CharacterRecord, 'level' | 'resources' | 'stats'>
+
 export interface GameSystem {
   id: SystemId
   name: string
@@ -118,7 +121,7 @@ export interface GameSystem {
   rules: {
     derived(c: CharacterRecord, picks: PickRecord[]): DerivedValue[]
     rest(c: CharacterRecord, kind: 'short' | 'long', picks: PickRecord[]): Record<string, ResourceValue>
-    levelUp?(c: CharacterRecord, picks: PickRecord[], input: Record<string, unknown>): Pick<CharacterRecord, 'level' | 'resources'>
+    levelUp?(c: CharacterRecord, picks: PickRecord[], input: Record<string, unknown>): LevelUpPatch
     /** Most items a character may be attuned to at once; undefined = no limit. */
     maxAttuned?: number
   }

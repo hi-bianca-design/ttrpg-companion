@@ -465,6 +465,7 @@ export type Database = {
         Returns: string
       }
       owns_character: { Args: { p_character_id: string }; Returns: boolean }
+      username_available: { Args: { p_username: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

@@ -93,7 +93,7 @@ export function ContentForm({ systemId, kind, initial, onSaved, onDeleted }: Con
   const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
 
   const parentDef = def.parentKind ? getSystem(systemId).contentKinds[def.parentKind] : undefined
-  const parents = useContentList(systemId, def.parentKind ?? '', 'all', !!def.parentKind)
+  const parents = useContentList(systemId, def.parentKind ?? '', 'pickable', !!def.parentKind)
 
   const set = (key: string, value: unknown) => {
     setValues((v) => ({ ...v, [key]: value }))
@@ -292,7 +292,7 @@ export function ContentForm({ systemId, kind, initial, onSaved, onDeleted }: Con
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{`Delete ${initial?.name ?? 'this'}?`}</DialogTitle>
-            <DialogDescription>It’s removed from your homebrew and can’t be picked for new characters. This can’t be undone.</DialogDescription>
+            <DialogDescription>It’s removed from your homebrew. If a character still uses it, remove it from them first. This can’t be undone.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" accessibilityLabel="Cancel" onPress={() => setConfirmingDelete(false)}>

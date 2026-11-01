@@ -3,6 +3,7 @@ import { renderHook, act } from '@testing-library/react-native'
 import { AuthProvider } from '@/features/auth/AuthProvider'
 import { useAuth } from '@/features/auth/useAuth'
 import { queryClient } from '@/lib/query-client'
+import { useBuilderStore } from '@/features/characters/builder/builder.store'
 
 const mockUnsubscribe = jest.fn()
 
@@ -64,5 +65,18 @@ describe('useAuth', () => {
     act(() => listener('SIGNED_OUT', null))
     expect(clear).toHaveBeenCalledTimes(1)
     clear.mockRestore()
+  })
+
+  it('drops the in-progress character draft on sign-out so the next user starts clean', async () => {
+    ;(supabase.auth.getSession as jest.Mock).mockResolvedValue({ data: { session: null } })
+    renderHook(() => useAuth(), { wrapper })
+    await act(async () => {})
+    act(() => {
+      useBuilderStore.getState().start('dnd5e-2024')
+      useBuilderStore.getState().update({ name: 'Previous user hero' })
+    })
+    const listener = (supabase.auth.onAuthStateChange as jest.Mock).mock.calls[0][0]
+    act(() => listener('SIGNED_OUT', null))
+    expect(useBuilderStore.getState()).toMatchObject({ systemId: null, draft: {} })
   })
 })

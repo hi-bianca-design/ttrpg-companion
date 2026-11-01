@@ -165,11 +165,11 @@ test('long rest restores slots and hp', () => {
   expect(slots.tiers['1'].max).toBe(4)
 })
 
-test('long rest restores half hit dice (min 1), capped at max', () => {
-  expect(rest(makeCharacter(), 'long', [wizardPick]).hit_dice).toEqual({ current: 3, max: 5 })
+test('long rest regains all spent hit dice (SRD 5.2)', () => {
+  expect(rest(makeCharacter(), 'long', [wizardPick]).hit_dice).toEqual({ current: 5, max: 5 })
   const lvl1 = makeCharacter({ level: 1, resources: { ...makeCharacter().resources, hit_dice: { current: 0, max: 1 } } })
   expect(rest(lvl1, 'long', [wizardPick]).hit_dice).toEqual({ current: 1, max: 1 })
-  const full = makeCharacter({ resources: { ...makeCharacter().resources, hit_dice: { current: 4, max: 5 } } })
+  const full = makeCharacter({ resources: { ...makeCharacter().resources, hit_dice: { current: 5, max: 5 } } })
   expect(rest(full, 'long', [wizardPick]).hit_dice).toEqual({ current: 5, max: 5 })
 })
 

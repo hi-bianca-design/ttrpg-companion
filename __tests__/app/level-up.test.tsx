@@ -1,5 +1,5 @@
 import '@testing-library/jest-native/extend-expect'
-import { render, screen } from '@testing-library/react-native'
+import { fireEvent, render, screen } from '@testing-library/react-native'
 import LevelUpScreen from '../../app/(app)/characters/[id]/level-up'
 import { useCharacter, useLevelUp } from '@/features/characters/characters.queries'
 
@@ -35,4 +35,22 @@ test('Level up stays disabled while the subclass list is loading on a 2→3 leve
   ;(useCharacter as jest.Mock).mockReturnValue({ data: character(2), isLoading: false, isError: false, refetch: jest.fn() })
   render(<LevelUpScreen />)
   expect(screen.getByRole('button', { name: 'Level up' })).toBeDisabled()
+})
+
+test('3→4: Level up waits for the ASI, then saves the raised score with the new level', () => {
+  const mutate = jest.fn()
+  ;(useLevelUp as jest.Mock).mockReturnValue({ mutate, isPending: false })
+  const c = character(3)
+  c.stats = { strength: 8, dexterity: 14, constitution: 14, intelligence: 15, wisdom: 12, charisma: 10 } as never
+  c.picks.push({ ...c.picks[0], content_id: 'sub', kind: 'subclass', content: { id: 'sub', kind: 'subclass', name: 'Evoker', data: {} } } as never)
+  ;(useCharacter as jest.Mock).mockReturnValue({ data: c, isLoading: false, isError: false, refetch: jest.fn() })
+  render(<LevelUpScreen />)
+  expect(screen.getByRole('button', { name: 'Level up' })).toBeDisabled()
+  fireEvent.press(screen.getByRole('button', { name: 'Strength 8, plus 2' }))
+  expect(screen.getByText('8 → 10')).toBeTruthy()
+  fireEvent.press(screen.getByRole('button', { name: 'Level up' }))
+  expect(mutate).toHaveBeenCalledWith(
+    expect.objectContaining({ patch: expect.objectContaining({ level: 4, stats: expect.objectContaining({ strength: 10 }) }) }),
+    expect.anything(),
+  )
 })

@@ -7,7 +7,7 @@ import type { SystemId } from '@/systems/types'
  * lazily: system builder steps use this hook, and the system registry must stay importable
  * (rules, schemas, tests) without constructing the Supabase client.
  */
-export function useContentList(systemId: SystemId, kind: string, scope: ContentScope = 'all', enabled = true) {
+export function useContentList(systemId: SystemId, kind: string, scope: ContentScope = 'pickable', enabled = true) {
   return useQuery({
     enabled,
     queryKey: qk.content(systemId, kind, scope),
@@ -54,7 +54,28 @@ export function useContentItem(id: string | undefined) {
   })
 }
 
-/** Create or update a homebrew row; every cached content list (builder, picker, My homebrew) refreshes. */
+/** The signed-in user's id (from the stored session), e.g. to tell my homebrew from a campaign row. */
+export function useCurrentUserId() {
+  return useQuery({
+    queryKey: ['session', 'uid'] as const,
+    staleTime: Infinity,
+    queryFn: () => {
+      const { currentUserId } = require('@/features/session') as typeof import('@/features/session')
+      return currentUserId()
+    },
+  }).data
+}
+
+/** Content lists plus every cached character: sheets resolve picks/items through the content rows. */
+function invalidateContentAndCharacters(qc: ReturnType<typeof useQueryClient>) {
+  return Promise.all([
+    qc.invalidateQueries({ queryKey: ['content'] }),
+    qc.invalidateQueries({ queryKey: ['character'] }),
+    qc.invalidateQueries({ queryKey: qk.characters }),
+  ])
+}
+
+/** Create or update a homebrew row; every cached content list (builder, picker, My homebrew) and sheet refreshes. */
 export function useSaveHomebrew() {
   const qc = useQueryClient()
   return useMutation({
@@ -62,7 +83,7 @@ export function useSaveHomebrew() {
       const { saveHomebrew } = require('./content.api') as typeof import('./content.api')
       return saveHomebrew(input)
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['content'] }),
+    onSuccess: () => invalidateContentAndCharacters(qc),
   })
 }
 
@@ -73,6 +94,6 @@ export function useDeleteHomebrew() {
       const { deleteHomebrew } = require('./content.api') as typeof import('./content.api')
       return deleteHomebrew(id)
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['content'] }),
+    onSuccess: () => invalidateContentAndCharacters(qc),
   })
 }

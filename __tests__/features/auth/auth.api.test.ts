@@ -2,6 +2,7 @@ import { signUp, signIn, signOut } from '@/features/auth/auth.api'
 
 jest.mock('@/lib/supabase', () => ({
   supabase: {
+    rpc: jest.fn(),
     auth: {
       signUp: jest.fn(),
       signInWithPassword: jest.fn(),
@@ -15,6 +16,7 @@ import { supabase } from '@/lib/supabase'
 describe('auth.api', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    ;(supabase.rpc as jest.Mock).mockResolvedValue({ data: true, error: null })
   })
 
   describe('signUp', () => {
@@ -38,6 +40,30 @@ describe('auth.api', () => {
       })
       await expect(signUp('existing@example.com', 'password123', 'user'))
         .rejects.toThrow('Email already registered')
+    })
+
+    it('checks the username first and fails as username_taken without signing up when it is taken', async () => {
+      ;(supabase.rpc as jest.Mock).mockResolvedValue({ data: false, error: null })
+      await expect(signUp('new@example.com', 'password123', 'bob'))
+        .rejects.toMatchObject({ code: 'username_taken', message: 'That username is taken.' })
+      expect(supabase.rpc).toHaveBeenCalledWith('username_available', { p_username: 'bob' })
+      expect(supabase.auth.signUp).not.toHaveBeenCalled()
+    })
+
+    it('still signs up when the availability check itself fails (the trigger is the guard)', async () => {
+      ;(supabase.rpc as jest.Mock).mockResolvedValue({ data: null, error: { message: 'Network request failed' } })
+      ;(supabase.auth.signUp as jest.Mock).mockResolvedValue({ data: { user: { id: 'u' } }, error: null })
+      await signUp('new@example.com', 'password123', 'bob')
+      expect(supabase.auth.signUp).toHaveBeenCalled()
+    })
+
+    it('maps the handle_new_user username_taken error to a username_taken AppError', async () => {
+      ;(supabase.auth.signUp as jest.Mock).mockResolvedValue({
+        data: { user: null, session: null },
+        error: { message: 'username_taken', code: 'P0001', status: 500 },
+      })
+      await expect(signUp('new@example.com', 'password123', 'bob'))
+        .rejects.toMatchObject({ code: 'username_taken', message: 'That username is taken.' })
     })
   })
 

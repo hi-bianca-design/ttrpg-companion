@@ -14,10 +14,25 @@ export async function listContent({ systemId, kind, scope, search }: ListContent
   let q = supabase.from('content').select('*').eq('system_id', systemId).eq('kind', kind)
   if (scope === 'official') q = q.is('owner_id', null)
   else if (scope === 'mine') q = q.eq('owner_id', await currentUserId()).is('campaign_id', null)
-  else if (typeof scope === 'object') q = q.eq('campaign_id', scope.campaignId)
+  else if (scope === 'pickable') q = q.or(await pickableFilter())
+  else q = q.eq('campaign_id', scope.campaignId)
   const term = search?.trim()
   if (term) q = q.ilike('name', `%${term.replace(/[\\%_]/g, '\\$&')}%`)
   return unwrap(await q.order('name')) ?? []
+}
+
+/**
+ * PostgREST filter matching can_reference_content: official, mine, or scoped to a campaign I GM or
+ * belong to. RLS on campaigns returns exactly those campaigns (is_campaign_member), so their ids are
+ * the campaign half of the rule.
+ */
+async function pickableFilter(): Promise<string> {
+  const [uid, campaigns] = await Promise.all([
+    currentUserId(),
+    supabase.from('campaigns').select('id').then(unwrap),
+  ])
+  const ids = (campaigns ?? []).map((c) => c.id)
+  return ['owner_id.is.null', `owner_id.eq.${uid}`, ...(ids.length ? [`campaign_id.in.(${ids.join(',')})`] : [])].join(',')
 }
 
 export async function getContent(id: string): Promise<ContentRow> {
@@ -74,6 +89,9 @@ export async function saveHomebrew(input: SaveHomebrewInput): Promise<ContentRow
   }
 }
 
+/** Deletes a homebrew row. A row still on a character is refused (FK on delete restrict) as `in_use`. */
 export async function deleteHomebrew(id: string): Promise<void> {
-  check(await supabase.from('content').delete().eq('id', id))
+  const res = await supabase.from('content').delete().eq('id', id)
+  if ((res.error as { code?: string } | null)?.code === '23503') throw new AppError('in_use', { cause: res.error })
+  check(res)
 }

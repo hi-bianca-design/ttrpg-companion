@@ -1,21 +1,29 @@
-// D&D level-up choices: HP method (average or a rolled hit die) and, once due, the subclass.
+// D&D level-up choices: HP method (average or a rolled hit die), the Ability Score Improvement at
+// levels 4/8/12/16/19 and, once due, the subclass.
 // Registered as `sheet.sections.levelUp`; reports its input and completeness through `onChange`.
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { View } from 'react-native'
 import { SectionHeader } from '@/components/game/SectionHeader'
 import { Input } from '@/components/ui/input'
 import { Text } from '@/components/ui/text'
 import type { SheetSectionProps } from '../../types'
-import { getAbilityModifier, hitDieOf, hpGain, SUBCLASS_LEVEL } from '../rules'
+import { ABILITY_KEYS, ABILITY_LABELS, type AbilityKey } from '../definition'
+import {
+  ABILITY_SCORE_CAP, type AsiChoice, getAbilityModifier, hitDieOf, hpGain, isAsiLevel, SUBCLASS_LEVEL,
+} from '../rules'
 import { ChoiceCard, Chip, QueryState, useDndContent } from '../steps/shared'
 
 type HpMethod = 'average' | 'roll'
+/** 'two': +2 to one ability. 'split': +1 to two different abilities. */
+type AsiMode = 'two' | 'split'
 
 export function LevelUpSection({ character, picks, onChange }: SheetSectionProps) {
   const subclasses = useDndContent('subclass')
   const [hpMethod, setHpMethod] = useState<HpMethod>('average')
   const [rollText, setRollText] = useState('')
   const [subclassId, setSubclassId] = useState<string | null>(null)
+  const [asiMode, setAsiMode] = useState<AsiMode>('two')
+  const [asiPicks, setAsiPicks] = useState<AbilityKey[]>([])
 
   const newLevel = character.level + 1
   const classPick = picks.find((p) => p.kind === 'class')
@@ -30,7 +38,16 @@ export function LevelUpSection({ character, picks, onChange }: SheetSectionProps
   const subclassLevel = options[0]?.data.features.subclass_level ?? SUBCLASS_LEVEL
   const subclassPending = !hasSubclass && newLevel >= SUBCLASS_LEVEL && (subclasses.isLoading || subclasses.isError)
   const needsSubclass = !hasSubclass && options.length > 0 && newLevel >= subclassLevel
-  const ready = (hpMethod === 'average' || rollValid) && !subclassPending && (!needsSubclass || subclassId !== null)
+  const asiDue = isAsiLevel(newLevel)
+  const asiStep = asiMode === 'two' ? 2 : 1
+  const score = (k: AbilityKey) => character.stats[k] ?? 10
+  const asi = useMemo<AsiChoice>(() => Object.fromEntries(asiPicks.map((k) => [k, asiStep])), [asiPicks, asiStep])
+  // Every score already at 20: nothing to raise, so the ASI can't block the level up.
+  const asiBlocked = ABILITY_KEYS.every((k) => score(k) >= ABILITY_SCORE_CAP)
+  const asiComplete = asiPicks.length * asiStep === 2
+  const asiReady = !asiDue || asiComplete || asiBlocked
+
+  const ready = (hpMethod === 'average' || rollValid) && !subclassPending && (!needsSubclass || subclassId !== null) && asiReady
 
   useEffect(() => {
     onChange?.(
@@ -38,10 +55,21 @@ export function LevelUpSection({ character, picks, onChange }: SheetSectionProps
         hpMethod,
         ...(hpMethod === 'roll' && rollValid ? { roll } : {}),
         ...(needsSubclass && subclassId ? { subclassId } : {}),
+        ...(asiDue && asiComplete ? { asi } : {}),
       },
       ready,
     )
-  }, [hpMethod, rollValid, roll, needsSubclass, subclassId, ready, onChange])
+  }, [hpMethod, rollValid, roll, needsSubclass, subclassId, asiDue, asiComplete, asi, ready, onChange])
+
+  const chooseAsiMode = (mode: AsiMode) => {
+    if (mode === asiMode) return
+    setAsiMode(mode)
+    setAsiPicks([])
+  }
+  const toggleAsi = (k: AbilityKey) => {
+    if (asiMode === 'two') setAsiPicks((p) => (p[0] === k ? [] : [k]))
+    else setAsiPicks((p) => (p.includes(k) ? p.filter((x) => x !== k) : [...p, k].slice(0, 2)))
+  }
 
   return (
     <>
@@ -86,6 +114,44 @@ export function LevelUpSection({ character, picks, onChange }: SheetSectionProps
           </Text>
         </View>
       </SectionHeader>
+
+      {asiDue ? (
+        <SectionHeader
+          id="levelup-asi"
+          title="Ability Score Improvement"
+          action={<Text variant="label" tone="accent">{`${asiPicks.length * asiStep}/2`}</Text>}
+        >
+          <View className="gap-3 pt-3">
+            <Text variant="body-sm" tone="muted">
+              {`Raise one score by 2, or two scores by 1. No score can go above ${ABILITY_SCORE_CAP}.`}
+            </Text>
+            <View className="flex-row flex-wrap gap-2">
+              <Chip label="+2 to one" selected={asiMode === 'two'} onPress={() => chooseAsiMode('two')} />
+              <Chip label="+1 to two" selected={asiMode === 'split'} onPress={() => chooseAsiMode('split')} />
+            </View>
+            <View className="flex-row flex-wrap gap-2">
+              {ABILITY_KEYS.map((k) => {
+                const selected = asiPicks.includes(k)
+                const full = asiMode === 'split' && asiPicks.length >= 2
+                const capped = score(k) + asiStep > ABILITY_SCORE_CAP
+                return (
+                  <Chip
+                    key={k}
+                    label={selected ? `${ABILITY_LABELS[k]} ${score(k)} → ${score(k) + asiStep}` : `${ABILITY_LABELS[k]} ${score(k)}`}
+                    accessibilityLabel={`${ABILITY_LABELS[k]} ${score(k)}, plus ${asiStep}`}
+                    selected={selected}
+                    disabled={!selected && (capped || full)}
+                    onPress={() => toggleAsi(k)}
+                  />
+                )
+              })}
+            </View>
+            {asiBlocked ? (
+              <Text variant="caption" tone="muted">{`Every score is already ${ABILITY_SCORE_CAP}.`}</Text>
+            ) : null}
+          </View>
+        </SectionHeader>
+      ) : null}
 
       {needsSubclass ? (
         <SectionHeader id="levelup-subclass" title="Subclass">

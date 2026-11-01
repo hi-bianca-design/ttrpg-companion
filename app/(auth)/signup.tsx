@@ -7,6 +7,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Text } from '@/components/ui/text'
 import { signUp } from '@/features/auth/auth.api'
+import { AppError } from '@/features/errors'
+
+/** Longest username profiles.username accepts (check constraint). */
+const USERNAME_MAX = 64
 
 export default function SignupScreen() {
   const [email, setEmail] = useState('')
@@ -21,7 +25,9 @@ export default function SignupScreen() {
   async function handleSignUp() {
     const next = {
       email: email.trim() ? undefined : 'Enter your email',
-      username: username.trim() ? undefined : 'Choose a username',
+      username: !username.trim()
+        ? 'Choose a username'
+        : username.trim().length > USERNAME_MAX ? `Use ${USERNAME_MAX} characters or fewer` : undefined,
       password: password ? undefined : 'Choose a password',
     }
     setErrors(next)
@@ -33,7 +39,8 @@ export default function SignupScreen() {
       // With email confirmation on there is no session yet; otherwise AuthProvider routes into the app.
       if (!data?.session) setConfirmSent(true)
     } catch (e: unknown) {
-      setFormError(e instanceof Error ? e.message : 'Something went wrong. Try again.')
+      if (e instanceof AppError && e.code === 'username_taken') setErrors({ username: e.message })
+      else setFormError(e instanceof Error ? e.message : 'Something went wrong. Try again.')
     } finally {
       setBusy(false)
     }
@@ -77,6 +84,7 @@ export default function SignupScreen() {
                 onChangeText={setUsername}
                 autoCapitalize="none"
                 autoComplete="username-new"
+                maxLength={USERNAME_MAX}
               />
               {errors.username && <Text variant="caption" tone="destructive">{errors.username}</Text>}
             </View>

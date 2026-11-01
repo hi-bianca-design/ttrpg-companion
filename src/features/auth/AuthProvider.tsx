@@ -2,6 +2,7 @@ import React, { createContext, useEffect, useState } from 'react'
 import { Session, User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { queryClient } from '@/lib/query-client'
+import { useBuilderStore } from '@/features/characters/builder/builder.store'
 
 type AuthContextValue = {
   user: User | null
@@ -31,8 +32,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'INITIAL_SESSION') return
-      // Cached characters/campaigns belong to the previous user.
-      if (event === 'SIGNED_OUT') queryClient.clear()
+      // Cached characters/campaigns and any half-built character belong to the previous user.
+      if (event === 'SIGNED_OUT') {
+        queryClient.clear()
+        useBuilderStore.getState().reset()
+      }
       setSession(session)
       setUser(session?.user ?? null)
     })

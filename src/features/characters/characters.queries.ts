@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '@/lib/query-client'
-import type { CharacterRecord, NewCharacter, ResourceValue } from '@/systems/types'
+import type { LevelUpPatch, NewCharacter, ResourceValue } from '@/systems/types'
 import {
   addItem, createCharacter, deleteCharacter, getCharacter, levelUpCharacter, listCharacters, removeItem, updateCharacter, updateItem, updateResources,
   type CharacterFull, type CharacterPatch, type ItemPatch,
@@ -48,7 +48,7 @@ export function useUpdateCharacter(id: string) {
 export function useLevelUp(id: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ patch, input }: { patch: Pick<CharacterRecord, 'level' | 'resources'>; input: Record<string, unknown> }) =>
+    mutationFn: ({ patch, input }: { patch: LevelUpPatch; input: Record<string, unknown> }) =>
       levelUpCharacter(id, patch, input),
     onSuccess: () => Promise.all([
       qc.invalidateQueries({ queryKey: qk.character(id) }),

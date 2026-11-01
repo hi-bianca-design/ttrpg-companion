@@ -3,7 +3,7 @@
 import type {
   CharacterRecord, DerivedValue, PickRecord, PoolValue, ResourceValue, SlotsValue,
 } from '../types'
-import { ABILITY_KEYS, ABILITY_LABELS } from './definition'
+import { ABILITY_KEYS, ABILITY_LABELS, type AbilityKey } from './definition'
 
 export function getAbilityModifier(score: number): number {
   return Math.floor((score - 10) / 2)
@@ -241,8 +241,8 @@ function clearSlots(v: ResourceValue | undefined): ResourceValue | undefined {
 }
 
 /**
- * Long: hp to max (temp cleared), all spell slots and death saves reset,
- * regain half max hit dice (min 1). Short: Warlock pact slots only.
+ * Long: hp to max (temp cleared), all spell slots and death saves reset, and all spent
+ * hit dice regained (SRD 5.2). Short: Warlock pact slots only.
  */
 export function rest(c: CharacterRecord, kind: 'short' | 'long', picks: PickRecord[]): Record<string, ResourceValue> {
   const next: Record<string, ResourceValue> = { ...c.resources }
@@ -256,7 +256,7 @@ export function rest(c: CharacterRecord, kind: 'short' | 'long', picks: PickReco
   const hp = c.resources.hp as PoolValue | undefined
   if (hp) set('hp', { ...hp, current: hp.max, temp: 0 })
   const hd = c.resources.hit_dice as PoolValue | undefined
-  if (hd) set('hit_dice', { ...hd, current: Math.min(hd.max, hd.current + Math.max(1, Math.floor(hd.max / 2))) })
+  if (hd) set('hit_dice', { ...hd, current: hd.max })
   for (const key of ['spell_slots', 'death_saves_success', 'death_saves_failure']) set(key, clearSlots(c.resources[key]))
   return next
 }
@@ -267,7 +267,28 @@ export const MAX_LEVEL = 20
 /** 2024 rules: every class chooses its subclass at level 3 (content may override via features.subclass_level). */
 export const SUBCLASS_LEVEL = 3
 
-export type LevelUpInput = { hpMethod: 'average' | 'roll'; roll?: number; subclassId?: string }
+/** Character levels that grant an Ability Score Improvement (2024 class tables). */
+export const ASI_LEVELS = [4, 8, 12, 16, 19] as const
+/** Highest an ability score can be raised to by an ASI. */
+export const ABILITY_SCORE_CAP = 20
+
+export function isAsiLevel(level: number): boolean {
+  return (ASI_LEVELS as readonly number[]).includes(level)
+}
+
+/** +2 to one ability or +1 to two; only applied when it totals exactly 2. */
+export type AsiChoice = Partial<Record<AbilityKey, 1 | 2>>
+
+export type LevelUpInput = { hpMethod: 'average' | 'roll'; roll?: number; subclassId?: string; asi?: AsiChoice }
+
+/** Stats after an ASI, each raised score capped at 20. An ASI that isn't exactly 2 points changes nothing. */
+export function applyAsi(stats: Record<string, number>, asi: AsiChoice | undefined): Record<string, number> {
+  const entries = Object.entries(asi ?? {}).filter(([k, v]) => (ABILITY_KEYS as readonly string[]).includes(k) && (v === 1 || v === 2))
+  if (entries.reduce((sum, [, v]) => sum + (v as number), 0) !== 2) return stats
+  const next = { ...stats }
+  for (const [k, v] of entries) next[k] = Math.min(ABILITY_SCORE_CAP, (stats[k] ?? 10) + (v as number))
+  return next
+}
 
 export function hitDieOf(picks: PickRecord[]): number {
   const die = asRecord(picks.find((p) => p.kind === 'class')?.content.data).hit_die
@@ -294,18 +315,23 @@ function grownSlots(old: SlotsValue, className: string, level: number): SlotsVal
 }
 
 /**
- * Next level's `level` and `resources`: HP max and current rise by the gain (no full heal),
- * hit dice max and current by 1, spell slots follow slotsFor. The subclass pick is persisted by the caller.
+ * Next level's `level`, `resources` and `stats`: HP max and current rise by the gain (no full heal),
+ * hit dice max and current by 1, spell slots follow slotsFor. At an ASI level the chosen +2 / +1+1
+ * is applied (capped at 20); a higher CON modifier also adds its difference for every earlier level,
+ * as the rules apply it retroactively. The subclass pick is persisted by the caller.
  */
 export function levelUp(
   c: CharacterRecord,
   picks: PickRecord[],
   input: Record<string, unknown>,
-): Pick<CharacterRecord, 'level' | 'resources'> {
+): Pick<CharacterRecord, 'level' | 'resources' | 'stats'> {
   if (c.level >= MAX_LEVEL) throw new Error('Already at max level')
   const level = c.level + 1
-  const { hpMethod, roll } = input as LevelUpInput
-  const gain = hpGain(hitDieOf(picks), getAbilityModifier(c.stats.constitution ?? 10), { hpMethod, roll })
+  const { hpMethod, roll, asi } = input as LevelUpInput
+  const stats = isAsiLevel(level) ? applyAsi(c.stats, asi) : c.stats
+  const oldCon = getAbilityModifier(c.stats.constitution ?? 10)
+  const newCon = getAbilityModifier(stats.constitution ?? 10)
+  const gain = hpGain(hitDieOf(picks), newCon, { hpMethod, roll }) + (newCon - oldCon) * c.level
   const resources: Record<string, ResourceValue> = { ...c.resources }
 
   const hp = c.resources.hp as PoolValue | undefined
@@ -316,5 +342,5 @@ export function levelUp(
   const cls = className(picks)
   if (slots && cls) resources.spell_slots = grownSlots(slots, cls, level)
 
-  return { level, resources }
+  return { level, resources, stats }
 }

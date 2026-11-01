@@ -25,3 +25,11 @@ test('lists the level and every changed resource and derived value from the prev
     { label: 'Proficiency', value: '+2 → +3' },
   ])
 })
+
+test('an ASI shows each raised score once (score, not a duplicate modifier row)', () => {
+  const c3 = { ...c, level: 3 }
+  const preview = system.rules.levelUp!(c3, picks, { hpMethod: 'average', asi: { intelligence: 2 } })
+  const rows = levelUpSummary(system, c3, preview, picks)
+  expect(rows).toContainEqual({ label: 'Intelligence', value: '16 → 18' })
+  expect(rows.filter((r) => r.label === 'Intelligence')).toHaveLength(1)
+})

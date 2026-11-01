@@ -1,3 +1,8 @@
+// HISTORICAL — one-shot tool, kept for provenance only; do not run it against the current schema.
+// It reads the PRE-REBUILD tables (classes, spells, ... from the 15 legacy migrations, removed in the
+// foundation rebuild), which no longer exist. The JSON it produced is the committed seed; edit that
+// (and run `npm run db:seed`) instead.
+//
 // One-off export of the legacy SRD tables to supabase/seed/dnd5e-2024/*.json.
 // Reads a LOCAL Supabase stack (built from the legacy migrations) via supabase-js.
 // Env: SUPABASE_URL (default http://127.0.0.1:54321) and SUPABASE_SERVICE_ROLE_KEY

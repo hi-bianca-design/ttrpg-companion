@@ -105,6 +105,25 @@ test('editing prefills, saves with the id and can delete after confirming', asyn
   await waitFor(() => expect(onDeleted).toHaveBeenCalled())
 })
 
+test('the parent picker lists only pickable classes', async () => {
+  ;(listContent as jest.Mock).mockResolvedValue([{ id: 'cls1', name: 'Fighter' }])
+  renderForm({ kind: 'subclass' })
+  await screen.findByRole('button', { name: 'Class Fighter' })
+  expect(listContent).toHaveBeenCalledWith(expect.objectContaining({ kind: 'class', scope: 'pickable' }))
+})
+
+test('the delete dialog does not promise existing characters keep it, and an in-use delete shows why', async () => {
+  ;(deleteHomebrew as jest.Mock).mockRejectedValue(new AppError('in_use'))
+  const initial = { id: 'c1', name: 'Frost Lance', description: null, parent_id: null, data: { level: 2, school: 'Evocation', casting_time: 'Action', range: '60 feet', components: 'V', duration: 'Instant', classes: ['wizard'], is_ritual: false, requires_concentration: false } } as never
+  const { onDeleted } = renderForm({ initial })
+  fireEvent.press(screen.getByRole('button', { name: 'Delete' }))
+  expect(screen.queryByText(/can’t be picked for new characters/)).toBeNull()
+  expect(screen.getByText(/remove it from them first/)).toBeTruthy()
+  await act(async () => { fireEvent.press(screen.getAllByRole('button', { name: 'Delete' }).at(-1)!) })
+  expect(await screen.findByText('This is used by a character. Remove it from them first.')).toBeTruthy()
+  expect(onDeleted).not.toHaveBeenCalled()
+})
+
 const featRow = (data: unknown) => ({ id: 'f1', name: 'Tough Guy', description: null, parent_id: null, data }) as never
 
 test('editing keeps nested data keys the form does not expose', async () => {

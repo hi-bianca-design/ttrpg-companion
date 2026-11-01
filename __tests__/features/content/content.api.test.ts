@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase'
 
 function builder(result: unknown) {
   const b: Record<string, unknown> = {}
-  for (const m of ['select', 'insert', 'update', 'delete', 'eq', 'is', 'ilike', 'order']) b[m] = jest.fn(() => b)
+  for (const m of ['select', 'insert', 'update', 'delete', 'eq', 'is', 'ilike', 'order', 'or']) b[m] = jest.fn(() => b)
   b.single = jest.fn(() => Promise.resolve(result))
   b.then = (res: (v: unknown) => unknown, rej: (e: unknown) => unknown) => Promise.resolve(result).then(res, rej)
   return b as Record<string, jest.Mock> & { then: unknown }
@@ -99,9 +99,26 @@ describe('listContent', () => {
     expect(b.ilike).toHaveBeenCalledWith('name', '%50\\%\\_off%')
   })
 
+  it('pickable matches can_reference_content: official, mine, and campaign rows of my campaigns', async () => {
+    const content = builder({ data: [], error: null })
+    const campaigns = builder({ data: [{ id: 'camp1' }, { id: 'camp2' }], error: null })
+    ;(supabase.from as jest.Mock).mockImplementation((t: string) => (t === 'campaigns' ? campaigns : content))
+    await listContent({ systemId: 'dnd5e-2024', kind: 'spell', scope: 'pickable' })
+    expect(campaigns.select).toHaveBeenCalledWith('id')
+    expect(content.or).toHaveBeenCalledWith('owner_id.is.null,owner_id.eq.u1,campaign_id.in.(camp1,camp2)')
+  })
+
+  it('pickable without campaigns is official plus mine only (no sheet-visible homebrew of others)', async () => {
+    const content = builder({ data: [], error: null })
+    const campaigns = builder({ data: [], error: null })
+    ;(supabase.from as jest.Mock).mockImplementation((t: string) => (t === 'campaigns' ? campaigns : content))
+    await listContent({ systemId: 'dnd5e-2024', kind: 'spell', scope: 'pickable' })
+    expect(content.or).toHaveBeenCalledWith('owner_id.is.null,owner_id.eq.u1')
+  })
+
   it('throws a mapped error when the query fails', async () => {
     ;(supabase.from as jest.Mock).mockReturnValue(builder({ data: null, error: { message: 'Network request failed' } }))
-    await expect(listContent({ systemId: 'dnd5e-2024', kind: 'spell', scope: 'all' })).rejects.toMatchObject({ code: 'network' })
+    await expect(listContent({ systemId: 'dnd5e-2024', kind: 'spell', scope: 'official' })).rejects.toMatchObject({ code: 'network' })
   })
 })
 
@@ -112,5 +129,13 @@ describe('deleteHomebrew', () => {
     await deleteHomebrew('c1')
     expect(b.delete).toHaveBeenCalled()
     expect(b.eq).toHaveBeenCalledWith('id', 'c1')
+  })
+
+  it('maps a foreign-key violation (still on a character) to an in_use AppError', async () => {
+    ;(supabase.from as jest.Mock).mockReturnValue(builder({ error: { code: '23503', message: 'violates foreign key constraint' } }))
+    const err = await deleteHomebrew('c1').catch((e) => e)
+    expect(err).toBeInstanceOf(AppError)
+    expect(err.code).toBe('in_use')
+    expect(err.message).toBe('This is used by a character. Remove it from them first.')
   })
 })

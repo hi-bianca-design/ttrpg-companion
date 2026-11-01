@@ -1,4 +1,4 @@
-import { hpGain, levelUp, SUBCLASS_LEVEL } from '@/systems/dnd5e-2024/rules'
+import { ASI_LEVELS, hpGain, isAsiLevel, levelUp, SUBCLASS_LEVEL } from '@/systems/dnd5e-2024/rules'
 import { getSystem } from '@/systems/registry'
 import type { CharacterRecord, PickRecord, PoolValue, SlotsValue } from '@/systems/types'
 
@@ -82,5 +82,51 @@ describe('invalid roll', () => {
   it('levelUp with a NaN roll yields a finite hp max', () => {
     const next = levelUp(wizard(4, lvl4Slots), picks, { hpMethod: 'roll', roll: NaN })
     expect((next.resources.hp as PoolValue).max).toBe(26)
+  })
+})
+
+describe('Ability Score Improvement', () => {
+  const fighter = [classPick('Fighter', 10)]
+
+  it('is due at levels 4, 8, 12, 16 and 19 only', () => {
+    expect(ASI_LEVELS).toEqual([4, 8, 12, 16, 19])
+    expect([...Array(20)].map((_, i) => i + 1).filter(isAsiLevel)).toEqual([4, 8, 12, 16, 19])
+  })
+
+  it('+2 to one ability on reaching level 4', () => {
+    const next = levelUp(wizard(3, lvl4Slots), fighter, { hpMethod: 'average', asi: { strength: 2 } })
+    expect(next.level).toBe(4)
+    expect(next.stats).toEqual({ ...wizard(3, lvl4Slots).stats, strength: 10 })
+  })
+
+  it('+1 to two abilities', () => {
+    const next = levelUp(wizard(7, lvl4Slots), fighter, { hpMethod: 'average', asi: { dexterity: 1, wisdom: 1 } })
+    expect(next.stats).toMatchObject({ dexterity: 15, wisdom: 13, strength: 8 })
+  })
+
+  it('never raises a score above 20', () => {
+    const c = { ...wizard(18, lvl4Slots), stats: { ...wizard(18, lvl4Slots).stats, intelligence: 19 } }
+    expect(levelUp(c, fighter, { hpMethod: 'average', asi: { intelligence: 2 } }).stats.intelligence).toBe(20)
+  })
+
+  it('is ignored at a level without an ASI, and stats are returned unchanged', () => {
+    const c = wizard(4, lvl4Slots)
+    const next = levelUp(c, fighter, { hpMethod: 'average', asi: { strength: 2 } })
+    expect(next.level).toBe(5)
+    expect(next.stats).toEqual(c.stats)
+  })
+
+  it('ignores an ASI that is not exactly 2 points', () => {
+    const c = wizard(3, lvl4Slots)
+    expect(levelUp(c, fighter, { hpMethod: 'average', asi: { strength: 2, dexterity: 1 } }).stats).toEqual(c.stats)
+    expect(levelUp(c, fighter, { hpMethod: 'average', asi: { strength: 1 } }).stats).toEqual(c.stats)
+  })
+
+  it('a higher CON modifier raises max HP for every level, as if it had always applied', () => {
+    // CON 13 (+1) -> 15 (+2) at level 4: this level gains 6 (d10 avg) + 2, plus 1 for each of the 3 earlier levels.
+    const c = { ...wizard(3, lvl4Slots, 13), resources: { hp: { current: 20, max: 28, temp: 0 } } }
+    const next = levelUp(c, fighter, { hpMethod: 'average', asi: { constitution: 2 } })
+    expect(next.stats.constitution).toBe(15)
+    expect(next.resources.hp).toMatchObject({ max: 28 + 8 + 3, current: 20 + 8 + 3 })
   })
 })

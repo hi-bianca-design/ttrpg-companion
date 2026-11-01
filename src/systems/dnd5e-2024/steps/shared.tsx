@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
 import { ToggleChip } from '@/components/ui/toggle-chip'
-import { useContentList } from '@/features/content/content.queries'
+import { useContentList, useCurrentUserId } from '@/features/content/content.queries'
 import { THEME_COLORS } from '@/lib/theme'
 import { cn } from '@/lib/utils'
 import { dnd5eContentSchemas } from '../schemas'
@@ -30,17 +30,21 @@ export type ContentItem<K extends Kind> = {
   data: z.infer<(typeof dnd5eContentSchemas)[K]>
 }
 
-/** D&D content of one kind with `data` parsed by its schema; rows that don't validate are dropped. */
+/**
+ * D&D content of one kind the user may pick (official, own, their campaigns'), with `data` parsed by
+ * its schema; rows that don't validate are dropped. `owned` = the user's own homebrew.
+ */
 export function useDndContent<K extends Kind>(kind: K) {
-  const query = useContentList('dnd5e-2024', kind)
+  const query = useContentList('dnd5e-2024', kind, 'pickable')
+  const uid = useCurrentUserId()
   const items = useMemo(() => (query.data ?? []).flatMap((row): ContentItem<K>[] => {
     const parsed = dnd5eContentSchemas[kind].safeParse(row.data)
     if (!parsed.success) return []
     return [{
       id: row.id, name: row.name, description: row.description, parent_id: row.parent_id,
-      owned: row.owner_id !== null, data: parsed.data as ContentItem<K>['data'],
+      owned: uid !== undefined && row.owner_id === uid, data: parsed.data as ContentItem<K>['data'],
     }]
-  }), [query.data, kind])
+  }), [query.data, kind, uid])
   return { items, isLoading: query.isLoading, isError: query.isError, refetch: query.refetch }
 }
 
