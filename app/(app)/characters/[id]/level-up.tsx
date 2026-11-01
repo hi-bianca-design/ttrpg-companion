@@ -7,6 +7,7 @@ import { ScreenBackground } from '@/components/game/ScreenBackground'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
+import { showToast } from '@/components/ui/toast'
 import { useCharacter, useLevelUp } from '@/features/characters/characters.queries'
 import { toRuleInput } from '@/features/characters/picks'
 import { levelUpSummary } from '@/features/characters/sheet/levelUpSummary'
@@ -96,7 +97,10 @@ export default function LevelUpScreen() {
     levelUp.mutate(
       { patch: preview, input },
       {
-        onSuccess: () => router.replace(`/(app)/characters/${id}`),
+        onSuccess: () => {
+          showToast(`${character.name} reached level ${preview.level}.`)
+          router.replace(`/(app)/characters/${id}`)
+        },
         onError: (e) => setSaveError(e instanceof Error ? e.message : ERROR_COPY.save_failed),
       },
     )

@@ -60,7 +60,7 @@ function toValues(fields: FieldDef[], initial?: ContentRow): Values {
 }
 
 function Chip({ label, group, selected, onPress }: { label: string; group: string; selected: boolean; onPress: () => void }) {
-  return <ToggleChip label={label} selected={selected} accessibilityLabel={`${group} ${label}`} onPress={onPress} />
+  return <ToggleChip size="sm" label={label} selected={selected} accessibilityLabel={`${group} ${label}`} onPress={onPress} />
 }
 
 function FieldBlock({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {

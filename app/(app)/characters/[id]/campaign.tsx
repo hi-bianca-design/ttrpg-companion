@@ -9,6 +9,8 @@ import { useAuth } from '@/features/auth/useAuth'
 import { CampaignCard } from '@/features/campaigns/CampaignCard'
 import { MemberList } from '@/features/campaigns/MemberList'
 import { useCampaign, useCharacterCampaign } from '@/features/campaigns/campaigns.queries'
+import { useCharacter } from '@/features/characters/characters.queries'
+import { SheetHeader } from '@/features/characters/sheet/SheetHeader'
 import { ERROR_COPY } from '@/features/errors'
 import { useCharacterRouteId } from '@/features/characters/useCharacterRouteId'
 
@@ -17,12 +19,16 @@ export default function CampaignTab() {
   const id = useCharacterRouteId()
   const router = useRouter()
   const { user } = useAuth()
+  const { data: character } = useCharacter(id)
   const membership = useCharacterCampaign(id)
   const campaign = useCampaign(membership.data?.id)
+
+  const header = <SheetHeader name={character?.name} eyebrow="Campaign" />
 
   if (membership.isLoading || (membership.data && campaign.isLoading)) {
     return (
       <ScreenBackground>
+        {header}
         <View className="gap-2" accessibilityLabel="Loading campaign">
           {[0, 1].map((i) => (
             <Card key={i} className="gap-3">
@@ -38,6 +44,7 @@ export default function CampaignTab() {
   if (membership.isError || campaign.isError) {
     return (
       <ScreenBackground>
+        {header}
         <View className="items-start gap-2">
           <Text variant="caption" tone="destructive">{ERROR_COPY.load_failed}</Text>
           <Button
@@ -54,7 +61,8 @@ export default function CampaignTab() {
 
   if (!membership.data || !campaign.data) {
     return (
-      <ScreenBackground>
+      <ScreenBackground scroll>
+        {header}
         <EmptyState
           icon={Scroll}
           title="No campaign yet"
@@ -69,6 +77,7 @@ export default function CampaignTab() {
   const c = campaign.data
   return (
     <ScreenBackground scroll>
+      {header}
       <CampaignCard
         campaign={{ ...c, member_count: c.members.length }}
         isGm={c.gm_id === user?.id}

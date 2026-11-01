@@ -4,6 +4,7 @@ import { View } from 'react-native'
 import { ContentCard } from '@/components/game/ContentCard'
 import { Button } from '@/components/ui/button'
 import { Text } from '@/components/ui/text'
+import { ToggleChip } from '@/components/ui/toggle-chip'
 import { THEME_COLORS } from '@/lib/theme'
 import type { ItemPatch, ItemWithContent } from '../characters.api'
 
@@ -25,6 +26,14 @@ export function filterItems(items: ItemWithContent[], segment: InventorySegment)
   return items
 }
 
+/** Stable display order: when the item was added, then name. Equipping or attuning never moves a row. */
+export function sortItems(items: ItemWithContent[]): ItemWithContent[] {
+  return [...items].sort((a, b) =>
+    (a.created_at ?? '').localeCompare(b.created_at ?? '') ||
+    (a.content?.name ?? '').localeCompare(b.content?.name ?? '') ||
+    a.id.localeCompare(b.id))
+}
+
 function metaFor(item: ItemWithContent): string | undefined {
   const data = asRecord(item.content?.data)
   const parts = [data.category, data.item_type, data.rarity].filter((x): x is string => typeof x === 'string')
@@ -43,7 +52,7 @@ type InventoryListProps = {
   onRemove: (item: ItemWithContent) => void
 }
 
-/** One card per item with quantity stepper, equip / attune toggles and remove. */
+/** One card per item; its quantity stepper, equip / attune toggles, remove and any helper caption sit inside the card. */
 export function InventoryList({ items, allItems, maxAttuned, pendingIds = [], onChange, onRemove }: InventoryListProps) {
   const { colorScheme } = useColorScheme()
   const iconColor = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light'].accentForeground
@@ -51,25 +60,16 @@ export function InventoryList({ items, allItems, maxAttuned, pendingIds = [], on
   const atLimit = maxAttuned !== undefined && attunedCount >= maxAttuned
 
   return (
-    <View className="gap-3">
-      {atLimit ? (
-        <Text variant="caption" tone="muted">
-          {`Attunement limit reached (${attunedCount} of ${maxAttuned}). Unattune an item to attune another.`}
-        </Text>
-      ) : null}
+    <View className="gap-2">
       {items.map((item) => {
         const name = item.content?.name ?? 'Unknown item'
         const attunable = requiresAttunement(item)
-        const tags = [
-          ...(item.content?.kind === 'magic_item' ? ['Magic'] : []),
-          ...(item.equipped ? ['Equipped'] : []),
-          ...(item.attuned ? ['Attuned'] : []),
-        ]
+        // Equipped / attuned state is shown by the toggles themselves, not repeated as tags.
+        const tags = item.content?.kind === 'magic_item' ? ['Magic'] : undefined
         const saving = pendingIds.includes(item.id)
-        const blocked = !item.attuned && atLimit
-        return (
-          <View key={item.id} className="gap-2">
-            <ContentCard title={name} meta={metaFor(item)} tags={tags} />
+        const blocked = attunable && !item.attuned && atLimit
+        const footer = (
+          <View className="gap-2">
             <View className="flex-row flex-wrap items-center gap-2">
               <View className="flex-row items-center gap-3">
                 <Button
@@ -92,33 +92,38 @@ export function InventoryList({ items, allItems, maxAttuned, pendingIds = [], on
                   <Plus size={16} color={iconColor} />
                 </Button>
               </View>
-              <Button
+              <ToggleChip
                 size="sm"
-                variant={item.equipped ? 'primary' : 'outline'}
+                tone="outline"
+                label={item.equipped ? 'Equipped' : 'Equip'}
+                selected={item.equipped}
                 accessibilityLabel={`${item.equipped ? 'Unequip' : 'Equip'} ${name}`}
-                accessibilityState={{ selected: item.equipped }}
                 onPress={() => onChange(item.id, { equipped: !item.equipped })}
-              >
-                <Text>{item.equipped ? 'Equipped' : 'Equip'}</Text>
-              </Button>
+              />
               {attunable ? (
-                <Button
+                <ToggleChip
                   size="sm"
-                  variant={item.attuned ? 'primary' : 'outline'}
-                  accessibilityLabel={`${item.attuned ? 'Unattune' : 'Attune'} ${name}`}
-                  accessibilityState={{ selected: item.attuned, disabled: blocked }}
+                  tone="outline"
+                  label={item.attuned ? 'Attuned' : 'Attune'}
+                  selected={item.attuned}
                   disabled={blocked}
+                  accessibilityLabel={`${item.attuned ? 'Unattune' : 'Attune'} ${name}`}
                   onPress={() => onChange(item.id, { attuned: !item.attuned })}
-                >
-                  <Text>{item.attuned ? 'Attuned' : 'Attune'}</Text>
-                </Button>
+                />
               ) : null}
-              <Button size="sm" variant="ghost" accessibilityLabel={`Remove ${name}`} onPress={() => onRemove(item)}>
-                <Text>Remove</Text>
+              {/* ml-auto keeps it right-aligned and still lets the row wrap when the toggles fill it. */}
+              <Button size="sm" variant="ghost" className="ml-auto" accessibilityLabel={`Remove ${name}`} onPress={() => onRemove(item)}>
+                <Text className="text-destructive">Remove</Text>
               </Button>
             </View>
+            {blocked ? (
+              <Text variant="caption" tone="muted">
+                {`Attunement limit reached (${attunedCount} of ${maxAttuned}). Unattune an item to attune another.`}
+              </Text>
+            ) : null}
           </View>
         )
+        return <ContentCard key={item.id} title={name} meta={metaFor(item)} tags={tags} footer={footer} />
       })}
     </View>
   )

@@ -9,7 +9,10 @@ import { Progress } from '@/components/ui/progress'
 import { Text } from '@/components/ui/text'
 import { THEME_COLORS } from '@/lib/theme'
 
-export type ResourceTint = 'sky' | 'plum' | 'sage' | 'ochre'
+export type ResourceTint = 'sky' | 'plum' | 'sage' | 'ochre' | 'terracotta'
+/** remaining (default): filled pips are what is left to spend (spell slots). marked: filled pips are what has
+ * been marked, counting up from empty (death saves). */
+export type PipCount = 'remaining' | 'marked'
 
 type ResourceTrackerProps =
   | {
@@ -17,12 +20,17 @@ type ResourceTrackerProps =
       label: string
       max: number
       used: number
+      /** used + 1 */
       onSpend: () => void
+      /** used - 1 */
       onRestore: () => void
       tint?: ResourceTint
+      count?: PipCount
+      /** Noun for the screen-reader summary: "Level 1 slots, 2 of 3 available". */
+      unit?: string
     }
   | { display: 'bar'; label: string; current: number; max: number; temp?: number; onAdjust: () => void }
-  | { display: 'counter'; label: string; current: number; max?: number; onAdjust: () => void }
+  | { display: 'counter'; label: string; current: number; max?: number; onAdjust?: () => void }
 
 const PIP_SIZE = 12
 const DIAMOND = `${PIP_SIZE / 2},0 ${PIP_SIZE},${PIP_SIZE / 2} ${PIP_SIZE / 2},${PIP_SIZE} 0,${PIP_SIZE / 2}`
@@ -109,33 +117,34 @@ function CircleButton({
 
 export function ResourceTracker(props: ResourceTrackerProps) {
   if (props.display === 'pips') {
-    const { label, max, used, onSpend, onRestore, tint = 'sky' } = props
-    const available = Math.max(0, max - used)
+    const { label, max, used, onSpend, onRestore, tint = 'sky', count = 'remaining', unit } = props
+    const marked = count === 'marked'
+    const filled = marked ? Math.min(max, used) : Math.max(0, max - used)
+    const name = unit ? `${label} ${unit}` : label
+    const summary = `${name}, ${filled} of ${max} ${marked ? 'marked' : 'available'}`
+    // remaining: − spends (used+1), + restores. marked: + marks (used+1), − clears.
+    const minus = marked
+      ? { label: `Clear ${label}`, disabled: used <= 0, onPress: onRestore }
+      : { label: `Spend ${label}`, disabled: filled === 0, onPress: onSpend }
+    const plus = marked
+      ? { label: `Mark ${label}`, disabled: used >= max, onPress: onSpend }
+      : { label: `Restore ${label}`, disabled: used === 0, onPress: onRestore }
     return (
-      <Card compact className="flex-row items-center justify-between">
-        <View className="gap-2">
-          <Text variant="subhead">{label}</Text>
-          <View className="flex-row gap-3">
+      <Card compact className="flex-row items-center justify-between gap-3">
+        <View className="flex-1 gap-2">
+          <View className="flex-row items-baseline gap-2">
+            <Text variant="subhead" numberOfLines={1} className="shrink">{label}</Text>
+            <Text variant="label">{`${filled}/${max}`}</Text>
+          </View>
+          <View className="flex-row gap-3" accessible accessibilityLabel={summary}>
             {Array.from({ length: max }, (_, i) => (
-              <Pip key={i} available={i < available} tint={tint} />
+              <Pip key={i} available={i < filled} tint={tint} />
             ))}
           </View>
         </View>
         <View className="flex-row gap-2">
-          <CircleButton
-            icon="minus"
-            variant="destructive"
-            label={`Spend ${label}`}
-            disabled={available === 0}
-            onPress={onSpend}
-          />
-          <CircleButton
-            icon="plus"
-            variant="primary"
-            label={`Restore ${label}`}
-            disabled={used === 0}
-            onPress={onRestore}
-          />
+          <CircleButton icon="minus" variant="destructive" {...minus} />
+          <CircleButton icon="plus" variant="primary" {...plus} />
         </View>
       </Card>
     )
@@ -145,7 +154,12 @@ export function ResourceTracker(props: ResourceTrackerProps) {
     const { label, current, max, temp, onAdjust } = props
     const pct = max > 0 ? (current / max) * 100 : 0
     return (
-      <Pressable role="button" accessibilityLabel={`Adjust ${label}`} onPress={onAdjust}>
+      <Pressable
+        role="button"
+        accessibilityLabel={`${label} ${current}/${max}${temp ? ` +${temp}` : ''}`}
+        accessibilityHint={`Adjust ${label}`}
+        onPress={onAdjust}
+      >
         <Card compact className="gap-2">
           <View className="flex-row items-baseline justify-between">
             <Text variant="label">{label}</Text>
@@ -161,14 +175,22 @@ export function ResourceTracker(props: ResourceTrackerProps) {
   }
 
   const { label, current, max, onAdjust } = props
+  const value = max != null ? `${current}/${max}` : String(current)
+  const card = (
+    <Card
+      compact
+      className="flex-row items-center justify-between"
+      accessible={!onAdjust}
+      accessibilityLabel={onAdjust ? undefined : `${label} ${value}`}
+    >
+      <Text variant="label">{label}</Text>
+      <Text variant="stat" numberOfLines={1}>{value}</Text>
+    </Card>
+  )
+  if (!onAdjust) return card
   return (
-    <Pressable role="button" accessibilityLabel={`Adjust ${label}`} onPress={onAdjust}>
-      <Card compact className="flex-row items-center justify-between">
-        <Text variant="label">{label}</Text>
-        <Text variant="stat" numberOfLines={1}>
-          {max != null ? `${current}/${max}` : current}
-        </Text>
-      </Card>
+    <Pressable role="button" accessibilityLabel={`${label} ${value}`} accessibilityHint={`Adjust ${label}`} onPress={onAdjust}>
+      {card}
     </Pressable>
   )
 }

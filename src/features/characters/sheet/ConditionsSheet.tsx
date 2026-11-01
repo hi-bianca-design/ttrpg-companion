@@ -41,7 +41,7 @@ export function ConditionsSheet({ open, onOpenChange, options, value, onApply }:
           const on = selected.includes(key)
           const label = titleCase(key)
           return (
-            <ToggleChip key={key} label={label} selected={on} onPress={() => toggle(key)} />
+            <ToggleChip key={key} size="sm" label={label} selected={on} onPress={() => toggle(key)} />
           )
         })}
       </View>

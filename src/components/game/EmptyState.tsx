@@ -12,10 +12,12 @@ type EmptyStateProps = {
   /** One call to action; omit when the screen header already offers it. */
   actionLabel?: string
   onAction?: () => void
+  /** outline when the screen already has its one primary button (e.g. an empty list inside a tab). */
+  actionVariant?: 'primary' | 'outline'
 }
 
 /** The one empty-state layout: centred duotone icon, display title, muted body, one full-width button. */
-export function EmptyState({ icon: IconComponent, title, body, actionLabel, onAction }: EmptyStateProps) {
+export function EmptyState({ icon: IconComponent, title, body, actionLabel, onAction, actionVariant = 'primary' }: EmptyStateProps) {
   const { colorScheme } = useColorScheme()
   const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
   return (
@@ -26,7 +28,7 @@ export function EmptyState({ icon: IconComponent, title, body, actionLabel, onAc
         <Text variant="body-sm" tone="muted" className="text-center">{body}</Text>
       </View>
       {actionLabel && onAction ? (
-        <Button className="w-full" onPress={onAction}>
+        <Button variant={actionVariant} className="w-full" accessibilityLabel={actionLabel} onPress={onAction}>
           <Text>{actionLabel}</Text>
         </Button>
       ) : null}

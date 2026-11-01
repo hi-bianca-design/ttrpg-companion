@@ -8,6 +8,7 @@ import type { CharacterFull } from '@/features/characters/characters.api'
 import * as charApi from '@/features/characters/characters.api'
 import { listContent } from '@/features/content/content.api'
 import { getCharacterCampaign } from '@/features/campaigns/campaigns.api'
+import { showToast } from '@/components/ui/toast'
 
 jest.mock('@/features/characters/characters.api', () => ({
   getCharacter: jest.fn(),
@@ -20,8 +21,10 @@ jest.mock('@/features/campaigns/campaigns.api', () => ({ getCharacterCampaign: j
 jest.mock('expo-router', () => ({
   useLocalSearchParams: () => ({}),
   useGlobalSearchParams: () => ({ id: 'ch1' }),
-  useRouter: () => ({ push: jest.fn(), back: jest.fn() }),
+  useRouter: () => mockRouter,
 }))
+const mockRouter = { push: jest.fn(), back: jest.fn(), replace: jest.fn(), dismiss: jest.fn(), canDismiss: jest.fn(() => true) }
+jest.mock('@/components/ui/toast', () => ({ showToast: jest.fn() }))
 jest.mock('@/components/game/ScreenBackground', () => ({
   ScreenBackground: ({ children }: { children: React.ReactNode }) => children,
 }))
@@ -36,8 +39,8 @@ const CATALOG = [
   row('c-rod', 'magic_item', 'Rod of Alertness', { rarity: 'Very Rare', requires_attunement: true }),
 ]
 
-const owned = (id: string, name: string, attuned: boolean, requires = true) => ({
-  id, character_id: 'ch1', content_id: `c-${id}`, quantity: 1, equipped: false, attuned, notes: null,
+const owned = (id: string, name: string, attuned: boolean, requires = true, extra: Record<string, unknown> = {}) => ({
+  id, character_id: 'ch1', content_id: `c-${id}`, quantity: 1, equipped: false, attuned, notes: null, created_at: '2026-01-01', ...extra,
   content: row(`c-${id}`, 'magic_item', name, { requires_attunement: requires, rarity: 'Rare' }),
 }) as never
 
@@ -94,6 +97,7 @@ test('adding with quantity 3 calls addItem(characterId, contentId, 3)', async ()
   fireEvent.press(screen.getByRole('button', { name: 'Increase quantity' }))
   fireEvent.press(screen.getByRole('button', { name: 'Add to inventory' }))
   await waitFor(() => expect(charApi.addItem).toHaveBeenCalledWith('ch1', 'c-rope', 3))
+  await waitFor(() => expect(showToast).toHaveBeenCalledWith('Added Rope ×3.'))
 })
 
 test('the source chips hide the campaign chip when the character has no campaign', async () => {
@@ -188,4 +192,42 @@ test('a second quantity tap is blocked while the first write is pending (no lost
   expect(charApi.updateItem).toHaveBeenCalledTimes(1)
   expect(charApi.updateItem).toHaveBeenCalledWith('a', { quantity: 2 })
   resolve()
+})
+
+test('shared header with the character name and caret Back', async () => {
+  setup(character([owned('a', 'Ring A', false)]))
+  expect(await screen.findByText('Mira')).toBeTruthy()
+  fireEvent.press(screen.getByRole('button', { name: 'Back' }))
+  expect(mockRouter.dismiss).toHaveBeenCalled()
+})
+
+test('rows keep a stable order (created_at, then name) whatever the server returns', async () => {
+  setup(character([
+    owned('z', 'Wand', false, false, { created_at: '2026-01-03', equipped: true }),
+    owned('b', 'Boots', false, false, { created_at: '2026-01-02' }),
+    owned('a', 'Amulet', false, false, { created_at: '2026-01-02' }),
+  ]))
+  await screen.findByText('Wand')
+  const json = JSON.stringify(screen.toJSON())
+  expect(json.indexOf('Amulet')).toBeLessThan(json.indexOf('Boots'))
+  expect(json.indexOf('Boots')).toBeLessThan(json.indexOf('Wand'))
+})
+
+test('controls live inside the item card; equip/attune are outline toggles; no duplicate state tags', async () => {
+  setup(character([owned('a', 'Ring A', true, true, { equipped: true })]))
+  const equip = await screen.findByRole('button', { name: 'Unequip Ring A' })
+  expect(equip.props.accessibilityState).toMatchObject({ selected: true })
+  expect(equip.props.className).not.toContain('bg-primary')
+  expect(screen.queryByText('EQUIPPED')).toBeNull()
+  // the Remove control shares the card container with the title
+  let box = screen.getByRole('button', { name: 'Remove Ring A' }).parent
+  while (box && !String(box.props.className ?? '').includes('rounded-card')) box = box.parent
+  expect(box).toBeTruthy()
+  expect(within(box!).getByText('Ring A')).toBeTruthy()
+})
+
+test('Remove uses the destructive tone', async () => {
+  setup(character([owned('a', 'Ring A', false)]))
+  const remove = await screen.findByRole('button', { name: 'Remove Ring A' })
+  expect(within(remove).getByText('Remove').props.className).toContain('text-destructive')
 })

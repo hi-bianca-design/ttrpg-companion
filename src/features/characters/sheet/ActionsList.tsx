@@ -1,5 +1,7 @@
+import { Sword } from 'phosphor-react-native'
 import { View } from 'react-native'
 import { ContentCard } from '@/components/game/ContentCard'
+import { EmptyState } from '@/components/game/EmptyState'
 import { Button } from '@/components/ui/button'
 import { Text } from '@/components/ui/text'
 import type { PickRecord, SlotsValue } from '@/systems/types'
@@ -71,6 +73,28 @@ export function lowestTier(slots: SlotsValue | undefined, level: number): string
   return tier === undefined ? null : String(tier)
 }
 
+/**
+ * The lowest spell level that no remaining slot can pay for (every level at or above it is blocked
+ * too, since a spell may use any tier at or above its level), or null when every level can be cast.
+ */
+export function lowestBlockedLevel(slots: SlotsValue | undefined): number | null {
+  if (!slots) return null
+  const tiers = Object.keys(slots.tiers).map(Number).sort((a, b) => a - b)
+  let blocked: number | null = null
+  for (let i = tiers.length - 1; i >= 0; i--) {
+    const s = slots.tiers[String(tiers[i])]
+    if (s.used < s.max) break
+    blocked = tiers[i]
+  }
+  return blocked
+}
+
+const EMPTY: Record<Segment, { title: string; body: string; action: string }> = {
+  actions: { title: 'No actions yet', body: 'Equip a weapon or learn spells to see them here.', action: 'Open inventory' },
+  bonus: { title: 'Nothing here yet', body: 'No bonus actions for this character.', action: 'Show actions' },
+  reactions: { title: 'Nothing here yet', body: 'No reactions for this character.', action: 'Show actions' },
+}
+
 type ActionsListProps = {
   segment: Segment
   picks: PickRecord[]
@@ -83,16 +107,9 @@ export function ActionsList({ segment, picks, slots, onUse, onEmptyAction }: Act
   const entries = buildEntries(picks).filter((e) => e.segment === segment)
 
   if (entries.length === 0) {
-    return (
-      <View className="items-start gap-3">
-        <Text variant="body-sm" tone="muted">
-          {segment === 'actions' ? 'No weapons equipped and no spells yet.' : 'Nothing here yet.'}
-        </Text>
-        <Button variant="outline" size="sm" onPress={onEmptyAction}>
-          <Text>{segment === 'actions' ? 'Open inventory' : 'Show actions'}</Text>
-        </Button>
-      </View>
-    )
+    const copy = EMPTY[segment]
+    // Outline: the tab's Long rest is its one primary button.
+    return <EmptyState icon={Sword} title={copy.title} body={copy.body} actionLabel={copy.action} onAction={onEmptyAction} actionVariant="outline" />
   }
 
   return (
@@ -100,28 +117,27 @@ export function ActionsList({ segment, picks, slots, onUse, onEmptyAction }: Act
       {entries.map((e) => {
         const costs = e.spellLevel !== undefined && e.spellLevel > 0
         const empty = costs && lowestTier(slots, e.spellLevel!) === null
+        // Why Use is disabled is said once, under the slot cards (SpellSlotsSection), not per card.
         return (
-          <View key={e.key} className="gap-1">
-            <ContentCard
-              title={e.title}
-              meta={e.meta}
-              tags={e.tags}
-              action={
-                costs ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    accessibilityLabel={`Use ${e.title}`}
-                    disabled={empty}
-                    onPress={() => onUse(e.spellLevel!)}
-                  >
-                    <Text>Use</Text>
-                  </Button>
-                ) : undefined
-              }
-            />
-            {empty ? <Text variant="caption" tone="muted">{`No spell slots left for ${e.title}.`}</Text> : null}
-          </View>
+          <ContentCard
+            key={e.key}
+            title={e.title}
+            meta={e.meta}
+            tags={e.tags}
+            action={
+              costs ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  accessibilityLabel={`Use ${e.title}`}
+                  disabled={empty}
+                  onPress={() => onUse(e.spellLevel!)}
+                >
+                  <Text>Use</Text>
+                </Button>
+              ) : undefined
+            }
+          />
         )
       })}
     </View>

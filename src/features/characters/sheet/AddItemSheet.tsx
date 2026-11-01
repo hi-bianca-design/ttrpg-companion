@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Text } from '@/components/ui/text'
+import { showToast } from '@/components/ui/toast'
 import { ToggleChip } from '@/components/ui/toggle-chip'
 import { useCharacterCampaign } from '@/features/campaigns/campaigns.queries'
 import { useContentSearch } from '@/features/content/content.queries'
@@ -62,7 +63,13 @@ export function AddItemSheet({ open, onOpenChange, characterId, systemId }: AddI
 
   const confirm = () => {
     if (!selected) return
-    add.mutate({ contentId: selected.id, quantity }, { onSuccess: () => onOpenChange(false) })
+    const name = selected.name
+    add.mutate({ contentId: selected.id, quantity }, {
+      onSuccess: () => {
+        showToast(quantity > 1 ? `Added ${name} ×${quantity}.` : `Added ${name}.`)
+        onOpenChange(false)
+      },
+    })
   }
 
   return (

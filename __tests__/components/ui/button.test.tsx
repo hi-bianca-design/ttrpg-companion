@@ -34,6 +34,8 @@ test('outline variant is a moss-bordered pill with accent text', () => {
   )
   const cls = screen.getByTestId('o').props.className
   expect(cls).toContain('border-primary')
+  expect(cls).toContain('border-1.5')
+  expect(cls).not.toContain('border-[')
   expect(cls).not.toContain('border-border')
   expect(screen.getByText('Bonus').props.className).toContain('text-accent-foreground')
 })

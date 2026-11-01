@@ -19,13 +19,13 @@ export function StatsSection({ character }: { character: CharacterFull }) {
               const score = character.stats[stat.key] ?? stat.default
               const mod = findDerived(character.derived, `${stat.key}_mod`)
               return (
-                <View
-                  key={stat.key}
-                  className="flex-1"
-                  accessible
-                  accessibilityLabel={mod ? `${stat.label} ${formatDerived(mod)}, score ${score}` : `${stat.label} ${score}`}
-                >
-                  <StatTile label={stat.short} value={mod ? formatDerived(mod) : score} sub={mod ? String(score) : undefined} />
+                <View key={stat.key} className="flex-1">
+                  <StatTile
+                    label={stat.short}
+                    value={mod ? formatDerived(mod) : score}
+                    sub={mod ? String(score) : undefined}
+                    accessibilityLabel={mod ? `${stat.label} ${formatDerived(mod)}, score ${score}` : `${stat.label} ${score}`}
+                  />
                 </View>
               )
             })}

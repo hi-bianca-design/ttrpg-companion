@@ -5,6 +5,7 @@ import ActionsTab from '../../../../app/(app)/characters/[id]/actions'
 import type { CharacterFull } from '@/features/characters/characters.api'
 import { useCharacter, useResourceMutation } from '@/features/characters/characters.queries'
 import type { SlotsValue } from '@/systems/types'
+import { showToast } from '@/components/ui/toast'
 
 jest.mock('@/features/characters/characters.queries', () => ({
   useCharacter: jest.fn(),
@@ -13,8 +14,10 @@ jest.mock('@/features/characters/characters.queries', () => ({
 jest.mock('expo-router', () => ({
   useLocalSearchParams: () => ({}),
   useGlobalSearchParams: () => ({ id: 'ch1' }),
-  useRouter: () => ({ push: jest.fn(), back: jest.fn() }),
+  useRouter: () => mockRouter,
 }))
+const mockRouter = { push: jest.fn(), back: jest.fn(), replace: jest.fn(), dismiss: jest.fn(), canDismiss: jest.fn(() => true) }
+jest.mock('@/components/ui/toast', () => ({ showToast: jest.fn() }))
 jest.mock('@/components/game/ScreenBackground', () => ({
   ScreenBackground: ({ children }: { children: React.ReactNode }) => children,
 }))
@@ -72,11 +75,52 @@ test('Use on a level-1 spell with tier 1 exhausted spends tier 2', () => {
   expect(next.tiers['2'].used).toBe(1)
 })
 
-test('Use is disabled with an explanatory caption when no tier has slots', () => {
+test('Use is disabled and ONE caption sits under the slot cards when no tier has slots', () => {
   setup(character(slots(2, 1)))
   const use = screen.getByRole('button', { name: 'Use Magic Missile' })
   expect(use).toBeDisabled()
-  expect(screen.getByText('No spell slots left for Magic Missile.')).toBeTruthy()
+  expect(screen.queryByText(/No spell slots left for Magic Missile/)).toBeNull()
+  expect(screen.getAllByText('No spell slots left. Rest to recover them.')).toHaveLength(1)
+})
+
+test('when only higher tiers are empty, the caption names the blocked level', () => {
+  setup(character(slots(0, 1)))
+  expect(screen.getByText('No spell slots left for level 2+ spells.')).toBeTruthy()
+})
+
+test('slot tiers show the "available/max" count next to the tier label', () => {
+  setup(character(slots(1, 0)))
+  expect(screen.getByText('1/2')).toBeTruthy()
+  expect(screen.getByLabelText('Level 1 slots, 1 of 2 available')).toBeTruthy()
+})
+
+test('shared header: caret Back + character name', () => {
+  setup(character(slots(0)))
+  expect(screen.getByText('Mira')).toBeTruthy()
+  fireEvent.press(screen.getByRole('button', { name: 'Back' }))
+  expect(mockRouter.dismiss).toHaveBeenCalled()
+})
+
+test('a compact HP bar opens the hit points sheet', () => {
+  setup(character(slots(0)))
+  fireEvent.press(screen.getByRole('button', { name: 'Hit Points 5/20' }))
+  expect(screen.getByText('Hit points')).toBeTruthy()
+  expect(screen.getByLabelText('Amount')).toBeTruthy()
+})
+
+test('active conditions show as tinted badges; none → no row', () => {
+  setup(character(slots(0), { conditions: ['prone', 'poisoned'] }))
+  expect(screen.getByText('Prone').props.className).toContain('text-tinted-foreground')
+  expect(screen.getByText('Poisoned')).toBeTruthy()
+})
+
+test('no actions at all → EmptyState title + Open inventory (outline)', () => {
+  setup(character(slots(0), { picks: [], items: [] } as never))
+  expect(screen.getByText('No actions yet')).toBeTruthy()
+  const open = screen.getByRole('button', { name: 'Open inventory' })
+  expect(open.props.className).toContain('border-primary')
+  fireEvent.press(open)
+  expect(mockRouter.push).toHaveBeenCalledWith('/(app)/characters/ch1/inventory')
 })
 
 test('cantrips have no Use action', () => {
@@ -121,6 +165,20 @@ test('long rest confirms, then is ONE write that resets every tier and refills h
   expect(next.spell_slots.tiers['1'].used).toBe(0)
   expect(next.spell_slots.tiers['2'].used).toBe(0)
   expect(next.hp).toEqual({ current: 20, max: 20, temp: 0 })
+  expect(showToast).toHaveBeenCalledWith('Long rest: Hit Points 20/20, Spell Slots restored.')
+})
+
+test('a short rest with nothing to recharge says so in a toast', () => {
+  setup(character(slots(2, 1)))
+  fireEvent.press(screen.getByRole('button', { name: 'Short rest' }))
+  fireEvent.press(screen.getByRole('button', { name: 'Confirm short rest' }))
+  expect(showToast).toHaveBeenCalledWith('Short rest: nothing to recharge.')
+})
+
+test('rests: Short is outline and Long is the one primary', () => {
+  setup(character(slots(0)))
+  expect(screen.getByRole('button', { name: 'Short rest' }).props.className).toContain('border-primary')
+  expect(screen.getByRole('button', { name: 'Long rest' }).props.className).toContain('bg-primary')
 })
 
 test('cancel leaves resources untouched', () => {

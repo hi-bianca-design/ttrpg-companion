@@ -17,8 +17,9 @@ jest.mock('@/features/characters/characters.queries', () => ({
 jest.mock('expo-router', () => ({
   useLocalSearchParams: () => ({}),
   useGlobalSearchParams: () => ({ id: 'ch1' }),
-  useRouter: () => ({ push: jest.fn(), back: jest.fn() }),
+  useRouter: () => mockRouter,
 }))
+const mockRouter = { push: jest.fn(), back: jest.fn(), replace: jest.fn(), dismiss: jest.fn(), canDismiss: jest.fn(() => true) }
 jest.mock('@/components/game/ScreenBackground', () => ({
   ScreenBackground: ({ children }: { children: React.ReactNode }) => children,
 }))
@@ -42,50 +43,79 @@ beforeEach(() => {
 
 // ── HpSheet ──
 
-test('HpSheet: −8 on {current:10,max:20,temp:5} confirms {current:7,max:20,temp:0}', () => {
-  const pool = { current: 10, max: 20, temp: 5 }
-  render(<><HpSheet characterId="ch1" pool={pool} open onOpenChange={jest.fn()} /><PortalHost /></>)
-  fireEvent.changeText(screen.getByLabelText('Amount'), '8')
-  fireEvent.press(screen.getByRole('button', { name: 'Damage' }))
-  fireEvent.press(screen.getByRole('button', { name: 'Confirm' }))
+function renderHp(pool: { current: number; max: number; temp?: number }, extra: Record<string, unknown> = {}) {
+  const onOpenChange = jest.fn()
+  render(<><HpSheet characterId="ch1" pool={pool} open onOpenChange={onOpenChange} {...extra} /><PortalHost /></>)
+  return { onOpenChange }
+}
 
+test('HpSheet: with no amount, Damage and Heal are disabled and there is no Confirm or Reset', () => {
+  renderHp({ current: 10, max: 20 })
+  expect(screen.getByRole('button', { name: 'Damage' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Heal' })).toBeDisabled()
+  expect(screen.queryByRole('button', { name: 'Confirm' })).toBeNull()
+  expect(screen.queryByRole('button', { name: 'Reset' })).toBeNull()
+})
+
+test('HpSheet: typed 8 on {10/20, bonus 5} previews and Damage applies it at once, then closes', () => {
+  const pool = { current: 10, max: 20, temp: 5 }
+  const { onOpenChange } = renderHp(pool)
+  fireEvent.changeText(screen.getByLabelText('Amount'), '8')
+  expect(screen.getByText('10 → 7')).toBeTruthy()
+  expect(screen.getByText('Bonus HP 5 → 0')).toBeTruthy()
+  expect(screen.getByText('10 → 18')).toBeTruthy()
+  fireEvent.press(screen.getByRole('button', { name: 'Take 8 damage' }))
   expect(useResourceMutation).toHaveBeenCalledWith('ch1', expect.any(Object))
   expect(mockResourceMutate).toHaveBeenCalledTimes(1)
   const change = mockResourceMutate.mock.calls[0][0]
   expect(change.key).toBe('hp')
   expect(change.apply(pool)).toEqual({ current: 7, max: 20, temp: 0 })
+  expect(onOpenChange).toHaveBeenCalledWith(false)
 })
 
-test('HpSheet: heal is clamped to max and Reset clears the pending change', () => {
+test('HpSheet: Heal applies the typed amount, clamped to max', () => {
   const pool = { current: 10, max: 20, temp: 0 }
-  render(<><HpSheet characterId="ch1" pool={pool} open onOpenChange={jest.fn()} /><PortalHost /></>)
+  renderHp(pool)
+  fireEvent.changeText(screen.getByLabelText('Amount'), '15')
+  expect(screen.getByText('10 → 20')).toBeTruthy()
+  fireEvent.press(screen.getByRole('button', { name: 'Heal 15' }))
+  expect(mockResourceMutate).toHaveBeenCalledTimes(1)
+  expect(mockResourceMutate.mock.calls[0][0].apply(pool)).toEqual({ current: 20, max: 20, temp: 0 })
+})
+
+test('HpSheet: a change that would do nothing is disabled with a reason, never silently dropped', () => {
+  renderHp({ current: 20, max: 20 })
   fireEvent.changeText(screen.getByLabelText('Amount'), '4')
-  fireEvent.press(screen.getByRole('button', { name: 'Heal' }))
-  expect(screen.getByText('10 → 14')).toBeTruthy()
-  fireEvent.press(screen.getByRole('button', { name: 'Reset' }))
-  expect(screen.getByText('10 → 10')).toBeTruthy()
-  fireEvent.press(screen.getByRole('button', { name: 'Confirm' }))
-  expect(mockResourceMutate).not.toHaveBeenCalled()
+  expect(screen.getByRole('button', { name: 'Heal 4' })).toBeDisabled()
+  expect(screen.getByText('Already at full HP.')).toBeTruthy()
+  expect(screen.getByRole('button', { name: 'Take 4 damage' })).not.toBeDisabled()
 })
 
 test('HpSheet passes mutation failures to onError', () => {
   const onError = jest.fn()
   failWrites('Network down')
-  render(<><HpSheet characterId="ch1" pool={{ current: 10, max: 20 }} open onOpenChange={jest.fn()} onError={onError} /><PortalHost /></>)
+  renderHp({ current: 10, max: 20 }, { onError })
   fireEvent.changeText(screen.getByLabelText('Amount'), '2')
-  fireEvent.press(screen.getByRole('button', { name: 'Damage' }))
-  fireEvent.press(screen.getByRole('button', { name: 'Confirm' }))
+  fireEvent.press(screen.getByRole('button', { name: 'Take 2 damage' }))
   expect(onError).toHaveBeenCalledWith(expect.objectContaining({ message: 'Network down' }))
 })
 
-test('HpSheet bonus mode sets temporary HP (no stacking)', () => {
+test('HpSheet bonus mode sets temporary HP (no stacking) and explains a lower value', () => {
   const pool = { current: 10, max: 20, temp: 3 }
-  render(<><HpSheet characterId="ch1" pool={pool} mode="temp" open onOpenChange={jest.fn()} /><PortalHost /></>)
+  renderHp(pool, { mode: 'temp' })
   fireEvent.changeText(screen.getByLabelText('Amount'), '6')
-  fireEvent.press(screen.getByRole('button', { name: 'Confirm' }))
+  expect(screen.getByText('Bonus HP 3 → 6')).toBeTruthy()
+  fireEvent.press(screen.getByRole('button', { name: 'Set bonus HP to 6' }))
   const change = mockResourceMutate.mock.calls[0][0]
   expect(change.apply(pool)).toEqual({ current: 10, max: 20, temp: 6 })
   expect(change.apply({ current: 10, max: 20, temp: 9 })).toEqual({ current: 10, max: 20, temp: 9 })
+})
+
+test('HpSheet bonus mode: a lower value is disabled with the no-stacking reason', () => {
+  renderHp({ current: 10, max: 20, temp: 9 }, { mode: 'temp' })
+  fireEvent.changeText(screen.getByLabelText('Amount'), '4')
+  expect(screen.getByRole('button', { name: 'Set bonus HP to 4' })).toBeDisabled()
+  expect(screen.getByText('Bonus HP doesn’t stack: 9 is already higher.')).toBeTruthy()
 })
 
 // ── ConditionsSheet ──
@@ -178,8 +208,8 @@ test('header shows the XP bar when details.xp exists', () => {
 
 test('vitals: HP / AC / Passive / Speed tiles; inspiration button only when inspired', () => {
   renderTab()
-  expect(screen.getByRole('button', { name: 'HP' })).toBeTruthy()
-  expect(screen.getByText('16')).toBeTruthy()
+  expect(screen.getByRole('button', { name: 'HP 10/20 +5' }).props.accessibilityHint).toBe('Adjust hit points')
+  expect(screen.getByLabelText('AC 16')).toBeTruthy()
   expect(screen.getByText('Passive')).toBeTruthy()
   expect(screen.getByRole('button', { name: '+ Bonus HP' })).toBeTruthy()
   expect(screen.queryByRole('button', { name: 'Spend inspiration' })).toBeNull()
@@ -193,7 +223,7 @@ test('Spend inspiration clears details.inspiration and keeps other details', () 
 
 test('pressing the HP tile opens the hit points sheet', () => {
   renderTab()
-  fireEvent.press(screen.getByRole('button', { name: 'HP' }))
+  fireEvent.press(screen.getByRole('button', { name: 'HP 10/20 +5' }))
   expect(screen.getByText('Hit points')).toBeTruthy()
   expect(screen.getByLabelText('Amount')).toBeTruthy()
 })
@@ -226,10 +256,9 @@ test('D&D proficiencies section: Sage skills and Wizard saves are marked profici
 test('a failed HP change shows in the sheet error caption', () => {
   failWrites('Network down')
   renderTab()
-  fireEvent.press(screen.getByRole('button', { name: 'HP' }))
+  fireEvent.press(screen.getByRole('button', { name: 'HP 10/20 +5' }))
   fireEvent.changeText(screen.getByLabelText('Amount'), '2')
-  fireEvent.press(screen.getByRole('button', { name: 'Heal' }))
-  fireEvent.press(screen.getByRole('button', { name: 'Confirm' }))
+  fireEvent.press(screen.getByRole('button', { name: 'Heal 2' }))
   expect(screen.getByText('Network down')).toBeTruthy()
 })
 
@@ -237,8 +266,8 @@ test('a failed bonus HP change shows in the sheet error caption', () => {
   failWrites('Bonus failed')
   renderTab()
   fireEvent.press(screen.getByRole('button', { name: '+ Bonus HP' }))
-  fireEvent.changeText(screen.getByLabelText('Amount'), '4')
-  fireEvent.press(screen.getByRole('button', { name: 'Confirm' }))
+  fireEvent.changeText(screen.getByLabelText('Amount'), '7')
+  fireEvent.press(screen.getByRole('button', { name: 'Set bonus HP to 7' }))
   expect(screen.getByText('Bonus failed')).toBeTruthy()
 })
 
@@ -246,8 +275,8 @@ test('a non-Error write failure falls back to the shared save_failed copy', () =
   mockResourceMutate.mockImplementation(() => mockHookOptions.forEach((o) => o?.onError?.('boom')))
   renderTab()
   fireEvent.press(screen.getByRole('button', { name: '+ Bonus HP' }))
-  fireEvent.changeText(screen.getByLabelText('Amount'), '4')
-  fireEvent.press(screen.getByRole('button', { name: 'Confirm' }))
+  fireEvent.changeText(screen.getByLabelText('Amount'), '7')
+  fireEvent.press(screen.getByRole('button', { name: 'Set bonus HP to 7' }))
   expect(screen.getByText(ERROR_COPY.save_failed)).toBeTruthy()
 })
 
@@ -266,7 +295,7 @@ test('long name and big HP: the name wraps to two lines max, HP value fits on on
   })
   render(<><CharacterTab /><PortalHost /></>)
   expect(screen.getByText(long)).toHaveProp('numberOfLines', 2)
-  const hpTile = screen.getByRole('button', { name: 'HP' })
+  const hpTile = screen.getByRole('button', { name: 'HP 120/120 +15' })
   const value = within(hpTile).getByText('120')
   expect(value).toHaveProp('numberOfLines', 1)
   expect(value).toHaveProp('adjustsFontSizeToFit', true)
@@ -285,4 +314,69 @@ test('loading shows skeleton cards; error shows Try again', () => {
   rerender(<CharacterTab />)
   fireEvent.press(screen.getByRole('button', { name: 'Try again' }))
   expect(refetch).toHaveBeenCalled()
+})
+
+test('vitals: the system’s counter resources (hit dice) render as a tile', () => {
+  renderTab()
+  expect(screen.getByLabelText('Hit Dice 3/3')).toBeTruthy()
+})
+
+test('above 0 HP there are no death saves and the HP tile is not destructive', () => {
+  renderTab()
+  expect(screen.queryByText('Death Save Successes')).toBeNull()
+  expect(screen.queryByLabelText(/Death Save Successes/)).toBeNull()
+})
+
+function renderDown(successUsed = 1, failureUsed = 2) {
+  const c = makeCharacter()
+  ;(useCharacter as jest.Mock).mockReturnValue({
+    data: {
+      ...c,
+      resources: {
+        ...c.resources,
+        hp: { current: 0, max: 20, temp: 0 },
+        death_saves_success: { tiers: { '1': { max: 3, used: successUsed } } },
+        death_saves_failure: { tiers: { '1': { max: 3, used: failureUsed } } },
+      },
+    },
+    isLoading: false, isError: false, refetch: jest.fn(),
+  })
+  return render(<><CharacterTab /><PortalHost /></>)
+}
+
+test('at 0 HP: death-save pips from the system resources (marked count) and a destructive HP tile', () => {
+  renderDown(1, 2)
+  expect(screen.getByText('Death Save Successes')).toBeTruthy()
+  expect(screen.getByLabelText('Death Save Successes, 1 of 3 marked')).toBeTruthy()
+  expect(screen.getByLabelText('Death Save Failures, 2 of 3 marked')).toBeTruthy()
+  const hpTile = screen.getByRole('button', { name: 'HP 0/20' })
+  expect(within(hpTile).getByText('0').props.className).toContain('text-destructive')
+})
+
+test('marking a death save writes the slots resource through the resource mutation', () => {
+  renderDown(1, 0)
+  fireEvent.press(screen.getByRole('button', { name: 'Mark Death Save Successes' }))
+  const change = mockResourceMutate.mock.calls.at(-1)[0]
+  expect(change.key).toBe('death_saves_success')
+  expect(change.apply({ tiers: { '1': { max: 3, used: 1 } } })).toEqual({ tiers: { '1': { max: 3, used: 2 } } })
+  // nothing marked yet: clearing a failure is disabled
+  expect(screen.getByRole('button', { name: 'Clear Death Save Failures' })).toBeDisabled()
+})
+
+test('conditions use the tinted badge', () => {
+  renderTab()
+  expect(screen.getByText('Prone').props.className).toContain('text-tinted-foreground')
+})
+
+test('shared sheet header: caret Back leaves the sheet; Level up opens the level-up screen', () => {
+  renderTab()
+  fireEvent.press(screen.getByRole('button', { name: 'Back' }))
+  expect(mockRouter.dismiss).toHaveBeenCalled()
+  fireEvent.press(screen.getByRole('button', { name: 'Level up' }))
+  expect(mockRouter.push).toHaveBeenCalledWith('/(app)/characters/ch1/level-up')
+})
+
+test('compact chips in the conditions sheet', () => {
+  render(<><ConditionsSheet open onOpenChange={jest.fn()} options={['blinded', 'prone']} value={[]} onApply={jest.fn()} /><PortalHost /></>)
+  expect(screen.getByRole('button', { name: 'Blinded' }).props.className).toContain('h-8')
 })

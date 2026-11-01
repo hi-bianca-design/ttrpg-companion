@@ -67,7 +67,11 @@ module.exports = {
         'resource-plum': { DEFAULT: token('resource-plum'), glow: token('resource-plum-glow') },
         'resource-sage': { DEFAULT: token('resource-sage'), glow: token('resource-sage-glow') },
         'resource-ochre': { DEFAULT: token('resource-ochre'), glow: token('resource-ochre-glow') },
+        'resource-terracotta': { DEFAULT: token('resource-terracotta'), glow: token('resource-terracotta-glow') },
+        tinted: { DEFAULT: token('tinted'), foreground: token('tinted-foreground'), border: token('tinted-border') },
       },
+      // One stroke weight for outline buttons and toggle chips.
+      borderWidth: { '1.5': '1.5px' },
     },
   },
 }

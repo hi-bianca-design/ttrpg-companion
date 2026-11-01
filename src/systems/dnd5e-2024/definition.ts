@@ -61,8 +61,9 @@ export const DND_RESOURCES: ResourceDef[] = [
   { key: 'hp', label: 'Hit Points', kind: 'pool', display: 'bar' },
   { key: 'spell_slots', label: 'Spell Slots', kind: 'slots', display: 'pips', tierLabel: (tier) => `Level ${tier}`, tint: 'sky' },
   { key: 'hit_dice', label: 'Hit Dice', kind: 'pool', display: 'counter' },
-  { key: 'death_saves_success', label: 'Death Save Successes', kind: 'slots', display: 'pips' },
-  { key: 'death_saves_failure', label: 'Death Save Failures', kind: 'slots', display: 'pips' },
+  // Counted up from empty, and only relevant while the character is down (0 HP).
+  { key: 'death_saves_success', label: 'Death Save Successes', kind: 'slots', display: 'pips', tint: 'sage', count: 'marked', showWhenEmpty: 'hp' },
+  { key: 'death_saves_failure', label: 'Death Save Failures', kind: 'slots', display: 'pips', tint: 'terracotta', count: 'marked', showWhenEmpty: 'hp' },
 ]
 
 /** The 15 SRD 5.2 conditions plus concentration, keyed lowercase. */

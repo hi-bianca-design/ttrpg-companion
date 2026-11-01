@@ -1,20 +1,32 @@
 import { Pressable } from 'react-native'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
+import { cn } from '@/lib/utils'
 
 type StatTileProps = {
   label: string
   value: string | number
   sub?: string
-  tone?: 'default' | 'highlight'
+  /** highlight: ochre number. destructive: destructive border + number (e.g. HP at 0). */
+  tone?: 'default' | 'highlight' | 'destructive'
+  /** Defaults to "<label> <value><sub>", so the value is announced with its label. */
+  accessibilityLabel?: string
+  /** What pressing does; only used when the tile is pressable. */
+  accessibilityHint?: string
   onPress?: () => void
 }
 
-export function StatTile({ label, value, sub, tone = 'default', onPress }: StatTileProps) {
+export function StatTile({ label, value, sub, tone = 'default', accessibilityLabel, accessibilityHint, onPress }: StatTileProps) {
+  const a11yLabel = accessibilityLabel ?? `${label} ${value}${sub ?? ''}`
   const body = (
-    <Card compact className="items-center gap-1">
+    <Card
+      compact
+      className={cn('items-center gap-1', tone === 'destructive' && 'border-destructive')}
+      accessible={!onPress}
+      accessibilityLabel={onPress ? undefined : a11yLabel}
+    >
       <Text variant="label">{label}</Text>
-      <Text variant="stat" tone={tone === 'highlight' ? 'highlight' : 'default'} numberOfLines={1} adjustsFontSizeToFit>
+      <Text variant="stat" tone={tone} numberOfLines={1} adjustsFontSizeToFit>
         {value}
       </Text>
       {sub ? (
@@ -26,7 +38,7 @@ export function StatTile({ label, value, sub, tone = 'default', onPress }: StatT
   )
   if (!onPress) return body
   return (
-    <Pressable role="button" accessibilityLabel={label} onPress={onPress}>
+    <Pressable role="button" accessibilityLabel={a11yLabel} accessibilityHint={accessibilityHint} onPress={onPress}>
       {body}
     </Pressable>
   )

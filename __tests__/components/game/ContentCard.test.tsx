@@ -8,3 +8,12 @@ test('long title truncates', () => {
   expect(screen.getByText('Fire')).toBeTruthy()
   expect(screen.getByText('Ritual')).toBeTruthy()
 })
+
+test('footer renders inside the card', () => {
+  const { Text } = jest.requireActual('react-native')
+  render(<ContentCard title="Rope" footer={<Text>Controls</Text>} />)
+  let box = screen.getByText('Controls').parent
+  while (box && !String(box.props.className ?? '').includes('rounded-card')) box = box.parent
+  expect(box).toBeTruthy()
+  expect(screen.getByText('Rope')).toBeTruthy()
+})

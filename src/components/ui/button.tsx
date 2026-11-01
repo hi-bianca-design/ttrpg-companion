@@ -7,7 +7,7 @@ const buttonVariants = cva('flex-row items-center justify-center gap-2 rounded-f
   variants: {
     variant: {
       primary: 'bg-primary active:opacity-90',
-      outline: 'border-[1.5px] border-primary bg-transparent active:bg-muted',
+      outline: 'border-1.5 border-primary bg-transparent active:bg-muted',
       ghost: 'bg-transparent active:bg-muted',
       highlight: 'bg-highlight active:opacity-90',
       destructive: 'bg-destructive active:opacity-90',

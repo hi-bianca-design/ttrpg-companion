@@ -25,3 +25,17 @@ test.each(['sky', 'plum', 'sage', 'ochre'])('resource-%s has a glow token', (tin
   expect(c.DEFAULT).toBe(`var(--resource-${tint})`)
   expect(c.glow).toBe(`var(--resource-${tint}-glow)`)
 })
+test('a 1.5px border width token for outline buttons and chips', () => {
+  expect(config.theme.extend.borderWidth['1.5']).toBe('1.5px')
+})
+test('terracotta resource tint (death-save failures) has a glow token', () => {
+  const c = config.theme.extend.colors['resource-terracotta']
+  expect(c.DEFAULT).toBe('var(--resource-terracotta)')
+  expect(c.glow).toBe('var(--resource-terracotta-glow)')
+})
+test('tinted badge tokens exist (conditions)', () => {
+  const c = config.theme.extend.colors.tinted
+  expect(c.DEFAULT).toBe('var(--tinted)')
+  expect(c.foreground).toBe('var(--tinted-foreground)')
+  expect(c.border).toBe('var(--tinted-border)')
+})

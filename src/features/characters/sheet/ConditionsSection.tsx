@@ -1,10 +1,8 @@
-import { View } from 'react-native'
 import { SectionHeader } from '@/components/game/SectionHeader'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Text } from '@/components/ui/text'
 import type { CharacterFull } from '../characters.api'
-import { titleCase } from './format'
+import { ConditionChips } from './ConditionChips'
 
 /** Active conditions as chips, with an Edit action that opens the conditions sheet. */
 export function ConditionsSection({ character, onEdit }: { character: CharacterFull; onEdit: () => void }) {
@@ -21,9 +19,7 @@ export function ConditionsSection({ character, onEdit }: { character: CharacterF
       {character.conditions.length === 0 ? (
         <Text variant="caption" tone="muted">None</Text>
       ) : (
-        <View className="flex-row flex-wrap gap-2">
-          {character.conditions.map((c) => <Badge key={c}>{titleCase(c)}</Badge>)}
-        </View>
+        <ConditionChips conditions={character.conditions} />
       )}
     </SectionHeader>
   )

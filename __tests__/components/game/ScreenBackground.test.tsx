@@ -30,3 +30,9 @@ test('glow is a wide ellipse (no rx/ry, which browsers ignore) with intermediate
   expect(gradient.props.gradientTransform).toMatch(/scale\(1\.2/)
   expect(byType('Stop').length).toBeGreaterThanOrEqual(3)
 })
+
+test('dark glow ends on the background token, so there is no tonal step where the tab bar starts', () => {
+  const { GLOW_STOPS } = jest.requireActual('@/lib/theme')
+  expect(GLOW_STOPS.dark.at(-1)[1]).toBe('background')
+  expect(GLOW_STOPS.light.at(-1)[1]).toBe('background')
+})

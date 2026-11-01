@@ -39,13 +39,21 @@
     --resource-plum-glow: rgba(139, 74, 94, 0.55);
     --resource-sage-glow: rgba(122, 154, 85, 0.55);
     --resource-ochre-glow: rgba(232, 181, 71, 0.55);
+    /* terracotta = the destructive hue, as a resource tint (death-save failures) */
+    --resource-terracotta: #D96A47;
+    --resource-terracotta-glow: rgba(217, 106, 71, 0.55);
+    /* tinted badge (active conditions): plum text 5.4:1 on the tinted surface */
+    --tinted: rgba(139, 74, 94, 0.10);
+    --tinted-foreground: #8B4A5E;
+    --tinted-border: rgba(139, 74, 94, 0.35);
     --overlay: rgba(14, 12, 8, 0.6);
   }
 
   .dark:root {
     --background: #173832;
     --glow: #5A5F36;
-    /* glow gradient stops (mockup): mid at 38%, background at 70%, fade (darker edge) at 100% */
+    /* glow gradient stops (mockup): mid at 38%, background at 70% and beyond. The mockup's darker 100% edge
+       (glow-fade) is not drawn: it left a tonal step above the tab bar (background). Kept for parity. */
     --glow-mid: #24433D;
     --glow-fade: #112D28;
     --foreground: #F5E4C3;
@@ -75,6 +83,12 @@
     --resource-plum-glow: rgba(215, 154, 174, 0.7);
     --resource-sage-glow: rgba(181, 201, 149, 0.7);
     --resource-ochre-glow: rgba(236, 193, 91, 0.7);
+    --resource-terracotta: #E68763;
+    --resource-terracotta-glow: rgba(230, 135, 99, 0.7);
+    /* plum text 4.8:1 on the tinted surface */
+    --tinted: rgba(215, 154, 174, 0.14);
+    --tinted-foreground: #D79AAE;
+    --tinted-border: rgba(215, 154, 174, 0.35);
     --overlay: rgba(0, 0, 0, 0.6);
   }
 }

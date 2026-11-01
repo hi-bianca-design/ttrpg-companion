@@ -3,7 +3,7 @@
 // generically by screens. Shapes stored in JSON columns are validated by its Zod schemas.
 import type * as React from 'react'
 import type { z } from 'zod'
-import type { ResourceTint } from '@/components/game/ResourceTracker'
+import type { PipCount, ResourceTint } from '@/components/game/ResourceTracker'
 
 export type SystemId = 'dnd5e-2024' | 'daggerheart'
 
@@ -15,7 +15,18 @@ export type ResourceValue = PoolValue | SlotsValue
 
 export type ResourceDef =
   | { key: string; label: string; kind: 'pool'; display: 'bar' | 'counter'; tint?: ResourceTint }
-  | { key: string; label: string; kind: 'slots'; display: 'pips'; tierLabel?: (tier: string) => string; tint?: ResourceTint }
+  | {
+      key: string
+      label: string
+      kind: 'slots'
+      display: 'pips'
+      tierLabel?: (tier: string) => string
+      tint?: ResourceTint
+      /** How the pips read; default 'remaining' (filled = left to spend). */
+      count?: PipCount
+      /** Only shown while this pool resource is at 0 (e.g. death saves while hit points are 0). */
+      showWhenEmpty?: string
+    }
 
 export type FieldDef = {
   key: string

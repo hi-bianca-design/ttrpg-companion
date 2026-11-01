@@ -1,21 +1,27 @@
 import { useMemo, useState } from 'react'
 import { View } from 'react-native'
 import { useRouter } from 'expo-router'
+import { ResourceTracker } from '@/components/game/ResourceTracker'
 import { ScreenBackground } from '@/components/game/ScreenBackground'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Text } from '@/components/ui/text'
+import { showToast } from '@/components/ui/toast'
 import { useCharacter, useResourceMutation } from '@/features/characters/characters.queries'
 import { toRuleInput } from '@/features/characters/picks'
-import { ActionsList, lowestTier, type Segment } from '@/features/characters/sheet/ActionsList'
+import { ActionsList, lowestBlockedLevel, lowestTier, type Segment } from '@/features/characters/sheet/ActionsList'
+import { ConditionChips } from '@/features/characters/sheet/ConditionChips'
+import { HpSheet } from '@/features/characters/sheet/HpSheet'
 import { RestButtons } from '@/features/characters/sheet/RestButtons'
+import { restSummary } from '@/features/characters/sheet/restSummary'
+import { SheetHeader } from '@/features/characters/sheet/SheetHeader'
 import { SpellSlotsSection } from '@/features/characters/sheet/SpellSlotsSection'
 import { ERROR_COPY } from '@/features/errors'
 import { useCharacterRouteId } from '@/features/characters/useCharacterRouteId'
 import { restoreSlot, spendSlot } from '@/systems/resources'
 import { getSystem } from '@/systems/registry'
-import type { ResourceValue, SlotsValue } from '@/systems/types'
+import type { PoolValue, ResourceValue, SlotsValue } from '@/systems/types'
 
 const SLOTS_KEY = 'spell_slots'
 
@@ -26,11 +32,11 @@ export default function ActionsTab() {
   const { data: character, isLoading, isError, refetch } = useCharacter(id)
   const [segment, setSegment] = useState<Segment>('actions')
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [hpKey, setHpKey] = useState<string | null>(null)
   const picks = useMemo(() => (character ? toRuleInput(character.picks, character.items) : []), [character])
 
-  const mutation = useResourceMutation(id, {
-    onError: (e) => setSaveError(e instanceof Error ? e.message : ERROR_COPY.save_failed),
-  })
+  const onError = (e: unknown) => setSaveError(e instanceof Error ? e.message : ERROR_COPY.save_failed)
+  const mutation = useResourceMutation(id, { onError })
   const change = (key: string, apply: (cur: ResourceValue) => ResourceValue) => {
     setSaveError(null)
     mutation.mutate({ key, apply })
@@ -39,6 +45,7 @@ export default function ActionsTab() {
   if (isLoading) {
     return (
       <ScreenBackground>
+        <SheetHeader />
         <View className="gap-2" accessibilityLabel="Loading actions">
           {[0, 1, 2].map((i) => (
             <Card key={i} className="gap-3">
@@ -54,6 +61,7 @@ export default function ActionsTab() {
   if (isError || !character) {
     return (
       <ScreenBackground>
+        <SheetHeader />
         <View className="items-start gap-2">
           <Text variant="caption" tone="destructive">Couldn’t load this character. Check your connection.</Text>
           <Button variant="outline" size="sm" onPress={() => refetch()}>
@@ -81,11 +89,35 @@ export default function ActionsTab() {
     setSaveError(null)
     // One atomic write: rules.rest computes from the latest cached resources.
     mutation.mutate({ applyAll: (resources) => system.rules.rest({ ...character, resources }, kind, picks) })
+    showToast(restSummary(system.resources, kind, character.resources, system.rules.rest(character, kind, picks)))
   }
+
+  // The system's bar-display pools (D&D: hit points), compact, each opening the HP sheet.
+  const bars = system.resources.flatMap((def) => {
+    const v = character.resources[def.key] as PoolValue | undefined
+    return def.kind === 'pool' && def.display === 'bar' && v ? [{ def, v }] : []
+  })
+  const hpOpen = bars.find((b) => b.def.key === hpKey)
 
   return (
     <ScreenBackground scroll>
-      <Text variant="title">{character.name}</Text>
+      <SheetHeader name={character.name} eyebrow="Actions" />
+      {bars.length > 0 || character.conditions.length > 0 ? (
+        <View className="gap-3">
+          {bars.map(({ def, v }) => (
+            <ResourceTracker
+              key={def.key}
+              display="bar"
+              label={def.label}
+              current={v.current}
+              max={v.max}
+              temp={v.temp}
+              onAdjust={() => { setSaveError(null); setHpKey(def.key) }}
+            />
+          ))}
+          <ConditionChips conditions={character.conditions} />
+        </View>
+      ) : null}
       {saveError ? <Text variant="caption" tone="destructive">{saveError}</Text> : null}
       {slots ? (
         <SpellSlotsSection
@@ -94,6 +126,7 @@ export default function ActionsTab() {
           tierLabel={labelFor}
           onSpend={(tier) => change(SLOTS_KEY, (cur) => spendSlot(cur as SlotsValue, tier))}
           onRestore={(tier) => change(SLOTS_KEY, (cur) => restoreSlot(cur as SlotsValue, tier))}
+          blockedFrom={lowestBlockedLevel(slots)}
         />
       ) : null}
       <Tabs value={segment} onValueChange={(v) => setSegment(v as Segment)}>
@@ -111,6 +144,16 @@ export default function ActionsTab() {
         onEmptyAction={() => (segment === 'actions' ? router.push(`/(app)/characters/${id}/inventory`) : setSegment('actions'))}
       />
       <RestButtons onRest={rest} />
+      {hpOpen ? (
+        <HpSheet
+          characterId={character.id}
+          pool={hpOpen.v}
+          resourceKey={hpOpen.def.key}
+          open
+          onOpenChange={(open) => { if (!open) setHpKey(null) }}
+          onError={onError}
+        />
+      ) : null}
     </ScreenBackground>
   )
 }

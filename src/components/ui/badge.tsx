@@ -8,6 +8,8 @@ const badgeVariants = cva('self-start rounded-full px-2 py-1', {
     variant: {
       default: 'border border-border bg-muted',
       accent: 'bg-primary',
+      // Status that applies to the character right now (conditions); plum, distinct from metadata badges.
+      tinted: 'border border-tinted-border bg-tinted',
     },
   },
   defaultVariants: { variant: 'default' },
@@ -22,7 +24,7 @@ function Badge({ className, variant, children, ...props }: BadgeProps) {
       {typeof children === 'string' ? (
         <Text
           variant="label"
-          className={variant === 'accent' ? 'text-primary-foreground' : undefined}
+          className={variant === 'accent' ? 'text-primary-foreground' : variant === 'tinted' ? 'text-tinted-foreground' : undefined}
         >
           {children}
         </Text>

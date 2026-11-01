@@ -10,7 +10,8 @@ import { Text } from '@/components/ui/text'
 import type { ItemWithContent } from '@/features/characters/characters.api'
 import { useCharacter, usePendingItemIds, useRemoveItem, useUpdateItem } from '@/features/characters/characters.queries'
 import { AddItemSheet } from '@/features/characters/sheet/AddItemSheet'
-import { filterItems, InventoryList, type InventorySegment } from '@/features/characters/sheet/InventoryList'
+import { filterItems, InventoryList, sortItems, type InventorySegment } from '@/features/characters/sheet/InventoryList'
+import { SheetHeader } from '@/features/characters/sheet/SheetHeader'
 import { ERROR_COPY } from '@/features/errors'
 import { useCharacterRouteId } from '@/features/characters/useCharacterRouteId'
 import { getSystem } from '@/systems/registry'
@@ -38,6 +39,7 @@ export default function InventoryTab() {
   if (isLoading) {
     return (
       <ScreenBackground>
+        <SheetHeader />
         <View className="gap-2" accessibilityLabel="Loading inventory">
           {[0, 1, 2].map((i) => (
             <Card key={i} className="gap-3">
@@ -53,6 +55,7 @@ export default function InventoryTab() {
   if (isError || !character) {
     return (
       <ScreenBackground>
+        <SheetHeader />
         <View className="items-start gap-2">
           <Text variant="caption" tone="destructive">Couldn’t load this character. Check your connection.</Text>
           <Button variant="outline" size="sm" onPress={() => refetch()}>
@@ -64,17 +67,17 @@ export default function InventoryTab() {
   }
 
   const system = getSystem(character.system_id)
-  const shown = filterItems(character.items, segment)
+  const shown = filterItems(sortItems(character.items), segment)
 
   const openAdd = () => { setSaveError(null); setAdding(true) }
 
   return (
     <ScreenBackground scroll>
-      <Text variant="title">{character.name}</Text>
+      <SheetHeader name={character.name} eyebrow="Inventory" />
       {saveError ? <Text variant="caption" tone="destructive">{saveError}</Text> : null}
       <SectionHeader
         id="inventory"
-        title="Inventory"
+        title="Items"
         action={character.items.length > 0 ? (
           <Button size="sm" onPress={openAdd}>
             <Text>Add item</Text>
