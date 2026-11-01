@@ -7,6 +7,7 @@ import { Text } from '@/components/ui/text'
 import { useAuth } from '@/features/auth/useAuth'
 import { CampaignCard } from '@/features/campaigns/CampaignCard'
 import { useCampaigns } from '@/features/campaigns/campaigns.queries'
+import { ERROR_COPY } from '@/features/errors'
 
 export default function CampaignsIndex() {
   const router = useRouter()
@@ -38,7 +39,7 @@ export default function CampaignsIndex() {
         </View>
       ) : isError ? (
         <View className="items-start gap-2">
-          <Text variant="caption" tone="destructive">Couldn’t load your campaigns. Check your connection.</Text>
+          <Text variant="caption" tone="destructive">{ERROR_COPY.load_failed}</Text>
           <Button variant="outline" size="sm" onPress={() => refetch()}>
             <Text>Try again</Text>
           </Button>

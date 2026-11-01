@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { View } from 'react-native'
-import { useLocalSearchParams } from 'expo-router'
+import { useGlobalSearchParams } from 'expo-router'
 import { ScreenBackground } from '@/components/game/ScreenBackground'
 import { SectionHeader } from '@/components/game/SectionHeader'
 import { Button } from '@/components/ui/button'
@@ -21,7 +21,8 @@ const EMPTY_COPY: Record<InventorySegment, string> = {
 }
 
 export default function InventoryTab() {
-  const { id } = useLocalSearchParams<{ id: string }>()
+  // Global params: a tab opened from the tab bar gets empty local params on web.
+  const { id } = useGlobalSearchParams<{ id: string }>()
   const { data: character, isLoading, isError, refetch } = useCharacter(id)
   const [segment, setSegment] = useState<InventorySegment>('all')
   const [adding, setAdding] = useState(false)

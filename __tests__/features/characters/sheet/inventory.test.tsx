@@ -17,7 +17,7 @@ jest.mock('@/features/characters/characters.api', () => ({
 jest.mock('@/features/content/content.api', () => ({ listContent: jest.fn() }))
 jest.mock('@/features/campaigns/campaigns.api', () => ({ getCharacterCampaign: jest.fn() }))
 jest.mock('expo-router', () => ({
-  useLocalSearchParams: () => ({ id: 'ch1' }),
+  useGlobalSearchParams: () => ({ id: 'ch1' }),
   useRouter: () => ({ push: jest.fn(), back: jest.fn() }),
 }))
 jest.mock('@/components/game/ScreenBackground', () => ({

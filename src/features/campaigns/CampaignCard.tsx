@@ -2,22 +2,13 @@ import { Pressable, View } from 'react-native'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
-import { getSystem } from '@/systems/registry'
-import type { SystemId } from '@/systems/types'
+import { systemName } from '@/systems/registry'
 import type { CampaignSummary } from './campaigns.api'
 
 type CampaignCardProps = {
   campaign: Pick<CampaignSummary, 'name' | 'description' | 'system_id'> & { member_count?: number }
   isGm: boolean
   onPress?: () => void
-}
-
-function systemName(id: string): string {
-  try {
-    return getSystem(id as SystemId).name
-  } catch {
-    return id
-  }
 }
 
 export function CampaignCard({ campaign, isGm, onPress }: CampaignCardProps) {

@@ -36,6 +36,7 @@ describe('toAppError', () => {
       not_your_character: 'You can only join with your own characters.',
       duplicate: 'You already have one with this name.',
       network: "Can't reach the server. Check your connection and try again.",
+      load_failed: 'Couldn’t load this. Check your connection and try again.',
       unknown: 'Something went wrong. Please try again.',
     })
   })

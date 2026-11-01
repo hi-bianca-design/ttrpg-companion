@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { View } from 'react-native'
-import { useLocalSearchParams, useRouter } from 'expo-router'
+import { useGlobalSearchParams, useRouter } from 'expo-router'
 import { useColorScheme } from 'nativewind'
 import { CaretLeft } from 'phosphor-react-native'
 import { ScreenBackground } from '@/components/game/ScreenBackground'
@@ -16,7 +16,8 @@ import { getSystem } from '@/systems/registry'
 type Choice = { input: Record<string, unknown>; ready: boolean }
 
 export default function LevelUpScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>()
+  // Global params: a tab opened from the tab bar gets empty local params on web.
+  const { id } = useGlobalSearchParams<{ id: string }>()
   const router = useRouter()
   const { colorScheme } = useColorScheme()
   const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']

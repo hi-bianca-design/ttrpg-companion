@@ -9,8 +9,8 @@ import { useAuth } from '@/features/auth/useAuth'
 import { InviteCode } from '@/features/campaigns/InviteCode'
 import { MemberList } from '@/features/campaigns/MemberList'
 import { useCampaign } from '@/features/campaigns/campaigns.queries'
-import { getSystem } from '@/systems/registry'
-import type { SystemId } from '@/systems/types'
+import { systemName } from '@/systems/registry'
+import { ERROR_COPY } from '@/features/errors'
 
 export default function CampaignDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -37,7 +37,7 @@ export default function CampaignDetailScreen() {
     return (
       <ScreenBackground>
         <View className="items-start gap-2">
-          <Text variant="caption" tone="destructive">Couldn’t load this campaign. Check your connection.</Text>
+          <Text variant="caption" tone="destructive">{ERROR_COPY.load_failed}</Text>
           <Button variant="outline" size="sm" onPress={() => refetch()}>
             <Text>Try again</Text>
           </Button>
@@ -57,7 +57,7 @@ export default function CampaignDetailScreen() {
       </View>
       <View className="flex-row flex-wrap items-center gap-2">
         <Badge variant={isGm ? 'accent' : 'default'}>{isGm ? 'GM' : 'Player'}</Badge>
-        <Badge>{getSystem(data.system_id as SystemId).name}</Badge>
+        <Badge>{systemName(data.system_id)}</Badge>
       </View>
       {data.description ? <Text variant="body-sm" tone="muted">{data.description}</Text> : null}
       {isGm ? <InviteCode code={data.invite_code} /> : null}

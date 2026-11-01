@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { View } from 'react-native'
-import { useLocalSearchParams, useRouter } from 'expo-router'
+import { useGlobalSearchParams, useRouter } from 'expo-router'
 import { ScreenBackground } from '@/components/game/ScreenBackground'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -18,7 +18,8 @@ import type { ResourceValue, SlotsValue } from '@/systems/types'
 const SLOTS_KEY = 'spell_slots'
 
 export default function ActionsTab() {
-  const { id } = useLocalSearchParams<{ id: string }>()
+  // Global params: a tab opened from the tab bar gets empty local params on web.
+  const { id } = useGlobalSearchParams<{ id: string }>()
   const router = useRouter()
   const { data: character, isLoading, isError, refetch } = useCharacter(id)
   const [segment, setSegment] = useState<Segment>('actions')

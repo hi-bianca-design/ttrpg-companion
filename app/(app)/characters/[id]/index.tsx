@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { View } from 'react-native'
-import { useLocalSearchParams, useRouter } from 'expo-router'
+import { useGlobalSearchParams, useRouter } from 'expo-router'
 import { useColorScheme } from 'nativewind'
 import { CaretLeft } from 'phosphor-react-native'
 import { ScreenBackground } from '@/components/game/ScreenBackground'
@@ -22,7 +22,8 @@ import type { PoolValue } from '@/systems/types'
 type OpenSheet = null | 'hp' | 'bonus' | 'conditions'
 
 export default function CharacterTab() {
-  const { id } = useLocalSearchParams<{ id: string }>()
+  // Global params: a tab opened from the tab bar gets empty local params on web.
+  const { id } = useGlobalSearchParams<{ id: string }>()
   const router = useRouter()
   const { data: character, isLoading, isError, refetch } = useCharacter(id)
   const update = useUpdateCharacter(id)

@@ -8,6 +8,7 @@ import { useAuth } from '@/features/auth/useAuth'
 import { CampaignCard } from '@/features/campaigns/CampaignCard'
 import { MemberList } from '@/features/campaigns/MemberList'
 import { useCampaign, useCharacterCampaign } from '@/features/campaigns/campaigns.queries'
+import { ERROR_COPY } from '@/features/errors'
 
 export default function CampaignTab() {
   // Global params: a tab opened from the tab bar gets empty local params.
@@ -36,7 +37,7 @@ export default function CampaignTab() {
     return (
       <ScreenBackground>
         <View className="items-start gap-2">
-          <Text variant="caption" tone="destructive">Couldn’t load the campaign. Check your connection.</Text>
+          <Text variant="caption" tone="destructive">{ERROR_COPY.load_failed}</Text>
           <Button
             variant="outline"
             size="sm"

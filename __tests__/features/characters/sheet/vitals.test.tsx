@@ -14,7 +14,7 @@ jest.mock('@/features/characters/characters.queries', () => ({
   useUpdateCharacter: jest.fn(),
 }))
 jest.mock('expo-router', () => ({
-  useLocalSearchParams: () => ({ id: 'ch1' }),
+  useGlobalSearchParams: () => ({ id: 'ch1' }),
   useRouter: () => ({ push: jest.fn(), back: jest.fn() }),
 }))
 jest.mock('@/components/game/ScreenBackground', () => ({

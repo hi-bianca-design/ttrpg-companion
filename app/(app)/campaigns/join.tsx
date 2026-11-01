@@ -8,7 +8,7 @@ import { Text } from '@/components/ui/text'
 import { OptionChips } from '@/features/campaigns/OptionChips'
 import { useJoinCampaign } from '@/features/campaigns/campaigns.queries'
 import { useCharacters } from '@/features/characters/characters.queries'
-import { toAppError } from '@/features/errors'
+import { ERROR_COPY, toAppError } from '@/features/errors'
 
 const CODE_LENGTH = 6
 
@@ -70,7 +70,7 @@ export default function JoinCampaignScreen() {
           <View className="h-11 rounded-full bg-muted" accessibilityLabel="Loading characters" />
         ) : characters.isError ? (
           <View className="items-start gap-2">
-            <Text variant="caption" tone="destructive">Couldn’t load your characters. Check your connection.</Text>
+            <Text variant="caption" tone="destructive">{ERROR_COPY.load_failed}</Text>
             <Button variant="outline" size="sm" onPress={() => characters.refetch()}>
               <Text>Try again</Text>
             </Button>
