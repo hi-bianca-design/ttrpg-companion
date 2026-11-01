@@ -4,6 +4,7 @@ import {
   formatModifier,
   getMaxHP,
   SPELLCASTING_CLASSES,
+  getMaxSpellLevel,
   slotsFor,
   derived,
   rest,
@@ -62,7 +63,14 @@ describe('SPELLCASTING_CLASSES', () => {
 // ── Spell slots ──
 
 test('wizard 5 slots', () => expect(slotsFor('Wizard', 5).tiers).toEqual({ '1': { max: 4, used: 0 }, '2': { max: 3, used: 0 }, '3': { max: 2, used: 0 } }))
-test('paladin 1 has no slots', () => expect(slotsFor('Paladin', 1).tiers).toEqual({}))
+test('paladin 1 has two level-1 slots', () => expect(slotsFor('Paladin', 1).tiers).toEqual({ '1': { max: 2, used: 0 } }))
+test('ranger 1 has two level-1 slots (SRD 5.2)', () => expect(slotsFor('Ranger', 1).tiers).toEqual({ '1': { max: 2, used: 0 } }))
+test('paladin 3 / 13 / 19 half-caster slots', () => {
+  const maxes = (lvl: number) => Object.values(slotsFor('Paladin', lvl).tiers).map((t) => t.max)
+  expect(maxes(3)).toEqual([3])
+  expect(maxes(13)).toEqual([4, 3, 3, 1])
+  expect(maxes(19)).toEqual([4, 3, 3, 3, 2])
+})
 test('warlock 5 pact slots', () => expect(slotsFor('Warlock', 5).tiers).toEqual({ '3': { max: 2, used: 0 } }))
 test('wizard 20 slots', () => {
   const maxes = Object.fromEntries(Object.entries(slotsFor('Wizard', 20).tiers).map(([t, s]) => [t, s.max]))
@@ -70,6 +78,22 @@ test('wizard 20 slots', () => {
 })
 test('ranger 5 half-caster slots', () => expect(slotsFor('Ranger', 5).tiers).toEqual({ '1': { max: 4, used: 0 }, '2': { max: 2, used: 0 } }))
 test('class name is case-insensitive', () => expect(slotsFor('wizard', 1).tiers).toEqual({ '1': { max: 2, used: 0 } }))
+describe('getMaxSpellLevel agrees with slotsFor', () => {
+  const highestTier = (cls: string, lvl: number) =>
+    Math.max(0, ...Object.keys(slotsFor(cls, lvl).tiers).map(Number))
+  it.each(SPELLCASTING_CLASSES)('%s, levels 1–20', (cls) => {
+    for (let lvl = 1; lvl <= 20; lvl++) expect(getMaxSpellLevel(cls, lvl)).toBe(highestTier(cls, lvl))
+  })
+  it('known values', () => {
+    expect(getMaxSpellLevel('Ranger', 1)).toBe(1)
+    expect(getMaxSpellLevel('Ranger', 5)).toBe(2)
+    expect(getMaxSpellLevel('Ranger', 17)).toBe(5)
+    expect(getMaxSpellLevel('Warlock', 9)).toBe(5)
+    expect(getMaxSpellLevel('Wizard', 17)).toBe(9)
+    expect(getMaxSpellLevel('Fighter', 20)).toBe(0)
+  })
+  it('is case-insensitive', () => expect(getMaxSpellLevel('ranger', 5)).toBe(2))
+})
 test('fighter has no slots', () => expect(slotsFor('Fighter', 10).tiers).toEqual({}))
 
 // ── Fixtures ──
@@ -221,7 +245,7 @@ test('builder step ids', () => {
 test('spells step is skipped when the class has no slots at the starting level', () => {
   const spells = dnd5eBuilder.steps.find((s) => s.id === 'spells')!
   expect(spells.skip?.({ ...dnd5eBuilder.initialDraft(), class_name: 'Fighter', level: 1 })).toBe(true)
-  expect(spells.skip?.({ ...dnd5eBuilder.initialDraft(), class_name: 'Paladin', level: 1 })).toBe(true)
+  expect(spells.skip?.({ ...dnd5eBuilder.initialDraft(), class_name: 'Paladin', level: 1 })).toBe(false)
   expect(spells.skip?.({ ...dnd5eBuilder.initialDraft(), class_name: 'Wizard', level: 1 })).toBe(false)
 })
 

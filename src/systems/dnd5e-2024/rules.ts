@@ -44,28 +44,10 @@ const SPELLS_KNOWN: Partial<Record<string, number[]>> = {
   Ranger:  [0,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11],
 }
 
-// Highest spell slot level available to a class at a given character level
+// Highest spell slot level available to a class at a given character level.
+// Derived from slotsFor so the two can't drift; case-insensitive; 0 for non-casters.
 export function getMaxSpellLevel(className: string, characterLevel: number): number {
-  switch (className) {
-    case 'Bard':
-    case 'Cleric':
-    case 'Druid':
-    case 'Sorcerer':
-    case 'Wizard':
-      // Full casters: ceil(level/2), max 9
-      return Math.min(9, Math.ceil(characterLevel / 2))
-    case 'Warlock':
-      // Full slots but max spell level 5
-      return Math.min(5, Math.ceil(characterLevel / 2))
-    case 'Paladin':
-      // Half caster starting at level 1: ceil(level/4), max 5
-      return Math.min(5, Math.ceil(characterLevel / 4))
-    case 'Ranger':
-      // Half caster starting at level 2
-      return characterLevel < 2 ? 0 : Math.min(5, Math.ceil((characterLevel - 1) / 4))
-    default:
-      return 0
-  }
+  return Math.max(0, ...Object.keys(slotsFor(className, characterLevel).tiers).map(Number))
 }
 
 export const XP_THRESHOLDS = [
@@ -144,12 +126,15 @@ function tiersFrom(counts: number[]): SlotsValue {
   return { tiers: Object.fromEntries(counts.map((max, i) => [String(i + 1), { max, used: 0 }])) }
 }
 
-/** Spell slots for a single-class character. Half casters use the SRD table (none at level 1). */
+/**
+ * Spell slots for a single-class character (SRD 5.2). Half casters (Paladin, Ranger) have
+ * slots from level 1: the full-caster row at ceil(level / 2).
+ */
 export function slotsFor(className: string, level: number): SlotsValue {
   const cls = className.toLowerCase()
   const lvl = Math.min(Math.max(Math.floor(level), 1), 20)
   if (FULL_CASTERS.has(cls)) return tiersFrom(FULL_CASTER_SLOTS[lvl - 1])
-  if (HALF_CASTERS.has(cls)) return lvl < 2 ? { tiers: {} } : tiersFrom(FULL_CASTER_SLOTS[Math.ceil(lvl / 2) - 1])
+  if (HALF_CASTERS.has(cls)) return tiersFrom(FULL_CASTER_SLOTS[Math.ceil(lvl / 2) - 1])
   if (cls === 'warlock') {
     const [count, slotLevel] = PACT_SLOTS[lvl - 1]
     return { tiers: { [String(slotLevel)]: { max: count, used: 0 } } }
