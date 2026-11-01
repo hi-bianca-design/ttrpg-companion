@@ -61,8 +61,8 @@ export type ResourceChange = { key: string; apply: (current: ResourceValue) => R
 
 /**
  * Optimistic resource edit. `apply` is an updater function (not a value) so rapid taps compose:
- * each onMutate folds its change into the latest cached state, and each request persists the
- * cumulative resources. On error the cache is restored to the state before this change.
+ * each onMutate folds its change into the latest cached state, and requests run serially and each
+ * reads the latest cache when it actually starts, so it persists the cumulative resources. On error the cache is restored to the state before this change.
  */
 export function useResourceMutation(characterId: string) {
   const qc = useQueryClient()
@@ -70,6 +70,9 @@ export function useResourceMutation(characterId: string) {
   const mutationKey = ['character-resources', characterId] as const
   return useMutation({
     mutationKey,
+    // Same scope => TanStack runs these mutations one at a time, so writes land in tap order.
+    // onMutate (optimistic update) still runs immediately for every tap.
+    scope: { id: `character-resources:${characterId}` },
     mutationFn: async (_change: ResourceChange) => {
       const latest = qc.getQueryData<CharacterFull>(key)
       if (!latest) return

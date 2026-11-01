@@ -2,6 +2,7 @@ import React from 'react'
 import { renderHook, act } from '@testing-library/react-native'
 import { AuthProvider } from '@/features/auth/AuthProvider'
 import { useAuth } from '@/features/auth/useAuth'
+import { queryClient } from '@/lib/query-client'
 
 const mockUnsubscribe = jest.fn()
 
@@ -50,5 +51,18 @@ describe('useAuth', () => {
     expect(() => renderHook(() => useAuth())).toThrow(
       'useAuth must be used within an AuthProvider'
     )
+  })
+
+  it('clears the query cache on sign-out so the next user sees no stale data', async () => {
+    ;(supabase.auth.getSession as jest.Mock).mockResolvedValue({ data: { session: null } })
+    const clear = jest.spyOn(queryClient, 'clear')
+    renderHook(() => useAuth(), { wrapper })
+    await act(async () => {})
+    const listener = (supabase.auth.onAuthStateChange as jest.Mock).mock.calls[0][0]
+    act(() => listener('SIGNED_IN', { user: { id: 'u1' } }))
+    expect(clear).not.toHaveBeenCalled()
+    act(() => listener('SIGNED_OUT', null))
+    expect(clear).toHaveBeenCalledTimes(1)
+    clear.mockRestore()
   })
 })

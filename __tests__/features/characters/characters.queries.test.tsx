@@ -41,7 +41,7 @@ beforeEach(() => jest.clearAllMocks())
 afterEach(() => client.clear())
 
 describe('useResourceMutation', () => {
-  it('composes two rapid taps: used is incremented by 2 before either resolves', async () => {
+  it('composes two rapid taps and serialises the writes so the last persisted value is cumulative', async () => {
     const resolvers: Array<() => void> = []
     mockUpdate.mockImplementation(() => new Promise<void>((r) => resolvers.push(r)))
     const { qc, hook } = setup()
@@ -49,13 +49,18 @@ describe('useResourceMutation', () => {
     await act(async () => { hook.result.current.mutate(spend) })
     await act(async () => { hook.result.current.mutate(spend) })
 
+    // optimistic cache already shows both taps, but only the first request is in flight
     expect(used(qc)).toBe(2)
-    // the second request persists the cumulative state
+    expect(mockUpdate).toHaveBeenCalledTimes(1)
+
+    await act(async () => { resolvers[0]() })
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(2))
+    // the second request is built when it runs, so it carries both taps
     expect(mockUpdate).toHaveBeenLastCalledWith('ch1', expect.objectContaining({
       spell_slots: { tiers: { '1': { max: 4, used: 2 } } },
     }))
 
-    await act(async () => { resolvers.forEach((r) => r()) })
+    await act(async () => { resolvers[1]() })
     expect(used(qc)).toBe(2)
   })
 
