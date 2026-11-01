@@ -370,18 +370,24 @@ export type Database = {
           hp_current: number
           hp_max: number
           id: string
+          illustration_full_url: string | null
+          illustration_profile_url: string | null
           intelligence: number
           level: number
           name: string
           notes: string | null
           proficiency_bonus: number
+          second_class_id: string | null
+          second_class_level: number | null
           species_id: string | null
           speed: number
+          starting_level: number
           strength: number
           subclass_id: string | null
           temp_hp: number
           user_id: string
           wisdom: number
+          xp: number
         }
         Insert: {
           alignment?: string | null
@@ -400,18 +406,24 @@ export type Database = {
           hp_current: number
           hp_max: number
           id?: string
+          illustration_full_url?: string | null
+          illustration_profile_url?: string | null
           intelligence: number
           level?: number
           name: string
           notes?: string | null
           proficiency_bonus?: number
+          second_class_id?: string | null
+          second_class_level?: number | null
           species_id?: string | null
           speed?: number
+          starting_level?: number
           strength: number
           subclass_id?: string | null
           temp_hp?: number
           user_id: string
           wisdom: number
+          xp?: number
         }
         Update: {
           alignment?: string | null
@@ -430,18 +442,24 @@ export type Database = {
           hp_current?: number
           hp_max?: number
           id?: string
+          illustration_full_url?: string | null
+          illustration_profile_url?: string | null
           intelligence?: number
           level?: number
           name?: string
           notes?: string | null
           proficiency_bonus?: number
+          second_class_id?: string | null
+          second_class_level?: number | null
           species_id?: string | null
           speed?: number
+          starting_level?: number
           strength?: number
           subclass_id?: string | null
           temp_hp?: number
           user_id?: string
           wisdom?: number
+          xp?: number
         }
         Relationships: [
           {
@@ -470,6 +488,13 @@ export type Database = {
             columns: ["custom_species_id"]
             isOneToOne: false
             referencedRelation: "user_content"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "characters_second_class_id_fkey"
+            columns: ["second_class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
             referencedColumns: ["id"]
           },
           {
@@ -872,7 +897,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_campaign_member: { Args: { p_campaign_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

@@ -26,7 +26,7 @@ export type CharacterWithRelations = DBCharacter & {
     spell_id: string | null
     custom_content_id: string | null
     is_prepared: boolean
-    slots_expended: Record<string, number>
+    slots_expended: Record<string, number> | null
     spell: DBSpell | null
   }>
   character_equipment: Array<{
@@ -63,6 +63,7 @@ export type WizardDraft = {
   class_name: string | null   // cached to gate spells step and display summaries
   hit_die: number | null      // cached for HP calculation in createCharacter
   subclass_id: string | null
+  starting_level: number
   // Step 2 — Origin
   species_id: string | null
   background_id: string | null
@@ -97,6 +98,7 @@ export const INITIAL_DRAFT: WizardDraft = {
   class_name: null,
   hit_die: null,
   subclass_id: null,
+  starting_level: 1,
   species_id: null,
   background_id: null,
   custom_species_id: null,

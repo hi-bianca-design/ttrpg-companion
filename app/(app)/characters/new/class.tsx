@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native'
 import { useRouter } from 'expo-router'
+import { Minus, Plus } from 'phosphor-react-native'
 import { getClasses } from '@/modules/srd/srd.service'
 import { useCharacterStore } from '@/modules/character/character.store'
 import { DBClass } from '@/modules/character/character.types'
@@ -10,6 +11,7 @@ export default function ClassStep() {
   const { draft, setDraft, resetDraft } = useCharacterStore()
   const [classes, setClasses] = useState<DBClass[]>([])
   const [selected, setSelected] = useState<DBClass | null>(null)
+  const [level, setLevel] = useState(draft.starting_level ?? 1)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -19,7 +21,7 @@ export default function ClassStep() {
 
   function handleNext() {
     if (!selected) return
-    setDraft({ class_id: selected.id, class_name: selected.name, hit_die: selected.hit_die })
+    setDraft({ class_id: selected.id, class_name: selected.name, hit_die: selected.hit_die, starting_level: level })
     router.push('/(app)/characters/new/origin')
   }
 
@@ -31,9 +33,34 @@ export default function ClassStep() {
     <View className="flex-1 bg-base">
       <View className="px-4 pt-4 pb-2">
         <Text className="text-2xl font-bold text-text">Choose a Class</Text>
-        <Text className="text-muted mt-1 text-sm">
+        <Text className="text-muted mt-1 text-sm mb-4">
           Your class defines your role in combat and how you solve problems.
         </Text>
+
+        {/* Level picker */}
+        <View className="bg-surface rounded-2xl px-4 py-3 flex-row items-center justify-between mb-2">
+          <View>
+            <Text className="text-text font-semibold text-sm">Starting Level</Text>
+            <Text className="text-muted text-xs">Campaigns often start at level 1</Text>
+          </View>
+          <View className="flex-row items-center gap-3">
+            <TouchableOpacity
+              onPress={() => setLevel((l) => Math.max(1, l - 1))}
+              className="w-8 h-8 rounded-full bg-overlay items-center justify-center"
+              disabled={level <= 1}
+            >
+              <Minus size={16} color={level <= 1 ? '#45475a' : '#cdd6f4'} weight="bold" />
+            </TouchableOpacity>
+            <Text className="text-primary font-bold text-xl w-8 text-center">{level}</Text>
+            <TouchableOpacity
+              onPress={() => setLevel((l) => Math.min(20, l + 1))}
+              className="w-8 h-8 rounded-full bg-overlay items-center justify-center"
+              disabled={level >= 20}
+            >
+              <Plus size={16} color={level >= 20 ? '#45475a' : '#cdd6f4'} weight="bold" />
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
 
       <FlatList
@@ -69,7 +96,7 @@ export default function ClassStep() {
           disabled={!selected}
         >
           <Text className={`font-semibold ${selected ? 'text-base' : 'text-muted'}`}>
-            {selected ? `Choose ${selected.name} →` : 'Select a class to continue'}
+            {selected ? `Choose ${selected.name} (Level ${level}) →` : 'Select a class to continue'}
           </Text>
         </TouchableOpacity>
       </View>

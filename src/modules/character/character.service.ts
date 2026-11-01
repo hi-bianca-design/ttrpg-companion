@@ -7,7 +7,7 @@ type CharacterUpdate = Database['public']['Tables']['characters']['Update']
 
 const SHEET_SELECT = `
   *,
-  class:classes(*),
+  class:classes!characters_class_id_fkey(*),
   subclass:subclasses(*),
   species:species(*),
   background:backgrounds(*),
@@ -21,7 +21,7 @@ const SHEET_SELECT = `
 export async function getCharacters(userId: string) {
   const { data, error } = await supabase
     .from('characters')
-    .select('*, class:classes(name, hit_die), species:species(name), background:backgrounds(name)')
+    .select('*, class:classes!characters_class_id_fkey(name, hit_die), species:species(name), background:backgrounds(name)')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
   if (error) throw new Error(error.message)
@@ -39,16 +39,18 @@ export async function getCharacter(id: string) {
 }
 
 export async function createCharacter(userId: string, draft: WizardDraft) {
+  const startingLevel = draft.starting_level ?? 1
   const conMod = getAbilityModifier(draft.constitution)
   const dexMod = getAbilityModifier(draft.dexterity)
-  const hpMax  = getMaxHP(1, draft.hit_die ?? 8, conMod)
+  const hpMax  = getMaxHP(startingLevel, draft.hit_die ?? 8, conMod)
 
   const { data, error } = await supabase
     .from('characters')
     .insert({
       user_id: userId,
       name: draft.name,
-      level: 1,
+      level: startingLevel,
+      starting_level: startingLevel,
       class_id: draft.class_id,
       subclass_id: draft.subclass_id,
       species_id: draft.custom_species_id ? null : draft.species_id,

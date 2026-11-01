@@ -26,7 +26,7 @@ export default function AbilityScoresStep() {
         const bg = bgs.find((b) => b.id === bgId)
         if (bg) {
           const opts = (bg.ability_score_options as { options?: string[][] } | null)?.options?.[0] ?? []
-          setBgEligible(opts as AbilityKey[])
+          setBgEligible(opts)
         }
       })
       .catch(() => {})
