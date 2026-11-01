@@ -1,5 +1,5 @@
 import {
-  createCharacter, getCharacter, listCharacters, addItem, updateItem, removeItem, updateResources,
+  createCharacter, deleteCharacter, getCharacter, listCharacters, addItem, updateItem, removeItem, updateResources,
 } from '@/features/characters/characters.api'
 import type { NewCharacter } from '@/systems/types'
 
@@ -129,5 +129,21 @@ describe('updates and items', () => {
     await removeItem('it1')
     expect(b.delete).toHaveBeenCalled()
     expect(supabase.from).toHaveBeenCalledWith('character_items')
+  })
+})
+
+describe('deleteCharacter', () => {
+  it('deletes the character row by id', async () => {
+    const b = builder({ error: null })
+    ;(supabase.from as jest.Mock).mockReturnValue(b)
+    await deleteCharacter('ch1')
+    expect(supabase.from).toHaveBeenCalledWith('characters')
+    expect(b.delete).toHaveBeenCalled()
+    expect(b.eq).toHaveBeenCalledWith('id', 'ch1')
+  })
+
+  it('throws when the delete fails', async () => {
+    ;(supabase.from as jest.Mock).mockReturnValue(builder({ error: { message: 'Network request failed' } }))
+    await expect(deleteCharacter('ch1')).rejects.toBeTruthy()
   })
 })

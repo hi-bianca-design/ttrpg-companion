@@ -6,7 +6,7 @@ import { Text } from '@/components/ui/text'
 import { cn } from '@/lib/utils'
 import type { BuilderStepProps } from '../../types'
 import { ABILITY_KEYS, ABILITY_LABELS, type AbilityKey, STANDARD_ARRAY } from '../definition'
-import { bonusFor } from '../draft'
+import { bonusAbilities, bonusFor } from '../draft'
 import { formatModifier, getAbilityModifier } from '../rules'
 import { Chip, StepIntro, useDndContent } from './shared'
 
@@ -21,15 +21,19 @@ export function AbilityScoresStep({ draft, update }: BuilderStepProps) {
   const [active, setActive] = useState<AbilityKey | null>(null)
   const backgrounds = useDndContent('background')
   const background = backgrounds.items.find((b) => b.id === draft.background_id)
-  const eligible = (background?.data.ability_score_options.abilities ?? []).filter(
-    (a): a is AbilityKey => (ABILITY_KEYS as readonly string[]).includes(a),
-  )
+  const eligible = bonusAbilities(draft) as AbilityKey[]
 
   const used = ABILITY_KEYS.map((k) => scoreOf(draft, k)).filter((v): v is number => v !== null)
   const assignedCount = used.length
 
+  /** Tapping your own value clears it; a value held by another ability swaps the two. */
   function assign(key: AbilityKey, value: number) {
-    update({ [key]: scoreOf(draft, key) === value ? null : value })
+    const current = scoreOf(draft, key)
+    if (current === value) update({ [key]: null })
+    else {
+      const holder = ABILITY_KEYS.find((k) => k !== key && scoreOf(draft, k) === value)
+      update(holder ? { [key]: value, [holder]: current } : { [key]: value })
+    }
     setActive(null)
   }
 
@@ -37,7 +41,7 @@ export function AbilityScoresStep({ draft, update }: BuilderStepProps) {
     <View className="gap-6">
       <StepIntro
         title="Ability scores"
-        description="Tap an ability, then pick a value from the standard array. Each value is used once."
+        description="Tap an ability, then pick a value from the standard array. Each value is used once; picking a taken value swaps the two."
       />
 
       <SectionHeader id="builder-standard-array" title="Standard array" action={<Text variant="label" tone="accent">{`${assignedCount}/6 assigned`}</Text>}>
@@ -92,15 +96,16 @@ export function AbilityScoresStep({ draft, update }: BuilderStepProps) {
                   <View className="flex-row flex-wrap gap-2 px-4 pb-3">
                     {STANDARD_ARRAY.map((v) => {
                       const mine = base === v
+                      const holder = ABILITY_KEYS.find((k) => k !== key && scoreOf(draft, k) === v)
                       return (
                         <Chip
                           key={v}
                           label={String(v)}
                           accessibilityLabel={`${v} for ${ABILITY_LABELS[key]}`}
+                          accessibilityHint={holder ? `Swaps with ${ABILITY_LABELS[holder]}` : undefined}
                           selected={mine}
-                          disabled={!mine && used.includes(v)}
+                          className={cn('w-11 px-0', holder && 'border-dashed')}
                           onPress={() => assign(key, v)}
-                          className="w-11 px-0"
                         />
                       )
                     })}
@@ -113,7 +118,9 @@ export function AbilityScoresStep({ draft, update }: BuilderStepProps) {
       </SectionHeader>
 
       <SectionHeader id="builder-bg-bonus" title="Background bonus">
-        {background ? (
+        {background && eligible.length < 2 ? (
+          <Text variant="body-sm" tone="muted">{`${background.name} grants no ability score bonuses.`}</Text>
+        ) : background ? (
           <View className="gap-3">
             <Text variant="body-sm" tone="muted">
               {`${background.name} grants +2 to one of these abilities and +1 to another.`}

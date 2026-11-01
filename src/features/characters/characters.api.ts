@@ -135,6 +135,11 @@ export async function createCharacter(input: NewCharacter): Promise<string> {
   return id
 }
 
+/** Deletes a character; picks and items go with it (ON DELETE CASCADE). */
+export async function deleteCharacter(id: string): Promise<void> {
+  check(await supabase.from('characters').delete().eq('id', id))
+}
+
 export async function updateResources(id: string, resources: Record<string, ResourceValue>): Promise<void> {
   check(await supabase.from('characters').update({ resources: resources as unknown as Json }).eq('id', id))
 }

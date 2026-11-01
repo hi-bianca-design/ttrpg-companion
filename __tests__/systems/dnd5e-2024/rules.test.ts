@@ -305,11 +305,58 @@ test('ability-scores step needs the standard array assigned plus two distinct ba
   const step = dnd5eBuilder.steps.find((s) => s.id === 'ability-scores')!
   const scores = { strength: 8, dexterity: 14, constitution: 13, intelligence: 15, wisdom: 12, charisma: 10 }
   const bonuses = { bg_bonus_two: 'intelligence', bg_bonus_one: 'constitution' }
-  expect(step.isComplete(dnd5eBuilder.initialDraft())).toBe(false)
-  expect(step.isComplete({ ...dnd5eBuilder.initialDraft(), ...bonuses })).toBe(false)
-  expect(step.isComplete({ ...dnd5eBuilder.initialDraft(), ...scores })).toBe(false)
-  expect(step.isComplete({ ...dnd5eBuilder.initialDraft(), ...scores, ...bonuses })).toBe(true)
-  expect(step.isComplete({ ...dnd5eBuilder.initialDraft(), ...scores, strength: 15, ...bonuses })).toBe(false)
+  const sage = { ...dnd5eBuilder.initialDraft(), bg_abilities: ['constitution', 'intelligence', 'wisdom'] }
+  expect(step.isComplete(sage)).toBe(false)
+  expect(step.isComplete({ ...sage, ...bonuses })).toBe(false)
+  expect(step.isComplete({ ...sage, ...scores })).toBe(false)
+  expect(step.isComplete({ ...sage, ...scores, ...bonuses })).toBe(true)
+  expect(step.isComplete({ ...sage, ...scores, strength: 15, ...bonuses })).toBe(false)
+})
+
+test('ability-scores step only needs background bonuses when the background offers at least two abilities', () => {
+  const step = dnd5eBuilder.steps.find((s) => s.id === 'ability-scores')!
+  const scores = { strength: 8, dexterity: 14, constitution: 13, intelligence: 15, wisdom: 12, charisma: 10 }
+  const base = { ...dnd5eBuilder.initialDraft(), ...scores, background_id: 'hb' }
+  expect(step.isComplete({ ...base, bg_abilities: [] })).toBe(true)
+  expect(step.isComplete({ ...base, bg_abilities: ['wisdom'] })).toBe(true)
+  expect(step.isComplete({ ...base, bg_abilities: ['wisdom', 'charisma', 'intelligence'] })).toBe(false)
+  expect(step.isComplete({ ...base, bg_abilities: ['wisdom', 'charisma'], bg_bonus_two: 'wisdom', bg_bonus_one: 'charisma' })).toBe(true)
+  expect(step.isComplete({ ...base, bg_abilities: ['wisdom', 'charisma'], bg_bonus_two: 'strength', bg_bonus_one: 'charisma' })).toBe(false)
+})
+
+describe('pruneDraft keeps chosen spells within the level and limits', () => {
+  const lists = { c1: ['wizard'], c2: ['wizard'], c3: ['wizard'], c4: ['wizard'], l1: ['wizard'], l1b: ['wizard'], l2: ['wizard'], l3: ['wizard', 'cleric'] }
+  const levels = { c1: 0, c2: 0, c3: 0, c4: 0, l1: 1, l1b: 1, l2: 2, l3: 3 }
+  const wizard5 = {
+    ...dnd5eBuilder.initialDraft(), class_id: 'wiz', class_name: 'Wizard', level: 5,
+    spell_classes: lists, spell_levels: levels, spell_ids: ['c1', 'c2', 'c3', 'c4', 'l1', 'l2', 'l3', 'l1b'],
+  }
+
+  test('lowering the level drops spells above the new max spell level and trims cantrips to the new limit', () => {
+    const next = dnd5eBuilder.pruneDraft(wizard5, { level: 1 })
+    expect(next.spell_ids).toEqual(['c1', 'c2', 'c3', 'l1', 'l1b'])
+  })
+
+  test('trims prepared spells to the new limit, keeping the earliest picks', () => {
+    const many = { ...wizard5, spell_ids: ['l1', 'l1b', 'x1', 'x2', 'x3'], spell_levels: { ...levels, x1: 1, x2: 1, x3: 1 }, spell_classes: { ...lists, x1: ['wizard'], x2: ['wizard'], x3: ['wizard'] } }
+    expect(dnd5eBuilder.pruneDraft(many, { level: 1 }).spell_ids).toEqual(['l1', 'l1b', 'x1', 'x2'])
+  })
+
+  test('a class change also applies the new class list, max level and limits', () => {
+    const next = dnd5eBuilder.pruneDraft({ ...wizard5, level: 1 }, { class_id: 'clr', class_name: 'Cleric' })
+    expect(next.spell_ids).toEqual([])
+  })
+
+  test('raising the level keeps everything', () => {
+    expect(dnd5eBuilder.pruneDraft(wizard5, { level: 9 }).spell_ids).toEqual(wizard5.spell_ids)
+  })
+
+  test('spells step is incomplete while picks exceed the limits or the max spell level', () => {
+    const spells = dnd5eBuilder.steps.find((s) => s.id === 'spells')!
+    expect(spells.isComplete(wizard5)).toBe(true) // level 5: 4 cantrips, 9 prepared, up to level 3
+    expect(spells.isComplete({ ...wizard5, level: 1 })).toBe(false)
+    expect(spells.isComplete({ ...wizard5, level: 1, spell_ids: ['c1', 'c2', 'c3', 'l1'] })).toBe(true)
+  })
 })
 
 test('toCharacter treats unassigned abilities as 10', () => {

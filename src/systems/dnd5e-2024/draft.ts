@@ -3,7 +3,7 @@
 // import it without a builder ↔ steps require cycle.
 import type { Draft, NewCharacter } from '../types'
 import { ABILITY_KEYS, STANDARD_ARRAY } from './definition'
-import { getAbilityModifier, getMaxHP, slotsFor } from './rules'
+import { getAbilityModifier, getMaxHP, getMaxSpellLevel, getSpellLimits, slotsFor } from './rules'
 
 export const str = (v: unknown): string => (typeof v === 'string' ? v : '')
 export const num = (v: unknown, fallback: number): number => (typeof v === 'number' && Number.isFinite(v) ? v : fallback)
@@ -22,6 +22,66 @@ export function bonusFor(draft: Draft, key: string): number {
   return draft.bg_bonus_two === key ? 2 : draft.bg_bonus_one === key ? 1 : 0
 }
 
+/** Abilities the chosen background lets you raise (cached from the background when it's picked). */
+export function bonusAbilities(draft: Draft): string[] {
+  return strList(draft.bg_abilities).filter((a) => (ABILITY_KEYS as readonly string[]).includes(a))
+}
+
+/**
+ * Background bonuses are needed only when the background offers at least two abilities
+ * (homebrew backgrounds may offer none); then +2 and +1 go to two different listed abilities.
+ */
+export function bonusesComplete(draft: Draft): boolean {
+  const eligible = bonusAbilities(draft)
+  if (eligible.length < 2) return true
+  const two = str(draft.bg_bonus_two)
+  const one = str(draft.bg_bonus_one)
+  return eligible.includes(two) && eligible.includes(one) && two !== one
+}
+
+const spellLevel = (draft: Draft, id: string): number | undefined => {
+  const v = ((draft.spell_levels ?? {}) as Record<string, unknown>)[id]
+  return typeof v === 'number' ? v : undefined
+}
+
+/** Chosen cantrips / leveled spells, and whether any pick is above the max spell level. */
+export function spellCounts(draft: Draft) {
+  const max = getMaxSpellLevel(str(draft.class_name), levelOf(draft))
+  let cantrips = 0
+  let spells = 0
+  let tooHigh = false
+  for (const id of strList(draft.spell_ids)) {
+    const lvl = spellLevel(draft, id) ?? 0
+    if (lvl === 0) cantrips++
+    else spells++
+    if (lvl > max) tooHigh = true
+  }
+  return { cantrips, spells, tooHigh }
+}
+
+/** True when the chosen spells fit the class's SRD 5.2 limits and max spell level. */
+export function spellsWithinLimits(draft: Draft): boolean {
+  const { maxCantrips, maxSpells } = getSpellLimits(str(draft.class_name), levelOf(draft))
+  const { cantrips, spells, tooHigh } = spellCounts(draft)
+  return !tooHigh && cantrips <= maxCantrips && spells <= maxSpells
+}
+
+/** Drops spells above the max spell level, then trims cantrips and spells to the limits (earliest picks kept). */
+function fitSpells(draft: Draft): string[] {
+  const cls = str(draft.class_name)
+  const level = levelOf(draft)
+  const max = getMaxSpellLevel(cls, level)
+  const { maxCantrips, maxSpells } = getSpellLimits(cls, level)
+  let cantrips = 0
+  let spells = 0
+  return strList(draft.spell_ids).filter((id) => {
+    const lvl = spellLevel(draft, id) ?? 0
+    if (lvl > max) return false
+    if (lvl === 0) return ++cantrips <= maxCantrips
+    return ++spells <= maxSpells
+  })
+}
+
 /** True when the six abilities hold exactly the standard array (each value used once). */
 export function abilitiesAssigned(draft: Draft): boolean {
   const values = ABILITY_KEYS.map((k) => draft[k])
@@ -32,11 +92,11 @@ export function abilitiesAssigned(draft: Draft): boolean {
 /**
  * Draft keys:
  * - class_id, class_name, hit_die (cached from the class pick), subclass_id, level
- * - species_id, background_id
+ * - species_id, background_id, bg_abilities (the background's eligible abilities, cached on pick)
  * - the six ability keys (null until assigned from the standard array),
  *   bg_bonus_two / bg_bonus_one (ability keys receiving +2 / +1)
- * - spell_ids, spell_classes (spell id → lowercase class list, cached by the spells step
- *   so pruneDraft can stay pure)
+ * - spell_ids, spell_classes (spell id → lowercase class list) and spell_levels (spell id →
+ *   level), both cached by the spells step so pruneDraft can stay pure
  * - name, alignment, personality_trait, ideal, bond, flaw, appearance, backstory
  */
 export function initialDraft(): Draft {
@@ -48,11 +108,13 @@ export function initialDraft(): Draft {
     level: 1,
     species_id: null,
     background_id: null,
+    bg_abilities: [],
     ...Object.fromEntries(ABILITY_KEYS.map((k) => [k, null])),
     bg_bonus_two: null,
     bg_bonus_one: null,
     spell_ids: [],
     spell_classes: {},
+    spell_levels: {},
     name: '',
     alignment: '',
     personality_trait: '',
@@ -65,22 +127,27 @@ export function initialDraft(): Draft {
 }
 
 /**
- * Merges `changed` into `draft`. A class change resets the subclass and drops spells off the
- * new class list; a background change clears the background ability bonuses (unless the
- * same patch sets them).
+ * Merges `changed` into `draft`, then keeps dependent choices valid:
+ * - a background change clears the bonuses (and its cached ability list) unless the patch sets them;
+ * - a class change resets the subclass and drops spells off the new class list;
+ * - a class or level change drops spells above the new max spell level and trims to the new limits.
  */
 export function pruneDraft(draft: Draft, changed: Partial<Draft>): Draft {
   const next: Draft = { ...draft, ...changed }
   if ('background_id' in changed && changed.background_id !== draft.background_id) {
     if (!('bg_bonus_two' in changed)) next.bg_bonus_two = null
     if (!('bg_bonus_one' in changed)) next.bg_bonus_one = null
+    if (!('bg_abilities' in changed)) next.bg_abilities = []
   }
-  if (!('class_id' in changed) || changed.class_id === draft.class_id) return next
-
-  const cls = str(next.class_name).toLowerCase()
-  const lists = (next.spell_classes ?? {}) as Record<string, string[]>
-  next.subclass_id = null
-  next.spell_ids = strList(next.spell_ids).filter((id) => strList(lists[id]).map((c) => c.toLowerCase()).includes(cls))
+  const classChanged = 'class_id' in changed && changed.class_id !== draft.class_id
+  const levelChanged = 'level' in changed && changed.level !== draft.level
+  if (classChanged) {
+    const cls = str(next.class_name).toLowerCase()
+    const lists = (next.spell_classes ?? {}) as Record<string, string[]>
+    next.subclass_id = null
+    next.spell_ids = strList(next.spell_ids).filter((id) => strList(lists[id]).map((c) => c.toLowerCase()).includes(cls))
+  }
+  if (classChanged || levelChanged) next.spell_ids = fitSpells(next)
   return next
 }
 

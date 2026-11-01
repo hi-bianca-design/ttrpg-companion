@@ -31,17 +31,17 @@ export function SpellsStep({ draft, update }: BuilderStepProps) {
     )
   }, [spells.items, className, maxSpellLevel])
 
-  // Cache each listed spell's class list so pruneDraft can drop off-list spells on a class change.
+  // Cache each listed spell's class list and level so pruneDraft can drop off-list spells on a
+  // class change and keep picks within the level's max spell level and limits.
   useEffect(() => {
     if (available.length === 0) return
-    const cached = (draft.spell_classes ?? {}) as Record<string, string[]>
-    const missing = available.filter((s) => !cached[s.id])
+    const classes = (draft.spell_classes ?? {}) as Record<string, string[]>
+    const levels = (draft.spell_levels ?? {}) as Record<string, number>
+    const missing = available.filter((s) => !classes[s.id] || levels[s.id] === undefined)
     if (missing.length === 0) return
     update({
-      spell_classes: {
-        ...cached,
-        ...Object.fromEntries(missing.map((s) => [s.id, s.data.classes.map((c) => c.toLowerCase())])),
-      },
+      spell_classes: { ...classes, ...Object.fromEntries(missing.map((s) => [s.id, s.data.classes.map((c) => c.toLowerCase())])) },
+      spell_levels: { ...levels, ...Object.fromEntries(missing.map((s) => [s.id, s.data.level])) },
     })
   }, [available]) // only when the list changes, not on every draft edit
 
@@ -102,6 +102,7 @@ export function SpellsStep({ draft, update }: BuilderStepProps) {
               ) : null}
               {items.map((s) => {
                 const isSelected = selected.includes(s.id)
+                const atLimit = !isSelected && (s.data.level === 0 ? chosenCantrips >= maxCantrips : chosenSpells >= maxSpells)
                 const tags = [s.data.is_ritual && 'Ritual', s.data.requires_concentration && 'Concentration'].filter(Boolean) as string[]
                 return (
                   <ChoiceCard
@@ -109,6 +110,7 @@ export function SpellsStep({ draft, update }: BuilderStepProps) {
                     title={s.name}
                     accessibilityLabel={`${s.name}${tags.length ? `, ${tags.join(', ')}` : ''}`}
                     selected={isSelected}
+                    disabled={atLimit}
                     onPress={() => toggle(s.id, s.data.level)}
                   >
                     <Text variant="body-sm" tone="muted">{`${s.data.casting_time} · ${s.data.range} · ${s.data.school}`}</Text>

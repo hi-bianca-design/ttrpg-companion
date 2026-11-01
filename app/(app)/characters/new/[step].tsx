@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native'
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router'
 import { CaretLeft, CaretRight, CheckCircle, CircleIcon } from 'phosphor-react-native'
@@ -54,6 +54,9 @@ export default function BuilderStepScreen() {
   const systemId = useBuilderStore((s) => s.systemId)
   const draft = useBuilderStore((s) => s.draft)
   const update = useBuilderStore((s) => s.update)
+  const reset = useBuilderStore((s) => s.reset)
+  // Set once the character is saved: the wizard is leaving, so a cleared store must not redirect back into it.
+  const finished = useRef(false)
   const router = useRouter()
   const create = useCreateCharacter()
   const [error, setError] = useState<string | null>(null)
@@ -61,7 +64,7 @@ export default function BuilderStepScreen() {
   const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
 
   // No wizard in progress (e.g. app reload on a step URL): start over from the picker.
-  if (!systemId) return <Redirect href="/(app)/characters/new" />
+  if (!systemId) return finished.current ? null : <Redirect href="/(app)/characters/new" />
 
   const system = getSystem(systemId)
   const steps = visibleSteps(system.builder.steps, draft)
@@ -78,7 +81,15 @@ export default function BuilderStepScreen() {
     setError(null)
     try {
       const id = await create.mutateAsync(system.builder.toCharacter(draft))
-      router.replace(`/(app)/characters/${id}`)
+      // Leave the wizard entirely so Back from the sheet returns to the list, then clear the draft.
+      // The push waits a tick so the pop is applied first (on web that rewinds browser history
+      // instead of collapsing into a replace that leaves the wizard entries behind).
+      finished.current = true
+      router.dismissTo('/(app)/characters')
+      setTimeout(() => {
+        router.push(`/(app)/characters/${id}`)
+        reset()
+      }, 0)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong. Try again.')
     }

@@ -5,7 +5,10 @@ import type { ReactElement } from 'react'
 import BuilderStepScreen from '../../../app/(app)/characters/new/[step]'
 import { useBuilderStore } from '@/features/characters/builder/builder.store'
 import { WizardProgress } from '@/features/characters/builder/WizardProgress'
+import { createCharacter } from '@/features/characters/characters.api'
 import { listContent } from '@/features/content/content.api'
+import { AbilityScoresStep } from '@/systems/dnd5e-2024/steps/AbilityScoresStep'
+import { OriginStep } from '@/systems/dnd5e-2024/steps/OriginStep'
 import { ClassStep } from '@/systems/dnd5e-2024/steps/ClassStep'
 import { filterSpells, SpellsStep } from '@/systems/dnd5e-2024/steps/SpellsStep'
 import type { Draft } from '@/systems/types'
@@ -13,10 +16,12 @@ import type { Draft } from '@/systems/types'
 jest.mock('@/features/content/content.api', () => ({ listContent: jest.fn() }))
 jest.mock('@/features/characters/characters.api', () => ({ createCharacter: jest.fn() }))
 const mockParams: { step: string } = { step: 'review' }
+const mockRouter = { push: jest.fn(), back: jest.fn(), replace: jest.fn(), dismissTo: jest.fn(), dismissAll: jest.fn() }
+const mockRedirect = jest.fn()
 jest.mock('expo-router', () => ({
   useLocalSearchParams: () => mockParams,
-  useRouter: () => ({ push: jest.fn(), back: jest.fn(), replace: jest.fn(), dismissTo: jest.fn() }),
-  Redirect: () => null,
+  useRouter: () => mockRouter,
+  Redirect: (props: { href: string }) => { mockRedirect(props.href); return null },
 }))
 jest.mock('@/components/game', () => ({
   ...jest.requireActual('@/components/game'),
@@ -42,7 +47,10 @@ const CONTENT: Record<string, unknown[]> = {
   ],
   subclass: [],
   species: [],
-  background: [],
+  background: [
+    row('background', 'sage', 'Sage', { skill_proficiencies: ['arcana'], ability_score_options: { abilities: ['constitution', 'intelligence', 'wisdom'] } }),
+    row('background', 'hb', 'Wanderer', { skill_proficiencies: ['survival'], ability_score_options: {} }),
+  ],
   spell: [
     spell('fire-bolt', 'Fire Bolt', 0, ['sorcerer', 'wizard']),
     spell('light', 'Light', 0, ['wizard', 'cleric']),
@@ -60,7 +68,7 @@ function renderWithQuery(ui: ReactElement) {
 }
 
 /** Renders a step bound to the real builder store, the way [step].tsx does. */
-function Bound({ Step }: { Step: typeof ClassStep }) {
+function Bound({ Step }: { Step: (props: { draft: Draft; update(patch: Partial<Draft>): void }) => ReactElement }) {
   const draft = useBuilderStore((s) => s.draft)
   const update = useBuilderStore((s) => s.update)
   return <Step draft={draft} update={update} />
@@ -69,7 +77,7 @@ function Bound({ Step }: { Step: typeof ClassStep }) {
 const completeWizard: Draft = {
   class_id: 'wiz', class_name: 'Wizard', hit_die: 6, species_id: 'elf', background_id: 'sage',
   strength: 8, dexterity: 14, constitution: 13, intelligence: 15, wisdom: 12, charisma: 10,
-  bg_bonus_two: 'intelligence', bg_bonus_one: 'constitution', name: 'Mira',
+  bg_abilities: ['constitution', 'intelligence', 'wisdom'], bg_bonus_two: 'intelligence', bg_bonus_one: 'constitution', name: 'Mira',
 }
 
 beforeEach(() => {
@@ -154,5 +162,60 @@ describe('Spells step', () => {
 
     for (const name of ['Fire Bolt', 'Light', 'Mage Hand', 'Ray of Frost']) fireEvent.press(screen.getByRole('button', { name: new RegExp(`^${name}`) }))
     expect(useBuilderStore.getState().draft.spell_ids).toEqual(['fire-bolt', 'light', 'mage-hand'])
+  })
+})
+
+describe('Review create', () => {
+  beforeEach(() => { mockParams.step = 'review' })
+
+  test('after creating, leaves the wizard (dismiss to the list, push the sheet) and resets the store without redirecting', async () => {
+    ;(createCharacter as jest.Mock).mockResolvedValue('new-id')
+    act(() => useBuilderStore.getState().update(completeWizard))
+    renderWithQuery(<BuilderStepScreen />)
+    await waitFor(() => expect(mockList).toHaveBeenCalledTimes(4))
+    fireEvent.press(screen.getByRole('button', { name: 'Create character' }))
+    await waitFor(() => expect(mockRouter.push).toHaveBeenCalledWith('/(app)/characters/new-id'))
+    expect(mockRouter.dismissTo).toHaveBeenCalledWith('/(app)/characters')
+    expect(mockRouter.dismissTo.mock.invocationCallOrder[0]).toBeLessThan(mockRouter.push.mock.invocationCallOrder[0])
+    expect(useBuilderStore.getState().systemId).toBeNull()
+    expect(mockRedirect).not.toHaveBeenCalled()
+  })
+})
+
+describe('Origin step', () => {
+  test('choosing a background caches its eligible ability list', async () => {
+    renderWithQuery(<Bound Step={OriginStep} />)
+    fireEvent.press(await screen.findByRole('button', { name: 'Sage' }))
+    expect(useBuilderStore.getState().draft).toMatchObject({ background_id: 'sage', bg_abilities: ['constitution', 'intelligence', 'wisdom'] })
+  })
+})
+
+describe('Ability scores step', () => {
+  test('assigning a value used by another ability swaps the two', async () => {
+    act(() => useBuilderStore.getState().update({ intelligence: 15, strength: 14 }))
+    renderWithQuery(<Bound Step={AbilityScoresStep} />)
+    fireEvent.press(screen.getByRole('button', { name: 'Strength, 14' }))
+    fireEvent.press(screen.getByRole('button', { name: '15 for Strength' }))
+    expect(useBuilderStore.getState().draft).toMatchObject({ strength: 15, intelligence: 14 })
+    await act(async () => {})
+  })
+
+  test('a background with no ability options shows a caption instead of bonus chips', async () => {
+    act(() => useBuilderStore.getState().update({ background_id: 'hb', bg_abilities: [] }))
+    renderWithQuery(<Bound Step={AbilityScoresStep} />)
+    expect(await screen.findByText('Wanderer grants no ability score bonuses.')).toBeTruthy()
+    expect(screen.queryByText('+2')).toBeNull()
+  })
+})
+
+describe('Spells step at the limit', () => {
+  test('unselected cards of a full category are disabled; selected ones stay enabled', async () => {
+    act(() => useBuilderStore.getState().update({ class_id: 'wiz', class_name: 'Wizard', level: 1 }))
+    renderWithQuery(<Bound Step={SpellsStep} />)
+    await screen.findByText('Fire Bolt')
+    for (const name of ['Fire Bolt', 'Light', 'Mage Hand']) fireEvent.press(screen.getByRole('button', { name: new RegExp(`^${name}`) }))
+    expect(screen.getByRole('button', { name: /^Ray of Frost/ })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /^Fire Bolt/ })).toBeEnabled()
+    expect(screen.getByRole('button', { name: /^Detect Magic/ })).toBeEnabled()
   })
 })

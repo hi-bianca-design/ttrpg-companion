@@ -82,23 +82,25 @@ export function QueryState({ isLoading, isError, onRetry }: { isLoading: boolean
 type ChoiceCardProps = {
   title: string
   selected: boolean
+  disabled?: boolean
   onPress: () => void
   accessibilityLabel?: string
   aside?: ReactNode
   children?: ReactNode
 }
 
-/** A selectable card: border-primary and a check when selected. */
-export function ChoiceCard({ title, selected, onPress, accessibilityLabel, aside, children }: ChoiceCardProps) {
+/** A selectable card: border-primary and a check when selected; dimmed and inert when disabled. */
+export function ChoiceCard({ title, selected, disabled = false, onPress, accessibilityLabel, aside, children }: ChoiceCardProps) {
   const colors = useThemeColors()
   return (
     <Pressable
       role="button"
       accessibilityLabel={accessibilityLabel ?? title}
-      accessibilityState={{ selected }}
+      accessibilityState={{ selected, disabled }}
+      disabled={disabled}
       onPress={onPress}
     >
-      <Card compact className={cn('gap-2', selected && 'border-primary')}>
+      <Card compact className={cn('gap-2', selected && 'border-primary', disabled && 'opacity-50')}>
         <View className="flex-row items-center gap-2">
           <Text variant="subhead" className="flex-shrink">{title}</Text>
           {aside}
@@ -117,15 +119,17 @@ type ChipProps = {
   disabled?: boolean
   onPress: () => void
   accessibilityLabel?: string
+  accessibilityHint?: string
   className?: string
 }
 
 /** Pill toggle with a 44pt touch target. */
-export function Chip({ label, selected = false, disabled = false, onPress, accessibilityLabel, className }: ChipProps) {
+export function Chip({ label, selected = false, disabled = false, onPress, accessibilityLabel, accessibilityHint, className }: ChipProps) {
   return (
     <Pressable
       role="button"
       accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityHint={accessibilityHint}
       accessibilityState={{ selected, disabled }}
       disabled={disabled}
       onPress={onPress}

@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '@/lib/query-client'
 import type { NewCharacter, ResourceValue } from '@/systems/types'
 import {
-  addItem, createCharacter, getCharacter, listCharacters, removeItem, updateCharacter, updateItem, updateResources,
+  addItem, createCharacter, deleteCharacter, getCharacter, listCharacters, removeItem, updateCharacter, updateItem, updateResources,
   type CharacterFull, type CharacterPatch, type ItemPatch,
 } from './characters.api'
 
@@ -19,6 +19,17 @@ export function useCreateCharacter() {
   return useMutation({
     mutationFn: (input: NewCharacter) => createCharacter(input),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.characters }),
+  })
+}
+
+export function useDeleteCharacter() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => deleteCharacter(id),
+    onSuccess: (_data, id) => {
+      qc.removeQueries({ queryKey: qk.character(id) })
+      return qc.invalidateQueries({ queryKey: qk.characters })
+    },
   })
 }
 

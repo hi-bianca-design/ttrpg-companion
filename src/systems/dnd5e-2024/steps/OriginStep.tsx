@@ -34,7 +34,7 @@ export function OriginStep({ draft, update }: BuilderStepProps) {
               title={bg.name}
               selected={draft.background_id === bg.id}
               aside={bg.owned ? <Badge>Homebrew</Badge> : null}
-              onPress={() => update({ background_id: bg.id })}
+              onPress={() => update({ background_id: bg.id, bg_abilities: bg.data.ability_score_options.abilities ?? [] })}
             >
               {bg.description ? <Text variant="body-sm" tone="muted" numberOfLines={2}>{bg.description}</Text> : null}
               <Text variant="caption" tone="accent">
