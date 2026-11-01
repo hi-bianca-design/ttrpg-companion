@@ -260,3 +260,58 @@ export function rest(c: CharacterRecord, kind: 'short' | 'long', picks: PickReco
   for (const key of ['spell_slots', 'death_saves_success', 'death_saves_failure']) set(key, clearSlots(c.resources[key]))
   return next
 }
+
+// ── Level up ─────────────────────────────────────────────────
+
+export const MAX_LEVEL = 20
+/** 2024 rules: every class chooses its subclass at level 3 (content may override via features.subclass_level). */
+export const SUBCLASS_LEVEL = 3
+
+export type LevelUpInput = { hpMethod: 'average' | 'roll'; roll?: number; subclassId?: string }
+
+export function hitDieOf(picks: PickRecord[]): number {
+  const die = asRecord(picks.find((p) => p.kind === 'class')?.content.data).hit_die
+  return typeof die === 'number' && die > 0 ? die : 8
+}
+
+/** HP gained on level up: average (floor(die/2)+1) or the roll, plus CON mod; never below 1. */
+export function hpGain(hitDie: number, conMod: number, input: Pick<LevelUpInput, 'hpMethod' | 'roll'>): number {
+  const base = input.hpMethod === 'roll' ? input.roll ?? 0 : Math.floor(hitDie / 2) + 1
+  return Math.max(1, base + conMod)
+}
+
+/** Recompute spell slot maxima for the new level, keeping `used` (capped at the new max). */
+function grownSlots(old: SlotsValue, className: string, level: number): SlotsValue {
+  const fresh = slotsFor(className, level)
+  return {
+    tiers: Object.fromEntries(
+      Object.entries(fresh.tiers).map(([tier, s]) => [tier, { max: s.max, used: Math.min(old.tiers[tier]?.used ?? 0, s.max) }]),
+    ),
+  }
+}
+
+/**
+ * Next level's `level` and `resources`: HP max and current rise by the gain (no full heal),
+ * hit dice max and current by 1, spell slots follow slotsFor. The subclass pick is persisted by the caller.
+ */
+export function levelUp(
+  c: CharacterRecord,
+  picks: PickRecord[],
+  input: Record<string, unknown>,
+): Pick<CharacterRecord, 'level' | 'resources'> {
+  if (c.level >= MAX_LEVEL) throw new Error('Already at max level')
+  const level = c.level + 1
+  const { hpMethod, roll } = input as LevelUpInput
+  const gain = hpGain(hitDieOf(picks), getAbilityModifier(c.stats.constitution ?? 10), { hpMethod, roll })
+  const resources: Record<string, ResourceValue> = { ...c.resources }
+
+  const hp = c.resources.hp as PoolValue | undefined
+  if (hp) resources.hp = { ...hp, max: hp.max + gain, current: hp.current + gain }
+  const hd = c.resources.hit_dice as PoolValue | undefined
+  if (hd) resources.hit_dice = { ...hd, max: hd.max + 1, current: hd.current + 1 }
+  const slots = c.resources.spell_slots as SlotsValue | undefined
+  const cls = className(picks)
+  if (slots && cls) resources.spell_slots = grownSlots(slots, cls, level)
+
+  return { level, resources }
+}

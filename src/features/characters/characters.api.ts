@@ -144,3 +144,25 @@ export async function updateItem(itemId: string, patch: ItemPatch): Promise<void
 export async function removeItem(itemId: string): Promise<void> {
   check(await supabase.from('character_items').delete().eq('id', itemId))
 }
+
+/**
+ * Applies a level-up: saves the subclass pick (if any), then the new level and resources.
+ * If the character write fails the pick is removed again, so a retry doesn't hit a duplicate.
+ */
+export async function levelUpCharacter(
+  id: string,
+  patch: Pick<CharacterRecord, 'level' | 'resources'>,
+  subclassId?: string,
+): Promise<void> {
+  if (subclassId) {
+    check(await supabase.from('character_picks').insert({
+      character_id: id, content_id: subclassId, kind: 'subclass', state: {}, acquired_at_level: patch.level,
+    }))
+  }
+  try {
+    await updateCharacter(id, patch)
+  } catch (e) {
+    if (subclassId) await supabase.from('character_picks').delete().eq('character_id', id).eq('content_id', subclassId)
+    throw e
+  }
+}

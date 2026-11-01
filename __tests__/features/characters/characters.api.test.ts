@@ -1,5 +1,5 @@
 import {
-  createCharacter, deleteCharacter, getCharacter, listCharacters, addItem, updateItem, removeItem, updateResources,
+  createCharacter, deleteCharacter, getCharacter, listCharacters, addItem, updateItem, removeItem, updateResources, levelUpCharacter,
 } from '@/features/characters/characters.api'
 import type { NewCharacter } from '@/systems/types'
 
@@ -145,5 +145,43 @@ describe('deleteCharacter', () => {
   it('throws when the delete fails', async () => {
     ;(supabase.from as jest.Mock).mockReturnValue(builder({ error: { message: 'Network request failed' } }))
     await expect(deleteCharacter('ch1')).rejects.toBeTruthy()
+  })
+})
+
+describe('levelUpCharacter', () => {
+  const patch = { level: 3, resources }
+
+  it('inserts the subclass pick then updates level and resources', async () => {
+    const chars = builder({ error: null })
+    const picks = builder({ error: null })
+    ;(supabase.from as jest.Mock).mockImplementation((t: string) => (t === 'characters' ? chars : picks))
+    await levelUpCharacter('ch1', patch, 'sub1')
+    expect(picks.insert).toHaveBeenCalledWith({ character_id: 'ch1', content_id: 'sub1', kind: 'subclass', state: {}, acquired_at_level: 3 })
+    expect(chars.update).toHaveBeenCalledWith(patch)
+    expect(chars.eq).toHaveBeenCalledWith('id', 'ch1')
+  })
+
+  it('skips the pick when no subclass is chosen', async () => {
+    const chars = builder({ error: null })
+    ;(supabase.from as jest.Mock).mockReturnValue(chars)
+    await levelUpCharacter('ch1', patch)
+    expect(supabase.from).toHaveBeenCalledTimes(1)
+  })
+
+  it('removes the pick again when the character update fails', async () => {
+    const chars = builder({ error: { message: 'boom' } })
+    const picks = builder({ error: null })
+    ;(supabase.from as jest.Mock).mockImplementation((t: string) => (t === 'characters' ? chars : picks))
+    await expect(levelUpCharacter('ch1', patch, 'sub1')).rejects.toBeTruthy()
+    expect(picks.delete).toHaveBeenCalled()
+    expect(picks.eq).toHaveBeenCalledWith('content_id', 'sub1')
+  })
+
+  it('does not touch the character when the pick insert fails', async () => {
+    const chars = builder({ error: null })
+    const picks = builder({ error: { message: 'dup' } })
+    ;(supabase.from as jest.Mock).mockImplementation((t: string) => (t === 'characters' ? chars : picks))
+    await expect(levelUpCharacter('ch1', patch, 'sub1')).rejects.toBeTruthy()
+    expect(chars.update).not.toHaveBeenCalled()
   })
 })

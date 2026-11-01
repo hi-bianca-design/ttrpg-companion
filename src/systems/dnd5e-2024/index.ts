@@ -1,7 +1,7 @@
 import type { ContentKindDef, GameSystem } from '../types'
 import { dnd5eBuilder } from './builder'
 import { DND_CONDITIONS, DND_CONTENT_KIND_META, DND_RESOURCES, DND_STATS } from './definition'
-import { derived, rest } from './rules'
+import { derived, levelUp, rest } from './rules'
 import { ProficienciesSection } from './sheet/ProficienciesSection'
 import { ProfileSection } from './sheet/ProfileSection'
 import { dnd5eContentSchemas, dnd5eDetailsSchema, dnd5eResourcesSchema, dnd5eStatsSchema } from './schemas'
@@ -22,6 +22,6 @@ export const dnd5e2024: GameSystem = {
   contentKinds,
   schemas: { stats: dnd5eStatsSchema, resources: dnd5eResourcesSchema, details: dnd5eDetailsSchema },
   builder: dnd5eBuilder,
-  rules: { derived, rest, maxAttuned: 3 },
+  rules: { derived, rest, levelUp, maxAttuned: 3 },
   sheet: { sections: { proficiencies: ProficienciesSection, profile: ProfileSection } },
 }
