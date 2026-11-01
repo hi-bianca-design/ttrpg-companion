@@ -34,6 +34,8 @@ export function useJoinCampaign() {
     onSuccess: () => Promise.all([
       qc.invalidateQueries({ queryKey: qk.campaigns }),
       qc.invalidateQueries({ queryKey: qk.characters }),
+      qc.invalidateQueries({ queryKey: ['character-campaign'] }),
+      qc.invalidateQueries({ queryKey: ['campaign'] }),
     ]),
   })
 }

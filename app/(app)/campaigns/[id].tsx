@@ -1,0 +1,70 @@
+import { View } from 'react-native'
+import { useLocalSearchParams, useRouter } from 'expo-router'
+import { ScreenBackground } from '@/components/game'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Text } from '@/components/ui/text'
+import { useAuth } from '@/features/auth/useAuth'
+import { InviteCode } from '@/features/campaigns/InviteCode'
+import { MemberList } from '@/features/campaigns/MemberList'
+import { useCampaign } from '@/features/campaigns/campaigns.queries'
+import { getSystem } from '@/systems/registry'
+import type { SystemId } from '@/systems/types'
+
+export default function CampaignDetailScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>()
+  const router = useRouter()
+  const { user } = useAuth()
+  const { data, isLoading, isError, refetch } = useCampaign(id)
+
+  if (isLoading) {
+    return (
+      <ScreenBackground>
+        <View className="gap-2" accessibilityLabel="Loading campaign">
+          {[0, 1].map((i) => (
+            <Card key={i} className="gap-3">
+              <View className="h-4 w-1/2 rounded-full bg-muted" />
+              <View className="h-4 w-1/3 rounded-full bg-muted" />
+            </Card>
+          ))}
+        </View>
+      </ScreenBackground>
+    )
+  }
+
+  if (isError || !data) {
+    return (
+      <ScreenBackground>
+        <View className="items-start gap-2">
+          <Text variant="caption" tone="destructive">Couldn’t load this campaign. Check your connection.</Text>
+          <Button variant="outline" size="sm" onPress={() => refetch()}>
+            <Text>Try again</Text>
+          </Button>
+        </View>
+      </ScreenBackground>
+    )
+  }
+
+  const isGm = data.gm_id === user?.id
+  return (
+    <ScreenBackground scroll>
+      <View className="flex-row items-center justify-between gap-3">
+        <Text variant="title" numberOfLines={2} className="flex-1">{data.name}</Text>
+        <Button size="sm" variant="outline" accessibilityLabel="Back" onPress={() => router.back()}>
+          <Text>Back</Text>
+        </Button>
+      </View>
+      <View className="flex-row flex-wrap items-center gap-2">
+        <Badge variant={isGm ? 'accent' : 'default'}>{isGm ? 'GM' : 'Player'}</Badge>
+        <Badge>{getSystem(data.system_id as SystemId).name}</Badge>
+      </View>
+      {data.description ? <Text variant="body-sm" tone="muted">{data.description}</Text> : null}
+      {isGm ? <InviteCode code={data.invite_code} /> : null}
+      <View className="gap-2">
+        <Text variant="heading">Members</Text>
+        <MemberList members={data.members} />
+      </View>
+    </ScreenBackground>
+  )
+}
