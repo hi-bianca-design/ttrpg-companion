@@ -14,11 +14,9 @@ function DialogOverlay({
 }: Omit<DialogPrimitive.OverlayProps, 'asChild' | 'children'> & React.RefAttributes<DialogPrimitive.OverlayRef> & { children?: React.ReactNode }) {
   return (
     <DialogPrimitive.Overlay
-      className={cn('absolute inset-0 items-center justify-center p-4', className)}
+      className={cn('absolute inset-0 items-center justify-center bg-overlay p-4', className)}
       {...props}
     >
-      {/* scrim: CSS-variable colours take no /opacity modifier, so dim with a separate layer */}
-      <View className="absolute inset-0 bg-foreground opacity-60" pointerEvents="none" />
       {children}
     </DialogPrimitive.Overlay>
   )

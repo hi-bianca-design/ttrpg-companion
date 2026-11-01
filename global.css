@@ -31,6 +31,7 @@
     --resource-plum: #8B4A5E;
     --resource-sage: #7A9A55;
     --resource-ochre: #E8B547;
+    --overlay: rgba(14, 12, 8, 0.6);
   }
 
   .dark:root {
@@ -58,5 +59,6 @@
     --resource-plum: #D79AAE;
     --resource-sage: #B5C995;
     --resource-ochre: #ECC15B;
+    --overlay: rgba(0, 0, 0, 0.6);
   }
 }

@@ -57,6 +57,7 @@ module.exports = {
         rule: token('rule'),
         input: token('input'),
         ring: token('ring'),
+        overlay: token('overlay'),
         primary: { DEFAULT: token('primary'), foreground: token('primary-foreground') },
         accent: { foreground: token('accent-foreground') },
         highlight: { DEFAULT: token('highlight'), foreground: token('highlight-foreground') },

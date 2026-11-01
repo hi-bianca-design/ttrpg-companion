@@ -16,8 +16,7 @@ function SheetContent({
   React.RefAttributes<DialogPrimitive.ContentRef> & { portalHost?: string }) {
   return (
     <DialogPrimitive.Portal hostName={portalHost}>
-      <DialogPrimitive.Overlay className="absolute inset-0 justify-end">
-        <View className="absolute inset-0 bg-foreground opacity-60" pointerEvents="none" />
+      <DialogPrimitive.Overlay className="absolute inset-0 justify-end bg-overlay">
         <DialogPrimitive.Content
           className={cn('w-full gap-4 rounded-t-sheet border border-border bg-background p-4', className)}
           {...props}

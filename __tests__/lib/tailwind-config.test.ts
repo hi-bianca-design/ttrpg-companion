@@ -17,3 +17,6 @@ test('label colour is label-foreground (text-label stays the font-size role)', (
   expect(colors['label-foreground']).toBeDefined()
   expect(colors.label).toBeUndefined()
 })
+test('overlay colour token exists', () => {
+  expect(config.theme.extend.colors.overlay).toBe('var(--overlay)')
+})
