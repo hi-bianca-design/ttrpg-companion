@@ -1,0 +1,916 @@
+[
+  {
+    "slug": "battleaxe",
+    "name": "Battleaxe",
+    "data": {
+      "category": "Martial Melee Weapon",
+      "cost": "10 GP",
+      "weight": 4,
+      "properties": {
+        "damage": "1d8",
+        "mastery": "Topple",
+        "damage_type": "Slashing",
+        "versatile_damage": "1d10",
+        "weapon_properties": [
+          "Versatile"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "blowgun",
+    "name": "Blowgun",
+    "data": {
+      "category": "Martial Ranged Weapon",
+      "cost": "10 GP",
+      "weight": 1,
+      "properties": {
+        "range": "25/100",
+        "damage": "1",
+        "mastery": "Vex",
+        "damage_type": "Piercing",
+        "ammunition_type": "Needle",
+        "weapon_properties": [
+          "Ammunition",
+          "Loading"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "breastplate",
+    "name": "Breastplate",
+    "data": {
+      "category": "Medium Armor",
+      "cost": "400 GP",
+      "weight": 20,
+      "properties": {
+        "don_time": "5 minutes",
+        "doff_time": "1 minute",
+        "armor_class": "14 + Dex modifier (max 2)",
+        "stealth_disadvantage": false,
+        "strength_requirement": null
+      }
+    }
+  },
+  {
+    "slug": "chain-mail",
+    "name": "Chain Mail",
+    "data": {
+      "category": "Heavy Armor",
+      "cost": "75 GP",
+      "weight": 55,
+      "properties": {
+        "don_time": "10 minutes",
+        "doff_time": "5 minutes",
+        "armor_class": "16",
+        "stealth_disadvantage": true,
+        "strength_requirement": 13
+      }
+    }
+  },
+  {
+    "slug": "chain-shirt",
+    "name": "Chain Shirt",
+    "data": {
+      "category": "Medium Armor",
+      "cost": "50 GP",
+      "weight": 20,
+      "properties": {
+        "don_time": "5 minutes",
+        "doff_time": "1 minute",
+        "armor_class": "13 + Dex modifier (max 2)",
+        "stealth_disadvantage": false,
+        "strength_requirement": null
+      }
+    }
+  },
+  {
+    "slug": "club",
+    "name": "Club",
+    "data": {
+      "category": "Simple Melee Weapon",
+      "cost": "1 SP",
+      "weight": 2,
+      "properties": {
+        "damage": "1d4",
+        "mastery": "Slow",
+        "damage_type": "Bludgeoning",
+        "weapon_properties": [
+          "Light"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "dagger",
+    "name": "Dagger",
+    "data": {
+      "category": "Simple Melee Weapon",
+      "cost": "2 GP",
+      "weight": 1,
+      "properties": {
+        "range": "20/60",
+        "damage": "1d4",
+        "mastery": "Nick",
+        "damage_type": "Piercing",
+        "weapon_properties": [
+          "Finesse",
+          "Light",
+          "Thrown"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "dart",
+    "name": "Dart",
+    "data": {
+      "category": "Simple Ranged Weapon",
+      "cost": "5 CP",
+      "weight": 0.25,
+      "properties": {
+        "range": "20/60",
+        "damage": "1d4",
+        "mastery": "Vex",
+        "damage_type": "Piercing",
+        "weapon_properties": [
+          "Finesse",
+          "Thrown"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "flail",
+    "name": "Flail",
+    "data": {
+      "category": "Martial Melee Weapon",
+      "cost": "10 GP",
+      "weight": 2,
+      "properties": {
+        "damage": "1d8",
+        "mastery": "Sap",
+        "damage_type": "Bludgeoning",
+        "weapon_properties": []
+      }
+    }
+  },
+  {
+    "slug": "glaive",
+    "name": "Glaive",
+    "data": {
+      "category": "Martial Melee Weapon",
+      "cost": "20 GP",
+      "weight": 6,
+      "properties": {
+        "damage": "1d10",
+        "mastery": "Graze",
+        "damage_type": "Slashing",
+        "weapon_properties": [
+          "Heavy",
+          "Reach",
+          "Two-Handed"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "greataxe",
+    "name": "Greataxe",
+    "data": {
+      "category": "Martial Melee Weapon",
+      "cost": "30 GP",
+      "weight": 7,
+      "properties": {
+        "damage": "1d12",
+        "mastery": "Cleave",
+        "damage_type": "Slashing",
+        "weapon_properties": [
+          "Heavy",
+          "Two-Handed"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "greatclub",
+    "name": "Greatclub",
+    "data": {
+      "category": "Simple Melee Weapon",
+      "cost": "2 SP",
+      "weight": 10,
+      "properties": {
+        "damage": "1d8",
+        "mastery": "Push",
+        "damage_type": "Bludgeoning",
+        "weapon_properties": [
+          "Two-Handed"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "greatsword",
+    "name": "Greatsword",
+    "data": {
+      "category": "Martial Melee Weapon",
+      "cost": "50 GP",
+      "weight": 6,
+      "properties": {
+        "damage": "2d6",
+        "mastery": "Graze",
+        "damage_type": "Slashing",
+        "weapon_properties": [
+          "Heavy",
+          "Two-Handed"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "halberd",
+    "name": "Halberd",
+    "data": {
+      "category": "Martial Melee Weapon",
+      "cost": "20 GP",
+      "weight": 6,
+      "properties": {
+        "damage": "1d10",
+        "mastery": "Cleave",
+        "damage_type": "Slashing",
+        "weapon_properties": [
+          "Heavy",
+          "Reach",
+          "Two-Handed"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "half-plate-armor",
+    "name": "Half Plate Armor",
+    "data": {
+      "category": "Medium Armor",
+      "cost": "750 GP",
+      "weight": 40,
+      "properties": {
+        "don_time": "5 minutes",
+        "doff_time": "1 minute",
+        "armor_class": "15 + Dex modifier (max 2)",
+        "stealth_disadvantage": true,
+        "strength_requirement": null
+      }
+    }
+  },
+  {
+    "slug": "hand-crossbow",
+    "name": "Hand Crossbow",
+    "data": {
+      "category": "Martial Ranged Weapon",
+      "cost": "75 GP",
+      "weight": 3,
+      "properties": {
+        "range": "30/120",
+        "damage": "1d6",
+        "mastery": "Vex",
+        "damage_type": "Piercing",
+        "ammunition_type": "Bolt",
+        "weapon_properties": [
+          "Ammunition",
+          "Light",
+          "Loading"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "handaxe",
+    "name": "Handaxe",
+    "data": {
+      "category": "Simple Melee Weapon",
+      "cost": "5 GP",
+      "weight": 2,
+      "properties": {
+        "range": "20/60",
+        "damage": "1d6",
+        "mastery": "Vex",
+        "damage_type": "Slashing",
+        "weapon_properties": [
+          "Light",
+          "Thrown"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "heavy-crossbow",
+    "name": "Heavy Crossbow",
+    "data": {
+      "category": "Martial Ranged Weapon",
+      "cost": "50 GP",
+      "weight": 18,
+      "properties": {
+        "range": "100/400",
+        "damage": "1d10",
+        "mastery": "Push",
+        "damage_type": "Piercing",
+        "ammunition_type": "Bolt",
+        "weapon_properties": [
+          "Ammunition",
+          "Heavy",
+          "Loading",
+          "Two-Handed"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "hide-armor",
+    "name": "Hide Armor",
+    "data": {
+      "category": "Medium Armor",
+      "cost": "10 GP",
+      "weight": 12,
+      "properties": {
+        "don_time": "5 minutes",
+        "doff_time": "1 minute",
+        "armor_class": "12 + Dex modifier (max 2)",
+        "stealth_disadvantage": false,
+        "strength_requirement": null
+      }
+    }
+  },
+  {
+    "slug": "javelin",
+    "name": "Javelin",
+    "data": {
+      "category": "Simple Melee Weapon",
+      "cost": "5 SP",
+      "weight": 2,
+      "properties": {
+        "range": "30/120",
+        "damage": "1d6",
+        "mastery": "Slow",
+        "damage_type": "Piercing",
+        "weapon_properties": [
+          "Thrown"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "lance",
+    "name": "Lance",
+    "data": {
+      "category": "Martial Melee Weapon",
+      "cost": "10 GP",
+      "weight": 6,
+      "properties": {
+        "note": "Two-Handed unless mounted",
+        "damage": "1d10",
+        "mastery": "Topple",
+        "damage_type": "Piercing",
+        "weapon_properties": [
+          "Heavy",
+          "Reach",
+          "Two-Handed"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "leather-armor",
+    "name": "Leather Armor",
+    "data": {
+      "category": "Light Armor",
+      "cost": "10 GP",
+      "weight": 10,
+      "properties": {
+        "don_time": "1 minute",
+        "doff_time": "1 minute",
+        "armor_class": "11 + Dex modifier",
+        "stealth_disadvantage": false,
+        "strength_requirement": null
+      }
+    }
+  },
+  {
+    "slug": "light-crossbow",
+    "name": "Light Crossbow",
+    "data": {
+      "category": "Simple Ranged Weapon",
+      "cost": "25 GP",
+      "weight": 5,
+      "properties": {
+        "range": "80/320",
+        "damage": "1d8",
+        "mastery": "Slow",
+        "damage_type": "Piercing",
+        "ammunition_type": "Bolt",
+        "weapon_properties": [
+          "Ammunition",
+          "Loading",
+          "Two-Handed"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "light-hammer",
+    "name": "Light Hammer",
+    "data": {
+      "category": "Simple Melee Weapon",
+      "cost": "2 GP",
+      "weight": 2,
+      "properties": {
+        "range": "20/60",
+        "damage": "1d4",
+        "mastery": "Nick",
+        "damage_type": "Bludgeoning",
+        "weapon_properties": [
+          "Light",
+          "Thrown"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "longbow",
+    "name": "Longbow",
+    "data": {
+      "category": "Martial Ranged Weapon",
+      "cost": "50 GP",
+      "weight": 2,
+      "properties": {
+        "range": "150/600",
+        "damage": "1d8",
+        "mastery": "Slow",
+        "damage_type": "Piercing",
+        "ammunition_type": "Arrow",
+        "weapon_properties": [
+          "Ammunition",
+          "Heavy",
+          "Two-Handed"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "longsword",
+    "name": "Longsword",
+    "data": {
+      "category": "Martial Melee Weapon",
+      "cost": "15 GP",
+      "weight": 3,
+      "properties": {
+        "damage": "1d8",
+        "mastery": "Sap",
+        "damage_type": "Slashing",
+        "versatile_damage": "1d10",
+        "weapon_properties": [
+          "Versatile"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "mace",
+    "name": "Mace",
+    "data": {
+      "category": "Simple Melee Weapon",
+      "cost": "5 GP",
+      "weight": 4,
+      "properties": {
+        "damage": "1d6",
+        "mastery": "Sap",
+        "damage_type": "Bludgeoning",
+        "weapon_properties": []
+      }
+    }
+  },
+  {
+    "slug": "maul",
+    "name": "Maul",
+    "data": {
+      "category": "Martial Melee Weapon",
+      "cost": "10 GP",
+      "weight": 10,
+      "properties": {
+        "damage": "2d6",
+        "mastery": "Topple",
+        "damage_type": "Bludgeoning",
+        "weapon_properties": [
+          "Heavy",
+          "Two-Handed"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "morningstar",
+    "name": "Morningstar",
+    "data": {
+      "category": "Martial Melee Weapon",
+      "cost": "15 GP",
+      "weight": 4,
+      "properties": {
+        "damage": "1d8",
+        "mastery": "Sap",
+        "damage_type": "Piercing",
+        "weapon_properties": []
+      }
+    }
+  },
+  {
+    "slug": "musket",
+    "name": "Musket",
+    "data": {
+      "category": "Martial Ranged Weapon",
+      "cost": "500 GP",
+      "weight": 10,
+      "properties": {
+        "range": "40/120",
+        "damage": "1d12",
+        "mastery": "Slow",
+        "damage_type": "Piercing",
+        "ammunition_type": "Bullet",
+        "weapon_properties": [
+          "Ammunition",
+          "Loading",
+          "Two-Handed"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "padded-armor",
+    "name": "Padded Armor",
+    "data": {
+      "category": "Light Armor",
+      "cost": "5 GP",
+      "weight": 8,
+      "properties": {
+        "don_time": "1 minute",
+        "doff_time": "1 minute",
+        "armor_class": "11 + Dex modifier",
+        "stealth_disadvantage": true,
+        "strength_requirement": null
+      }
+    }
+  },
+  {
+    "slug": "pike",
+    "name": "Pike",
+    "data": {
+      "category": "Martial Melee Weapon",
+      "cost": "5 GP",
+      "weight": 18,
+      "properties": {
+        "damage": "1d10",
+        "mastery": "Push",
+        "damage_type": "Piercing",
+        "weapon_properties": [
+          "Heavy",
+          "Reach",
+          "Two-Handed"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "pistol",
+    "name": "Pistol",
+    "data": {
+      "category": "Martial Ranged Weapon",
+      "cost": "250 GP",
+      "weight": 3,
+      "properties": {
+        "range": "30/90",
+        "damage": "1d10",
+        "mastery": "Vex",
+        "damage_type": "Piercing",
+        "ammunition_type": "Bullet",
+        "weapon_properties": [
+          "Ammunition",
+          "Loading"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "plate-armor",
+    "name": "Plate Armor",
+    "data": {
+      "category": "Heavy Armor",
+      "cost": "1500 GP",
+      "weight": 65,
+      "properties": {
+        "don_time": "10 minutes",
+        "doff_time": "5 minutes",
+        "armor_class": "18",
+        "stealth_disadvantage": true,
+        "strength_requirement": 15
+      }
+    }
+  },
+  {
+    "slug": "quarterstaff",
+    "name": "Quarterstaff",
+    "data": {
+      "category": "Simple Melee Weapon",
+      "cost": "2 SP",
+      "weight": 4,
+      "properties": {
+        "damage": "1d6",
+        "mastery": "Topple",
+        "damage_type": "Bludgeoning",
+        "versatile_damage": "1d8",
+        "weapon_properties": [
+          "Versatile"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "rapier",
+    "name": "Rapier",
+    "data": {
+      "category": "Martial Melee Weapon",
+      "cost": "25 GP",
+      "weight": 2,
+      "properties": {
+        "damage": "1d8",
+        "mastery": "Vex",
+        "damage_type": "Piercing",
+        "weapon_properties": [
+          "Finesse"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "ring-mail",
+    "name": "Ring Mail",
+    "data": {
+      "category": "Heavy Armor",
+      "cost": "30 GP",
+      "weight": 40,
+      "properties": {
+        "don_time": "10 minutes",
+        "doff_time": "5 minutes",
+        "armor_class": "14",
+        "stealth_disadvantage": true,
+        "strength_requirement": null
+      }
+    }
+  },
+  {
+    "slug": "scale-mail",
+    "name": "Scale Mail",
+    "data": {
+      "category": "Medium Armor",
+      "cost": "50 GP",
+      "weight": 45,
+      "properties": {
+        "don_time": "5 minutes",
+        "doff_time": "1 minute",
+        "armor_class": "14 + Dex modifier (max 2)",
+        "stealth_disadvantage": true,
+        "strength_requirement": null
+      }
+    }
+  },
+  {
+    "slug": "scimitar",
+    "name": "Scimitar",
+    "data": {
+      "category": "Martial Melee Weapon",
+      "cost": "25 GP",
+      "weight": 3,
+      "properties": {
+        "damage": "1d6",
+        "mastery": "Nick",
+        "damage_type": "Slashing",
+        "weapon_properties": [
+          "Finesse",
+          "Light"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "shield",
+    "name": "Shield",
+    "data": {
+      "category": "Shield",
+      "cost": "10 GP",
+      "weight": 6,
+      "properties": {
+        "don_time": "Utilize action",
+        "doff_time": "Utilize action",
+        "armor_class_bonus": 2
+      }
+    }
+  },
+  {
+    "slug": "shortbow",
+    "name": "Shortbow",
+    "data": {
+      "category": "Simple Ranged Weapon",
+      "cost": "25 GP",
+      "weight": 2,
+      "properties": {
+        "range": "80/320",
+        "damage": "1d6",
+        "mastery": "Vex",
+        "damage_type": "Piercing",
+        "ammunition_type": "Arrow",
+        "weapon_properties": [
+          "Ammunition",
+          "Two-Handed"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "shortsword",
+    "name": "Shortsword",
+    "data": {
+      "category": "Martial Melee Weapon",
+      "cost": "10 GP",
+      "weight": 2,
+      "properties": {
+        "damage": "1d6",
+        "mastery": "Vex",
+        "damage_type": "Piercing",
+        "weapon_properties": [
+          "Finesse",
+          "Light"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "sickle",
+    "name": "Sickle",
+    "data": {
+      "category": "Simple Melee Weapon",
+      "cost": "1 GP",
+      "weight": 2,
+      "properties": {
+        "damage": "1d4",
+        "mastery": "Nick",
+        "damage_type": "Slashing",
+        "weapon_properties": [
+          "Light"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "sling",
+    "name": "Sling",
+    "data": {
+      "category": "Simple Ranged Weapon",
+      "cost": "1 SP",
+      "weight": 0,
+      "properties": {
+        "range": "30/120",
+        "damage": "1d4",
+        "mastery": "Slow",
+        "damage_type": "Bludgeoning",
+        "ammunition_type": "Bullet",
+        "weapon_properties": [
+          "Ammunition"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "spear",
+    "name": "Spear",
+    "data": {
+      "category": "Simple Melee Weapon",
+      "cost": "1 GP",
+      "weight": 3,
+      "properties": {
+        "range": "20/60",
+        "damage": "1d6",
+        "mastery": "Sap",
+        "damage_type": "Piercing",
+        "versatile_damage": "1d8",
+        "weapon_properties": [
+          "Thrown",
+          "Versatile"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "splint-armor",
+    "name": "Splint Armor",
+    "data": {
+      "category": "Heavy Armor",
+      "cost": "200 GP",
+      "weight": 60,
+      "properties": {
+        "don_time": "10 minutes",
+        "doff_time": "5 minutes",
+        "armor_class": "17",
+        "stealth_disadvantage": true,
+        "strength_requirement": 15
+      }
+    }
+  },
+  {
+    "slug": "studded-leather-armor",
+    "name": "Studded Leather Armor",
+    "data": {
+      "category": "Light Armor",
+      "cost": "45 GP",
+      "weight": 13,
+      "properties": {
+        "don_time": "1 minute",
+        "doff_time": "1 minute",
+        "armor_class": "12 + Dex modifier",
+        "stealth_disadvantage": false,
+        "strength_requirement": null
+      }
+    }
+  },
+  {
+    "slug": "trident",
+    "name": "Trident",
+    "data": {
+      "category": "Martial Melee Weapon",
+      "cost": "5 GP",
+      "weight": 4,
+      "properties": {
+        "range": "20/60",
+        "damage": "1d8",
+        "mastery": "Topple",
+        "damage_type": "Piercing",
+        "versatile_damage": "1d10",
+        "weapon_properties": [
+          "Thrown",
+          "Versatile"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "war-pick",
+    "name": "War Pick",
+    "data": {
+      "category": "Martial Melee Weapon",
+      "cost": "5 GP",
+      "weight": 2,
+      "properties": {
+        "damage": "1d8",
+        "mastery": "Sap",
+        "damage_type": "Piercing",
+        "versatile_damage": "1d10",
+        "weapon_properties": [
+          "Versatile"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "warhammer",
+    "name": "Warhammer",
+    "data": {
+      "category": "Martial Melee Weapon",
+      "cost": "15 GP",
+      "weight": 5,
+      "properties": {
+        "damage": "1d8",
+        "mastery": "Push",
+        "damage_type": "Bludgeoning",
+        "versatile_damage": "1d10",
+        "weapon_properties": [
+          "Versatile"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "whip",
+    "name": "Whip",
+    "data": {
+      "category": "Martial Melee Weapon",
+      "cost": "2 GP",
+      "weight": 3,
+      "properties": {
+        "damage": "1d4",
+        "mastery": "Slow",
+        "damage_type": "Slashing",
+        "weapon_properties": [
+          "Finesse",
+          "Reach"
+        ]
+      }
+    }
+  }
+]
