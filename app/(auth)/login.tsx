@@ -1,71 +1,81 @@
 import { useState } from 'react'
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native'
+import { View } from 'react-native'
 import { useRouter } from 'expo-router'
-import { signIn } from '@/modules/auth/auth.service'
+import { ScreenBackground } from '@/components/game'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Text } from '@/components/ui/text'
+import { signIn } from '@/features/auth/auth.api'
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
   const router = useRouter()
 
-  async function handleLogin() {
-    if (!email || !password) return
-    setLoading(true)
-    setError(null)
+  async function handleSignIn() {
+    const emailMissing = !email.trim()
+    const passwordMissing = !password
+    setEmailError(emailMissing ? 'Enter your email' : null)
+    setPasswordError(passwordMissing ? 'Enter your password' : null)
+    setFormError(null)
+    if (emailMissing || passwordMissing) return
+    setBusy(true)
     try {
       await signIn(email.trim(), password)
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Unknown error')
+      setFormError(e instanceof Error ? e.message : 'Something went wrong. Try again.')
     } finally {
-      setLoading(false)
+      setBusy(false)
     }
   }
 
   return (
-    <View className="flex-1 justify-center px-6">
-      <Text className="text-4xl font-bold text-primary mb-2">D&D Companion</Text>
-      <Text className="text-muted mb-10">Sign in to your account</Text>
+    <ScreenBackground scroll>
+      <View className="gap-2 pt-8">
+        <Text variant="display">D&D Companion</Text>
+        <Text tone="muted">Sign in to your account</Text>
+      </View>
 
-      <TextInput
-        className="bg-surface text-text rounded-xl px-4 py-3 mb-3"
-        placeholder="Email"
-        placeholderTextColor="#6c7086"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
-      <TextInput
-        className="bg-surface text-text rounded-xl px-4 py-3 mb-6"
-        placeholder="Password"
-        placeholderTextColor="#6c7086"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+      <View className="gap-4">
+        <View className="gap-2">
+          <Label>Email</Label>
+          <Input
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            autoComplete="email"
+            keyboardType="email-address"
+          />
+          {emailError && <Text variant="caption" tone="destructive">{emailError}</Text>}
+        </View>
+        <View className="gap-2">
+          <Label>Password</Label>
+          <Input
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            autoComplete="current-password"
+            secureTextEntry
+          />
+          {passwordError && <Text variant="caption" tone="destructive">{passwordError}</Text>}
+        </View>
+        {formError && <Text variant="caption" tone="destructive">{formError}</Text>}
+      </View>
 
-      {error && (
-        <Text className="text-red mb-4 text-center">{error}</Text>
-      )}
-
-      <TouchableOpacity
-        className="bg-primary rounded-xl py-3 items-center mb-4"
-        onPress={handleLogin}
-        disabled={loading}
-      >
-        {loading
-          ? <ActivityIndicator color="#1e1e2e" />
-          : <Text className="text-base font-semibold text-[#1e1e2e]">Sign In</Text>
-        }
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => router.push('/(auth)/signup')}>
-        <Text className="text-muted text-center">
-          Don't have an account? <Text className="text-primary">Sign up</Text>
-        </Text>
-      </TouchableOpacity>
-    </View>
+      <View className="gap-3">
+        <Button className="w-full" onPress={handleSignIn} disabled={busy}>
+          <Text variant="subhead">{busy ? 'Signing in…' : 'Sign in'}</Text>
+        </Button>
+        <Button variant="ghost" className="w-full" onPress={() => router.push('/(auth)/signup')}>
+          <Text variant="body-sm">No account yet? Create one</Text>
+        </Button>
+      </View>
+    </ScreenBackground>
   )
 }

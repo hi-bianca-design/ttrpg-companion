@@ -1,0 +1,82 @@
+[
+  {
+    "slug": "acolyte",
+    "name": "Acolyte",
+    "description": "You have spent your life in service to a temple, learning prayers, rites, and the tenets of your faith. The temple taught you to read and write.",
+    "data": {
+      "skill_proficiencies": [
+        "insight",
+        "religion"
+      ],
+      "ability_score_options": {
+        "abilities": [
+          "intelligence",
+          "wisdom",
+          "charisma"
+        ]
+      },
+      "origin_feat": "Magic Initiate (Cleric)",
+      "tool_proficiency": "Calligrapher's Supplies"
+    }
+  },
+  {
+    "slug": "criminal",
+    "name": "Criminal",
+    "description": "You are an experienced criminal with a history of breaking the law. You have spent a lot of time among other criminals and still have contacts within the criminal underworld.",
+    "data": {
+      "skill_proficiencies": [
+        "sleight-of-hand",
+        "stealth"
+      ],
+      "ability_score_options": {
+        "abilities": [
+          "dexterity",
+          "constitution",
+          "intelligence"
+        ]
+      },
+      "origin_feat": "Alert",
+      "tool_proficiency": "Thieves' Tools"
+    }
+  },
+  {
+    "slug": "sage",
+    "name": "Sage",
+    "description": "You spent years learning the lore of the multiverse. You scoured manuscripts, studied scrolls, and listened to the greatest experts on the subjects that interest you.",
+    "data": {
+      "skill_proficiencies": [
+        "arcana",
+        "history"
+      ],
+      "ability_score_options": {
+        "abilities": [
+          "constitution",
+          "intelligence",
+          "wisdom"
+        ]
+      },
+      "origin_feat": "Magic Initiate (Wizard)",
+      "tool_proficiency": "Calligrapher's Supplies"
+    }
+  },
+  {
+    "slug": "soldier",
+    "name": "Soldier",
+    "description": "War has been your life for as long as you can remember. You trained as a youth, studied the use of weapons and armor, learned basic survival techniques, and pledged yourself to a regiment.",
+    "data": {
+      "skill_proficiencies": [
+        "athletics",
+        "intimidation"
+      ],
+      "ability_score_options": {
+        "abilities": [
+          "strength",
+          "dexterity",
+          "constitution"
+        ]
+      },
+      "origin_feat": "Savage Attacker",
+      "tool_proficiency": "Gaming Set (choose one kind)"
+    }
+  }
+]

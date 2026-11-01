@@ -4,13 +4,20 @@
     "slug": "dnd-companion",
     "version": "1.0.0",
     "scheme": "dnd-companion",
+    "userInterfaceStyle": "automatic",
     "web": {
       "bundler": "metro",
       "output": "single"
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ],
     "experiments": {
       "typedRoutes": true
+    },
+    "ios": {
+      "bundleIdentifier": "com.anonymous.dnd-companion"
     }
   }
 }

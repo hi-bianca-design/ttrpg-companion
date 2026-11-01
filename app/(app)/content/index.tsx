@@ -1,113 +1,93 @@
-import { useCallback, useState } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native'
-import { useRouter, useFocusEffect } from 'expo-router'
-import { useAuth } from '@/modules/auth/useAuth'
-import { getUserContent, deleteUserContent } from '@/modules/user_content/user_content.service'
-import { DBUserContent, ContentType, CONTENT_TYPE_LABELS } from '@/modules/user_content/user_content.types'
-
-const CONTENT_TYPE_ORDER: ContentType[] = ['subclass', 'species', 'background', 'spell', 'feat', 'equipment']
+import { useState } from 'react'
+import { View } from 'react-native'
+import { useRouter } from 'expo-router'
+import { useColorScheme } from 'nativewind'
+import { BookOpen, Plus } from 'phosphor-react-native'
+import { ContentCard, EmptyState, ScreenBackground } from '@/components/game'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Text } from '@/components/ui/text'
+import { ToggleChip } from '@/components/ui/toggle-chip'
+import { useContentSearch } from '@/features/content/content.queries'
+import { homebrewKinds, KindPicker } from '@/features/content/KindPicker'
+import { THEME_COLORS } from '@/lib/theme'
+import { getSystem, visibleSystems } from '@/systems/registry'
+import type { SystemId } from '@/systems/types'
 
 export default function ContentScreen() {
-  const { user } = useAuth()
   const router = useRouter()
-  const [items, setItems] = useState<DBUserContent[]>([])
-  const [loading, setLoading] = useState(true)
+  const systems = visibleSystems()
+  const [systemId, setSystemId] = useState<SystemId>(systems[0].id)
+  const [kind, setKind] = useState<string | null>(null)
+  const { colorScheme } = useColorScheme()
+  const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
 
-  const load = useCallback(async () => {
-    if (!user) return
-    setLoading(true)
-    try {
-      const data = await getUserContent(user.id)
-      setItems(data)
-    } catch (e) {
-      Alert.alert('Error', e instanceof Error ? e.message : 'An error occurred')
-    } finally {
-      setLoading(false)
-    }
-  }, [user])
+  const kinds = homebrewKinds(systemId)
+  const mine = useContentSearch(systemId, kinds.map((k) => k.kind), 'mine', '')
+  const rows = kind ? mine.data.filter((r) => r.kind === kind) : mine.data
+  const create = () =>
+    router.push({ pathname: '/(app)/content/new', params: { systemId, ...(kind ? { kind } : {}) } })
 
-  useFocusEffect(useCallback(() => {
-    load()
-    return () => {}
-  }, [load]))
-
-  function confirmDelete(id: string, name: string) {
-    Alert.alert('Delete', `Delete "${name}"? This cannot be undone.`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete', style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteUserContent(id)
-            setItems((prev) => prev.filter((i) => i.id !== id))
-          } catch (e) {
-            Alert.alert('Error', e instanceof Error ? e.message : 'An error occurred')
-          }
-        },
-      },
-    ])
-  }
-
-  if (loading) {
-    return <View className="flex-1 bg-base justify-center items-center"><ActivityIndicator color="#cba6f7" /></View>
-  }
-
-  const grouped = CONTENT_TYPE_ORDER.reduce<Partial<Record<ContentType, DBUserContent[]>>>(
-    (acc, type) => {
-      const group = items.filter((i) => i.content_type === type)
-      if (group.length > 0) acc[type] = group
-      return acc
-    },
-    {}
-  )
+  const changeSystem = (id: SystemId) => { setSystemId(id); setKind(null) }
 
   return (
-    <View className="flex-1 bg-base">
-      <View className="px-4 pt-12 pb-4 flex-row justify-between items-center">
-        <Text className="text-2xl font-bold text-text">My Content</Text>
-        <TouchableOpacity
-          className="bg-primary px-4 py-2 rounded-lg"
-          onPress={() => router.push('/(app)/content/new')}
-        >
-          <Text className="text-base font-semibold">+ New</Text>
-        </TouchableOpacity>
+    <ScreenBackground scroll>
+      <View className="flex-row items-center justify-between gap-3">
+        <Text variant="title">Homebrew</Text>
+        {rows.length > 0 ? (
+          <Button size="sm" accessibilityLabel="New homebrew" onPress={create}>
+            <Plus size={16} color={colors.primaryForeground} weight="bold" />
+            <Text>New</Text>
+          </Button>
+        ) : null}
       </View>
 
-      {items.length === 0 ? (
-        <View className="flex-1 justify-center items-center px-6">
-          <Text className="text-muted text-center mb-4">No custom content yet.</Text>
-          <TouchableOpacity
-            className="bg-primary px-6 py-3 rounded-xl"
-            onPress={() => router.push('/(app)/content/new')}
-          >
-            <Text className="text-base font-semibold">Add Your First Entry</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>
-          {(Object.entries(grouped) as [ContentType, DBUserContent[]][]).map(([type, group]) => (
-            <View key={type} className="mb-6">
-              <Text className="text-muted text-xs font-bold mb-2">{CONTENT_TYPE_LABELS[type].toUpperCase()}</Text>
-              {group.map((item) => (
-                <TouchableOpacity
-                  key={item.id}
-                  className="bg-surface rounded-xl p-4 mb-2"
-                  onPress={() => router.push(`/(app)/content/${item.id}`)}
-                  onLongPress={() => confirmDelete(item.id, item.name)}
-                  accessibilityRole="button"
-                  accessibilityLabel={item.name}
-                  accessibilityHint="Tap to edit. Long press to delete."
-                >
-                  <Text className="text-text font-bold">{item.name}</Text>
-                  {item.description && (
-                    <Text className="text-muted text-sm mt-1" numberOfLines={2}>{item.description}</Text>
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
+      {systems.length > 1 ? (
+        <View className="flex-row flex-wrap gap-2">
+          {systems.map((s) => (
+            <ToggleChip key={s.id} label={s.name} selected={s.id === systemId} onPress={() => changeSystem(s.id)} />
           ))}
-        </ScrollView>
+        </View>
+      ) : null}
+
+      <KindPicker systemId={systemId} value={kind} onChange={setKind} allowAll />
+
+      {mine.isLoading ? (
+        <View className="gap-2" accessibilityLabel="Loading homebrew">
+          {[0, 1, 2].map((i) => (
+            <Card key={i} className="gap-3">
+              <View className="h-4 w-1/2 rounded-full bg-muted" />
+              <View className="h-4 w-1/3 rounded-full bg-muted" />
+            </Card>
+          ))}
+        </View>
+      ) : mine.isError ? (
+        <View className="items-start gap-2">
+          <Text variant="caption" tone="destructive">Couldn’t load your homebrew. Check your connection.</Text>
+          <Button variant="outline" size="sm" onPress={() => mine.refetch()}>
+            <Text>Try again</Text>
+          </Button>
+        </View>
+      ) : rows.length === 0 ? (
+        <EmptyState
+          icon={BookOpen}
+          title="No homebrew yet"
+          body="Make your own spells, species, items and more. They show up next to the SRD when you build characters."
+          actionLabel="Create"
+          onAction={create}
+        />
+      ) : (
+        <View className="gap-2">
+          {rows.map((r) => (
+            <ContentCard
+              key={r.id}
+              title={r.name}
+              meta={getSystem(systemId).contentKinds[r.kind]?.label}
+              onPress={() => router.push(`/(app)/content/${r.id}`)}
+            />
+          ))}
+        </View>
       )}
-    </View>
+    </ScreenBackground>
   )
 }

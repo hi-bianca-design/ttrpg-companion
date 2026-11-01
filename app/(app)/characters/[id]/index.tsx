@@ -1,182 +1,119 @@
-import { useEffect, useState } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Modal } from 'react-native'
-import { useLocalSearchParams, useRouter } from 'expo-router'
-import { getCharacter, updateCharacter } from '@/modules/character/character.service'
-import { CharacterWithRelations, DBCharacter, ABILITY_KEYS, ABILITY_LABELS, AbilityKey } from '@/modules/character/character.types'
-import { getAbilityModifier, formatModifier, getProficiencyBonus } from '@/modules/character/character.utils'
-import { HPBar } from '@/components/character/HPBar'
-import { ConditionBadge } from '@/components/character/ConditionBadge'
+import { useMemo, useState } from 'react'
+import { View } from 'react-native'
+import { useRouter } from 'expo-router'
+import { ScreenBackground } from '@/components/game/ScreenBackground'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Text } from '@/components/ui/text'
+import { useCharacter, useResourceMutation, useUpdateCharacter } from '@/features/characters/characters.queries'
+import { toRuleInput } from '@/features/characters/picks'
+import { ConditionsSection } from '@/features/characters/sheet/ConditionsSection'
+import { ConditionsSheet } from '@/features/characters/sheet/ConditionsSheet'
+import { HpSheet } from '@/features/characters/sheet/HpSheet'
+import { CharacterSummary, classLine } from '@/features/characters/sheet/CharacterSummary'
+import { SheetHeader } from '@/features/characters/sheet/SheetHeader'
+import { StatsSection } from '@/features/characters/sheet/StatsSection'
+import { VitalsSection } from '@/features/characters/sheet/VitalsSection'
+import { ERROR_COPY } from '@/features/errors'
+import { useCharacterRouteId } from '@/features/characters/useCharacterRouteId'
+import { getSystem } from '@/systems/registry'
+import type { PoolValue, ResourceValue } from '@/systems/types'
 
-const CONDITIONS = [
-  'Blinded', 'Charmed', 'Deafened', 'Exhausted', 'Frightened', 'Grappled',
-  'Incapacitated', 'Invisible', 'Paralyzed', 'Petrified', 'Poisoned',
-  'Prone', 'Restrained', 'Stunned', 'Unconscious',
-]
+type OpenSheet = null | 'hp' | 'bonus' | 'conditions'
 
-export default function OverviewTab() {
-  const { id } = useLocalSearchParams<{ id: string }>()
+export default function CharacterTab() {
+  // Own param first, global as fallback (see useCharacterRouteId).
+  const id = useCharacterRouteId()
   const router = useRouter()
-  const [character, setCharacter] = useState<CharacterWithRelations | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [conditionPickerOpen, setConditionPickerOpen] = useState(false)
+  const { data: character, isLoading, isError, refetch } = useCharacter(id)
+  const update = useUpdateCharacter(id)
+  const [sheet, setSheet] = useState<OpenSheet>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const picks = useMemo(() => (character ? toRuleInput(character.picks, character.items) : []), [character])
 
-  useEffect(() => {
-    getCharacter(id)
-      .then((data) => setCharacter(data as CharacterWithRelations))
-      .catch((e) => Alert.alert('Error', e instanceof Error ? e.message : 'An error occurred'))
-      .finally(() => setLoading(false))
-  }, [id])
+  const onSaveError = { onError: (e: unknown) => setSaveError(e instanceof Error ? e.message : ERROR_COPY.save_failed) }
+  const resources = useResourceMutation(id, onSaveError)
+  const changeResource = (key: string, apply: (cur: ResourceValue) => ResourceValue) => {
+    setSaveError(null)
+    resources.mutate({ key, apply })
+  }
+  const closeSheet = (open: boolean) => { if (!open) setSheet(null) }
+  const openSheet = (next: OpenSheet) => { setSaveError(null); setSheet(next) }
 
-  async function applyDamage(amount: number) {
-    if (!character) return
-    const newHP = Math.max(0, character.hp_current - amount)
-    const updated = await updateCharacter(id, { hp_current: newHP }) as DBCharacter
-    setCharacter((prev) => prev ? { ...prev, hp_current: updated.hp_current } : prev)
+  const levelUp = () => router.push(`/(app)/characters/${id}/level-up`)
+
+  if (isLoading) {
+    return (
+      <ScreenBackground>
+        <SheetHeader />
+        <View className="gap-2" accessibilityLabel="Loading character">
+          {[0, 1, 2].map((i) => (
+            <Card key={i} className="gap-3">
+              <View className="h-4 w-1/2 rounded-full bg-muted" />
+              <View className="h-11 w-full rounded-card bg-muted" />
+            </Card>
+          ))}
+        </View>
+      </ScreenBackground>
+    )
   }
 
-  async function applyHeal(amount: number) {
-    if (!character) return
-    const newHP = Math.min(character.hp_max, character.hp_current + amount)
-    const updated = await updateCharacter(id, { hp_current: newHP }) as DBCharacter
-    setCharacter((prev) => prev ? { ...prev, hp_current: updated.hp_current } : prev)
+  if (isError || !character) {
+    return (
+      <ScreenBackground>
+        <SheetHeader />
+        <View className="items-start gap-2">
+          <Text variant="caption" tone="destructive">Couldn’t load this character. Check your connection.</Text>
+          <Button variant="outline" size="sm" onPress={() => refetch()}>
+            <Text>Try again</Text>
+          </Button>
+        </View>
+      </ScreenBackground>
+    )
   }
 
-  async function setTempHP(amount: number) {
-    if (!character) return
-    const updated = await updateCharacter(id, { temp_hp: amount }) as DBCharacter
-    setCharacter((prev) => prev ? { ...prev, temp_hp: updated.temp_hp } : prev)
-  }
-
-  async function removeCondition(condition: string) {
-    if (!character) return
-    const newConditions = (character.conditions ?? []).filter((c) => c !== condition)
-    const updated = await updateCharacter(id, { conditions: newConditions }) as DBCharacter
-    setCharacter((prev) => prev ? { ...prev, conditions: updated.conditions } : prev)
-  }
-
-  async function addCondition(condition: string) {
-    if (!character || (character.conditions ?? []).includes(condition)) return
-    const newConditions = [...(character.conditions ?? []), condition]
-    const updated = await updateCharacter(id, { conditions: newConditions }) as DBCharacter
-    setCharacter((prev) => prev ? { ...prev, conditions: updated.conditions } : prev)
-    setConditionPickerOpen(false)
-  }
-
-  if (loading || !character) {
-    return <View className="flex-1 bg-base justify-center items-center"><ActivityIndicator color="#cba6f7" /></View>
-  }
-
-  const profBonus = getProficiencyBonus(character.level)
-  const speciesName = character.species?.name ?? character.custom_species?.name ?? '—'
-  const backgroundName = character.background?.name ?? character.custom_background?.name ?? '—'
+  const system = getSystem(character.system_id)
+  const Proficiencies = system.sheet?.sections?.proficiencies
+  const Profile = system.sheet?.sections?.profile
+  const hp = character.resources.hp as PoolValue | undefined
 
   return (
-    <ScrollView className="flex-1 bg-base" contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
-      <View className="flex-row justify-between items-start mb-4">
-        <View>
-          <Text className="text-2xl font-bold text-text">{character.name}</Text>
-          <Text className="text-muted text-sm">
-            Level {character.level} {character.class?.name ?? '—'}
-            {character.subclass ? ` (${character.subclass.name})` : ''}
-          </Text>
-          <Text className="text-muted text-xs">{speciesName} · {backgroundName}</Text>
-        </View>
-        <TouchableOpacity
-          className="bg-surface px-3 py-1 rounded-lg"
-          onPress={() => router.push(`/(app)/characters/${id}/level-up`)}
-        >
-          <Text className="text-primary text-sm">Level Up</Text>
-        </TouchableOpacity>
-      </View>
+    <ScreenBackground scroll>
+      <SheetHeader name={character.name} eyebrow="Your character" subtitle={classLine(character) || undefined} onLevelUp={levelUp}>
+        <CharacterSummary character={character} />
+      </SheetHeader>
+      {saveError ? <Text variant="caption" tone="destructive">{saveError}</Text> : null}
+      <VitalsSection
+        character={character}
+        onEditHp={() => openSheet('hp')}
+        onBonusHp={() => openSheet('bonus')}
+        onChangeResource={changeResource}
+        onSpendInspiration={() => {
+          setSaveError(null)
+          update.mutate({ details: { ...character.details, inspiration: false } }, onSaveError)
+        }}
+      />
+      <ConditionsSection character={character} onEdit={() => setSheet('conditions')} />
+      <StatsSection character={character} />
+      {Proficiencies ? <Proficiencies character={character} picks={picks} /> : null}
+      {Profile ? <Profile character={character} picks={picks} /> : null}
 
-      <View className="bg-surface rounded-xl p-4 mb-3">
-        <Text className="text-muted text-xs font-bold mb-3">HIT POINTS</Text>
-        <HPBar
-          hpCurrent={character.hp_current}
-          hpMax={character.hp_max}
-          tempHP={character.temp_hp}
-          onDamage={applyDamage}
-          onHeal={applyHeal}
-          onSetTempHP={setTempHP}
-        />
-      </View>
-
-      <View className="flex-row gap-3 mb-3">
-        {[
-          { label: 'AC', value: character.armor_class },
-          { label: 'Initiative', value: formatModifier(getAbilityModifier(character.dexterity)) },
-          { label: 'Speed', value: `${character.speed} ft` },
-          { label: 'Prof', value: `+${profBonus}` },
-        ].map(({ label, value }) => (
-          <View key={label} className="flex-1 bg-surface rounded-xl p-3 items-center">
-            <Text className="text-muted text-xs">{label}</Text>
-            <Text className="text-text font-bold text-lg">{value}</Text>
-          </View>
-        ))}
-      </View>
-
-      <View className="bg-surface rounded-xl p-4 mb-3">
-        <Text className="text-muted text-xs font-bold mb-3">ABILITY SCORES</Text>
-        <View className="flex-row flex-wrap gap-2">
-          {ABILITY_KEYS.map((key) => {
-            const score = character[key]
-            const mod = getAbilityModifier(score)
-            return (
-              <View key={key} className="items-center bg-overlay rounded-xl px-3 py-2 flex-1 min-w-[80px]">
-                <Text className="text-muted text-xs">{ABILITY_LABELS[key].slice(0, 3).toUpperCase()}</Text>
-                <Text className="text-text font-bold text-xl">{score}</Text>
-                <Text className="text-primary text-sm">{formatModifier(mod)}</Text>
-              </View>
-            )
-          })}
-        </View>
-      </View>
-
-      <View className="bg-surface rounded-xl p-4">
-        <View className="flex-row justify-between items-center mb-2">
-          <Text className="text-muted text-xs font-bold">CONDITIONS</Text>
-          <TouchableOpacity onPress={() => setConditionPickerOpen(true)}>
-            <Text className="text-primary text-xs">+ Add</Text>
-          </TouchableOpacity>
-        </View>
-        {(character.conditions ?? []).length === 0 ? (
-          <Text className="text-muted text-xs">None</Text>
-        ) : (
-          <View className="flex-row flex-wrap">
-            {(character.conditions ?? []).map((c) => (
-              <ConditionBadge key={c} condition={c} onRemove={() => removeCondition(c)} />
-            ))}
-          </View>
-        )}
-      </View>
-
-      <Modal visible={conditionPickerOpen} transparent animationType="slide">
-        <View className="flex-1 justify-end bg-black/60">
-          <View className="bg-surface rounded-t-2xl p-4 pb-8">
-            <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-text font-bold text-lg">Add Condition</Text>
-              <TouchableOpacity onPress={() => setConditionPickerOpen(false)}>
-                <Text className="text-muted">Cancel</Text>
-              </TouchableOpacity>
-            </View>
-            <View className="flex-row flex-wrap gap-2">
-              {CONDITIONS.map((c) => {
-                const active = (character.conditions ?? []).includes(c)
-                return (
-                  <TouchableOpacity
-                    key={c}
-                    onPress={() => addCondition(c)}
-                    disabled={active}
-                    className={`px-3 py-2 rounded-full border ${active ? 'border-overlay bg-overlay opacity-40' : 'border-red bg-red/20'}`}
-                  >
-                    <Text className={`text-sm ${active ? 'text-muted' : 'text-red'}`}>{c}</Text>
-                  </TouchableOpacity>
-                )
-              })}
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </ScrollView>
+      {hp ? (
+        <>
+          <HpSheet characterId={character.id} pool={hp} resourceDefs={system.resources} open={sheet === 'hp'} onOpenChange={closeSheet} onError={onSaveError.onError} />
+          <HpSheet characterId={character.id} pool={hp} resourceDefs={system.resources} mode="temp" open={sheet === 'bonus'} onOpenChange={closeSheet} onError={onSaveError.onError} />
+        </>
+      ) : null}
+      <ConditionsSheet
+        open={sheet === 'conditions'}
+        onOpenChange={closeSheet}
+        options={system.conditions}
+        value={character.conditions}
+        onApply={(conditions) => {
+          setSaveError(null)
+          update.mutate({ conditions }, onSaveError)
+        }}
+      />
+    </ScreenBackground>
   )
 }

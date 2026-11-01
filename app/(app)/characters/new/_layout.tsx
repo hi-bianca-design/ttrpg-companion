@@ -1,15 +1,11 @@
-import { Stack, useSegments } from 'expo-router'
-import { View } from 'react-native'
-import { WizardProgress } from '@/components/character/WizardProgress'
+import { Stack } from 'expo-router'
+import { DiscardDraftGuard } from '@/features/characters/builder/DiscardDraftGuard'
 
 export default function WizardLayout() {
-  const segments = useSegments()
-  const currentStep = segments[segments.length - 1] ?? 'class'
-
   return (
-    <View className="flex-1 bg-base">
-      <WizardProgress currentStep={currentStep} />
+    <>
       <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right' }} />
-    </View>
+      <DiscardDraftGuard />
+    </>
   )
 }

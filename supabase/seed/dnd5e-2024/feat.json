@@ -1,0 +1,226 @@
+[
+  {
+    "slug": "ability-score-improvement",
+    "name": "Ability Score Improvement",
+    "data": {
+      "prerequisites": {
+        "level": 4
+      },
+      "benefits": "Increase one ability score by 2, or two ability scores by 1 each. No score can exceed 20. Repeatable.",
+      "ability_score_bonuses": {
+        "amount": 2,
+        "options": "any",
+        "or_split": true
+      }
+    }
+  },
+  {
+    "slug": "alert",
+    "name": "Alert",
+    "data": {
+      "prerequisites": {},
+      "benefits": "Initiative Proficiency: When you roll Initiative, add your Proficiency Bonus to the roll. Initiative Swap: Immediately after rolling Initiative, you can swap your Initiative with one willing ally in the same combat (neither can have Incapacitated).",
+      "ability_score_bonuses": {}
+    }
+  },
+  {
+    "slug": "archery",
+    "name": "Archery",
+    "data": {
+      "prerequisites": {
+        "feature": "Fighting Style"
+      },
+      "benefits": "You gain a +2 bonus to attack rolls you make with Ranged weapons.",
+      "ability_score_bonuses": {}
+    }
+  },
+  {
+    "slug": "boon-of-combat-prowess",
+    "name": "Boon of Combat Prowess",
+    "data": {
+      "prerequisites": {
+        "level": 19
+      },
+      "benefits": "Ability Score Increase: +1 to one ability score (max 30). Peerless Aim: When you miss with an attack roll, you can hit instead. Once per turn.",
+      "ability_score_bonuses": {
+        "max": 30,
+        "amount": 1,
+        "options": "any"
+      }
+    }
+  },
+  {
+    "slug": "boon-of-dimensional-travel",
+    "name": "Boon of Dimensional Travel",
+    "data": {
+      "prerequisites": {
+        "level": 19
+      },
+      "benefits": "Ability Score Increase: +1 to one ability score (max 30). Blink Steps: Immediately after you take the Attack action or Magic action, teleport up to 30 feet to an unoccupied space you can see.",
+      "ability_score_bonuses": {
+        "max": 30,
+        "amount": 1,
+        "options": "any"
+      }
+    }
+  },
+  {
+    "slug": "boon-of-fate",
+    "name": "Boon of Fate",
+    "data": {
+      "prerequisites": {
+        "level": 19
+      },
+      "benefits": "Ability Score Increase: +1 to one ability score (max 30). Improve Fate: When you or a creature within 60 feet succeeds or fails a D20 Test, roll 2d4 and apply the total as a bonus or penalty to the d20 roll. Once per Initiative or Short/Long Rest.",
+      "ability_score_bonuses": {
+        "max": 30,
+        "amount": 1,
+        "options": "any"
+      }
+    }
+  },
+  {
+    "slug": "boon-of-irresistible-offense",
+    "name": "Boon of Irresistible Offense",
+    "data": {
+      "prerequisites": {
+        "level": 19
+      },
+      "benefits": "Ability Score Increase: +1 to Strength or Dexterity (max 30). Overcome Defenses: Your Bludgeoning, Piercing, and Slashing damage always ignores Resistance. Overwhelming Strike: On a nat-20 attack roll, deal bonus damage equal to the boosted ability score (same type as the attack).",
+      "ability_score_bonuses": {
+        "max": 30,
+        "amount": 1,
+        "options": [
+          "strength",
+          "dexterity"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "boon-of-spell-recall",
+    "name": "Boon of Spell Recall",
+    "data": {
+      "prerequisites": {
+        "level": 19
+      },
+      "benefits": "Prerequisite: Spellcasting class feature. Ability Score Increase: +1 to Intelligence, Wisdom, or Charisma (max 30). Free Casting: When you cast a spell with a level 1–4 slot, roll 1d4. If the result equals the slot level, the slot is not expended.",
+      "ability_score_bonuses": {
+        "max": 30,
+        "amount": 1,
+        "options": [
+          "intelligence",
+          "wisdom",
+          "charisma"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "boon-of-the-night-spirit",
+    "name": "Boon of the Night Spirit",
+    "data": {
+      "prerequisites": {
+        "level": 19
+      },
+      "benefits": "Ability Score Increase: +1 to one ability score (max 30). Merge with Shadows: While in Dim Light or Darkness, gain the Invisible condition as a Bonus Action (ends when you take any action, bonus action, or reaction). Shadowy Form: While in Dim Light or Darkness, Resistance to all damage except Psychic and Radiant.",
+      "ability_score_bonuses": {
+        "max": 30,
+        "amount": 1,
+        "options": "any"
+      }
+    }
+  },
+  {
+    "slug": "boon-of-truesight",
+    "name": "Boon of Truesight",
+    "data": {
+      "prerequisites": {
+        "level": 19
+      },
+      "benefits": "Ability Score Increase: +1 to one ability score (max 30). Truesight: You have Truesight with a range of 60 feet.",
+      "ability_score_bonuses": {
+        "max": 30,
+        "amount": 1,
+        "options": "any"
+      }
+    }
+  },
+  {
+    "slug": "defense",
+    "name": "Defense",
+    "data": {
+      "prerequisites": {
+        "feature": "Fighting Style"
+      },
+      "benefits": "While wearing Light, Medium, or Heavy armor, you gain a +1 bonus to Armor Class.",
+      "ability_score_bonuses": {}
+    }
+  },
+  {
+    "slug": "grappler",
+    "name": "Grappler",
+    "data": {
+      "prerequisites": {
+        "level": 4
+      },
+      "benefits": "Prerequisite: Strength or Dexterity 13+. Ability Score Increase: +1 to Strength or Dexterity (max 20). Punch and Grab: When you hit with an Unarmed Strike as part of the Attack action, you can use both the Damage and Grapple option (once per turn). Attack Advantage: You have Advantage on attack rolls against a creature you have Grappled. Fast Wrestler: No extra movement to move a Grappled creature of your size or smaller.",
+      "ability_score_bonuses": {
+        "amount": 1,
+        "options": [
+          "strength",
+          "dexterity"
+        ]
+      }
+    }
+  },
+  {
+    "slug": "great-weapon-fighting",
+    "name": "Great Weapon Fighting",
+    "data": {
+      "prerequisites": {
+        "feature": "Fighting Style"
+      },
+      "benefits": "When you roll damage for a Melee weapon attack with a Two-Handed or Versatile weapon held in two hands, treat any 1 or 2 on a damage die as a 3.",
+      "ability_score_bonuses": {}
+    }
+  },
+  {
+    "slug": "magic-initiate",
+    "name": "Magic Initiate",
+    "data": {
+      "prerequisites": {},
+      "benefits": "Choose Cleric, Druid, or Wizard list when taken. Repeatable once per list. Two Cantrips: Learn 2 cantrips from the chosen spell list. Level 1 Spell: Learn 1 level-1 spell from the same list; always prepared, cast once without a slot per Long Rest, or with spell slots. Spell Change: Replace one chosen spell on each level-up.",
+      "ability_score_bonuses": {}
+    }
+  },
+  {
+    "slug": "savage-attacker",
+    "name": "Savage Attacker",
+    "data": {
+      "prerequisites": {},
+      "benefits": "Once per turn when you hit a target with a weapon, roll the weapon's damage dice twice and use either roll.",
+      "ability_score_bonuses": {}
+    }
+  },
+  {
+    "slug": "skilled",
+    "name": "Skilled",
+    "data": {
+      "prerequisites": {},
+      "benefits": "Gain proficiency in any combination of three skills or tools of your choice. Repeatable.",
+      "ability_score_bonuses": {}
+    }
+  },
+  {
+    "slug": "two-weapon-fighting",
+    "name": "Two-Weapon Fighting",
+    "data": {
+      "prerequisites": {
+        "feature": "Fighting Style"
+      },
+      "benefits": "When you make an extra attack using a weapon with the Light property, you can add your ability modifier to the damage of that attack even if you haven't already added it.",
+      "ability_score_bonuses": {}
+    }
+  }
+]

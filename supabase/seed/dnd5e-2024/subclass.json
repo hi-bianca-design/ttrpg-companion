@@ -1,0 +1,369 @@
+[
+  {
+    "slug": "champion",
+    "name": "Champion",
+    "description": "The Champion focuses on the development of raw physical power honed to deadly perfection.",
+    "parent_slug": "fighter",
+    "data": {
+      "features": {
+        "level_features": {
+          "3": [
+            "Improved Critical",
+            "Remarkable Athlete"
+          ],
+          "7": [
+            "Additional Fighting Style"
+          ],
+          "10": [
+            "Heroic Warrior"
+          ],
+          "15": [
+            "Superior Critical"
+          ],
+          "18": [
+            "Survivor"
+          ]
+        },
+        "subclass_level": 3
+      }
+    }
+  },
+  {
+    "slug": "circle-of-the-land",
+    "name": "Circle of the Land",
+    "description": "The Circle of the Land is made up of mystics and sages who safeguard ancient knowledge and rites, drawing power from their chosen terrain.",
+    "parent_slug": "druid",
+    "data": {
+      "features": {
+        "level_features": {
+          "3": [
+            "Circle of the Land Spells",
+            "Land's Aid"
+          ],
+          "6": [
+            "Natural Recovery"
+          ],
+          "10": [
+            "Nature's Ward"
+          ],
+          "14": [
+            "Nature's Sanctuary"
+          ]
+        },
+        "subclass_level": 3
+      }
+    }
+  },
+  {
+    "slug": "college-of-lore",
+    "name": "College of Lore",
+    "description": "Bards of the College of Lore know something about most things and use their knowledge and wit to aid their companions.",
+    "parent_slug": "bard",
+    "data": {
+      "features": {
+        "level_features": {
+          "3": [
+            "Bonus Proficiencies",
+            "Cutting Words"
+          ],
+          "6": [
+            "Magical Discoveries"
+          ],
+          "14": [
+            "Peerless Skill"
+          ]
+        },
+        "subclass_level": 3
+      }
+    }
+  },
+  {
+    "slug": "draconic-sorcery",
+    "name": "Draconic Sorcery",
+    "description": "Your innate magic comes from draconic magic that was mingled with your blood or that of your ancestors.",
+    "parent_slug": "sorcerer",
+    "data": {
+      "features": {
+        "level_features": {
+          "3": [
+            "Draconic Resilience"
+          ],
+          "6": [
+            "Elemental Affinity"
+          ],
+          "14": [
+            "Dragon Wings"
+          ],
+          "18": [
+            "Dragon Companion"
+          ]
+        },
+        "subclass_level": 3
+      }
+    }
+  },
+  {
+    "slug": "evoker",
+    "name": "Evoker",
+    "description": "You focus your study on magic that creates powerful elemental effects such as bitter cold, searing flame, rolling thunder, crackling lightning, and burning acid.",
+    "parent_slug": "wizard",
+    "data": {
+      "features": {
+        "level_features": {
+          "3": [
+            "Potent Cantrip",
+            "Sculpt Spells"
+          ],
+          "10": [
+            "Empowered Evocation"
+          ],
+          "14": [
+            "Overchannel"
+          ]
+        },
+        "subclass_level": 3
+      }
+    }
+  },
+  {
+    "slug": "fiend-patron",
+    "name": "Fiend Patron",
+    "description": "You have made a pact with a fiend from the lower planes of existence, a powerful demon, devil, or other evil being.",
+    "parent_slug": "warlock",
+    "data": {
+      "features": {
+        "level_features": {
+          "3": [
+            "Dark One's Blessing",
+            "Fiend Spells"
+          ],
+          "6": [
+            "Dark One's Own Luck"
+          ],
+          "10": [
+            "Fiendish Resilience"
+          ],
+          "14": [
+            "Hurl Through Hell"
+          ]
+        },
+        "subclass_level": 3,
+        "expanded_spells": {
+          "1": [
+            "Burning Hands",
+            "Command"
+          ],
+          "2": [
+            "Blindness/Deafness",
+            "Scorching Ray"
+          ],
+          "3": [
+            "Fireball",
+            "Stinking Cloud"
+          ],
+          "4": [
+            "Fire Shield",
+            "Wall of Fire"
+          ],
+          "5": [
+            "Flame Strike",
+            "Hallow"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "slug": "hunter",
+    "name": "Hunter",
+    "description": "Emulating the Hunter archetype means accepting your place as a bulwark between civilization and the terrors of the wilderness.",
+    "parent_slug": "ranger",
+    "data": {
+      "features": {
+        "level_features": {
+          "3": [
+            "Hunter's Lore",
+            "Hunter's Prey"
+          ],
+          "7": [
+            "Defensive Tactics"
+          ],
+          "11": [
+            "Superior Hunter's Prey"
+          ],
+          "15": [
+            "Superior Hunter's Defense"
+          ]
+        },
+        "subclass_level": 3
+      }
+    }
+  },
+  {
+    "slug": "life-domain",
+    "name": "Life Domain",
+    "description": "The Life domain focuses on the vibrant positive energy that sustains all life. Clerics of this domain are powerful healers.",
+    "parent_slug": "cleric",
+    "data": {
+      "features": {
+        "domain_spells": {
+          "3": [
+            "Aid",
+            "Bless",
+            "Cure Wounds",
+            "Lesser Restoration"
+          ],
+          "5": [
+            "Mass Healing Word",
+            "Revivify"
+          ],
+          "7": [
+            "Aura of Life",
+            "Death Ward"
+          ],
+          "9": [
+            "Greater Restoration",
+            "Mass Cure Wounds"
+          ]
+        },
+        "level_features": {
+          "3": [
+            "Disciple of Life",
+            "Preserve Life"
+          ],
+          "6": [
+            "Blessed Healer"
+          ],
+          "17": [
+            "Supreme Healing"
+          ]
+        },
+        "subclass_level": 3
+      }
+    }
+  },
+  {
+    "slug": "oath-of-devotion",
+    "name": "Oath of Devotion",
+    "description": "The Oath of Devotion binds a paladin to the loftiest ideals of justice, virtue, and order.",
+    "parent_slug": "paladin",
+    "data": {
+      "features": {
+        "oath_spells": {
+          "3": [
+            "Protection from Evil and Good",
+            "Shield of Faith"
+          ],
+          "5": [
+            "Aid",
+            "Zone of Truth"
+          ],
+          "9": [
+            "Beacon of Hope",
+            "Dispel Magic"
+          ],
+          "13": [
+            "Freedom of Movement",
+            "Guardian of Faith"
+          ],
+          "17": [
+            "Commune",
+            "Flame Strike"
+          ]
+        },
+        "level_features": {
+          "3": [
+            "Oath of Devotion Spells",
+            "Sacred Weapon"
+          ],
+          "7": [
+            "Aura of Devotion"
+          ],
+          "9": [
+            "Abjure Foes"
+          ],
+          "20": [
+            "Holy Nimbus"
+          ]
+        },
+        "subclass_level": 3
+      }
+    }
+  },
+  {
+    "slug": "path-of-the-berserker",
+    "name": "Path of the Berserker",
+    "description": "Barbarians who walk the Path of the Berserker direct their Rage primarily toward violence, thrilling in the chaos of battle.",
+    "parent_slug": "barbarian",
+    "data": {
+      "features": {
+        "level_features": {
+          "3": [
+            "Frenzy"
+          ],
+          "6": [
+            "Mindless Rage"
+          ],
+          "10": [
+            "Retaliation"
+          ],
+          "14": [
+            "Intimidating Presence"
+          ]
+        },
+        "subclass_level": 3
+      }
+    }
+  },
+  {
+    "slug": "thief",
+    "name": "Thief",
+    "description": "You hone your skills in the larcenous arts. Burglars, bandits, cutpurses, and other criminals typically follow this archetype.",
+    "parent_slug": "rogue",
+    "data": {
+      "features": {
+        "level_features": {
+          "3": [
+            "Fast Hands",
+            "Second-Story Work"
+          ],
+          "9": [
+            "Supreme Sneak"
+          ],
+          "13": [
+            "Use Magic Device"
+          ],
+          "17": [
+            "Thief's Reflexes"
+          ]
+        },
+        "subclass_level": 3
+      }
+    }
+  },
+  {
+    "slug": "warrior-of-the-open-hand",
+    "name": "Warrior of the Open Hand",
+    "description": "Warriors of the Open Hand are the ultimate masters of martial arts combat, pushing their bodies to the limit and adapting their strikes to meet any challenge.",
+    "parent_slug": "monk",
+    "data": {
+      "features": {
+        "level_features": {
+          "3": [
+            "Open Hand Technique"
+          ],
+          "6": [
+            "Wholeness of Body"
+          ],
+          "11": [
+            "Fleet Step"
+          ],
+          "17": [
+            "Quivering Palm"
+          ]
+        },
+        "subclass_level": 3
+      }
+    }
+  }
+]

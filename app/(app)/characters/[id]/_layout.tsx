@@ -1,21 +1,59 @@
-import { Tabs } from 'expo-router'
+import { Tabs, useLocalSearchParams } from 'expo-router'
+import { useColorScheme } from 'nativewind'
+import { User, Sword, Backpack, Scroll } from 'phosphor-react-native'
+import { CharacterRouteIdContext } from '@/features/characters/useCharacterRouteId'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { TAB_LABEL_STYLE, THEME_COLORS, tabBarStyle } from '@/lib/theme'
 
 export default function CharacterSheetLayout() {
+  const { id } = useLocalSearchParams<{ id: string }>()
+  const { colorScheme } = useColorScheme()
+  const dark = colorScheme === 'dark'
+  const colors = THEME_COLORS[dark ? 'dark' : 'light']
+  const insets = useSafeAreaInsets()
+
   return (
-    <Tabs
-      screenOptions={{
-        tabBarStyle: { backgroundColor: '#313244', borderTopColor: '#45475a' },
-        tabBarActiveTintColor: '#cba6f7',
-        tabBarInactiveTintColor: '#6c7086',
-        headerShown: false,
-        tabBarLabelStyle: { fontSize: 10 },
-      }}
-    >
-      <Tabs.Screen name="index"     options={{ tabBarLabel: 'Overview' }} />
-      <Tabs.Screen name="skills"    options={{ tabBarLabel: 'Skills' }} />
-      <Tabs.Screen name="actions"   options={{ tabBarLabel: 'Actions' }} />
-      <Tabs.Screen name="inventory" options={{ tabBarLabel: 'Inventory' }} />
-      <Tabs.Screen name="notes"     options={{ tabBarLabel: 'Notes' }} />
-    </Tabs>
+    <CharacterRouteIdContext.Provider value={id}>
+      <Tabs
+        screenOptions={{
+          tabBarStyle: tabBarStyle(dark ? 'dark' : 'light', insets.bottom),
+          // Primary green is too dim on the dark teal bar; accent-foreground keeps the active tab legible.
+          tabBarActiveTintColor: dark ? colors.accentForeground : colors.primary,
+          tabBarInactiveTintColor: colors.mutedForeground,
+          tabBarLabelStyle: TAB_LABEL_STYLE,
+          headerShown: false,
+        }}
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            tabBarLabel: 'Character',
+            tabBarIcon: ({ color, size }) => <User size={size} color={color} weight="duotone" />,
+          }}
+        />
+        <Tabs.Screen
+          name="actions"
+          options={{
+            tabBarLabel: 'Actions',
+            tabBarIcon: ({ color, size }) => <Sword size={size} color={color} weight="duotone" />,
+          }}
+        />
+        <Tabs.Screen
+          name="inventory"
+          options={{
+            tabBarLabel: 'Inventory',
+            tabBarIcon: ({ color, size }) => <Backpack size={size} color={color} weight="duotone" />,
+          }}
+        />
+        <Tabs.Screen
+          name="campaign"
+          options={{
+            tabBarLabel: 'Campaign',
+            tabBarIcon: ({ color, size }) => <Scroll size={size} color={color} weight="duotone" />,
+          }}
+        />
+        <Tabs.Screen name="level-up" options={{ href: null }} />
+      </Tabs>
+    </CharacterRouteIdContext.Provider>
   )
 }

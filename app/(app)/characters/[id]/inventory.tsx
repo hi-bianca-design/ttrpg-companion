@@ -1,89 +1,140 @@
-import { useEffect, useState } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native'
-import { useLocalSearchParams } from 'expo-router'
-import { getCharacter } from '@/modules/character/character.service'
-import { supabase } from '@/lib/supabase'
-import { CharacterWithRelations } from '@/modules/character/character.types'
+import { useState } from 'react'
+import { View } from 'react-native'
+import { ScreenBackground } from '@/components/game/ScreenBackground'
+import { SectionHeader } from '@/components/game/SectionHeader'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Text } from '@/components/ui/text'
+import type { ItemWithContent } from '@/features/characters/characters.api'
+import { useCharacter, usePendingItemIds, useRemoveItem, useUpdateItem } from '@/features/characters/characters.queries'
+import { AddItemSheet } from '@/features/characters/sheet/AddItemSheet'
+import { filterItems, InventoryList, sortItems, type InventorySegment } from '@/features/characters/sheet/InventoryList'
+import { SheetHeader } from '@/features/characters/sheet/SheetHeader'
+import { ERROR_COPY } from '@/features/errors'
+import { useCharacterRouteId } from '@/features/characters/useCharacterRouteId'
+import { getSystem } from '@/systems/registry'
 
-type EquipmentRow = CharacterWithRelations['character_equipment'][number]
+const EMPTY_COPY: Record<InventorySegment, string> = {
+  all: 'Your pack is empty.',
+  equipped: 'Nothing equipped yet.',
+  magic: 'No magic items yet.',
+}
 
 export default function InventoryTab() {
-  const { id } = useLocalSearchParams<{ id: string }>()
-  const [items, setItems] = useState<EquipmentRow[]>([])
-  const [loading, setLoading] = useState(true)
+  // Own param first, global as fallback (see useCharacterRouteId).
+  const id = useCharacterRouteId()
+  const { data: character, isLoading, isError, refetch } = useCharacter(id)
+  const [segment, setSegment] = useState<InventorySegment>('all')
+  const [adding, setAdding] = useState(false)
+  const [removing, setRemoving] = useState<ItemWithContent | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
-  useEffect(() => {
-    getCharacter(id)
-      .then((data) => setItems((data as CharacterWithRelations).character_equipment ?? []))
-      .catch((e) => Alert.alert('Error', e instanceof Error ? e.message : 'An error occurred'))
-      .finally(() => setLoading(false))
-  }, [id])
+  const onError = (e: unknown) => setSaveError(e instanceof Error ? e.message : ERROR_COPY.save_failed)
+  const update = useUpdateItem(id, { onError })
+  const remove = useRemoveItem(id, { onError })
+  const pendingIds = usePendingItemIds(id)
 
-  async function toggleEquipped(item: EquipmentRow) {
-    const { error } = await supabase
-      .from('character_equipment')
-      .update({ is_equipped: !item.is_equipped })
-      .eq('id', item.id)
-    if (error) { Alert.alert('Error', error.message); return }
-    setItems((prev) => prev.map((i) => i.id === item.id ? { ...i, is_equipped: !i.is_equipped } : i))
-  }
-
-  if (loading) {
-    return <View className="flex-1 bg-base justify-center items-center"><ActivityIndicator color="#cba6f7" /></View>
-  }
-
-  const equipped   = items.filter((i) => i.is_equipped)
-  const unequipped = items.filter((i) => !i.is_equipped)
-
-  function renderItem(item: EquipmentRow) {
-    const itemName = item.equipment?.name ?? item.custom_equipment?.name ?? 'Unknown Item'
-    const isCustom = !!item.custom_content_id
+  if (isLoading) {
     return (
-      <TouchableOpacity
-        key={item.id}
-        onPress={() => toggleEquipped(item)}
-        className={`rounded-xl p-3 mb-2 flex-row justify-between items-center ${item.is_equipped ? 'bg-surface border border-primary' : 'bg-surface border border-transparent'}`}
-      >
-        <View className="flex-1">
-          <View className="flex-row items-center gap-2">
-            <Text className={`font-medium ${item.is_equipped ? 'text-primary' : 'text-text'}`}>
-              {itemName}
-            </Text>
-            {isCustom && (
-              <View className="bg-overlay px-2 py-0.5 rounded-full">
-                <Text className="text-muted text-xs">Custom</Text>
-              </View>
-            )}
-          </View>
-          <Text className="text-muted text-xs mt-0.5">
-            {item.equipment?.category ?? 'Custom'} · qty: {item.quantity}
-          </Text>
+      <ScreenBackground>
+        <SheetHeader />
+        <View className="gap-2" accessibilityLabel="Loading inventory">
+          {[0, 1, 2].map((i) => (
+            <Card key={i} className="gap-3">
+              <View className="h-4 w-1/2 rounded-full bg-muted" />
+              <View className="h-4 w-1/3 rounded-full bg-muted" />
+            </Card>
+          ))}
         </View>
-        <View className={`w-5 h-5 rounded-full border-2 ${item.is_equipped ? 'bg-primary border-primary' : 'border-overlay'}`} />
-      </TouchableOpacity>
+      </ScreenBackground>
     )
   }
 
+  if (isError || !character) {
+    return (
+      <ScreenBackground>
+        <SheetHeader />
+        <View className="items-start gap-2">
+          <Text variant="caption" tone="destructive">Couldn’t load this character. Check your connection.</Text>
+          <Button variant="outline" size="sm" onPress={() => refetch()}>
+            <Text>Try again</Text>
+          </Button>
+        </View>
+      </ScreenBackground>
+    )
+  }
+
+  const system = getSystem(character.system_id)
+  const shown = filterItems(sortItems(character.items), segment)
+
+  const openAdd = () => { setSaveError(null); setAdding(true) }
+
   return (
-    <ScrollView className="flex-1 bg-base" contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
-      {items.length === 0 ? (
-        <Text className="text-muted text-center mt-8">No equipment yet.</Text>
+    <ScreenBackground scroll>
+      <SheetHeader name={character.name} eyebrow="Inventory" />
+      {saveError ? <Text variant="caption" tone="destructive">{saveError}</Text> : null}
+      <SectionHeader
+        id="inventory"
+        title="Items"
+        action={character.items.length > 0 ? (
+          <Button size="sm" onPress={openAdd}>
+            <Text>Add item</Text>
+          </Button>
+        ) : undefined}
+      />
+      {character.items.length > 0 ? (
+        <Tabs value={segment} onValueChange={(v) => setSegment(v as InventorySegment)}>
+          <TabsList>
+            <TabsTrigger value="all" accessibilityLabel="All"><Text>All</Text></TabsTrigger>
+            <TabsTrigger value="equipped" accessibilityLabel="Equipped"><Text>Equipped</Text></TabsTrigger>
+            <TabsTrigger value="magic" accessibilityLabel="Magic"><Text>Magic</Text></TabsTrigger>
+          </TabsList>
+        </Tabs>
+      ) : null}
+      {character.items.length === 0 ? (
+        <View className="items-start gap-3">
+          <Text variant="body-sm" tone="muted">{EMPTY_COPY.all}</Text>
+          <Button onPress={openAdd}>
+            <Text>Add item</Text>
+          </Button>
+        </View>
+      ) : shown.length === 0 ? (
+        <Text variant="body-sm" tone="muted">{EMPTY_COPY[segment]}</Text>
       ) : (
-        <>
-          {equipped.length > 0 && (
-            <>
-              <Text className="text-muted text-xs font-bold mb-2">EQUIPPED</Text>
-              {equipped.map(renderItem)}
-            </>
-          )}
-          {unequipped.length > 0 && (
-            <>
-              <Text className="text-muted text-xs font-bold mt-4 mb-2">IN PACK</Text>
-              {unequipped.map(renderItem)}
-            </>
-          )}
-        </>
+        <InventoryList
+          items={shown}
+          allItems={character.items}
+          maxAttuned={system.rules.maxAttuned}
+          pendingIds={pendingIds}
+          onChange={(itemId, patch) => { setSaveError(null); update.mutate({ itemId, patch }) }}
+          onRemove={setRemoving}
+        />
       )}
-    </ScrollView>
+      <AddItemSheet open={adding} onOpenChange={setAdding} characterId={character.id} systemId={character.system_id} />
+      <Dialog open={removing !== null} onOpenChange={(o) => { if (!o) setRemoving(null) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove item?</DialogTitle>
+            <DialogDescription>{`${removing?.content?.name ?? 'This item'} will be removed from your inventory.`}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onPress={() => setRemoving(null)}>
+              <Text>Cancel</Text>
+            </Button>
+            <Button
+              variant="destructive"
+              onPress={() => {
+                if (removing) { setSaveError(null); remove.mutate(removing.id) }
+                setRemoving(null)
+              }}
+            >
+              <Text>Remove</Text>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </ScreenBackground>
   )
 }
