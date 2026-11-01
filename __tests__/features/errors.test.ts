@@ -37,6 +37,7 @@ describe('toAppError', () => {
       duplicate: 'You already have one with this name.',
       network: "Can't reach the server. Check your connection and try again.",
       load_failed: 'Couldn’t load this. Check your connection and try again.',
+      save_failed: 'Couldn’t save. Try again.',
       unknown: 'Something went wrong. Please try again.',
     })
   })

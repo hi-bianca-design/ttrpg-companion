@@ -1,5 +1,6 @@
 import '@testing-library/jest-native/extend-expect'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { makeTestQueryClient } from '../../helpers/queryClient'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import type { ReactElement } from 'react'
 import BuilderStepScreen from '../../../app/(app)/characters/new/[step]'
@@ -63,7 +64,7 @@ const CONTENT: Record<string, unknown[]> = {
 }
 
 function renderWithQuery(ui: ReactElement) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const client = makeTestQueryClient()
   return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>)
 }
 

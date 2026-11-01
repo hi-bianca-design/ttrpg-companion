@@ -1,5 +1,6 @@
 import '@testing-library/jest-native/extend-expect'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { makeTestQueryClient } from '../../helpers/queryClient'
 import { render, screen } from '@testing-library/react-native'
 import CampaignDetailScreen from '../../../app/(app)/campaigns/[id]'
 import { getCampaign } from '@/features/campaigns/campaigns.api'
@@ -15,7 +16,7 @@ jest.mock('@/features/auth/useAuth', () => ({ useAuth: () => ({ user: { id: 'gm1
 jest.mock('@/features/campaigns/campaigns.api', () => ({ getCampaign: jest.fn() }))
 
 function renderDetail() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const client = makeTestQueryClient()
   render(<QueryClientProvider client={client}><CampaignDetailScreen /></QueryClientProvider>)
 }
 

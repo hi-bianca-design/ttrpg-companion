@@ -1,7 +1,7 @@
 module.exports = {
   preset: 'jest-expo',
   setupFilesAfterEnv: ['./jest.setup.ts'],
-  testPathIgnorePatterns: ['/node_modules/', '/__tests__/scripts/fixtures/', `${__dirname}/.worktrees/`, '/.claude/worktrees/', '/.superpowers/'],
+  testPathIgnorePatterns: ['/node_modules/', '/__tests__/scripts/fixtures/', '/__tests__/helpers/', `${__dirname}/.worktrees/`, '/.claude/worktrees/', '/.superpowers/'],
   modulePathIgnorePatterns: ['/.claude/worktrees/', '/.superpowers/'],
   transform: { '^.+\\.mjs$': 'babel-jest' },
   moduleNameMapper: {

@@ -4,7 +4,7 @@ import LevelUpScreen from '../../app/(app)/characters/[id]/level-up'
 import { useCharacter, useLevelUp } from '@/features/characters/characters.queries'
 
 jest.mock('@/features/characters/characters.queries', () => ({ useCharacter: jest.fn(), useLevelUp: jest.fn() }))
-jest.mock('expo-router', () => ({ useRouter: () => ({ back: jest.fn(), replace: jest.fn() }), useGlobalSearchParams: () => ({ id: 'c1' }) }))
+jest.mock('expo-router', () => ({ useRouter: () => ({ back: jest.fn(), replace: jest.fn() }), useLocalSearchParams: () => ({}), useGlobalSearchParams: () => ({ id: 'c1' }) }))
 jest.mock('@/components/game/ScreenBackground', () => ({ ScreenBackground: ({ children }: { children: React.ReactNode }) => children }))
 jest.mock('@/systems/dnd5e-2024/steps/shared', () => ({
   ...jest.requireActual('@/systems/dnd5e-2024/steps/shared'),

@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { View } from 'react-native'
-import { useGlobalSearchParams, useRouter } from 'expo-router'
+import { useRouter } from 'expo-router'
 import { useColorScheme } from 'nativewind'
 import { CaretLeft } from 'phosphor-react-native'
 import { ScreenBackground } from '@/components/game/ScreenBackground'
@@ -10,14 +10,16 @@ import { Text } from '@/components/ui/text'
 import { useCharacter, useLevelUp } from '@/features/characters/characters.queries'
 import { toRuleInput } from '@/features/characters/picks'
 import { levelUpSummary } from '@/features/characters/sheet/levelUpSummary'
+import { ERROR_COPY } from '@/features/errors'
+import { useCharacterRouteId } from '@/features/characters/useCharacterRouteId'
 import { THEME_COLORS } from '@/lib/theme'
 import { getSystem } from '@/systems/registry'
 
 type Choice = { input: Record<string, unknown>; ready: boolean }
 
 export default function LevelUpScreen() {
-  // Global params: a tab opened from the tab bar gets empty local params on web.
-  const { id } = useGlobalSearchParams<{ id: string }>()
+  // Own param first, global as fallback (see useCharacterRouteId).
+  const id = useCharacterRouteId()
   const router = useRouter()
   const { colorScheme } = useColorScheme()
   const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
@@ -95,7 +97,7 @@ export default function LevelUpScreen() {
       { patch: preview, input },
       {
         onSuccess: () => router.replace(`/(app)/characters/${id}`),
-        onError: (e) => setSaveError(e instanceof Error ? e.message : 'Couldn’t save. Try again.'),
+        onError: (e) => setSaveError(e instanceof Error ? e.message : ERROR_COPY.save_failed),
       },
     )
   }

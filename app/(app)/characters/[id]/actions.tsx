@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { View } from 'react-native'
-import { useGlobalSearchParams, useRouter } from 'expo-router'
+import { useRouter } from 'expo-router'
 import { ScreenBackground } from '@/components/game/ScreenBackground'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -11,6 +11,8 @@ import { toRuleInput } from '@/features/characters/picks'
 import { ActionsList, lowestTier, type Segment } from '@/features/characters/sheet/ActionsList'
 import { RestButtons } from '@/features/characters/sheet/RestButtons'
 import { SpellSlotsSection } from '@/features/characters/sheet/SpellSlotsSection'
+import { ERROR_COPY } from '@/features/errors'
+import { useCharacterRouteId } from '@/features/characters/useCharacterRouteId'
 import { restoreSlot, spendSlot } from '@/systems/resources'
 import { getSystem } from '@/systems/registry'
 import type { ResourceValue, SlotsValue } from '@/systems/types'
@@ -18,8 +20,8 @@ import type { ResourceValue, SlotsValue } from '@/systems/types'
 const SLOTS_KEY = 'spell_slots'
 
 export default function ActionsTab() {
-  // Global params: a tab opened from the tab bar gets empty local params on web.
-  const { id } = useGlobalSearchParams<{ id: string }>()
+  // Own param first, global as fallback (see useCharacterRouteId).
+  const id = useCharacterRouteId()
   const router = useRouter()
   const { data: character, isLoading, isError, refetch } = useCharacter(id)
   const [segment, setSegment] = useState<Segment>('actions')
@@ -27,7 +29,7 @@ export default function ActionsTab() {
   const picks = useMemo(() => (character ? toRuleInput(character.picks, character.items) : []), [character])
 
   const mutation = useResourceMutation(id, {
-    onError: (e) => setSaveError(e instanceof Error ? e.message : 'Couldn’t save. Try again.'),
+    onError: (e) => setSaveError(e instanceof Error ? e.message : ERROR_COPY.save_failed),
   })
   const change = (key: string, apply: (cur: ResourceValue) => ResourceValue) => {
     setSaveError(null)

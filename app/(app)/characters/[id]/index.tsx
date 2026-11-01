@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { View } from 'react-native'
-import { useGlobalSearchParams, useRouter } from 'expo-router'
+import { useRouter } from 'expo-router'
 import { useColorScheme } from 'nativewind'
 import { CaretLeft } from 'phosphor-react-native'
 import { ScreenBackground } from '@/components/game/ScreenBackground'
@@ -15,6 +15,8 @@ import { HpSheet } from '@/features/characters/sheet/HpSheet'
 import { SheetHeader } from '@/features/characters/sheet/SheetHeader'
 import { StatsSection } from '@/features/characters/sheet/StatsSection'
 import { VitalsSection } from '@/features/characters/sheet/VitalsSection'
+import { ERROR_COPY } from '@/features/errors'
+import { useCharacterRouteId } from '@/features/characters/useCharacterRouteId'
 import { THEME_COLORS } from '@/lib/theme'
 import { getSystem } from '@/systems/registry'
 import type { PoolValue } from '@/systems/types'
@@ -22,8 +24,8 @@ import type { PoolValue } from '@/systems/types'
 type OpenSheet = null | 'hp' | 'bonus' | 'conditions'
 
 export default function CharacterTab() {
-  // Global params: a tab opened from the tab bar gets empty local params on web.
-  const { id } = useGlobalSearchParams<{ id: string }>()
+  // Own param first, global as fallback (see useCharacterRouteId).
+  const id = useCharacterRouteId()
   const router = useRouter()
   const { data: character, isLoading, isError, refetch } = useCharacter(id)
   const update = useUpdateCharacter(id)
@@ -33,7 +35,7 @@ export default function CharacterTab() {
   const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
   const picks = useMemo(() => (character ? toRuleInput(character.picks, character.items) : []), [character])
 
-  const onSaveError = { onError: (e: unknown) => setSaveError(e instanceof Error ? e.message : 'Couldn’t save. Try again.') }
+  const onSaveError = { onError: (e: unknown) => setSaveError(e instanceof Error ? e.message : ERROR_COPY.save_failed) }
   const closeSheet = (open: boolean) => { if (!open) setSheet(null) }
   const openSheet = (next: OpenSheet) => { setSaveError(null); setSheet(next) }
 

@@ -1,6 +1,6 @@
 import path from 'path'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { checkFiles } = require('../../scripts/check-tokens.mjs')
+const { checkFiles, ENFORCED_ROOTS } = require('../../scripts/check-tokens.mjs')
 
 const fx = (name: string) => path.join(__dirname, 'fixtures', name)
 
@@ -49,5 +49,9 @@ describe('check-tokens', () => {
     fs.writeFileSync(f, '<V className="dark:p-5 active:gap-10 mt-0.5 -mx-5 w-32 p-4 w-1/2 inset-0" />\n')
     const texts = checkFiles([f]).map((x: { text: string }) => x.text)
     expect(texts).toHaveLength(5)
+  })
+
+  it('enforces tokens across app/ as well as feature code', () => {
+    expect(ENFORCED_ROOTS).toEqual(expect.arrayContaining(['app', 'src/features', 'src/components/game', 'src/systems']))
   })
 })

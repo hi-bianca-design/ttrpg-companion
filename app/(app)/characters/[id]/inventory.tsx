@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { View } from 'react-native'
-import { useGlobalSearchParams } from 'expo-router'
 import { ScreenBackground } from '@/components/game/ScreenBackground'
 import { SectionHeader } from '@/components/game/SectionHeader'
 import { Button } from '@/components/ui/button'
@@ -12,6 +11,8 @@ import type { ItemWithContent } from '@/features/characters/characters.api'
 import { useCharacter, usePendingItemIds, useRemoveItem, useUpdateItem } from '@/features/characters/characters.queries'
 import { AddItemSheet } from '@/features/characters/sheet/AddItemSheet'
 import { filterItems, InventoryList, type InventorySegment } from '@/features/characters/sheet/InventoryList'
+import { ERROR_COPY } from '@/features/errors'
+import { useCharacterRouteId } from '@/features/characters/useCharacterRouteId'
 import { getSystem } from '@/systems/registry'
 
 const EMPTY_COPY: Record<InventorySegment, string> = {
@@ -21,15 +22,15 @@ const EMPTY_COPY: Record<InventorySegment, string> = {
 }
 
 export default function InventoryTab() {
-  // Global params: a tab opened from the tab bar gets empty local params on web.
-  const { id } = useGlobalSearchParams<{ id: string }>()
+  // Own param first, global as fallback (see useCharacterRouteId).
+  const id = useCharacterRouteId()
   const { data: character, isLoading, isError, refetch } = useCharacter(id)
   const [segment, setSegment] = useState<InventorySegment>('all')
   const [adding, setAdding] = useState(false)
   const [removing, setRemoving] = useState<ItemWithContent | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
 
-  const onError = (e: unknown) => setSaveError(e instanceof Error ? e.message : 'Couldn’t save. Try again.')
+  const onError = (e: unknown) => setSaveError(e instanceof Error ? e.message : ERROR_COPY.save_failed)
   const update = useUpdateItem(id, { onError })
   const remove = useRemoveItem(id, { onError })
   const pendingIds = usePendingItemIds(id)

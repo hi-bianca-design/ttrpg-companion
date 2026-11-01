@@ -7,6 +7,7 @@ import { useCharacter, useResourceMutation, useUpdateCharacter } from '@/feature
 import { ConditionsSheet } from '@/features/characters/sheet/ConditionsSheet'
 import { HpSheet } from '@/features/characters/sheet/HpSheet'
 import { getSystem } from '@/systems/registry'
+import { ERROR_COPY } from '@/features/errors'
 
 jest.mock('@/features/characters/characters.queries', () => ({
   useCharacter: jest.fn(),
@@ -14,6 +15,7 @@ jest.mock('@/features/characters/characters.queries', () => ({
   useUpdateCharacter: jest.fn(),
 }))
 jest.mock('expo-router', () => ({
+  useLocalSearchParams: () => ({}),
   useGlobalSearchParams: () => ({ id: 'ch1' }),
   useRouter: () => ({ push: jest.fn(), back: jest.fn() }),
 }))
@@ -238,6 +240,15 @@ test('a failed bonus HP change shows in the sheet error caption', () => {
   fireEvent.changeText(screen.getByLabelText('Amount'), '4')
   fireEvent.press(screen.getByRole('button', { name: 'Confirm' }))
   expect(screen.getByText('Bonus failed')).toBeTruthy()
+})
+
+test('a non-Error write failure falls back to the shared save_failed copy', () => {
+  mockResourceMutate.mockImplementation(() => mockHookOptions.forEach((o) => o?.onError?.('boom')))
+  renderTab()
+  fireEvent.press(screen.getByRole('button', { name: '+ Bonus HP' }))
+  fireEvent.changeText(screen.getByLabelText('Amount'), '4')
+  fireEvent.press(screen.getByRole('button', { name: 'Confirm' }))
+  expect(screen.getByText(ERROR_COPY.save_failed)).toBeTruthy()
 })
 
 test('the D&D profile section renders after proficiencies', () => {

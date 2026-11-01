@@ -1,6 +1,7 @@
 import '@testing-library/jest-native/extend-expect'
 import { PortalHost } from '@rn-primitives/portal'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { makeTestQueryClient } from '../../helpers/queryClient'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import { ContentForm } from '@/features/content/ContentForm'
 import { saveHomebrew, deleteHomebrew, listContent } from '@/features/content/content.api'
@@ -16,7 +17,7 @@ jest.mock('@/features/content/content.api', () => ({
 function renderForm(props: Partial<React.ComponentProps<typeof ContentForm>> & { kind?: string } = {}) {
   const onSaved = jest.fn()
   const onDeleted = jest.fn()
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const client = makeTestQueryClient()
   render(
     <QueryClientProvider client={client}>
       <ContentForm systemId="dnd5e-2024" kind="spell" onSaved={onSaved} onDeleted={onDeleted} {...props} />

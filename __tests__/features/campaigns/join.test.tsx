@@ -1,6 +1,7 @@
 import '@testing-library/jest-native/extend-expect'
 import { PortalHost } from '@rn-primitives/portal'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { makeTestQueryClient } from '../../helpers/queryClient'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import { useLocalSearchParams } from 'expo-router'
 import JoinCampaignScreen from '../../../app/(app)/campaigns/join'
@@ -22,7 +23,7 @@ const CHARACTERS = [
 ]
 
 function renderJoin() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const client = makeTestQueryClient()
   render(
     <QueryClientProvider client={client}>
       <JoinCampaignScreen />

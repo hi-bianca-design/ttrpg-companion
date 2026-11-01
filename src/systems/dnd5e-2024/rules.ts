@@ -1,5 +1,5 @@
 // D&D 5e (2024) rules: ability maths, spell slots, derived values and rests.
-// Ported from src/modules/character/character.utils.ts (removed in Task 20).
+// Ported from the pre-rebuild character utils (since removed).
 import type {
   CharacterRecord, DerivedValue, PickRecord, PoolValue, ResourceValue, SlotsValue,
 } from '../types'

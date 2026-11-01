@@ -2,7 +2,7 @@
 // Reads a LOCAL Supabase stack (built from the legacy migrations) via supabase-js.
 // Env: SUPABASE_URL (default http://127.0.0.1:54321) and SUPABASE_SERVICE_ROLE_KEY
 // (see `npx supabase status -o env`). Never commit keys.
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import fs from 'fs'
 import path from 'path'
 import { getSystem } from '../../src/systems/registry'
@@ -24,7 +24,7 @@ const TABLES: { table: string; kind: Kind }[] = [
   { table: 'magic_items', kind: 'magic_item' },
 ]
 
-async function fetchAll(client: ReturnType<typeof createClient>, table: string): Promise<Row[]> {
+async function fetchAll(client: SupabaseClient<any, any, any, any, any>, table: string): Promise<Row[]> {
   const rows: Row[] = []
   for (let from = 0; ; from += 1000) {
     const { data, error } = await client.from(table).select('*').order('name').range(from, from + 999)

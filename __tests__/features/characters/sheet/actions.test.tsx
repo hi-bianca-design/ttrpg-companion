@@ -11,6 +11,7 @@ jest.mock('@/features/characters/characters.queries', () => ({
   useResourceMutation: jest.fn(),
 }))
 jest.mock('expo-router', () => ({
+  useLocalSearchParams: () => ({}),
   useGlobalSearchParams: () => ({ id: 'ch1' }),
   useRouter: () => ({ push: jest.fn(), back: jest.fn() }),
 }))

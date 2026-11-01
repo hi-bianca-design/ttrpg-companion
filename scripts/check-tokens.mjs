@@ -3,7 +3,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-export const ENFORCED_ROOTS = ['src/features', 'src/components/game', 'src/systems']
+export const ENFORCED_ROOTS = ['src/features', 'src/components/game', 'src/systems', 'app']
 
 const EXEMPT = [
   /(^|\/)src\/lib\/theme\.ts$/,

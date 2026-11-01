@@ -1,5 +1,5 @@
 import { View } from 'react-native'
-import { useGlobalSearchParams, useRouter } from 'expo-router'
+import { useRouter } from 'expo-router'
 import { ScreenBackground } from '@/components/game'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -9,10 +9,11 @@ import { CampaignCard } from '@/features/campaigns/CampaignCard'
 import { MemberList } from '@/features/campaigns/MemberList'
 import { useCampaign, useCharacterCampaign } from '@/features/campaigns/campaigns.queries'
 import { ERROR_COPY } from '@/features/errors'
+import { useCharacterRouteId } from '@/features/characters/useCharacterRouteId'
 
 export default function CampaignTab() {
-  // Global params: a tab opened from the tab bar gets empty local params.
-  const { id } = useGlobalSearchParams<{ id: string }>()
+  // Own param first, global as fallback (see useCharacterRouteId).
+  const id = useCharacterRouteId()
   const router = useRouter()
   const { user } = useAuth()
   const membership = useCharacterCampaign(id)
