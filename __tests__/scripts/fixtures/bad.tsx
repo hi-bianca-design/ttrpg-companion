@@ -1,4 +1,4 @@
-// Fixture: one violation per rule. Not a real component.
+// @ts-nocheck (fixture: one violation per rule)
 export const hex = '#ff0000'
 export const rgb = 'rgba(0, 0, 0, 0.5)'
 export const a = <View style={{ padding: 4 }} />
