@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { Progress } from '@/components/ui/progress'
 import { Text } from '@/components/ui/text'
+import { AccountMenu } from '@/features/auth/AccountMenu'
 import type { CharacterSummary } from '@/features/characters/characters.api'
 import { useCharacters, useDeleteCharacter } from '@/features/characters/characters.queries'
 import { THEME_COLORS } from '@/lib/theme'
@@ -69,12 +70,15 @@ export default function CharactersScreen() {
             </Text>
           ) : null}
         </View>
-        {characters.length > 0 ? (
-          <Button size="sm" accessibilityLabel="New character" onPress={create}>
-            <Plus size={16} color={colors.primaryForeground} weight="bold" />
-            <Text>New</Text>
-          </Button>
-        ) : null}
+        <View className="flex-row items-center gap-3">
+          {characters.length > 0 ? (
+            <Button size="sm" accessibilityLabel="New character" onPress={create}>
+              <Plus size={16} color={colors.primaryForeground} weight="bold" />
+              <Text>New</Text>
+            </Button>
+          ) : null}
+          <AccountMenu />
+        </View>
       </View>
 
       {isLoading ? (

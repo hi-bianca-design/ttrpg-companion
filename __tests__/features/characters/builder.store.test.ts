@@ -56,3 +56,16 @@ describe('visibleSteps', () => {
     }
   })
 })
+
+describe('exiting', () => {
+  test('exit() marks the wizard as leaving on purpose; reset keeps it, start clears it', () => {
+    store().start('dnd5e-2024')
+    expect(store().exiting).toBe(false)
+    store().exit()
+    expect(store().exiting).toBe(true)
+    store().reset()
+    expect(store().exiting).toBe(true)
+    store().start('dnd5e-2024')
+    expect(store().exiting).toBe(false)
+  })
+})

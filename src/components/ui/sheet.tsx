@@ -1,5 +1,5 @@
 import * as DialogPrimitive from '@rn-primitives/dialog'
-import { ScrollView, useWindowDimensions, View } from 'react-native'
+import { KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions, View } from 'react-native'
 import { cn } from '@/lib/utils'
 
 // Bottom sheet built on the Dialog primitive (portal + overlay + focus handling).
@@ -17,13 +17,18 @@ function SheetContent({
   return (
     <DialogPrimitive.Portal hostName={portalHost}>
       <DialogPrimitive.Overlay className="absolute inset-0 justify-end bg-overlay">
-        <DialogPrimitive.Content
-          className={cn('w-full gap-4 rounded-t-sheet border border-border bg-background p-4', className)}
-          {...props}
-        >
-          <View className="mb-1 h-1 w-8 self-center rounded-full bg-rule" />
-          {children}
-        </DialogPrimitive.Content>
+        {/* The sheet sits on the bottom edge, where the iOS keyboard opens: padding lifts it (input and
+            the buttons under it, e.g. HpSheet's Damage/Heal) clear of the keyboard. Android resizes the
+            window itself; web has no on-screen keyboard to avoid. */}
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="w-full">
+          <DialogPrimitive.Content
+            className={cn('w-full gap-4 rounded-t-sheet border border-border bg-background p-4', className)}
+            {...props}
+          >
+            <View className="mb-1 h-1 w-8 self-center rounded-full bg-rule" />
+            {children}
+          </DialogPrimitive.Content>
+        </KeyboardAvoidingView>
       </DialogPrimitive.Overlay>
     </DialogPrimitive.Portal>
   )

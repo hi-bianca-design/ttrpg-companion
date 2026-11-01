@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { ScreenBackground } from '@/components/game'
-import { Button } from '@/components/ui/button'
+import { CancelButton, NavRow, ScreenBackground } from '@/components/game'
 import { Text } from '@/components/ui/text'
 import { ContentForm } from '@/features/content/ContentForm'
 import { homebrewKinds, KindPicker } from '@/features/content/KindPicker'
@@ -19,11 +18,11 @@ export default function NewContentScreen() {
 
   return (
     <ScreenBackground scroll>
-      <View className="flex-row items-center justify-between gap-3">
+      <View className="gap-3">
+        <NavRow>
+          <CancelButton onPress={() => router.back()} />
+        </NavRow>
         <Text variant="title">{def ? `New ${def.label.toLowerCase()}` : 'New homebrew'}</Text>
-        <Button size="sm" variant="outline" accessibilityLabel="Cancel" onPress={() => router.back()}>
-          <Text>Cancel</Text>
-        </Button>
       </View>
       <KindPicker systemId={systemId} value={kind} onChange={setKind} />
       {kind ? (

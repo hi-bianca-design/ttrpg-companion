@@ -1,6 +1,6 @@
 import { View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { ScreenBackground } from '@/components/game'
+import { CancelButton, NavRow, ScreenBackground } from '@/components/game'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
@@ -47,11 +47,11 @@ export default function EditContentScreen() {
 
   return (
     <ScreenBackground scroll>
-      <View className="flex-row items-center justify-between gap-3">
-        <Text variant="title" numberOfLines={1} className="flex-1">{`Edit ${def.label.toLowerCase()}`}</Text>
-        <Button size="sm" variant="outline" accessibilityLabel="Cancel" onPress={() => router.back()}>
-          <Text>Cancel</Text>
-        </Button>
+      <View className="gap-3">
+        <NavRow>
+          <CancelButton onPress={() => router.back()} />
+        </NavRow>
+        <Text variant="title" numberOfLines={1}>{`Edit ${def.label.toLowerCase()}`}</Text>
       </View>
       <ContentForm
         systemId={systemId}

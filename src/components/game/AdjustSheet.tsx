@@ -11,6 +11,8 @@ type AdjustSheetProps = {
   children: ReactNode
   primaryLabel: string
   onPrimary: () => void
+  /** outline when the sheet's action isn't the screen's main one (e.g. Sign out). */
+  primaryVariant?: 'primary' | 'outline'
   secondaryLabel?: string
   onSecondary?: () => void
 }
@@ -22,6 +24,7 @@ export function AdjustSheet({
   children,
   primaryLabel,
   onPrimary,
+  primaryVariant = 'primary',
   secondaryLabel,
   onSecondary,
 }: AdjustSheetProps) {
@@ -33,10 +36,8 @@ export function AdjustSheet({
         </SheetHeader>
         {children}
         <View className="gap-2">
-          <Button onPress={onPrimary}>
-            <Text variant="subhead" className="text-primary-foreground">
-              {primaryLabel}
-            </Text>
+          <Button variant={primaryVariant} accessibilityLabel={primaryLabel} onPress={onPrimary}>
+            <Text variant="subhead">{primaryLabel}</Text>
           </Button>
           {secondaryLabel && onSecondary ? (
             <Button variant="outline" onPress={onSecondary}>

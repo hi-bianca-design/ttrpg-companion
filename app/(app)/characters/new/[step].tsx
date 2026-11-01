@@ -1,9 +1,9 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native'
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router'
-import { CaretLeft, CaretRight, CheckCircle, CircleIcon } from 'phosphor-react-native'
+import { CaretRight, CheckCircle, CircleIcon } from 'phosphor-react-native'
 import { useColorScheme } from 'nativewind'
-import { ScreenBackground, SectionHeader } from '@/components/game'
+import { BackButton, ScreenBackground, SectionHeader } from '@/components/game'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
@@ -55,16 +55,16 @@ export default function BuilderStepScreen() {
   const draft = useBuilderStore((s) => s.draft)
   const update = useBuilderStore((s) => s.update)
   const reset = useBuilderStore((s) => s.reset)
-  // Set once the character is saved: the wizard is leaving, so a cleared store must not redirect back into it.
-  const finished = useRef(false)
+  const exit = useBuilderStore((s) => s.exit)
+  // Set once the character is saved or the draft discarded: the wizard is leaving, so a cleared
+  // store must not redirect back into it.
+  const exiting = useBuilderStore((s) => s.exiting)
   const router = useRouter()
   const create = useCreateCharacter()
   const [error, setError] = useState<string | null>(null)
-  const { colorScheme } = useColorScheme()
-  const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
 
   // No wizard in progress (e.g. app reload on a step URL): start over from the picker.
-  if (!systemId) return finished.current ? null : <Redirect href="/(app)/characters/new" />
+  if (!systemId) return exiting ? null : <Redirect href="/(app)/characters/new" />
 
   const system = getSystem(systemId)
   const steps = visibleSteps(system.builder.steps, draft)
@@ -84,7 +84,7 @@ export default function BuilderStepScreen() {
       // Leave the wizard entirely so Back from the sheet returns to the list, then clear the draft.
       // The push waits a tick so the pop is applied first (on web that rewinds browser history
       // instead of collapsing into a replace that leaves the wizard entries behind).
-      finished.current = true
+      exit()
       router.dismissTo('/(app)/characters')
       setTimeout(() => {
         router.push(`/(app)/characters/${id}`)
@@ -99,9 +99,8 @@ export default function BuilderStepScreen() {
     <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScreenBackground>
         <View className="flex-row items-center gap-3">
-          <Button variant="ghost" size="icon" accessibilityLabel="Back" onPress={() => router.back()}>
-            <CaretLeft size={20} color={colors.foreground} />
-          </Button>
+          {/* On the first step this leaves the wizard; DiscardDraftGuard asks first when the draft has choices. */}
+          <BackButton onPress={() => router.back()} />
           <WizardProgress title={current.title} index={index} total={steps.length} />
         </View>
 

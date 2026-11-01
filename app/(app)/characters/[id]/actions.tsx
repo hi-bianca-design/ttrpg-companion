@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Text } from '@/components/ui/text'
-import { showToast } from '@/components/ui/toast'
+import { showToast, ToastClearance } from '@/components/ui/toast'
 import { useCharacter, useResourceMutation } from '@/features/characters/characters.queries'
 import { toRuleInput } from '@/features/characters/picks'
 import { ActionsList, lowestBlockedLevel, lowestTier, type Segment } from '@/features/characters/sheet/ActionsList'
@@ -150,9 +150,8 @@ export default function ActionsTab() {
         onEmptyAction={() => (segment === 'actions' ? router.push(`/(app)/characters/${id}/inventory`) : setSegment('actions'))}
       />
       <RestButtons onRest={rest} />
-      {/* At the end of the scroll the rest buttons would sit under the toast band (tab bar + 8 + toast);
-          this keeps them clear of the confirmation they trigger. */}
-      <View testID="toast-clearance" className="h-6" />
+      {/* The rest buttons end the scroll and trigger a toast: keep them clear of it. */}
+      <ToastClearance />
       {hpOpen ? (
         <HpSheet
           characterId={character.id}

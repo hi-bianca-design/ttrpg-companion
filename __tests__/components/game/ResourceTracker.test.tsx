@@ -1,3 +1,4 @@
+import '@testing-library/jest-native/extend-expect'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import { ResourceTracker } from '@/components/game/ResourceTracker'
 
@@ -51,10 +52,23 @@ test('pips: -/+ buttons render icons, not glyph text', () => {
   expect(screen.queryByText('+')).toBeNull()
 })
 
-test('pips: shows the "2/3" count next to the label and an accessible summary on the pip row', () => {
+test('pips: shows the "2/3" count and an accessible summary on the pip row', () => {
   render(<ResourceTracker display="pips" label="Level 1" unit="slots" max={3} used={1} onSpend={jest.fn()} onRestore={jest.fn()} />)
   expect(screen.getByText('2/3')).toBeTruthy()
   expect(screen.getByLabelText('Level 1 slots, 2 of 3 available')).toBeTruthy()
+})
+
+test('pips: the count stands apart from the tier title, right-aligned before the −/+ buttons in the foreground tone', () => {
+  render(<ResourceTracker display="pips" label="Level 1" unit="slots" max={3} used={1} onSpend={jest.fn()} onRestore={jest.fn()} />)
+  const count = screen.getByTestId('pip-count')
+  expect(count).toHaveTextContent('2/3')
+  expect(count.props.className).toContain('text-foreground')
+  expect(screen.getByText('Level 1').props.className).toContain('text-label-foreground')
+  // Tree order: title, pips, then the count, then the buttons — so "LEVEL 1" and "2/3" never read as one string.
+  const json = JSON.stringify(screen.toJSON())
+  const at = (s: string) => json.indexOf(s)
+  expect(at('pip-count')).toBeGreaterThan(at('pip-available'))
+  expect(at('pip-count')).toBeLessThan(at('Spend Level 1'))
 })
 
 test('pips counting marks: filled = marked, + marks and − clears', () => {

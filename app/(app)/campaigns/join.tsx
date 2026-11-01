@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react'
 import { View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Sword } from 'phosphor-react-native'
-import { EmptyState, ScreenBackground } from '@/components/game'
+import { CancelButton, EmptyState, NavRow, ScreenBackground } from '@/components/game'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Text } from '@/components/ui/text'
+import { showToast } from '@/components/ui/toast'
 import { OptionChips } from '@/features/campaigns/OptionChips'
 import { useJoinCampaign } from '@/features/campaigns/campaigns.queries'
 import { useCharacters } from '@/features/characters/characters.queries'
@@ -26,6 +27,12 @@ export default function JoinCampaignScreen() {
     if (params.characterId) setCharacterId(params.characterId)
   }, [params.characterId])
 
+  // Opened from a character sheet's Campaign tab: Cancel and a successful join return there. A plain
+  // back() would leave the campaigns stack for the characters list, not the sheet that opened it.
+  const fromSheet = params.characterId
+  const backToSheet = (id: string) => router.navigate({ pathname: '/(app)/characters/[id]/campaign', params: { id } })
+  const cancel = () => (fromSheet ? backToSheet(fromSheet) : router.back())
+
   const list = characters.data ?? []
   const chosen = list.find((c) => c.id === characterId)
   const canJoin = code.length === CODE_LENGTH && !!chosen && !join.isPending
@@ -36,7 +43,11 @@ export default function JoinCampaignScreen() {
     join.mutate(
       { code, characterId: chosen.id },
       {
-        onSuccess: (campaignId) => router.replace({ pathname: '/(app)/campaigns/[id]', params: { id: campaignId } }),
+        onSuccess: (campaignId) => {
+          showToast(`${chosen.name} joined the campaign.`)
+          if (fromSheet) backToSheet(fromSheet)
+          else router.replace({ pathname: '/(app)/campaigns/[id]', params: { id: campaignId } })
+        },
         onError: (e) => setError(toAppError(e).message),
       },
     )
@@ -44,11 +55,11 @@ export default function JoinCampaignScreen() {
 
   return (
     <ScreenBackground scroll>
-      <View className="flex-row items-center justify-between gap-3">
+      <View className="gap-3">
+        <NavRow>
+          <CancelButton onPress={cancel} />
+        </NavRow>
         <Text variant="title">Join a campaign</Text>
-        <Button size="sm" variant="outline" accessibilityLabel="Cancel" onPress={() => router.back()}>
-          <Text>Cancel</Text>
-        </Button>
       </View>
 
       <View className="gap-2">

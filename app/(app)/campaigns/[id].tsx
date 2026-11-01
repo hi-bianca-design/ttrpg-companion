@@ -1,6 +1,6 @@
 import { View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { ScreenBackground, SectionHeader } from '@/components/game'
+import { BackButton, NavRow, ScreenBackground, SectionHeader } from '@/components/game'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -13,14 +13,27 @@ import { systemName } from '@/systems/registry'
 import { ERROR_COPY } from '@/features/errors'
 
 export default function CampaignDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>()
+  const { id, fromCharacter } = useLocalSearchParams<{ id: string; fromCharacter?: string }>()
   const router = useRouter()
   const { user } = useAuth()
   const { data, isLoading, isError, refetch } = useCampaign(id)
+  // Opened from a character sheet's Campaign tab, Back returns to that tab: a plain back() from this
+  // cross-tab push would land on the characters list. Opened directly there is nothing to go back to.
+  const back = () => {
+    if (fromCharacter) router.navigate({ pathname: '/(app)/characters/[id]/campaign', params: { id: fromCharacter } })
+    else if (router.canGoBack()) router.back()
+    else router.replace('/(app)/campaigns')
+  }
+  const nav = (
+    <NavRow>
+      <BackButton onPress={back} />
+    </NavRow>
+  )
 
   if (isLoading) {
     return (
       <ScreenBackground>
+        {nav}
         <View className="gap-2" accessibilityLabel="Loading campaign">
           {[0, 1].map((i) => (
             <Card key={i} className="gap-3">
@@ -36,6 +49,7 @@ export default function CampaignDetailScreen() {
   if (isError || !data) {
     return (
       <ScreenBackground>
+        {nav}
         <View className="items-start gap-2">
           <Text variant="caption" tone="destructive">{ERROR_COPY.load_failed}</Text>
           <Button variant="outline" size="sm" onPress={() => refetch()}>
@@ -49,11 +63,9 @@ export default function CampaignDetailScreen() {
   const isGm = data.gm_id === user?.id
   return (
     <ScreenBackground scroll>
-      <View className="flex-row items-center justify-between gap-3">
-        <Text variant="title" numberOfLines={2} className="flex-1">{data.name}</Text>
-        <Button size="sm" variant="outline" accessibilityLabel="Back" onPress={() => router.back()}>
-          <Text>Back</Text>
-        </Button>
+      <View className="gap-3">
+        {nav}
+        <Text variant="title" numberOfLines={2}>{data.name}</Text>
       </View>
       <View className="flex-row flex-wrap items-center gap-2">
         <Badge variant={isGm ? 'accent' : 'default'}>{isGm ? 'GM' : 'Player'}</Badge>

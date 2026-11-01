@@ -8,12 +8,15 @@ import JoinCampaignScreen from '../../../app/(app)/campaigns/join'
 import { joinCampaign } from '@/features/campaigns/campaigns.api'
 import { listCharacters } from '@/features/characters/characters.api'
 import { AppError, ERROR_COPY, type AppErrorCode } from '@/features/errors'
+import { showToast } from '@/components/ui/toast'
 
 jest.mock('@/lib/supabase', () => ({ supabase: { from: jest.fn(), rpc: jest.fn(), auth: { getSession: jest.fn() } } }))
+const mockRouter = { replace: jest.fn(), back: jest.fn(), push: jest.fn(), navigate: jest.fn() }
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ replace: jest.fn(), back: jest.fn(), push: jest.fn() }),
+  useRouter: () => mockRouter,
   useLocalSearchParams: jest.fn(() => ({})),
 }))
+jest.mock('@/components/ui/toast', () => ({ showToast: jest.fn() }))
 jest.mock('@/features/campaigns/campaigns.api', () => ({ joinCampaign: jest.fn() }))
 jest.mock('@/features/characters/characters.api', () => ({ listCharacters: jest.fn() }))
 
@@ -94,3 +97,65 @@ test.each<AppErrorCode>(['invalid_code', 'already_member', 'system_mismatch', 'n
     expect(await screen.findByText(ERROR_COPY[code])).toBeTruthy()
   },
 )
+
+test('Cancel is a ghost text button at the leading edge, above the title', async () => {
+  renderJoin()
+  await screen.findByRole('button', { name: 'Character Thorin' })
+  const cancel = screen.getByRole('button', { name: 'Cancel' })
+  expect(cancel.props.className).toContain('bg-transparent')
+  expect(cancel.props.className).not.toContain('border-primary')
+  const json = JSON.stringify(screen.toJSON())
+  expect(json.indexOf('Cancel')).toBeLessThan(json.indexOf('Join a campaign'))
+})
+
+test('Cancel from the campaigns list goes back', async () => {
+  renderJoin()
+  await screen.findByRole('button', { name: 'Character Thorin' })
+  fireEvent.press(screen.getByRole('button', { name: 'Cancel' }))
+  expect(mockRouter.back).toHaveBeenCalled()
+  expect(mockRouter.navigate).not.toHaveBeenCalled()
+})
+
+test('a successful join toasts and opens the campaign', async () => {
+  ;(joinCampaign as jest.Mock).mockResolvedValue('camp1')
+  renderJoin()
+  fireEvent.changeText(screen.getByLabelText('Invite code'), 'AB12CD')
+  await pickCharacter('Elara')
+  fireEvent.press(screen.getByRole('button', { name: 'Join' }))
+  await waitFor(() => expect(showToast).toHaveBeenCalledWith('Elara joined the campaign.'))
+  expect(mockRouter.replace).toHaveBeenCalledWith({ pathname: '/(app)/campaigns/[id]', params: { id: 'camp1' } })
+})
+
+test('a failed join does not toast', async () => {
+  ;(joinCampaign as jest.Mock).mockRejectedValue(new AppError('invalid_code'))
+  renderJoin()
+  fireEvent.changeText(screen.getByLabelText('Invite code'), 'AB12CD')
+  await pickCharacter('Elara')
+  fireEvent.press(screen.getByRole('button', { name: 'Join' }))
+  expect(await screen.findByText(ERROR_COPY.invalid_code)).toBeTruthy()
+  expect(showToast).not.toHaveBeenCalled()
+})
+
+describe('opened from a character sheet', () => {
+  const sheet = { pathname: '/(app)/characters/[id]/campaign', params: { id: 'ch1' } }
+  beforeEach(() => (useLocalSearchParams as jest.Mock).mockReturnValue({ characterId: 'ch1' }))
+
+  test('a successful join returns to that character’s Campaign tab', async () => {
+    ;(joinCampaign as jest.Mock).mockResolvedValue('camp1')
+    renderJoin()
+    await screen.findByRole('button', { name: 'Character Thorin', selected: true })
+    fireEvent.changeText(screen.getByLabelText('Invite code'), 'AB12CD')
+    fireEvent.press(screen.getByRole('button', { name: 'Join' }))
+    await waitFor(() => expect(mockRouter.navigate).toHaveBeenCalledWith(sheet))
+    expect(showToast).toHaveBeenCalledWith('Thorin joined the campaign.')
+    expect(mockRouter.replace).not.toHaveBeenCalled()
+  })
+
+  test('Cancel returns to that character’s Campaign tab', async () => {
+    renderJoin()
+    await screen.findByRole('button', { name: 'Character Thorin' })
+    fireEvent.press(screen.getByRole('button', { name: 'Cancel' }))
+    expect(mockRouter.navigate).toHaveBeenCalledWith(sheet)
+    expect(mockRouter.back).not.toHaveBeenCalled()
+  })
+})

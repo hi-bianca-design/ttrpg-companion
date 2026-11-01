@@ -39,3 +39,18 @@ test('the header shows while the campaign loads', () => {
   expect(screen.getByRole('button', { name: 'Back' })).toBeTruthy()
   expect(screen.getByLabelText('Loading campaign')).toBeTruthy()
 })
+
+test('opening the campaign tells the detail screen which sheet to return to', () => {
+  const camp = { id: 'camp1', gm_id: 'gm1', name: 'Odd Game', description: null, invite_code: 'ABC123', system_id: 'dnd5e-2024', members: [] }
+  ;(useCharacterCampaign as jest.Mock).mockReturnValue({ data: { id: 'camp1' }, isLoading: false, isError: false })
+  ;(useCampaign as jest.Mock).mockReturnValue({ data: camp, isLoading: false, isError: false })
+  render(<CampaignTab />)
+  fireEvent.press(screen.getByText('Odd Game'))
+  expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/(app)/campaigns/[id]', params: { id: 'camp1', fromCharacter: 'ch1' } })
+})
+
+test('Join a campaign passes the character, so join returns here', () => {
+  render(<CampaignTab />)
+  fireEvent.press(screen.getByRole('button', { name: 'Join a campaign' }))
+  expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/(app)/campaigns/join', params: { characterId: 'ch1' } })
+})

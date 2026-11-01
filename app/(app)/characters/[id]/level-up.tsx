@@ -1,8 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { View } from 'react-native'
 import { useRouter } from 'expo-router'
-import { useColorScheme } from 'nativewind'
-import { CaretLeft } from 'phosphor-react-native'
+import { BackButton, NavRow } from '@/components/game/HeaderNav'
 import { ScreenBackground } from '@/components/game/ScreenBackground'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -13,7 +12,6 @@ import { toRuleInput } from '@/features/characters/picks'
 import { levelUpSummary } from '@/features/characters/sheet/levelUpSummary'
 import { ERROR_COPY } from '@/features/errors'
 import { useCharacterRouteId } from '@/features/characters/useCharacterRouteId'
-import { THEME_COLORS } from '@/lib/theme'
 import { getSystem } from '@/systems/registry'
 
 type Choice = { input: Record<string, unknown>; ready: boolean }
@@ -22,8 +20,6 @@ export default function LevelUpScreen() {
   // Own param first, global as fallback (see useCharacterRouteId).
   const id = useCharacterRouteId()
   const router = useRouter()
-  const { colorScheme } = useColorScheme()
-  const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
   const { data: character, isLoading, isError, refetch } = useCharacter(id)
   const levelUp = useLevelUp(id)
   const [choice, setChoice] = useState<Choice>({ input: {}, ready: false })
@@ -32,11 +28,9 @@ export default function LevelUpScreen() {
   const onChoice = useCallback((input: Record<string, unknown>, ready: boolean) => setChoice({ input, ready }), [])
 
   const back = (
-    <View className="flex-row items-center">
-      <Button variant="ghost" size="icon" accessibilityLabel="Back" onPress={() => router.back()}>
-        <CaretLeft size={20} color={colors.foreground} />
-      </Button>
-    </View>
+    <NavRow>
+      <BackButton onPress={() => router.back()} />
+    </NavRow>
   )
 
   if (isLoading) {

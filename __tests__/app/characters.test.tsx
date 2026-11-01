@@ -12,6 +12,8 @@ jest.mock('expo-router', () => ({ useRouter: () => ({ push: jest.fn() }) }))
 jest.mock('@/components/game', () => ({
   ScreenBackground: ({ children }: { children: React.ReactNode }) => children,
 }))
+jest.mock('@/features/auth/useAuth', () => ({ useAuth: () => ({ user: { id: 'u1', email: 'mira@example.com', user_metadata: { username: 'mira' } } }) }))
+jest.mock('@/features/auth/auth.api', () => ({ signOut: jest.fn() }))
 
 const mockMutate = jest.fn()
 
@@ -47,4 +49,17 @@ test('long press → Cancel does not delete', () => {
   fireEvent.press(screen.getByRole('button', { name: 'Cancel' }))
   expect(mockMutate).not.toHaveBeenCalled()
   expect(screen.queryByText('Delete Mira?')).toBeNull()
+})
+
+test('the header has the account button (sign-out lives behind it)', () => {
+  renderList()
+  fireEvent.press(screen.getByRole('button', { name: 'Account' }))
+  expect(screen.getByText('mira@example.com')).toBeTruthy()
+  expect(screen.getByRole('button', { name: 'Sign out' })).toBeTruthy()
+})
+
+test('the account button shows even before the first character exists', () => {
+  ;(useCharacters as jest.Mock).mockReturnValue({ data: [], isLoading: true, isError: false, refetch: jest.fn() })
+  renderList()
+  expect(screen.getByRole('button', { name: 'Account' })).toBeTruthy()
 })

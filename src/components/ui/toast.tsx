@@ -11,6 +11,18 @@ const FADE_MS = 250
 // The Toaster sits at the app root, outside any tab navigator (useBottomTabBarHeight would throw
 // there), so it uses the tab bar's own height from the theme: bar + safe-area inset + an 8pt gap.
 const GAP_ABOVE_TAB_BAR = 8
+/** One-line toast pill: py-3 (12 + 12) around a body-sm line (20). */
+const TOAST_PILL_HEIGHT = 44
+/** Space the toast takes above the tab bar: the 8pt gap plus the pill. */
+export const TOAST_BAND = GAP_ABOVE_TAB_BAR + TOAST_PILL_HEIGHT
+/**
+ * Room a screen leaves under its last control when that control fires a toast (Actions' rest
+ * buttons), so the confirmation never covers what triggered it: the band plus 28pt of air.
+ */
+export const TOAST_CLEARANCE = 80
+/** ScreenBackground's column gap (gap-6) and bottom padding (pb-8): both already sit under the last control. */
+export const SCREEN_COLUMN_GAP = 24
+export const SCREEN_BOTTOM_PADDING = 32
 
 type ToastState = { message: string | null; seq: number; show: (message: string) => void; hide: (seq: number) => void }
 
@@ -66,4 +78,12 @@ export function Toaster() {
       </Animated.View>
     </View>
   )
+}
+
+/**
+ * Last child of a ScreenBackground column whose final control triggers a toast. Its height tops up the
+ * column gap above it and the screen's bottom padding below it to TOAST_CLEARANCE.
+ */
+export function ToastClearance() {
+  return <View testID="toast-clearance" style={{ height: TOAST_CLEARANCE - SCREEN_COLUMN_GAP - SCREEN_BOTTOM_PADDING }} />
 }

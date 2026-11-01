@@ -17,7 +17,10 @@ jest.mock('expo-router', () => ({
   useRouter: () => mockRouter,
 }))
 const mockRouter = { push: jest.fn(), back: jest.fn(), replace: jest.fn(), dismiss: jest.fn(), canDismiss: jest.fn(() => true) }
-jest.mock('@/components/ui/toast', () => ({ showToast: jest.fn() }))
+jest.mock('@/components/ui/toast', () => ({
+  showToast: jest.fn(),
+  ToastClearance: jest.requireActual('@/components/ui/toast').ToastClearance,
+}))
 jest.mock('@/components/game/ScreenBackground', () => ({
   ScreenBackground: ({ children }: { children: React.ReactNode }) => children,
 }))

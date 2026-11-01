@@ -142,16 +142,18 @@ export function ResourceTracker(props: ResourceTrackerProps) {
     return (
       <Card compact className="flex-row items-center justify-between gap-3">
         <View className="flex-1 gap-2">
-          <View className="flex-row items-baseline gap-2">
-            <Text variant="label" numberOfLines={1} className="shrink">{label}</Text>
-            <Text variant="label">{`${filled}/${max}`}</Text>
-          </View>
+          <Text variant="label" numberOfLines={1}>{label}</Text>
           <View className="flex-row gap-3" accessible accessibilityLabel={summary}>
             {Array.from({ length: max }, (_, i) => (
               <Pip key={i} available={i < filled} tint={tint} />
             ))}
           </View>
         </View>
+        {/* The count sits apart from the tier title (so "LEVEL 1" and "3/3" never read as one string),
+            right-aligned before the buttons in the foreground ink. */}
+        <Text testID="pip-count" variant="label" tone="default">
+          {`${filled}/${max}`}
+        </Text>
         <View className="flex-row gap-2">
           <CircleButton icon="minus" {...minus} />
           <CircleButton icon="plus" {...plus} />

@@ -10,14 +10,15 @@ export default function AppLayout() {
   const dark = colorScheme === 'dark'
   const colors = THEME_COLORS[dark ? 'dark' : 'light']
   const insets = useSafeAreaInsets()
-  // Hide parent tab bar when inside a character detail ([id] is segment index 2)
-  const inCharacterSheet = segments[2] === '[id]'
+  // No root tab bar inside a character sheet ([id], which has its own tabs) or the creation wizard
+  // (new): leaving the wizard goes through its Back / discard prompt, not a tab switch.
+  const hideTabBar = segments[2] === '[id]' || segments[2] === 'new'
 
   return (
     // No top safe-area wrapper: ScreenBackground paints the glow up under the status bar and insets its own content.
     <Tabs
       screenOptions={{
-        tabBarStyle: inCharacterSheet ? { display: 'none' } : tabBarStyle(dark ? 'dark' : 'light', insets.bottom),
+        tabBarStyle: hideTabBar ? { display: 'none' } : tabBarStyle(dark ? 'dark' : 'light', insets.bottom),
         // Primary green is too dim on the dark teal bar; accent-foreground keeps the active tab legible.
         tabBarActiveTintColor: dark ? colors.accentForeground : colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,

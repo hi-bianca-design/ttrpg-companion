@@ -54,3 +54,12 @@ test('sits above the tab bar: bottom = inset + tab bar height + 8; style holds o
   expect(style.bottom).toBe(34 + TAB_BAR_CONTENT_HEIGHT + 8)
   expect(Object.keys(style).filter((k) => k !== 'bottom' && k !== 'opacity')).toEqual([])
 })
+
+test('ToastClearance: with the screen column gap and bottom padding it leaves TOAST_CLEARANCE under the last control', () => {
+  const { ToastClearance, TOAST_CLEARANCE, SCREEN_COLUMN_GAP, SCREEN_BOTTOM_PADDING, TOAST_BAND } = jest.requireActual('@/components/ui/toast')
+  render(<ToastClearance />)
+  const spacer = screen.getByTestId('toast-clearance')
+  expect(spacer.props.style.height + SCREEN_COLUMN_GAP + SCREEN_BOTTOM_PADDING).toBe(TOAST_CLEARANCE)
+  // A one-line toast band (8pt gap + the pill) fits inside the clearance with room to spare.
+  expect(TOAST_CLEARANCE).toBeGreaterThan(TOAST_BAND)
+})
