@@ -10,9 +10,11 @@ export default function AppLayout() {
   const dark = colorScheme === 'dark'
   const colors = THEME_COLORS[dark ? 'dark' : 'light']
   const insets = useSafeAreaInsets()
-  // No root tab bar inside a character sheet ([id], which has its own tabs) or the creation wizard
-  // (new): leaving the wizard goes through its Back / discard prompt, not a tab switch.
-  const hideTabBar = segments[2] === '[id]' || segments[2] === 'new'
+  // No root tab bar inside a character sheet ([id], which has its own tabs) or the character creation
+  // wizard (new): leaving the wizard goes through its Back / Cancel and the discard prompt, not a tab
+  // switch. Other tabs' pushed and modal-like screens (campaign detail, join, homebrew forms) keep it.
+  const inCharacters = segments[1] === 'characters'
+  const hideTabBar = inCharacters && (segments[2] === '[id]' || segments[2] === 'new')
 
   return (
     // No top safe-area wrapper: ScreenBackground paints the glow up under the status bar and insets its own content.

@@ -9,6 +9,7 @@ import { useAuth } from '@/features/auth/useAuth'
 import { InviteCode } from '@/features/campaigns/InviteCode'
 import { MemberList } from '@/features/campaigns/MemberList'
 import { useCampaign } from '@/features/campaigns/campaigns.queries'
+import { useReturnToSheet } from '@/features/campaigns/useReturnToSheet'
 import { systemName } from '@/systems/registry'
 import { ERROR_COPY } from '@/features/errors'
 
@@ -17,10 +18,11 @@ export default function CampaignDetailScreen() {
   const router = useRouter()
   const { user } = useAuth()
   const { data, isLoading, isError, refetch } = useCampaign(id)
-  // Opened from a character sheet's Campaign tab, Back returns to that tab: a plain back() from this
-  // cross-tab push would land on the characters list. Opened directly there is nothing to go back to.
+  const returnToSheet = useReturnToSheet()
+  // Opened from a character sheet's Campaign tab, Back returns to that tab (see useReturnToSheet).
+  // Opened directly there is nothing to go back to.
   const back = () => {
-    if (fromCharacter) router.navigate({ pathname: '/(app)/characters/[id]/campaign', params: { id: fromCharacter } })
+    if (fromCharacter) returnToSheet(fromCharacter)
     else if (router.canGoBack()) router.back()
     else router.replace('/(app)/campaigns')
   }

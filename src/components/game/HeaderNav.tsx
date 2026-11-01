@@ -29,9 +29,19 @@ export function BackButton({ onPress }: { onPress: () => void }) {
   )
 }
 
-export function CancelButton({ onPress }: { onPress: () => void }) {
+/**
+ * Ghost "Cancel". The negative margin pulls the button's 12px padding into the gutter so the text lines
+ * up with the 16px screen margin; the 44pt hit area (hitSlop) is unchanged.
+ */
+export function CancelButton({ onPress, edge = 'leading' }: { onPress: () => void; edge?: 'leading' | 'trailing' }) {
   return (
-    <Button variant="ghost" size="sm" accessibilityLabel="Cancel" onPress={onPress}>
+    <Button
+      variant="ghost"
+      size="sm"
+      accessibilityLabel="Cancel"
+      className={edge === 'leading' ? '-ml-3' : '-mr-3'}
+      onPress={onPress}
+    >
       <Text>Cancel</Text>
     </Button>
   )

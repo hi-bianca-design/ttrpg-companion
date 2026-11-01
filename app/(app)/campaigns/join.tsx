@@ -9,6 +9,7 @@ import { Text } from '@/components/ui/text'
 import { showToast } from '@/components/ui/toast'
 import { OptionChips } from '@/features/campaigns/OptionChips'
 import { useJoinCampaign } from '@/features/campaigns/campaigns.queries'
+import { useReturnToSheet } from '@/features/campaigns/useReturnToSheet'
 import { useCharacters } from '@/features/characters/characters.queries'
 import { ERROR_COPY, toAppError } from '@/features/errors'
 
@@ -27,10 +28,9 @@ export default function JoinCampaignScreen() {
     if (params.characterId) setCharacterId(params.characterId)
   }, [params.characterId])
 
-  // Opened from a character sheet's Campaign tab: Cancel and a successful join return there. A plain
-  // back() would leave the campaigns stack for the characters list, not the sheet that opened it.
+  // Opened from a character sheet's Campaign tab: Cancel and a successful join return there.
   const fromSheet = params.characterId
-  const backToSheet = (id: string) => router.navigate({ pathname: '/(app)/characters/[id]/campaign', params: { id } })
+  const backToSheet = useReturnToSheet()
   const cancel = () => (fromSheet ? backToSheet(fromSheet) : router.back())
 
   const list = characters.data ?? []

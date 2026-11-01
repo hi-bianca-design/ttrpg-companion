@@ -220,3 +220,22 @@ describe('Spells step at the limit', () => {
     expect(screen.getByRole('button', { name: /^Detect Magic/ })).toBeEnabled()
   })
 })
+
+describe('wizard header Cancel', () => {
+  test('step 1 has only Back (Back already leaves the wizard)', () => {
+    mockParams.step = 'class'
+    renderWithQuery(<BuilderStepScreen />)
+    expect(screen.getByRole('button', { name: 'Back' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull()
+  })
+
+  test('from step 2 a trailing ghost Cancel dismisses the whole wizard (the discard guard prompts once)', () => {
+    mockParams.step = 'origin'
+    renderWithQuery(<BuilderStepScreen />)
+    const cancel = screen.getByRole('button', { name: 'Cancel' })
+    expect(cancel.props.className).toContain('bg-transparent')
+    expect(cancel.props.className).toContain('-mr-3')
+    fireEvent.press(cancel)
+    expect(mockRouter.dismissTo).toHaveBeenCalledWith('/(app)/characters')
+  })
+})

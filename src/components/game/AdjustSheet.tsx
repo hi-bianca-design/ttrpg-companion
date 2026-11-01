@@ -15,6 +15,8 @@ type AdjustSheetProps = {
   primaryVariant?: 'primary' | 'outline'
   secondaryLabel?: string
   onSecondary?: () => void
+  /** ghost for a quiet dismiss (e.g. Close) under the primary. */
+  secondaryVariant?: 'outline' | 'ghost'
 }
 
 export function AdjustSheet({
@@ -27,6 +29,7 @@ export function AdjustSheet({
   primaryVariant = 'primary',
   secondaryLabel,
   onSecondary,
+  secondaryVariant = 'outline',
 }: AdjustSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -40,7 +43,7 @@ export function AdjustSheet({
             <Text variant="subhead">{primaryLabel}</Text>
           </Button>
           {secondaryLabel && onSecondary ? (
-            <Button variant="outline" onPress={onSecondary}>
+            <Button variant={secondaryVariant} accessibilityLabel={secondaryLabel} onPress={onSecondary}>
               <Text variant="subhead">{secondaryLabel}</Text>
             </Button>
           ) : null}

@@ -63,3 +63,13 @@ test('ToastClearance: with the screen column gap and bottom padding it leaves TO
   // A one-line toast band (8pt gap + the pill) fits inside the clearance with room to spare.
   expect(TOAST_CLEARANCE).toBeGreaterThan(TOAST_BAND)
 })
+
+test('toast text wraps to at most two lines, and the band is sized for two', () => {
+  const { TOAST_BAND, TOAST_CLEARANCE } = jest.requireActual('@/components/ui/toast')
+  renderToaster()
+  act(() => showToast('Long rest: Hit Points 14/14, Spell Slots, Hit Dice and everything else restored.'))
+  expect(screen.getByText(/Long rest/).props.numberOfLines).toBe(2)
+  // 8pt gap + py-3 (24) + two body-sm lines (2 × 20)
+  expect(TOAST_BAND).toBe(8 + 24 + 40)
+  expect(TOAST_CLEARANCE).toBeGreaterThanOrEqual(TOAST_BAND + 16)
+})

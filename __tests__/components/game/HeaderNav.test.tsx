@@ -32,3 +32,17 @@ test('NavRow is a 44pt row that keeps the leave affordance at the leading edge',
   expect(row.props.className).toContain('min-h-11')
   expect(row.props.className).toContain('flex-row')
 })
+
+test('CancelButton pulls its 12px padding into the gutter so the text aligns with the 16px margin, keeping the 44pt hit area', () => {
+  render(<CancelButton onPress={jest.fn()} />)
+  const cancel = screen.getByRole('button', { name: 'Cancel' })
+  expect(cancel.props.className).toContain('-ml-3')
+  expect(cancel.props.hitSlop).toEqual({ top: 6, bottom: 6, left: 6, right: 6 })
+})
+
+test('CancelButton at the trailing edge pulls into the right gutter instead', () => {
+  render(<CancelButton edge="trailing" onPress={jest.fn()} />)
+  const cancel = screen.getByRole('button', { name: 'Cancel' })
+  expect(cancel.props.className).toContain('-mr-3')
+  expect(cancel.props.className).not.toContain('-ml-3')
+})

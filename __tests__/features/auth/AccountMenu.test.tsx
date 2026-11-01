@@ -70,3 +70,20 @@ test('a failed sign-out shows the shared error copy and keeps the dialog open', 
   expect(await screen.findByText(ERROR_COPY.network)).toBeTruthy()
   expect(screen.getByText('Sign out of D&D Companion?')).toBeTruthy()
 })
+
+test('the account sheet has a ghost Close that dismisses it without signing out', () => {
+  renderMenu()
+  fireEvent.press(screen.getByRole('button', { name: 'Account' }))
+  const close = screen.getByRole('button', { name: 'Close' })
+  expect(close.props.className).toContain('bg-transparent')
+  expect(close.props.className).not.toContain('border-primary')
+  fireEvent.press(close)
+  expect(screen.queryByText('mira@example.com')).toBeNull()
+  expect(signOut).not.toHaveBeenCalled()
+})
+
+test('the menu is one layout box (its sheet and dialog roots must not become extra row children that take a gap)', () => {
+  const { toJSON } = render(<AccountMenu />)
+  const tree = toJSON()
+  expect(Array.isArray(tree)).toBe(false)
+})

@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'rea
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router'
 import { CaretRight, CheckCircle, CircleIcon } from 'phosphor-react-native'
 import { useColorScheme } from 'nativewind'
-import { BackButton, ScreenBackground, SectionHeader } from '@/components/game'
+import { BackButton, CancelButton, ScreenBackground, SectionHeader } from '@/components/game'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
@@ -102,6 +102,8 @@ export default function BuilderStepScreen() {
           {/* On the first step this leaves the wizard; DiscardDraftGuard asks first when the draft has choices. */}
           <BackButton onPress={() => router.back()} />
           <WizardProgress title={current.title} index={index} total={steps.length} />
+          {/* From step 2 Back only steps back; Cancel leaves the whole wizard (DiscardDraftGuard asks once). */}
+          {index > 0 ? <CancelButton edge="trailing" onPress={() => router.dismissTo('/(app)/characters')} /> : null}
         </View>
 
         <ScrollView

@@ -10,8 +10,10 @@ import { systemName } from '@/systems/registry'
 jest.mock('@/lib/supabase', () => ({ supabase: { from: jest.fn(), rpc: jest.fn(), auth: { getSession: jest.fn() } } }))
 const mockRouter = { back: jest.fn(), push: jest.fn(), navigate: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) }
 const mockParams: { id: string; fromCharacter?: string } = { id: 'camp1' }
+const mockNavigation = { reset: jest.fn() }
 jest.mock('expo-router', () => ({
   useRouter: () => mockRouter,
+  useNavigation: () => mockNavigation,
   useLocalSearchParams: () => mockParams,
 }))
 jest.mock('@/features/auth/useAuth', () => ({ useAuth: () => ({ user: { id: 'gm1' } }) }))
@@ -68,6 +70,7 @@ describe('back affordance', () => {
     await screen.findByText('Odd Game')
     fireEvent.press(screen.getByRole('button', { name: 'Back' }))
     expect(mockRouter.back).toHaveBeenCalled()
+    expect(mockNavigation.reset).not.toHaveBeenCalled()
     mockRouter.canGoBack.mockReturnValueOnce(false)
     fireEvent.press(screen.getByRole('button', { name: 'Back' }))
     expect(mockRouter.replace).toHaveBeenCalledWith('/(app)/campaigns')
@@ -80,5 +83,7 @@ describe('back affordance', () => {
     fireEvent.press(screen.getByRole('button', { name: 'Back' }))
     expect(mockRouter.navigate).toHaveBeenCalledWith({ pathname: '/(app)/characters/[id]/campaign', params: { id: 'ch1' } })
     expect(mockRouter.back).not.toHaveBeenCalled()
+    // The campaigns stack was only borrowed: the Campaigns tab must reopen on its list, not this detail.
+    expect(mockNavigation.reset).toHaveBeenCalledWith({ index: 0, routes: [{ name: 'index' }] })
   })
 })

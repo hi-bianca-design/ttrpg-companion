@@ -12,8 +12,10 @@ import { showToast } from '@/components/ui/toast'
 
 jest.mock('@/lib/supabase', () => ({ supabase: { from: jest.fn(), rpc: jest.fn(), auth: { getSession: jest.fn() } } }))
 const mockRouter = { replace: jest.fn(), back: jest.fn(), push: jest.fn(), navigate: jest.fn() }
+const mockNavigation = { reset: jest.fn() }
 jest.mock('expo-router', () => ({
   useRouter: () => mockRouter,
+  useNavigation: () => mockNavigation,
   useLocalSearchParams: jest.fn(() => ({})),
 }))
 jest.mock('@/components/ui/toast', () => ({ showToast: jest.fn() }))
@@ -149,6 +151,7 @@ describe('opened from a character sheet', () => {
     await waitFor(() => expect(mockRouter.navigate).toHaveBeenCalledWith(sheet))
     expect(showToast).toHaveBeenCalledWith('Thorin joined the campaign.')
     expect(mockRouter.replace).not.toHaveBeenCalled()
+    expect(mockNavigation.reset).toHaveBeenCalledWith({ index: 0, routes: [{ name: 'index' }] })
   })
 
   test('Cancel returns to that character’s Campaign tab', async () => {
@@ -157,5 +160,6 @@ describe('opened from a character sheet', () => {
     fireEvent.press(screen.getByRole('button', { name: 'Cancel' }))
     expect(mockRouter.navigate).toHaveBeenCalledWith(sheet)
     expect(mockRouter.back).not.toHaveBeenCalled()
+    expect(mockNavigation.reset).toHaveBeenCalledWith({ index: 0, routes: [{ name: 'index' }] })
   })
 })

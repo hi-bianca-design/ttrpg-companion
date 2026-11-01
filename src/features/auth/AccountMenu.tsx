@@ -39,8 +39,10 @@ export function AccountMenu() {
     }
   }
 
+  // One View: on web the Sheet and Dialog roots render as elements, and as bare row children they would
+  // each take the header row's gap, pushing the icon off the right gutter.
   return (
-    <>
+    <View>
       <Button
         variant="ghost"
         size="icon"
@@ -57,6 +59,9 @@ export function AccountMenu() {
         title="Account"
         primaryLabel="Sign out"
         primaryVariant="outline"
+        secondaryLabel="Close"
+        secondaryVariant="ghost"
+        onSecondary={() => setSheetOpen(false)}
         onPrimary={() => {
           // One overlay at a time: the sheet closes before the confirmation opens.
           setSheetOpen(false)
@@ -88,6 +93,6 @@ export function AccountMenu() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </View>
   )
 }

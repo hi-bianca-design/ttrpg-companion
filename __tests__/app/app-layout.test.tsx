@@ -32,3 +32,15 @@ test('the root tab bar is hidden in the character wizard, on every step', () => 
 test('the root tab bar stays hidden in the character sheet', () => {
   expect(tabBarFor(['(app)', 'characters', '[id]'])).toEqual({ display: 'none' })
 })
+
+test('other tabs keep the root tab bar on their pushed and modal-like screens', () => {
+  for (const segs of [
+    ['(app)', 'campaigns', 'new'],
+    ['(app)', 'campaigns', 'join'],
+    ['(app)', 'campaigns', '[id]'],
+    ['(app)', 'content', 'new'],
+    ['(app)', 'content', '[id]'],
+  ]) {
+    expect(tabBarFor(segs)).not.toEqual({ display: 'none' })
+  }
+})
