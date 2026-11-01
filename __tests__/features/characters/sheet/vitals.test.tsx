@@ -22,12 +22,19 @@ jest.mock('@/components/game/ScreenBackground', () => ({
 }))
 
 const mockResourceMutate = jest.fn()
+let mockHookOptions: Array<{ onError?: (e: unknown) => void } | undefined> = []
+// Failed writes are reported at hook level (all instances), as the real hook does.
+const failWrites = (message: string) => mockResourceMutate.mockImplementation(() => mockHookOptions.forEach((o) => o?.onError?.(new Error(message))))
 const mockUpdateMutate = jest.fn()
 
 beforeEach(() => {
   jest.clearAllMocks()
   mockResourceMutate.mockReset()
-  ;(useResourceMutation as jest.Mock).mockReturnValue({ mutate: mockResourceMutate })
+  mockHookOptions = []
+  ;(useResourceMutation as jest.Mock).mockImplementation((_id: string, options?: { onError?: (e: unknown) => void }) => {
+    mockHookOptions.push(options)
+    return { mutate: mockResourceMutate }
+  })
   ;(useUpdateCharacter as jest.Mock).mockReturnValue({ mutate: mockUpdateMutate, isPending: false })
 })
 
@@ -40,7 +47,7 @@ test('HpSheet: −8 on {current:10,max:20,temp:5} confirms {current:7,max:20,tem
   fireEvent.press(screen.getByRole('button', { name: 'Damage' }))
   fireEvent.press(screen.getByRole('button', { name: 'Confirm' }))
 
-  expect(useResourceMutation).toHaveBeenCalledWith('ch1')
+  expect(useResourceMutation).toHaveBeenCalledWith('ch1', expect.any(Object))
   expect(mockResourceMutate).toHaveBeenCalledTimes(1)
   const change = mockResourceMutate.mock.calls[0][0]
   expect(change.key).toBe('hp')
@@ -61,7 +68,7 @@ test('HpSheet: heal is clamped to max and Reset clears the pending change', () =
 
 test('HpSheet passes mutation failures to onError', () => {
   const onError = jest.fn()
-  mockResourceMutate.mockImplementation((_change, opts) => opts?.onError?.(new Error('Network down')))
+  failWrites('Network down')
   render(<><HpSheet characterId="ch1" pool={{ current: 10, max: 20 }} open onOpenChange={jest.fn()} onError={onError} /><PortalHost /></>)
   fireEvent.changeText(screen.getByLabelText('Amount'), '2')
   fireEvent.press(screen.getByRole('button', { name: 'Damage' }))
@@ -215,7 +222,7 @@ test('D&D proficiencies section: Sage skills and Wizard saves are marked profici
 })
 
 test('a failed HP change shows in the sheet error caption', () => {
-  mockResourceMutate.mockImplementation((_change, opts) => opts?.onError?.(new Error('Network down')))
+  failWrites('Network down')
   renderTab()
   fireEvent.press(screen.getByRole('button', { name: 'HP' }))
   fireEvent.changeText(screen.getByLabelText('Amount'), '2')
@@ -225,7 +232,7 @@ test('a failed HP change shows in the sheet error caption', () => {
 })
 
 test('a failed bonus HP change shows in the sheet error caption', () => {
-  mockResourceMutate.mockImplementation((_change, opts) => opts?.onError?.(new Error('Bonus failed')))
+  failWrites('Bonus failed')
   renderTab()
   fireEvent.press(screen.getByRole('button', { name: '+ Bonus HP' }))
   fireEvent.changeText(screen.getByLabelText('Amount'), '4')

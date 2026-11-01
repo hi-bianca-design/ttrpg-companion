@@ -1,6 +1,6 @@
 import '@testing-library/jest-native/extend-expect'
 import { PortalHost } from '@rn-primitives/portal'
-import { fireEvent, render, screen } from '@testing-library/react-native'
+import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import ActionsTab from '../../../../app/(app)/characters/[id]/actions'
 import type { CharacterFull } from '@/features/characters/characters.api'
 import { useCharacter, useResourceMutation } from '@/features/characters/characters.queries'
@@ -109,16 +109,17 @@ test('pips restore and spend per tier', () => {
   expect(mockMutate.mock.calls[1][0].apply(slots(2)).tiers['2'].used).toBe(1)
 })
 
-test('long rest confirms, then resets every tier to 0 and refills hp', () => {
+test('long rest confirms, then is ONE write that resets every tier and refills hp', () => {
   setup(character(slots(2, 1)))
   fireEvent.press(screen.getByRole('button', { name: 'Long rest' }))
   expect(mockMutate).not.toHaveBeenCalled()
   fireEvent.press(screen.getByRole('button', { name: 'Confirm long rest' }))
-  const byKey = Object.fromEntries(mockMutate.mock.calls.map(([c]) => [c.key, c]))
-  const next = byKey.spell_slots.apply(slots(2, 1)) as SlotsValue
-  expect(next.tiers['1'].used).toBe(0)
-  expect(next.tiers['2'].used).toBe(0)
-  expect(byKey.hp.apply({ current: 5, max: 20, temp: 0 })).toEqual({ current: 20, max: 20, temp: 0 })
+  expect(mockMutate).toHaveBeenCalledTimes(1)
+  const current = { hp: { current: 5, max: 20, temp: 0 }, spell_slots: slots(2, 1) }
+  const next = mockMutate.mock.calls[0][0].applyAll(current)
+  expect(next.spell_slots.tiers['1'].used).toBe(0)
+  expect(next.spell_slots.tiers['2'].used).toBe(0)
+  expect(next.hp).toEqual({ current: 20, max: 20, temp: 0 })
 })
 
 test('cancel leaves resources untouched', () => {
@@ -128,10 +129,10 @@ test('cancel leaves resources untouched', () => {
   expect(mockMutate).not.toHaveBeenCalled()
 })
 
-test('mutation failure surfaces a caption', () => {
-  mockMutate.mockImplementation((_c, opts) => opts?.onError?.(new Error('Network down')))
+test('a failed write (reported at hook level) surfaces a caption', () => {
   setup(character(slots(0)))
-  fireEvent.press(screen.getByRole('button', { name: 'Use Magic Missile' }))
+  const { onError } = (useResourceMutation as jest.Mock).mock.calls.at(-1)[1]
+  act(() => onError(new Error('Network down')))
   expect(screen.getByText('Network down')).toBeTruthy()
 })
 

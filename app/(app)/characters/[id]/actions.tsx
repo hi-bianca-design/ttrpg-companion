@@ -21,15 +21,16 @@ export default function ActionsTab() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const { data: character, isLoading, isError, refetch } = useCharacter(id)
-  const mutation = useResourceMutation(id)
   const [segment, setSegment] = useState<Segment>('actions')
   const [saveError, setSaveError] = useState<string | null>(null)
   const picks = useMemo(() => (character ? toRuleInput(character.picks, character.items) : []), [character])
 
-  const onError = (e: unknown) => setSaveError(e instanceof Error ? e.message : 'Couldn’t save. Try again.')
+  const mutation = useResourceMutation(id, {
+    onError: (e) => setSaveError(e instanceof Error ? e.message : 'Couldn’t save. Try again.'),
+  })
   const change = (key: string, apply: (cur: ResourceValue) => ResourceValue) => {
     setSaveError(null)
-    mutation.mutate({ key, apply }, { onError })
+    mutation.mutate({ key, apply })
   }
 
   if (isLoading) {
@@ -74,10 +75,9 @@ export default function ActionsTab() {
   }
 
   const rest = (kind: 'short' | 'long') => {
-    const next = system.rules.rest(character, kind, picks)
-    for (const key of Object.keys(next)) {
-      if (JSON.stringify(next[key]) !== JSON.stringify(character.resources[key])) change(key, () => next[key])
-    }
+    setSaveError(null)
+    // One atomic write: rules.rest computes from the latest cached resources.
+    mutation.mutate({ applyAll: (resources) => system.rules.rest({ ...character, resources }, kind, picks) })
   }
 
   return (

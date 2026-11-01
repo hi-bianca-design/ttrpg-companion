@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '@/lib/query-client'
 import type { NewCharacter, ResourceValue } from '@/systems/types'
@@ -68,15 +69,27 @@ export function useRemoveItem(characterId: string) {
   })
 }
 
-export type ResourceChange = { key: string; apply: (current: ResourceValue) => ResourceValue }
+type Resources = Record<string, ResourceValue>
+/** Edit one resource (`key` + `apply`), or several at once (`applyAll`, e.g. a rest) as a single write. */
+export type ResourceChange =
+  | { key: string; apply: (current: ResourceValue) => ResourceValue }
+  | { applyAll: (current: Resources) => Resources }
+
+export type ResourceMutationOptions = {
+  /** Called for every failed write (after the optimistic update is rolled back), not just the latest mutate call. */
+  onError?: (error: unknown) => void
+}
 
 /**
  * Optimistic resource edit. `apply` is an updater function (not a value) so rapid taps compose:
  * each onMutate folds its change into the latest cached state, and requests run serially and each
  * reads the latest cache when it actually starts, so it persists the cumulative resources. On error the cache is restored to the state before this change.
  */
-export function useResourceMutation(characterId: string) {
+export function useResourceMutation(characterId: string, options: ResourceMutationOptions = {}) {
   const qc = useQueryClient()
+  // Hook-level (not per-mutate) so earlier in-flight failures also reach the caller.
+  const onErrorRef = useRef(options.onError)
+  onErrorRef.current = options.onError
   const key = qk.character(characterId)
   const mutationKey = ['character-resources', characterId] as const
   return useMutation({
@@ -89,17 +102,20 @@ export function useResourceMutation(characterId: string) {
       if (!latest) return
       await updateResources(characterId, latest.resources)
     },
-    onMutate: async ({ key: resourceKey, apply }: ResourceChange) => {
+    onMutate: async (change: ResourceChange) => {
       await qc.cancelQueries({ queryKey: key })
       const previous = qc.getQueryData<CharacterFull>(key)
       qc.setQueryData<CharacterFull>(key, (old) => {
-        const current = old?.resources[resourceKey]
-        return old && current ? { ...old, resources: { ...old.resources, [resourceKey]: apply(current) } } : old
+        if (!old) return old
+        if ('applyAll' in change) return { ...old, resources: change.applyAll(old.resources) }
+        const current = old.resources[change.key]
+        return current ? { ...old, resources: { ...old.resources, [change.key]: change.apply(current) } } : old
       })
       return { previous }
     },
-    onError: (_err, _change, context) => {
+    onError: (err, _change, context) => {
       if (context?.previous) qc.setQueryData(key, context.previous)
+      onErrorRef.current?.(err)
     },
     onSettled: () => {
       // Only refetch once the last in-flight tap settles, so a refetch can't clobber later optimistic taps.
