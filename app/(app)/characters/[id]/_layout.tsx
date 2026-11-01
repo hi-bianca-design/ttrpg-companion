@@ -1,15 +1,21 @@
 import { Tabs } from 'expo-router'
+import { useColorScheme } from 'nativewind'
 import { User, Sword, Backpack, Scroll } from 'phosphor-react-native'
+import { THEME_COLORS } from '@/lib/theme'
 
 export default function CharacterSheetLayout() {
+  const { colorScheme } = useColorScheme()
+  const dark = colorScheme === 'dark'
+  const colors = THEME_COLORS[dark ? 'dark' : 'light']
+
   return (
     <Tabs
       screenOptions={{
-        tabBarStyle: { backgroundColor: '#313244', borderTopColor: '#45475a' },
-        tabBarActiveTintColor: '#cba6f7',
-        tabBarInactiveTintColor: '#6c7086',
+        tabBarStyle: { backgroundColor: colors.background, borderTopColor: colors.rule },
+        // Primary green is too dim on the dark teal bar; accent-foreground keeps the active tab legible.
+        tabBarActiveTintColor: dark ? colors.accentForeground : colors.primary,
+        tabBarInactiveTintColor: colors.mutedForeground,
         headerShown: false,
-        tabBarLabelStyle: { fontSize: 12 },
       }}
     >
       <Tabs.Screen

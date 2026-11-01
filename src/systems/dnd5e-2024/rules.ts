@@ -161,11 +161,38 @@ function stringList(v: unknown): string[] {
   return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []
 }
 
-function hasSkill(picks: PickRecord[], skill: string): boolean {
-  return picks.some((p) =>
-    [...stringList(asRecord(p.content.data).skill_proficiencies), ...stringList(p.state.skills)]
-      .some((s) => s.toLowerCase() === skill),
+/** "Animal Handling" / "animal-handling" → "animal-handling". */
+function skillKey(name: string): string {
+  return name.trim().toLowerCase().replace(/\s+/g, '-')
+}
+
+/**
+ * Saving throws from the class pick's `saving_throw_proficiencies`; skills from every pick's
+ * `skill_proficiencies` (background) plus chosen `state.skills`. Keys are lowercase / kebab-case.
+ */
+export function proficiencies(picks: PickRecord[]): { saves: string[]; skills: string[] } {
+  const cls = picks.find((p) => p.kind === 'class')
+  const saves = stringList(asRecord(cls?.content.data).saving_throw_proficiencies).map((s) => s.toLowerCase())
+  const skills = picks.flatMap((p) =>
+    [...stringList(asRecord(p.content.data).skill_proficiencies), ...stringList(p.state.skills)].map(skillKey),
   )
+  return { saves: [...new Set(saves)], skills: [...new Set(skills)] }
+}
+
+function hasSkill(picks: PickRecord[], skill: string): boolean {
+  return proficiencies(picks).skills.includes(skill)
+}
+
+/** Progress (0–100) through the current level's XP band, and the next level's threshold. */
+function xpValues(level: number, xp: number): DerivedValue[] {
+  const next = getXPForNextLevel(level)
+  if (next === null) return [{ key: 'xp_progress', label: 'Experience', value: 100, format: 'plain' }]
+  const start = XP_THRESHOLDS[Math.max(0, level - 1)] ?? 0
+  const pct = Math.round(((xp - start) / (next - start)) * 100)
+  return [
+    { key: 'xp_progress', label: 'Experience', value: Math.min(100, Math.max(0, pct)), format: 'plain' },
+    { key: 'xp_next', label: 'Next level', value: next, format: 'plain' },
+  ]
 }
 
 // ── Derived values ───────────────────────────────────────────
@@ -202,6 +229,7 @@ export function derived(c: CharacterRecord, picks: PickRecord[]): DerivedValue[]
     { key: 'initiative', label: 'Initiative', value: mod('dexterity') + (alert ? prof : 0), format: 'modifier' },
     { key: 'passive_perception', label: 'Passive Perception', value: 10 + mod('wisdom') + (hasSkill(picks, 'perception') ? prof : 0), format: 'plain' },
     { key: 'speed', label: 'Speed', value: typeof speciesSpeed === 'number' ? speciesSpeed : 30, format: 'plain' },
+    ...(typeof c.details.xp === 'number' ? xpValues(c.level, c.details.xp) : []),
   ]
 }
 

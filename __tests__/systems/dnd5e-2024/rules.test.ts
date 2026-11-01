@@ -9,6 +9,7 @@ import {
   slotsFor,
   derived,
   rest,
+  proficiencies,
 } from '@/systems/dnd5e-2024/rules'
 import { dnd5eBuilder } from '@/systems/dnd5e-2024/builder'
 import { getSystem, SYSTEMS } from '@/systems/registry'
@@ -383,4 +384,32 @@ test('toCharacter builds a valid level-1 wizard', () => {
   expect(sys.schemas.stats.safeParse(c.stats).success).toBe(true)
   expect(sys.schemas.resources.safeParse(c.resources).success).toBe(true)
   expect(sys.schemas.details.safeParse(c.details).success).toBe(true)
+})
+
+// ── Proficiencies (sheet) ──
+
+test('proficiencies: class saves and background / state skills, normalised to kebab-case keys', () => {
+  const wiz = pick('class', 'Wizard', { saving_throw_proficiencies: ['intelligence', 'Wisdom'] }, { skills: ['Arcana', 'Animal Handling'] })
+  const bg = pick('background', 'Criminal', { skill_proficiencies: ['sleight-of-hand', 'stealth'] })
+  const p = proficiencies([wiz, bg])
+  expect(p.saves).toEqual(['intelligence', 'wisdom'])
+  expect(p.skills.sort()).toEqual(['animal-handling', 'arcana', 'sleight-of-hand', 'stealth'])
+})
+
+test('proficiencies are empty without picks', () => {
+  expect(proficiencies([])).toEqual({ saves: [], skills: [] })
+})
+
+test('derived XP progress only when details.xp is set', () => {
+  expect(value(makeCharacter(), [], 'xp_progress')).toBeUndefined()
+  // level 5 (makeCharacter) spans 6500 → 14000
+  const c = makeCharacter({ details: { xp: 10250 } })
+  expect(value(c, [], 'xp_progress')?.value).toBe(50)
+  expect(value(c, [], 'xp_next')?.value).toBe(14000)
+  expect(value(makeCharacter({ level: 20, details: { xp: 400000 } }), [], 'xp_progress')?.value).toBe(100)
+})
+
+test('details schema keeps xp and inspiration', () => {
+  const parsed = getSystem('dnd5e-2024').schemas.details.parse({ xp: 300, inspiration: true })
+  expect(parsed).toEqual({ xp: 300, inspiration: true })
 })

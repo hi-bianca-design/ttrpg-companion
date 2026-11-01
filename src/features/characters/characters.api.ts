@@ -2,17 +2,13 @@ import { supabase } from '@/lib/supabase'
 import type { Database, Json } from '@/types/database.types'
 import { getSystem } from '@/systems/registry'
 import type {
-  CharacterRecord, DerivedValue, NewCharacter, PickRecord, ResourceValue, SystemId,
+  CharacterRecord, DerivedValue, NewCharacter, ResourceValue, SystemId,
 } from '@/systems/types'
 import { check, unwrap } from '@/features/errors'
 import { currentUserId } from '@/features/session'
+import { toRuleInput, type ItemWithContent, type PickWithContent } from './picks'
 
-type ContentRow = Database['public']['Tables']['content']['Row']
-type PickRow = Database['public']['Tables']['character_picks']['Row']
-type ItemRow = Database['public']['Tables']['character_items']['Row']
-
-export type PickWithContent = PickRow & { content: ContentRow | null }
-export type ItemWithContent = ItemRow & { content: ContentRow | null }
+export type { ItemWithContent, PickWithContent }
 
 export type CharacterSummary = {
   id: string
@@ -83,22 +79,7 @@ export async function getCharacter(id: string): Promise<CharacterFull> {
   const items = character_items as ItemWithContent[]
 
   // Rules read equipped armor etc. from pick state, so items are presented as picks.
-  const ruleInput: PickRecord[] = [
-    ...picks.flatMap((p) => p.content ? [{
-      content_id: p.content_id,
-      kind: p.content.kind,
-      state: (p.state ?? {}) as Record<string, unknown>,
-      acquired_at_level: p.acquired_at_level,
-      content: { name: p.content.name, data: p.content.data },
-    }] : []),
-    ...items.flatMap((i) => i.content ? [{
-      content_id: i.content_id,
-      kind: i.content.kind,
-      state: { equipped: i.equipped, attuned: i.attuned },
-      acquired_at_level: 0,
-      content: { name: i.content.name, data: i.content.data },
-    }] : []),
-  ]
+  const ruleInput = toRuleInput(picks, items)
 
   return {
     ...record,
