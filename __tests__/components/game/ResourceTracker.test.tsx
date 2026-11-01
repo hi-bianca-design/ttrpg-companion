@@ -40,3 +40,11 @@ test('counter: shows current only without max', () => {
   render(<ResourceTracker display="counter" label="Inspiration" current={2} onAdjust={jest.fn()} />)
   expect(screen.getByText('2')).toBeTruthy()
 })
+
+test('pips: -/+ buttons render icons, not glyph text', () => {
+  render(<ResourceTracker display="pips" label="L1" max={2} used={1} onSpend={jest.fn()} onRestore={jest.fn()} />)
+  expect(screen.getByTestId('icon-minus')).toBeTruthy()
+  expect(screen.getByTestId('icon-plus')).toBeTruthy()
+  expect(screen.queryByText('−')).toBeNull()
+  expect(screen.queryByText('+')).toBeNull()
+})

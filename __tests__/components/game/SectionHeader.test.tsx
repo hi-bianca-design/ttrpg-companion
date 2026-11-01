@@ -25,3 +25,15 @@ test('non-collapsible always shows children', () => {
   )
   expect(screen.getByText('child')).toBeTruthy()
 })
+
+test('collapsible header meets the 44pt touch target and shows a chevron icon', () => {
+  render(
+    <SectionHeader id="touch" title="Touch" collapsible>
+      <Text>child</Text>
+    </SectionHeader>,
+  )
+  const cls = screen.getByLabelText('Touch').props.className
+  expect(cls).toContain('min-h-11')
+  expect(screen.getByTestId('icon-chevron')).toBeTruthy()
+  expect(screen.queryByText('˅')).toBeNull()
+})

@@ -1,5 +1,6 @@
 import { useColorScheme } from 'nativewind'
 import { useMemo } from 'react'
+import { Minus, Plus } from 'phosphor-react-native'
 import { Pressable, View, type ViewStyle } from 'react-native'
 import Svg, { Polygon } from 'react-native-svg'
 import { Button } from '@/components/ui/button'
@@ -59,18 +60,22 @@ function Pip({ available, tint }: { available: boolean; tint: ResourceTint }) {
 }
 
 function CircleButton({
-  glyph,
+  icon,
   label,
   variant,
   disabled,
   onPress,
 }: {
-  glyph: string
+  icon: 'minus' | 'plus'
   label: string
   variant: 'destructive' | 'primary'
   disabled: boolean
   onPress: () => void
 }) {
+  const { colorScheme } = useColorScheme()
+  const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
+  const color = variant === 'destructive' ? colors.destructive : colors.accentForeground
+  const Icon = icon === 'minus' ? Minus : Plus
   return (
     <Button
       variant="outline"
@@ -80,9 +85,7 @@ function CircleButton({
       onPress={onPress}
       className={variant === 'destructive' ? 'border-destructive' : 'border-primary'}
     >
-      <Text variant="subhead" tone={variant === 'destructive' ? 'destructive' : 'accent'}>
-        {glyph}
-      </Text>
+      <Icon testID={`icon-${icon}`} size={16} color={color} weight="bold" />
     </Button>
   )
 }
@@ -103,14 +106,14 @@ export function ResourceTracker(props: ResourceTrackerProps) {
         </View>
         <View className="flex-row gap-2">
           <CircleButton
-            glyph="−"
+            icon="minus"
             variant="destructive"
             label={`Spend ${label}`}
             disabled={available === 0}
             onPress={onSpend}
           />
           <CircleButton
-            glyph="+"
+            icon="plus"
             variant="primary"
             label={`Restore ${label}`}
             disabled={used === 0}
