@@ -1,116 +1,113 @@
-import { useEffect, useState, useCallback } from 'react'
-import { View, Text, ScrollView, ActivityIndicator, Alert } from 'react-native'
-import { useLocalSearchParams } from 'expo-router'
-import { getCharacter } from '@/modules/character/character.service'
-import { CharacterWithRelations } from '@/modules/character/character.types'
-import { getAbilityModifier, formatModifier, getProficiencyBonus } from '@/modules/character/character.utils'
-import { SectionHeader } from '@/components/game/SectionHeader'
+import { useMemo, useState } from 'react'
+import { View } from 'react-native'
+import { useLocalSearchParams, useRouter } from 'expo-router'
+import { ScreenBackground } from '@/components/game/ScreenBackground'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Text } from '@/components/ui/text'
+import { useCharacter, useResourceMutation } from '@/features/characters/characters.queries'
+import { toRuleInput } from '@/features/characters/picks'
+import { ActionsList, lowestTier, type Segment } from '@/features/characters/sheet/ActionsList'
+import { RestButtons } from '@/features/characters/sheet/RestButtons'
+import { SpellSlotsSection } from '@/features/characters/sheet/SpellSlotsSection'
+import { restoreSlot, spendSlot } from '@/systems/resources'
+import { getSystem } from '@/systems/registry'
+import type { ResourceValue, SlotsValue } from '@/systems/types'
 
-const STANDARD_ACTIONS = [
-  { name: 'Attack',    description: 'Make one melee or ranged attack.' },
-  { name: 'Dash',      description: 'Double your movement speed this turn.' },
-  { name: 'Disengage', description: 'Move without provoking opportunity attacks.' },
-  { name: 'Dodge',     description: 'Attacks against you have disadvantage until your next turn.' },
-  { name: 'Help',      description: 'Give an ally advantage on their next ability check or attack.' },
-  { name: 'Hide',      description: 'Make a Dexterity (Stealth) check to hide.' },
-  { name: 'Ready',     description: 'Prepare a reaction to a trigger you describe.' },
-  { name: 'Search',    description: 'Make a Wisdom (Perception) or Intelligence (Investigation) check.' },
-]
+const SLOTS_KEY = 'spell_slots'
 
 export default function ActionsTab() {
   const { id } = useLocalSearchParams<{ id: string }>()
-  const [character, setCharacter] = useState<CharacterWithRelations | null>(null)
-  const [loading, setLoading] = useState(true)
+  const router = useRouter()
+  const { data: character, isLoading, isError, refetch } = useCharacter(id)
+  const mutation = useResourceMutation(id)
+  const [segment, setSegment] = useState<Segment>('actions')
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const picks = useMemo(() => (character ? toRuleInput(character.picks, character.items) : []), [character])
 
-  const load = useCallback(() => {
-    getCharacter(id)
-      .then((data) => setCharacter(data as CharacterWithRelations))
-      .catch((e) => Alert.alert('Error', e instanceof Error ? e.message : 'An error occurred'))
-      .finally(() => setLoading(false))
-  }, [id])
-
-  useEffect(() => { load() }, [load])
-
-  if (loading || !character) {
-    return <View className="flex-1 bg-legacy-base justify-center items-center"><ActivityIndicator color="#cba6f7" /></View>
+  const onError = (e: unknown) => setSaveError(e instanceof Error ? e.message : 'Couldn’t save. Try again.')
+  const change = (key: string, apply: (cur: ResourceValue) => ResourceValue) => {
+    setSaveError(null)
+    mutation.mutate({ key, apply }, { onError })
   }
 
-  const profBonus = getProficiencyBonus(character.level)
-  const strMod = getAbilityModifier(character.strength)
-  const dexMod = getAbilityModifier(character.dexterity)
+  if (isLoading) {
+    return (
+      <ScreenBackground>
+        <View className="gap-2" accessibilityLabel="Loading actions">
+          {[0, 1, 2].map((i) => (
+            <Card key={i} className="gap-3">
+              <View className="h-4 w-1/2 rounded-full bg-muted" />
+              <View className="h-11 w-full rounded-card bg-muted" />
+            </Card>
+          ))}
+        </View>
+      </ScreenBackground>
+    )
+  }
 
-  const equippedWeapons = character.character_inventory.filter(
-    (e) => e.is_equipped && e.equipment?.category?.toLowerCase() === 'weapon'
-  )
+  if (isError || !character) {
+    return (
+      <ScreenBackground>
+        <View className="items-start gap-2">
+          <Text variant="caption" tone="destructive">Couldn’t load this character. Check your connection.</Text>
+          <Button variant="outline" size="sm" onPress={() => refetch()}>
+            <Text>Try again</Text>
+          </Button>
+        </View>
+      </ScreenBackground>
+    )
+  }
 
-  const spellsByLevel = character.character_spells.reduce<Record<number, typeof character.character_spells>>(
-    (acc, s) => {
-      const level = s.spell?.level ?? 0
-      if (!acc[level]) acc[level] = []
-      acc[level].push(s)
-      return acc
-    },
-    {}
-  )
-  const spellLevels = Object.keys(spellsByLevel).map(Number).sort((a, b) => a - b)
+  const system = getSystem(character.system_id)
+  const slots = character.resources[SLOTS_KEY] as SlotsValue | undefined
+  const tierLabel = system.resources.find((r) => r.key === SLOTS_KEY && r.kind === 'slots')
+  const labelFor = tierLabel && tierLabel.kind === 'slots' ? tierLabel.tierLabel : undefined
+
+  const useSpell = (level: number) => {
+    // Pick the tier from the latest cached state so a rapid second tap sees the first spend.
+    change(SLOTS_KEY, (cur) => {
+      const tier = lowestTier(cur as SlotsValue, level)
+      return tier ? spendSlot(cur as SlotsValue, tier) : cur
+    })
+  }
+
+  const rest = (kind: 'short' | 'long') => {
+    const next = system.rules.rest(character, kind, picks)
+    for (const key of Object.keys(next)) {
+      if (JSON.stringify(next[key]) !== JSON.stringify(character.resources[key])) change(key, () => next[key])
+    }
+  }
 
   return (
-    <ScrollView className="flex-1 bg-legacy-base" contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
-      {equippedWeapons.length > 0 && (
-        <SectionHeader collapsible id={`${id}:weapons`} title="WEAPONS">
-          {equippedWeapons.map((w) => {
-            const attackBonus = profBonus + Math.max(strMod, dexMod)
-            const name = w.equipment?.name ?? w.custom_item?.name ?? 'Weapon'
-            return (
-              <View key={w.id} className="bg-legacy-overlay rounded-xl p-3 mb-2">
-                <Text className="text-legacy-text font-bold">{name}</Text>
-                <Text className="text-legacy-muted text-sm mt-1">Attack: {formatModifier(attackBonus)}</Text>
-              </View>
-            )
-          })}
-        </SectionHeader>
-      )}
-
-      <SectionHeader collapsible id={`${id}:standard-actions`} title="ACTIONS">
-        {STANDARD_ACTIONS.map((action) => (
-          <View key={action.name} className="bg-legacy-overlay rounded-xl p-3 mb-2">
-            <Text className="text-legacy-text font-bold">{action.name}</Text>
-            <Text className="text-legacy-muted text-sm mt-1">{action.description}</Text>
-          </View>
-        ))}
-      </SectionHeader>
-
-      {spellLevels.length > 0 && (
-        <SectionHeader collapsible id={`${id}:spells`} title="SPELLS">
-          {spellLevels.map((level) => (
-            <View key={level} className="mb-3">
-              <Text className="text-legacy-muted text-xs font-bold mb-2">
-                {level === 0 ? 'CANTRIPS' : `LEVEL ${level}`}
-              </Text>
-              {spellsByLevel[level].map((s) => {
-                const name = s.spell?.name ?? 'Custom Spell'
-                const school = s.spell?.school ?? ''
-                return (
-                  <View
-                    key={s.id}
-                    className={`bg-legacy-overlay rounded-xl p-3 mb-2 border ${s.is_prepared ? 'border-legacy-primary/40' : 'border-transparent'}`}
-                  >
-                    <View className="flex-row justify-between items-start">
-                      <Text className="text-legacy-text font-medium flex-1">{name}</Text>
-                      {s.is_prepared && (
-                        <View className="bg-legacy-primary/20 px-2 py-0.5 rounded-full ml-2">
-                          <Text className="text-legacy-primary text-xs">Prepared</Text>
-                        </View>
-                      )}
-                    </View>
-                    {!!school && <Text className="text-legacy-muted text-xs mt-1">{school}</Text>}
-                  </View>
-                )
-              })}
-            </View>
-          ))}
-        </SectionHeader>
-      )}
-    </ScrollView>
+    <ScreenBackground scroll>
+      <Text variant="title">{character.name}</Text>
+      {saveError ? <Text variant="caption" tone="destructive">{saveError}</Text> : null}
+      {slots ? (
+        <SpellSlotsSection
+          characterId={character.id}
+          slots={slots}
+          tierLabel={labelFor}
+          onSpend={(tier) => change(SLOTS_KEY, (cur) => spendSlot(cur as SlotsValue, tier))}
+          onRestore={(tier) => change(SLOTS_KEY, (cur) => restoreSlot(cur as SlotsValue, tier))}
+        />
+      ) : null}
+      <Tabs value={segment} onValueChange={(v) => setSegment(v as Segment)}>
+        <TabsList>
+          <TabsTrigger value="actions" accessibilityLabel="Actions"><Text>Actions</Text></TabsTrigger>
+          <TabsTrigger value="bonus" accessibilityLabel="Bonus"><Text>Bonus</Text></TabsTrigger>
+          <TabsTrigger value="reactions" accessibilityLabel="Reactions"><Text>Reactions</Text></TabsTrigger>
+        </TabsList>
+      </Tabs>
+      <ActionsList
+        segment={segment}
+        picks={picks}
+        slots={slots}
+        onUse={useSpell}
+        onEmptyAction={() => (segment === 'actions' ? router.push(`/(app)/characters/${id}/inventory`) : setSegment('actions'))}
+      />
+      <RestButtons onRest={rest} />
+    </ScreenBackground>
   )
 }
