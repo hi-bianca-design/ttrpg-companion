@@ -41,9 +41,10 @@ module.exports = {
     },
     fontFamily: {
       display: ['Fraunces_600SemiBold'],
-      sans: ['Inter_400Regular'],
+      // NativeWind special-cases the default font-sans/font-mono keys and drops custom families on native, so these have their own names.
+      inter: ['Inter_400Regular'],
       'sans-semibold': ['Inter_600SemiBold'],
-      mono: ['IBMPlexMono_500Medium'],
+      plex: ['IBMPlexMono_500Medium'],
     },
     extend: {
       colors: {

@@ -1,21 +1,25 @@
 import { Tabs, useSegments } from 'expo-router'
+import { useColorScheme } from 'nativewind'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Sword, BookOpen } from 'phosphor-react-native'
+import { BookOpen, Sword, UsersThree } from 'phosphor-react-native'
+import { THEME_COLORS } from '@/lib/theme'
 
 export default function AppLayout() {
   const segments = useSegments()
+  const { colorScheme } = useColorScheme()
+  const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
   // Hide parent tab bar when inside a character detail ([id] is segment index 2)
   const inCharacterSheet = segments[2] === '[id]'
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#1e1e2e' }} edges={['top']}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <Tabs
         screenOptions={{
           tabBarStyle: inCharacterSheet
             ? { display: 'none' }
-            : { backgroundColor: '#313244', borderTopColor: '#45475a' },
-          tabBarActiveTintColor: '#cba6f7',
-          tabBarInactiveTintColor: '#6c7086',
+            : { backgroundColor: colors.background, borderTopColor: colors.rule },
+          tabBarActiveTintColor: colors.primary,
+          tabBarInactiveTintColor: colors.mutedForeground,
           headerShown: false,
         }}
       >
@@ -24,15 +28,20 @@ export default function AppLayout() {
           name="characters"
           options={{
             title: 'Characters',
-            tabBarLabel: 'Characters',
             tabBarIcon: ({ color, size }) => <Sword size={size} color={color} weight="duotone" />,
+          }}
+        />
+        <Tabs.Screen
+          name="campaigns"
+          options={{
+            title: 'Campaigns',
+            tabBarIcon: ({ color, size }) => <UsersThree size={size} color={color} weight="duotone" />,
           }}
         />
         <Tabs.Screen
           name="content"
           options={{
-            title: 'Content',
-            tabBarLabel: 'Content',
+            title: 'Homebrew',
             tabBarIcon: ({ color, size }) => <BookOpen size={size} color={color} weight="duotone" />,
           }}
         />

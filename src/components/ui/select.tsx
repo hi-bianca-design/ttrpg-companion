@@ -12,7 +12,7 @@ function SelectValue({
   const { value } = SelectPrimitive.useRootContext()
   return (
     <SelectPrimitive.Value
-      className={cn('font-sans text-body text-foreground', !value && 'text-muted-foreground', className)}
+      className={cn('font-inter text-body text-foreground', !value && 'text-muted-foreground', className)}
       {...props}
     />
   )
@@ -74,7 +74,7 @@ function SelectItem({
       {...props}
     >
       <View className="flex-1">
-        <SelectPrimitive.ItemText className="font-sans text-body text-foreground" />
+        <SelectPrimitive.ItemText className="font-inter text-body text-foreground" />
       </View>
       <SelectPrimitive.ItemIndicator>
         <Check size={16} />

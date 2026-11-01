@@ -64,7 +64,7 @@ function DialogDescription({
 }: DialogPrimitive.DescriptionProps & React.RefAttributes<DialogPrimitive.DescriptionRef>) {
   return (
     <DialogPrimitive.Description
-      className={cn('font-sans text-body-sm text-muted-foreground', className)}
+      className={cn('font-inter text-body-sm text-muted-foreground', className)}
       {...props}
     />
   )

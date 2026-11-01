@@ -17,7 +17,7 @@ function Label({
       onPressOut={onPressOut}
     >
       <LabelPrimitive.Text
-        className={cn('font-mono text-label uppercase text-label-foreground', className)}
+        className={cn('font-plex text-label uppercase text-label-foreground', className)}
         {...props}
       />
     </LabelPrimitive.Root>

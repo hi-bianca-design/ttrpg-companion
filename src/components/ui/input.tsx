@@ -7,7 +7,7 @@ function Input({ className, editable = true, ...props }: InputProps) {
   return (
     <TextInput
       className={cn(
-        'h-11 rounded-full border border-border bg-input px-4 font-sans text-body text-foreground placeholder:text-muted-foreground',
+        'h-11 rounded-full border border-border bg-input px-4 font-inter text-body text-foreground placeholder:text-muted-foreground',
         !editable && 'opacity-50',
         className,
       )}

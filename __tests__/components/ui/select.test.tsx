@@ -8,7 +8,7 @@ test('SelectValue styles the selected value', () => {
     </Select>,
   )
   const cls = screen.getByText('Alpha').props.className
-  expect(cls).toContain('font-sans')
+  expect(cls).toContain('font-inter')
   expect(cls).toContain('text-body')
   expect(cls).toContain('text-foreground')
 })
@@ -29,7 +29,7 @@ test('SelectItem label is styled', () => {
     </Select>,
   )
   const cls = screen.getByText('Alpha').props.className
-  expect(cls).toContain('font-sans')
+  expect(cls).toContain('font-inter')
   expect(cls).toContain('text-body')
   expect(cls).toContain('text-foreground')
 })

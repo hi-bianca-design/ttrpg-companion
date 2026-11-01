@@ -21,11 +21,11 @@ colorScheme.set('system')
 
 // Cap system font scaling at 2x so layouts hold; the smallest type role (label, 11px)
 // is never scaled below spec because maxFontSizeMultiplier only limits enlarging.
-if (!Text.defaultProps) Text.defaultProps = {}
-Text.defaultProps.maxFontSizeMultiplier = 2
-
-if (!TextInput.defaultProps) TextInput.defaultProps = {}
-TextInput.defaultProps.maxFontSizeMultiplier = 2
+// React Native still reads defaultProps at runtime, but its types no longer declare it.
+type WithDefaults = { defaultProps?: { maxFontSizeMultiplier?: number } }
+for (const Component of [Text, TextInput] as unknown as WithDefaults[]) {
+  Component.defaultProps = { ...Component.defaultProps, maxFontSizeMultiplier: 2 }
+}
 
 function RootRedirect() {
   const { user, loading } = useAuth()

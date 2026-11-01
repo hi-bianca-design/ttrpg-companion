@@ -1,10 +1,5 @@
-import { Slot } from 'expo-router'
-import { View } from 'react-native'
+import { Stack } from 'expo-router'
 
 export default function AuthLayout() {
-  return (
-    <View className="flex-1 bg-legacy-base">
-      <Slot />
-    </View>
-  )
+  return <Stack screenOptions={{ headerShown: false, animation: 'fade' }} />
 }

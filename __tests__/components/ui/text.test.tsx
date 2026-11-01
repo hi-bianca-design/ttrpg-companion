@@ -12,7 +12,7 @@ test('label variant is uppercase mono with label colour', () => {
   render(<Text variant="label">Armor Class</Text>)
   const cls = screen.getByText('Armor Class').props.className
   expect(cls).toContain('text-label')
-  expect(cls).toContain('font-mono')
+  expect(cls).toContain('font-plex')
   expect(cls).toContain('uppercase')
   expect(cls).toContain('text-label-foreground')
 })
