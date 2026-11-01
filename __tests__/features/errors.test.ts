@@ -17,8 +17,12 @@ describe('toAppError', () => {
     expect(toAppError({ message: 'TypeError: Failed to fetch' }).code).toBe('network')
   })
 
+  it('maps a Postgres unique violation to duplicate', () => {
+    expect(toAppError({ code: '23505', message: 'duplicate key value' }).code).toBe('duplicate')
+  })
+
   it('maps anything else to unknown', () => {
-    expect(toAppError({ code: '23505', message: 'duplicate key' }).code).toBe('unknown')
+    expect(toAppError({ code: '23503', message: 'fk violation' }).code).toBe('unknown')
     expect(toAppError('boom').code).toBe('unknown')
     expect(toAppError(null).code).toBe('unknown')
   })
@@ -34,6 +38,7 @@ describe('toAppError', () => {
       already_member: "You're already in this campaign.",
       system_mismatch: 'That character is from a different game system than this campaign.',
       not_your_character: 'You can only join with your own characters.',
+      duplicate: 'You already have one with this name.',
       network: "Can't reach the server. Check your connection and try again.",
       unknown: 'Something went wrong. Please try again.',
     })

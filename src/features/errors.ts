@@ -4,6 +4,7 @@ export type AppErrorCode =
   | 'already_member'
   | 'system_mismatch'
   | 'not_your_character'
+  | 'duplicate'
   | 'network'
   | 'unknown'
 
@@ -12,6 +13,7 @@ export const ERROR_COPY: Record<AppErrorCode, string> = {
   already_member: "You're already in this campaign.",
   system_mismatch: 'That character is from a different game system than this campaign.',
   not_your_character: 'You can only join with your own characters.',
+  duplicate: 'You already have one with this name.',
   network: "Can't reach the server. Check your connection and try again.",
   unknown: 'Something went wrong. Please try again.',
 }
@@ -33,6 +35,7 @@ export function toAppError(e: unknown): AppError {
   const err = (typeof e === 'object' && e !== null ? e : {}) as { code?: unknown; message?: unknown }
   const message = typeof err.message === 'string' ? err.message : typeof e === 'string' ? e : ''
   if (err.code === 'P0001' && RPC_CODES.has(message)) return new AppError(message as AppErrorCode, { cause: e })
+  if (err.code === '23505') return new AppError('duplicate', { cause: e }) // unique violation (e.g. homebrew slug)
   if (NETWORK_PATTERN.test(message)) return new AppError('network', { cause: e })
   return new AppError('unknown', { cause: e })
 }

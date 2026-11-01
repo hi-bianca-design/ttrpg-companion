@@ -98,6 +98,9 @@ export const SPELL_SCHOOLS = [
   'Evocation', 'Illusion', 'Necromancy', 'Transmutation',
 ]
 
+/** Keys spells store in `classes` (lowercase; the builder's Spells step matches them case-insensitively). */
+export const SPELLCASTING_CLASSES = ['bard', 'cleric', 'druid', 'paladin', 'ranger', 'sorcerer', 'warlock', 'wizard']
+
 export type ContentKindMeta = Omit<ContentKindDef, 'schema'>
 
 /**
@@ -129,7 +132,7 @@ export const DND_CONTENT_KIND_META: Record<string, ContentKindMeta> = {
   background: {
     kind: 'background', label: 'Background', plural: 'Backgrounds', homebrew: true, isItem: false,
     fields: [
-      { key: 'skill_proficiencies', label: 'Skill proficiencies', type: 'multiselect', required: true },
+      { key: 'skill_proficiencies', label: 'Skill proficiencies', type: 'multiselect', options: SKILLS.map((s) => s.key), required: true },
       { key: 'origin_feat', label: 'Origin feat', type: 'text' },
       { key: 'tool_proficiency', label: 'Tool proficiency', type: 'text' },
     ],
@@ -149,7 +152,7 @@ export const DND_CONTENT_KIND_META: Record<string, ContentKindMeta> = {
       { key: 'range', label: 'Range', type: 'text', required: true },
       { key: 'components', label: 'Components', type: 'text', required: true },
       { key: 'duration', label: 'Duration', type: 'text', required: true },
-      { key: 'classes', label: 'Classes', type: 'multiselect', required: true },
+      { key: 'classes', label: 'Classes', type: 'multiselect', options: SPELLCASTING_CLASSES, required: true },
       { key: 'is_ritual', label: 'Ritual', type: 'boolean' },
       { key: 'requires_concentration', label: 'Concentration', type: 'boolean' },
     ],

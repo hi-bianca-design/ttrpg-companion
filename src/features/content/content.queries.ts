@@ -1,4 +1,4 @@
-import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk, type ContentScope } from '@/lib/query-client'
 import type { SystemId } from '@/systems/types'
 
@@ -7,8 +7,9 @@ import type { SystemId } from '@/systems/types'
  * lazily: system builder steps use this hook, and the system registry must stay importable
  * (rules, schemas, tests) without constructing the Supabase client.
  */
-export function useContentList(systemId: SystemId, kind: string, scope: ContentScope = 'all') {
+export function useContentList(systemId: SystemId, kind: string, scope: ContentScope = 'all', enabled = true) {
   return useQuery({
+    enabled,
     queryKey: qk.content(systemId, kind, scope),
     queryFn: () => {
       const { listContent } = require('./content.api') as typeof import('./content.api')
@@ -38,5 +39,40 @@ export function useContentSearch(systemId: SystemId, kinds: string[], scope: Con
       isError: results.some((r) => r.isError),
       refetch: () => results.forEach((r) => r.refetch()),
     }),
+  })
+}
+
+/** One content row by id (homebrew edit screen). */
+export function useContentItem(id: string | undefined) {
+  return useQuery({
+    queryKey: ['content', 'item', id] as const,
+    enabled: !!id,
+    queryFn: () => {
+      const { getContent } = require('./content.api') as typeof import('./content.api')
+      return getContent(id as string)
+    },
+  })
+}
+
+/** Create or update a homebrew row; every cached content list (builder, picker, My homebrew) refreshes. */
+export function useSaveHomebrew() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: import('./content.api').SaveHomebrewInput) => {
+      const { saveHomebrew } = require('./content.api') as typeof import('./content.api')
+      return saveHomebrew(input)
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['content'] }),
+  })
+}
+
+export function useDeleteHomebrew() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => {
+      const { deleteHomebrew } = require('./content.api') as typeof import('./content.api')
+      return deleteHomebrew(id)
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['content'] }),
   })
 }
