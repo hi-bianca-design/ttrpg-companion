@@ -10,24 +10,58 @@ alter table public.character_items enable row level security;
 alter table public.campaigns enable row level security;
 alter table public.campaign_members enable row level security;
 
--- True when the caller owns the character, or shares a campaign it is in (GM or member).
+-- Characters the caller sees through campaigns (not their own): characters on an active
+-- membership row of a campaign where the caller is GM or an *active* member. Invited
+-- users see nobody's characters until they accept.
 -- security definer to avoid characters <-> campaign_members policy recursion.
-create or replace function public.can_view_character(p_character_id uuid)
-returns boolean
-language plpgsql
+create or replace function public.campaign_visible_character_ids()
+returns setof uuid
+language sql
 stable
 security definer
 set search_path = ''
 as $$
-begin
-  return exists (
+  select m.character_id
+    from public.campaign_members m
+   where m.status = 'active'
+     and m.character_id is not null
+     and m.campaign_id in (
+       select c.id from public.campaigns c where c.gm_id = auth.uid()
+       union
+       select me.campaign_id from public.campaign_members me
+        where me.user_id = auth.uid() and me.status = 'active'
+     );
+$$;
+
+-- True when the caller owns the character or sees it through a campaign.
+create or replace function public.can_view_character(p_character_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
     select 1 from public.characters ch
-    where ch.id = p_character_id and ch.owner_id = auth.uid()
-  ) or exists (
-    select 1 from public.campaign_members m
-    where m.character_id = p_character_id and public.is_campaign_member(m.campaign_id)
-  );
-end;
+     where ch.id = p_character_id and ch.owner_id = auth.uid()
+  ) or p_character_id in (select public.campaign_visible_character_ids());
+$$;
+
+-- Content referenced by the picks/items of characters the caller sees through a campaign,
+-- so a GM or fellow member can resolve another player's homebrew on that player's sheet
+-- (and nothing else of theirs).
+create or replace function public.campaign_sheet_content_ids()
+returns setof uuid
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select p.content_id from public.character_picks p
+   where p.character_id in (select public.campaign_visible_character_ids())
+  union
+  select i.content_id from public.character_items i
+   where i.character_id in (select public.campaign_visible_character_ids());
 $$;
 
 -- True when the caller owns the character.
@@ -46,9 +80,13 @@ begin
 end;
 $$;
 
+revoke execute on function public.campaign_visible_character_ids() from public, anon;
 revoke execute on function public.can_view_character(uuid) from public, anon;
+revoke execute on function public.campaign_sheet_content_ids() from public, anon;
 revoke execute on function public.owns_character(uuid) from public, anon;
+grant execute on function public.campaign_visible_character_ids() to authenticated, service_role;
 grant execute on function public.can_view_character(uuid) to authenticated, service_role;
+grant execute on function public.campaign_sheet_content_ids() to authenticated, service_role;
 grant execute on function public.owns_character(uuid) to authenticated, service_role;
 
 -- profiles: any signed-in user can read (usernames show in campaigns); edit only your own.
@@ -63,13 +101,15 @@ create policy profiles_update on public.profiles
 create policy game_systems_select on public.game_systems
   for select to anon, authenticated using (true);
 
--- content: official, own, or campaign-scoped to a campaign I'm in.
+-- content: official, own, campaign-scoped to a campaign I'm in, or on the sheet of a
+-- character I see through a campaign.
 create policy content_select on public.content
   for select to authenticated
   using (
     owner_id is null
     or owner_id = (select auth.uid())
     or (campaign_id is not null and public.is_campaign_member(campaign_id))
+    or id in (select public.campaign_sheet_content_ids())
   );
 -- Writes: my own homebrew, or campaign items in campaigns where I'm GM.
 create policy content_insert on public.content
@@ -98,7 +138,7 @@ create policy content_delete on public.content
 -- characters: full access for the owner; read for GM / members of a campaign it is in.
 create policy characters_select on public.characters
   for select to authenticated
-  using (owner_id = (select auth.uid()) or public.can_view_character(id));
+  using (owner_id = (select auth.uid()) or id in (select public.campaign_visible_character_ids()));
 create policy characters_insert on public.characters
   for insert to authenticated
   with check (owner_id = (select auth.uid()));

@@ -61,10 +61,15 @@ create trigger campaign_members_set_updated_at
   before update on public.campaign_members
   for each row execute function public.set_updated_at();
 
--- Integrity for membership rows, whoever writes them:
---  * only the GM may change role / user / campaign of an existing row;
+-- Integrity for membership rows written by end users (RLS decides *which* rows; this
+-- decides *what* may change):
+--  * campaign_id and user_id of an existing row never change;
+--  * role changes only by the campaign's GM;
+--  * only the member themselves attaches/changes their character or accepts an invite
+--    (invited -> active); a row a GM creates for someone else is forced to
+--    status 'invited' with no character;
 --  * an attached character must belong to the member and match the campaign's system.
--- Skipped for privileged callers (no auth.uid(), e.g. service role or migrations).
+-- Skipped for privileged callers with no auth.uid() (service role, migrations, seed).
 create or replace function public.campaign_members_guard()
 returns trigger
 language plpgsql
@@ -72,18 +77,32 @@ security definer
 set search_path = ''
 as $$
 declare
+  v_uid uuid := auth.uid();
   v_owner uuid;
   v_char_system text;
 begin
-  if auth.uid() is null then
+  if v_uid is null then
     return new;
   end if;
 
-  if tg_op = 'UPDATE'
-     and (new.role, new.user_id, new.campaign_id) is distinct from (old.role, old.user_id, old.campaign_id)
-     and not public.is_campaign_gm(old.campaign_id) then
-    raise exception 'only the GM can change role or membership'
-      using errcode = '42501';
+  if tg_op = 'INSERT' then
+    if new.user_id <> v_uid then
+      new.status := 'invited';
+      new.character_id := null;
+    end if;
+  else
+    if (new.user_id, new.campaign_id) is distinct from (old.user_id, old.campaign_id) then
+      raise exception 'membership rows cannot be moved' using errcode = '42501';
+    end if;
+    if new.role is distinct from old.role and not public.is_campaign_gm(old.campaign_id) then
+      raise exception 'only the GM can change roles' using errcode = '42501';
+    end if;
+    if new.user_id <> v_uid
+       and (new.character_id is distinct from old.character_id
+            or (old.status = 'invited' and new.status = 'active')) then
+      raise exception 'only the member can pick a character or accept an invite'
+        using errcode = '42501';
+    end if;
   end if;
 
   if new.character_id is not null
