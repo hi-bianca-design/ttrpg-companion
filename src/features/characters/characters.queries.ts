@@ -45,25 +45,42 @@ export function useUpdateCharacter(id: string) {
   })
 }
 
-export function useAddItem(characterId: string) {
+export type ItemMutationOptions = {
+  /** Called for every failed item write (hook-level, so overlapping mutations all report). */
+  onError?: (error: unknown) => void
+}
+
+function useLatest<T>(value: T) {
+  const ref = useRef(value)
+  ref.current = value
+  return ref
+}
+
+export function useAddItem(characterId: string, options: ItemMutationOptions = {}) {
   const qc = useQueryClient()
+  const onErrorRef = useLatest(options.onError)
   return useMutation({
+    onError: (e) => onErrorRef.current?.(e),
     mutationFn: ({ contentId, quantity }: { contentId: string; quantity: number }) => addItem(characterId, contentId, quantity),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.character(characterId) }),
   })
 }
 
-export function useUpdateItem(characterId: string) {
+export function useUpdateItem(characterId: string, options: ItemMutationOptions = {}) {
   const qc = useQueryClient()
+  const onErrorRef = useLatest(options.onError)
   return useMutation({
+    onError: (e) => onErrorRef.current?.(e),
     mutationFn: ({ itemId, patch }: { itemId: string; patch: ItemPatch }) => updateItem(itemId, patch),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.character(characterId) }),
   })
 }
 
-export function useRemoveItem(characterId: string) {
+export function useRemoveItem(characterId: string, options: ItemMutationOptions = {}) {
   const qc = useQueryClient()
+  const onErrorRef = useLatest(options.onError)
   return useMutation({
+    onError: (e) => onErrorRef.current?.(e),
     mutationFn: (itemId: string) => removeItem(itemId),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.character(characterId) }),
   })

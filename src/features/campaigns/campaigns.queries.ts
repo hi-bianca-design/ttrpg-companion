@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '@/lib/query-client'
 import type { SystemId } from '@/systems/types'
-import { createCampaign, getCampaign, joinCampaign, listMyCampaigns } from './campaigns.api'
+import { createCampaign, getCampaign, getCharacterCampaign, joinCampaign, listMyCampaigns } from './campaigns.api'
 
 export function useCampaigns() {
   return useQuery({ queryKey: qk.campaigns, queryFn: listMyCampaigns })
@@ -9,6 +9,14 @@ export function useCampaigns() {
 
 export function useCampaign(id: string | undefined) {
   return useQuery({ queryKey: qk.campaign(id ?? ''), queryFn: () => getCampaign(id!), enabled: !!id })
+}
+
+export function useCharacterCampaign(characterId: string | undefined) {
+  return useQuery({
+    queryKey: ['character-campaign', characterId ?? ''] as const,
+    queryFn: () => getCharacterCampaign(characterId!),
+    enabled: !!characterId,
+  })
 }
 
 export function useCreateCampaign() {

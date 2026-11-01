@@ -47,3 +47,16 @@ export async function createCampaign(input: { name: string; systemId: SystemId; 
 export async function joinCampaign(code: string, characterId: string): Promise<string> {
   return unwrap(await supabase.rpc('join_campaign', { p_code: code, p_character_id: characterId }))
 }
+
+/** The campaign this character is active in (a character belongs to at most one), or null. */
+export async function getCharacterCampaign(characterId: string): Promise<{ id: string; name: string } | null> {
+  const rows = unwrap(
+    await supabase
+      .from('campaign_members')
+      .select('campaigns(id, name)')
+      .eq('character_id', characterId)
+      .eq('status', 'active')
+      .limit(1),
+  )
+  return rows[0]?.campaigns ?? null
+}

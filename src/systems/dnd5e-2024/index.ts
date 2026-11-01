@@ -22,6 +22,6 @@ export const dnd5e2024: GameSystem = {
   contentKinds,
   schemas: { stats: dnd5eStatsSchema, resources: dnd5eResourcesSchema, details: dnd5eDetailsSchema },
   builder: dnd5eBuilder,
-  rules: { derived, rest },
+  rules: { derived, rest, maxAttuned: 3 },
   sheet: { sections: { proficiencies: ProficienciesSection, profile: ProfileSection } },
 }

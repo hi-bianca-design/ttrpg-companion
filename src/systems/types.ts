@@ -90,6 +90,8 @@ export interface GameSystem {
     derived(c: CharacterRecord, picks: PickRecord[]): DerivedValue[]
     rest(c: CharacterRecord, kind: 'short' | 'long', picks: PickRecord[]): Record<string, ResourceValue>
     levelUp?(c: CharacterRecord, picks: PickRecord[], input: Record<string, unknown>): Pick<CharacterRecord, 'level' | 'resources'>
+    /** Most items a character may be attuned to at once; undefined = no limit. */
+    maxAttuned?: number
   }
   // Per-system sheet sections, e.g. D&D 'proficiencies'
   sheet?: { sections?: Record<string, React.ComponentType<{ character: CharacterRecord; picks: PickRecord[] }>> }
