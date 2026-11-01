@@ -15,7 +15,7 @@ export function HPBar({ hpCurrent, hpMax, tempHP, onDamage, onHeal, onSetTempHP 
   const [inputValue, setInputValue] = useState('')
 
   const hpPercent = Math.max(0, hpCurrent / hpMax)
-  const barColor = hpPercent >= 0.5 ? 'bg-green' : hpPercent >= 0.25 ? 'bg-yellow' : 'bg-red'
+  const barColor = hpPercent >= 0.5 ? 'bg-legacy-green' : hpPercent >= 0.25 ? 'bg-legacy-yellow' : 'bg-legacy-red'
 
   const parsedAmount = parseInt(inputValue, 10)
   const isValidAmount = !isNaN(parsedAmount) && parsedAmount > 0
@@ -31,39 +31,39 @@ export function HPBar({ hpCurrent, hpMax, tempHP, onDamage, onHeal, onSetTempHP 
 
   return (
     <View>
-      <View className="bg-overlay rounded-full h-4 overflow-hidden mb-1">
+      <View className="bg-legacy-overlay rounded-full h-4 overflow-hidden mb-1">
         <View className={`${barColor} h-full rounded-full`} style={{ width: `${hpPercent * 100}%` }} />
       </View>
 
       <View className="flex-row justify-between items-center mb-3">
-        <Text className="text-text font-bold text-lg">
+        <Text className="text-legacy-text font-bold text-lg">
           {hpCurrent} / {hpMax}
-          {tempHP > 0 && <Text className="text-blue"> (+{tempHP} temp)</Text>}
+          {tempHP > 0 && <Text className="text-legacy-blue"> (+{tempHP} temp)</Text>}
         </Text>
       </View>
 
       <View className="flex-row gap-2">
         {[
-          { label: 'Damage', mode: 'damage' as const, color: 'bg-red' },
-          { label: 'Heal', mode: 'heal' as const, color: 'bg-green' },
-          { label: 'Temp HP', mode: 'temp' as const, color: 'bg-blue' },
+          { label: 'Damage', mode: 'damage' as const, color: 'bg-legacy-red' },
+          { label: 'Heal', mode: 'heal' as const, color: 'bg-legacy-green' },
+          { label: 'Temp HP', mode: 'temp' as const, color: 'bg-legacy-blue' },
         ].map(({ label, mode, color }) => (
           <TouchableOpacity
             key={mode}
             onPress={() => { setInputValue(''); setModalMode(mode) }}
             className={`${color} rounded-lg px-3 py-2 flex-1 items-center`}
           >
-            <Text className="text-base text-sm font-medium">{label}</Text>
+            <Text className="text-legacy-base text-sm font-medium">{label}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
       <Modal visible={modalMode !== null} transparent animationType="fade">
         <View className="flex-1 justify-center items-center bg-black/60">
-          <View className="bg-surface rounded-2xl p-6 w-64">
-            <Text className="text-text font-bold text-lg mb-4 capitalize">{modalMode}</Text>
+          <View className="bg-legacy-surface rounded-2xl p-6 w-64">
+            <Text className="text-legacy-text font-bold text-lg mb-4 capitalize">{modalMode}</Text>
             <TextInput
-              className="bg-overlay text-text rounded-xl px-4 py-3 text-center text-2xl mb-4"
+              className="bg-legacy-overlay text-legacy-text rounded-xl px-4 py-3 text-center text-2xl mb-4"
               keyboardType="number-pad"
               value={inputValue}
               onChangeText={setInputValue}
@@ -73,17 +73,17 @@ export function HPBar({ hpCurrent, hpMax, tempHP, onDamage, onHeal, onSetTempHP 
             />
             <View className="flex-row gap-3">
               <TouchableOpacity
-                className="flex-1 bg-overlay rounded-xl py-2 items-center"
+                className="flex-1 bg-legacy-overlay rounded-xl py-2 items-center"
                 onPress={() => setModalMode(null)}
               >
-                <Text className="text-muted">Cancel</Text>
+                <Text className="text-legacy-muted">Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                className={`flex-1 rounded-xl py-2 items-center ${isValidAmount ? 'bg-primary' : 'bg-overlay'}`}
+                className={`flex-1 rounded-xl py-2 items-center ${isValidAmount ? 'bg-legacy-primary' : 'bg-legacy-overlay'}`}
                 onPress={confirm}
                 disabled={!isValidAmount}
               >
-                <Text className={`font-semibold ${isValidAmount ? 'text-base' : 'text-muted'}`}>Confirm</Text>
+                <Text className={`font-semibold ${isValidAmount ? 'text-legacy-base' : 'text-legacy-muted'}`}>Confirm</Text>
               </TouchableOpacity>
             </View>
           </View>

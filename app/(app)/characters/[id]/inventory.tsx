@@ -37,7 +37,7 @@ export default function InventoryTab() {
   }
 
   if (loading) {
-    return <View className="flex-1 bg-base justify-center items-center"><ActivityIndicator color="#cba6f7" /></View>
+    return <View className="flex-1 bg-legacy-base justify-center items-center"><ActivityIndicator color="#cba6f7" /></View>
   }
 
   const equipped   = items.filter((i) => i.is_equipped)
@@ -71,53 +71,53 @@ export default function InventoryTab() {
         key={item.id}
         onPress={() => toggleEquipped(item)}
         className={`rounded-xl p-3 mb-2 flex-row justify-between items-center ${
-          item.is_equipped ? 'bg-surface border border-primary' : 'bg-surface border border-transparent'
+          item.is_equipped ? 'bg-legacy-surface border border-legacy-primary' : 'bg-legacy-surface border border-transparent'
         }`}
       >
         <View className="flex-1">
           <View className="flex-row items-center gap-2 flex-wrap">
-            <Text className={`font-medium ${item.is_equipped ? 'text-primary' : 'text-text'}`}>
+            <Text className={`font-medium ${item.is_equipped ? 'text-legacy-primary' : 'text-legacy-text'}`}>
               {name}
             </Text>
             {isCustom && (
-              <View className="bg-overlay px-2 py-0.5 rounded-full">
-                <Text className="text-muted text-xs">Custom</Text>
+              <View className="bg-legacy-overlay px-2 py-0.5 rounded-full">
+                <Text className="text-legacy-muted text-xs">Custom</Text>
               </View>
             )}
             {isMagic && (
-              <View className="bg-primary/20 px-2 py-0.5 rounded-full">
-                <Text className="text-primary text-xs">Magic</Text>
+              <View className="bg-legacy-primary/20 px-2 py-0.5 rounded-full">
+                <Text className="text-legacy-primary text-xs">Magic</Text>
               </View>
             )}
             {isAttuned && (
-              <View className="bg-teal/20 px-2 py-0.5 rounded-full">
-                <Text className="text-teal text-xs">Attuned</Text>
+              <View className="bg-legacy-teal/20 px-2 py-0.5 rounded-full">
+                <Text className="text-legacy-teal text-xs">Attuned</Text>
               </View>
             )}
           </View>
-          <Text className="text-muted text-xs mt-0.5">
+          <Text className="text-legacy-muted text-xs mt-0.5">
             {category} · qty: {item.quantity}
           </Text>
           {!!item.notes && (
-            <Text className="text-muted text-xs mt-0.5 italic">{item.notes}</Text>
+            <Text className="text-legacy-muted text-xs mt-0.5 italic">{item.notes}</Text>
           )}
         </View>
-        <View className={`w-5 h-5 rounded-full border-2 ml-3 ${item.is_equipped ? 'bg-primary border-primary' : 'border-overlay'}`} />
+        <View className={`w-5 h-5 rounded-full border-2 ml-3 ${item.is_equipped ? 'bg-legacy-primary border-legacy-primary' : 'border-legacy-overlay'}`} />
       </TouchableOpacity>
     )
   }
 
   return (
-    <View className="flex-1 bg-base">
+    <View className="flex-1 bg-legacy-base">
       {/* Sub-tab bar */}
-      <View className="flex-row mx-4 mt-4 mb-3 bg-surface rounded-xl overflow-hidden">
+      <View className="flex-row mx-4 mt-4 mb-3 bg-legacy-surface rounded-xl overflow-hidden">
         {(['equipped', 'backpack'] as const).map((t) => (
           <TouchableOpacity
             key={t}
             onPress={() => setSubTab(t)}
-            className={`flex-1 py-2 items-center ${subTab === t ? 'bg-primary' : ''}`}
+            className={`flex-1 py-2 items-center ${subTab === t ? 'bg-legacy-primary' : ''}`}
           >
-            <Text className={`font-medium text-sm ${subTab === t ? 'text-base' : 'text-muted'}`}>
+            <Text className={`font-medium text-sm ${subTab === t ? 'text-legacy-base' : 'text-legacy-muted'}`}>
               {t === 'equipped' ? `Equipped (${equipped.length})` : `Backpack (${backpack.length})`}
             </Text>
           </TouchableOpacity>
@@ -127,7 +127,7 @@ export default function InventoryTab() {
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>
         {displayed.length === 0 ? (
           <View className="items-center py-12">
-            <Text className="text-muted text-sm">
+            <Text className="text-legacy-muted text-sm">
               {subTab === 'equipped' ? 'Nothing equipped.' : 'Backpack is empty.'}
             </Text>
           </View>

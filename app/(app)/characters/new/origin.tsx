@@ -36,43 +36,43 @@ export default function OriginStep() {
   }
 
   if (loading) {
-    return <View className="flex-1 bg-base justify-center items-center"><ActivityIndicator color="#cba6f7" /></View>
+    return <View className="flex-1 bg-legacy-base justify-center items-center"><ActivityIndicator color="#cba6f7" /></View>
   }
 
   const canProceed = !!selectedBg && !!selectedSp
 
   return (
-    <View className="flex-1 bg-base">
+    <View className="flex-1 bg-legacy-base">
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
-        <Text className="text-2xl font-bold text-text">Determine Origin</Text>
-        <Text className="text-muted mt-1 mb-6 text-sm">
+        <Text className="text-2xl font-bold text-legacy-text">Determine Origin</Text>
+        <Text className="text-legacy-muted mt-1 mb-6 text-sm">
           Your background and species shape who you were before adventuring.
         </Text>
 
-        <Text className="text-lg font-bold text-text mb-3">Background</Text>
+        <Text className="text-lg font-bold text-legacy-text mb-3">Background</Text>
         {backgrounds.map((bg) => {
           const isSelected = selectedBg?.id === bg.id
           return (
             <TouchableOpacity
               key={bg.id}
               onPress={() => setSelectedBg(bg)}
-              className={`rounded-xl p-4 mb-3 border-2 ${isSelected ? 'bg-surface border-primary' : 'bg-surface border-transparent'}`}
+              className={`rounded-xl p-4 mb-3 border-2 ${isSelected ? 'bg-legacy-surface border-legacy-primary' : 'bg-legacy-surface border-transparent'}`}
             >
               <View className="flex-row items-center gap-2">
-                <Text className={`font-bold flex-1 ${isSelected ? 'text-primary' : 'text-text'}`}>{bg.name}</Text>
+                <Text className={`font-bold flex-1 ${isSelected ? 'text-legacy-primary' : 'text-legacy-text'}`}>{bg.name}</Text>
                 {bg.is_custom && (
-                  <View className="bg-overlay px-2 py-0.5 rounded-full">
-                    <Text className="text-muted text-xs">Custom</Text>
+                  <View className="bg-legacy-overlay px-2 py-0.5 rounded-full">
+                    <Text className="text-legacy-muted text-xs">Custom</Text>
                   </View>
                 )}
               </View>
-              <Text className="text-muted text-sm mt-1">{bg.description}</Text>
-              <Text className="text-green text-xs mt-1">Skills: {bg.skill_proficiencies.join(', ')}</Text>
+              <Text className="text-legacy-muted text-sm mt-1">{bg.description}</Text>
+              <Text className="text-legacy-green text-xs mt-1">Skills: {bg.skill_proficiencies.join(', ')}</Text>
             </TouchableOpacity>
           )
         })}
 
-        <Text className="text-lg font-bold text-text mt-4 mb-3">Species</Text>
+        <Text className="text-lg font-bold text-legacy-text mt-4 mb-3">Species</Text>
         {species.map((sp) => {
           const isSelected = selectedSp?.id === sp.id
           // sp.traits is stored as { traits: string[] } in both the SRD DB and the custom species adapter
@@ -81,32 +81,32 @@ export default function OriginStep() {
             <TouchableOpacity
               key={sp.id}
               onPress={() => setSelectedSp(sp)}
-              className={`rounded-xl p-4 mb-3 border-2 ${isSelected ? 'bg-surface border-primary' : 'bg-surface border-transparent'}`}
+              className={`rounded-xl p-4 mb-3 border-2 ${isSelected ? 'bg-legacy-surface border-legacy-primary' : 'bg-legacy-surface border-transparent'}`}
             >
               <View className="flex-row items-center gap-2">
-                <Text className={`font-bold flex-1 ${isSelected ? 'text-primary' : 'text-text'}`}>{sp.name}</Text>
+                <Text className={`font-bold flex-1 ${isSelected ? 'text-legacy-primary' : 'text-legacy-text'}`}>{sp.name}</Text>
                 {sp.is_custom && (
-                  <View className="bg-overlay px-2 py-0.5 rounded-full">
-                    <Text className="text-muted text-xs">Custom</Text>
+                  <View className="bg-legacy-overlay px-2 py-0.5 rounded-full">
+                    <Text className="text-legacy-muted text-xs">Custom</Text>
                   </View>
                 )}
               </View>
-              <Text className="text-muted text-xs mt-1">Speed: {sp.speed} ft</Text>
+              <Text className="text-legacy-muted text-xs mt-1">Speed: {sp.speed} ft</Text>
               {traits.length > 0 && (
-                <Text className="text-yellow text-xs mt-1">Traits: {traits.join(', ')}</Text>
+                <Text className="text-legacy-yellow text-xs mt-1">Traits: {traits.join(', ')}</Text>
               )}
             </TouchableOpacity>
           )
         })}
       </ScrollView>
 
-      <View className="absolute bottom-0 left-0 right-0 p-4 bg-base border-t border-overlay">
+      <View className="absolute bottom-0 left-0 right-0 p-4 bg-legacy-base border-t border-legacy-overlay">
         <TouchableOpacity
-          className={`rounded-xl py-3 items-center ${canProceed ? 'bg-primary' : 'bg-overlay'}`}
+          className={`rounded-xl py-3 items-center ${canProceed ? 'bg-legacy-primary' : 'bg-legacy-overlay'}`}
           onPress={handleNext}
           disabled={!canProceed}
         >
-          <Text className={`font-semibold ${canProceed ? 'text-base' : 'text-muted'}`}>
+          <Text className={`font-semibold ${canProceed ? 'text-legacy-base' : 'text-legacy-muted'}`}>
             {canProceed && selectedBg && selectedSp
               ? `${selectedBg.name} · ${selectedSp.name} →`
               : 'Select background and species'}

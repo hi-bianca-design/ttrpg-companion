@@ -25,11 +25,11 @@ export default function LoginScreen() {
 
   return (
     <View className="flex-1 justify-center px-6">
-      <Text className="text-4xl font-bold text-primary mb-2">D&D Companion</Text>
-      <Text className="text-muted mb-10">Sign in to your account</Text>
+      <Text className="text-4xl font-bold text-legacy-primary mb-2">D&D Companion</Text>
+      <Text className="text-legacy-muted mb-10">Sign in to your account</Text>
 
       <TextInput
-        className="bg-surface text-text rounded-xl px-4 py-3 mb-3"
+        className="bg-legacy-surface text-legacy-text rounded-xl px-4 py-3 mb-3"
         placeholder="Email"
         placeholderTextColor="#6c7086"
         value={email}
@@ -38,7 +38,7 @@ export default function LoginScreen() {
         keyboardType="email-address"
       />
       <TextInput
-        className="bg-surface text-text rounded-xl px-4 py-3 mb-6"
+        className="bg-legacy-surface text-legacy-text rounded-xl px-4 py-3 mb-6"
         placeholder="Password"
         placeholderTextColor="#6c7086"
         value={password}
@@ -47,23 +47,23 @@ export default function LoginScreen() {
       />
 
       {error && (
-        <Text className="text-red mb-4 text-center">{error}</Text>
+        <Text className="text-legacy-red mb-4 text-center">{error}</Text>
       )}
 
       <TouchableOpacity
-        className="bg-primary rounded-xl py-3 items-center mb-4"
+        className="bg-legacy-primary rounded-xl py-3 items-center mb-4"
         onPress={handleLogin}
         disabled={loading}
       >
         {loading
           ? <ActivityIndicator color="#1e1e2e" />
-          : <Text className="text-base font-semibold text-[#1e1e2e]">Sign In</Text>
+          : <Text className="text-legacy-base font-semibold text-[#1e1e2e]">Sign In</Text>
         }
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => router.push('/(auth)/signup')}>
-        <Text className="text-muted text-center">
-          Don't have an account? <Text className="text-primary">Sign up</Text>
+        <Text className="text-legacy-muted text-center">
+          Don't have an account? <Text className="text-legacy-primary">Sign up</Text>
         </Text>
       </TouchableOpacity>
     </View>

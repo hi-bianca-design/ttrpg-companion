@@ -32,7 +32,7 @@ export default function ActionsTab() {
   useEffect(() => { load() }, [load])
 
   if (loading || !character) {
-    return <View className="flex-1 bg-base justify-center items-center"><ActivityIndicator color="#cba6f7" /></View>
+    return <View className="flex-1 bg-legacy-base justify-center items-center"><ActivityIndicator color="#cba6f7" /></View>
   }
 
   const profBonus = getProficiencyBonus(character.level)
@@ -55,16 +55,16 @@ export default function ActionsTab() {
   const spellLevels = Object.keys(spellsByLevel).map(Number).sort((a, b) => a - b)
 
   return (
-    <ScrollView className="flex-1 bg-base" contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
+    <ScrollView className="flex-1 bg-legacy-base" contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
       {equippedWeapons.length > 0 && (
         <CollapsibleSection sectionKey={`${id}:weapons`} title="WEAPONS">
           {equippedWeapons.map((w) => {
             const attackBonus = profBonus + Math.max(strMod, dexMod)
             const name = w.equipment?.name ?? w.custom_item?.name ?? 'Weapon'
             return (
-              <View key={w.id} className="bg-overlay rounded-xl p-3 mb-2">
-                <Text className="text-text font-bold">{name}</Text>
-                <Text className="text-muted text-sm mt-1">Attack: {formatModifier(attackBonus)}</Text>
+              <View key={w.id} className="bg-legacy-overlay rounded-xl p-3 mb-2">
+                <Text className="text-legacy-text font-bold">{name}</Text>
+                <Text className="text-legacy-muted text-sm mt-1">Attack: {formatModifier(attackBonus)}</Text>
               </View>
             )
           })}
@@ -73,9 +73,9 @@ export default function ActionsTab() {
 
       <CollapsibleSection sectionKey={`${id}:standard-actions`} title="ACTIONS">
         {STANDARD_ACTIONS.map((action) => (
-          <View key={action.name} className="bg-overlay rounded-xl p-3 mb-2">
-            <Text className="text-text font-bold">{action.name}</Text>
-            <Text className="text-muted text-sm mt-1">{action.description}</Text>
+          <View key={action.name} className="bg-legacy-overlay rounded-xl p-3 mb-2">
+            <Text className="text-legacy-text font-bold">{action.name}</Text>
+            <Text className="text-legacy-muted text-sm mt-1">{action.description}</Text>
           </View>
         ))}
       </CollapsibleSection>
@@ -84,7 +84,7 @@ export default function ActionsTab() {
         <CollapsibleSection sectionKey={`${id}:spells`} title="SPELLS">
           {spellLevels.map((level) => (
             <View key={level} className="mb-3">
-              <Text className="text-muted text-xs font-bold mb-2">
+              <Text className="text-legacy-muted text-xs font-bold mb-2">
                 {level === 0 ? 'CANTRIPS' : `LEVEL ${level}`}
               </Text>
               {spellsByLevel[level].map((s) => {
@@ -93,17 +93,17 @@ export default function ActionsTab() {
                 return (
                   <View
                     key={s.id}
-                    className={`bg-overlay rounded-xl p-3 mb-2 border ${s.is_prepared ? 'border-primary/40' : 'border-transparent'}`}
+                    className={`bg-legacy-overlay rounded-xl p-3 mb-2 border ${s.is_prepared ? 'border-legacy-primary/40' : 'border-transparent'}`}
                   >
                     <View className="flex-row justify-between items-start">
-                      <Text className="text-text font-medium flex-1">{name}</Text>
+                      <Text className="text-legacy-text font-medium flex-1">{name}</Text>
                       {s.is_prepared && (
-                        <View className="bg-primary/20 px-2 py-0.5 rounded-full ml-2">
-                          <Text className="text-primary text-xs">Prepared</Text>
+                        <View className="bg-legacy-primary/20 px-2 py-0.5 rounded-full ml-2">
+                          <Text className="text-legacy-primary text-xs">Prepared</Text>
                         </View>
                       )}
                     </View>
-                    {!!school && <Text className="text-muted text-xs mt-1">{school}</Text>}
+                    {!!school && <Text className="text-legacy-muted text-xs mt-1">{school}</Text>}
                   </View>
                 )
               })}

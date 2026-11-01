@@ -117,37 +117,37 @@ export default function EditContentScreen() {
   }
 
   if (loading || !item) {
-    return <View className="flex-1 bg-base justify-center items-center"><ActivityIndicator color="#cba6f7" /></View>
+    return <View className="flex-1 bg-legacy-base justify-center items-center"><ActivityIndicator color="#cba6f7" /></View>
   }
 
   return (
-    <View className="flex-1 bg-base">
+    <View className="flex-1 bg-legacy-base">
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
         <View className="flex-row justify-between items-center mb-4">
           <TouchableOpacity onPress={() => router.back()}>
-            <Text className="text-primary">← Back</Text>
+            <Text className="text-legacy-primary">← Back</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={confirmDelete}>
-            <Text className="text-red font-medium">Delete</Text>
+            <Text className="text-legacy-red font-medium">Delete</Text>
           </TouchableOpacity>
         </View>
 
-        <Text className="text-2xl font-bold text-text mb-1">
+        <Text className="text-2xl font-bold text-legacy-text mb-1">
           Edit {CONTENT_TYPE_LABELS[item.content_type]}
         </Text>
-        <Text className="text-muted text-sm mb-6">{item.content_type}</Text>
+        <Text className="text-legacy-muted text-sm mb-6">{item.content_type}</Text>
 
-        <Text className="text-muted text-xs font-bold mb-1">NAME *</Text>
+        <Text className="text-legacy-muted text-xs font-bold mb-1">NAME *</Text>
         <TextInput
-          className="bg-surface text-text rounded-xl px-4 py-3 mb-4"
+          className="bg-legacy-surface text-legacy-text rounded-xl px-4 py-3 mb-4"
           value={name}
           onChangeText={setName}
           placeholderTextColor="#6c7086"
         />
 
-        <Text className="text-muted text-xs font-bold mb-1">DESCRIPTION</Text>
+        <Text className="text-legacy-muted text-xs font-bold mb-1">DESCRIPTION</Text>
         <TextInput
-          className="bg-surface text-text rounded-xl px-4 py-3 mb-6"
+          className="bg-legacy-surface text-legacy-text rounded-xl px-4 py-3 mb-6"
           value={description}
           onChangeText={setDescription}
           multiline
@@ -158,21 +158,21 @@ export default function EditContentScreen() {
 
         {item.content_type === 'subclass' && (
           <>
-            <Text className="text-muted text-xs font-bold mb-2">CLASS</Text>
+            <Text className="text-legacy-muted text-xs font-bold mb-2">CLASS</Text>
             <View className="flex-row flex-wrap gap-2 mb-4">
               {classes.map((cls) => (
                 <TouchableOpacity
                   key={cls.id}
                   onPress={() => setProp('class_id', cls.id)}
-                  className={`px-3 py-2 rounded-lg border ${props.class_id === cls.id ? 'bg-primary border-primary' : 'bg-surface border-overlay'}`}
+                  className={`px-3 py-2 rounded-lg border ${props.class_id === cls.id ? 'bg-legacy-primary border-legacy-primary' : 'bg-legacy-surface border-legacy-overlay'}`}
                 >
-                  <Text className={`text-sm ${props.class_id === cls.id ? 'text-base font-bold' : 'text-text'}`}>{cls.name}</Text>
+                  <Text className={`text-sm ${props.class_id === cls.id ? 'text-legacy-base font-bold' : 'text-legacy-text'}`}>{cls.name}</Text>
                 </TouchableOpacity>
               ))}
             </View>
-            <Text className="text-muted text-xs font-bold mb-1">FEATURES</Text>
+            <Text className="text-legacy-muted text-xs font-bold mb-1">FEATURES</Text>
             <TextInput
-              className="bg-surface text-text rounded-xl px-4 py-3 mb-4"
+              className="bg-legacy-surface text-legacy-text rounded-xl px-4 py-3 mb-4"
               value={(props.features as string) ?? ''}
               onChangeText={(v) => setProp('features', v)}
               multiline
@@ -185,17 +185,17 @@ export default function EditContentScreen() {
 
         {item.content_type === 'species' && (
           <>
-            <Text className="text-muted text-xs font-bold mb-1">SPEED (FT)</Text>
+            <Text className="text-legacy-muted text-xs font-bold mb-1">SPEED (FT)</Text>
             <TextInput
-              className="bg-surface text-text rounded-xl px-4 py-3 mb-4"
+              className="bg-legacy-surface text-legacy-text rounded-xl px-4 py-3 mb-4"
               value={String(props.speed ?? '30')}
               onChangeText={(v) => setProp('speed', v)}
               keyboardType="number-pad"
               placeholderTextColor="#6c7086"
             />
-            <Text className="text-muted text-xs font-bold mb-1">TRAITS (one per line)</Text>
+            <Text className="text-legacy-muted text-xs font-bold mb-1">TRAITS (one per line)</Text>
             <TextInput
-              className="bg-surface text-text rounded-xl px-4 py-3 mb-4"
+              className="bg-legacy-surface text-legacy-text rounded-xl px-4 py-3 mb-4"
               value={(props.traits_text as string) ?? ''}
               onChangeText={(v) => setProp('traits_text', v)}
               multiline
@@ -208,16 +208,16 @@ export default function EditContentScreen() {
 
         {item.content_type === 'background' && (
           <>
-            <Text className="text-muted text-xs font-bold mb-1">SKILL PROFICIENCIES (comma-separated)</Text>
+            <Text className="text-legacy-muted text-xs font-bold mb-1">SKILL PROFICIENCIES (comma-separated)</Text>
             <TextInput
-              className="bg-surface text-text rounded-xl px-4 py-3 mb-4"
+              className="bg-legacy-surface text-legacy-text rounded-xl px-4 py-3 mb-4"
               value={(props.skills_text as string) ?? ''}
               onChangeText={(v) => setProp('skills_text', v)}
               placeholderTextColor="#6c7086"
             />
-            <Text className="text-muted text-xs font-bold mb-1">BACKGROUND FEATURE</Text>
+            <Text className="text-legacy-muted text-xs font-bold mb-1">BACKGROUND FEATURE</Text>
             <TextInput
-              className="bg-surface text-text rounded-xl px-4 py-3 mb-4"
+              className="bg-legacy-surface text-legacy-text rounded-xl px-4 py-3 mb-4"
               value={(props.feature as string) ?? ''}
               onChangeText={(v) => setProp('feature', v)}
               multiline
@@ -230,15 +230,15 @@ export default function EditContentScreen() {
 
         {item.content_type === 'spell' && (
           <>
-            <Text className="text-muted text-xs font-bold mb-2">LEVEL</Text>
+            <Text className="text-legacy-muted text-xs font-bold mb-2">LEVEL</Text>
             <View className="flex-row gap-2 mb-4 flex-wrap">
               {[0,1,2,3,4,5,6,7,8,9].map((lvl) => (
                 <TouchableOpacity
                   key={lvl}
                   onPress={() => setProp('level', lvl)}
-                  className={`w-9 h-9 rounded-lg items-center justify-center ${props.level === lvl ? 'bg-primary' : 'bg-surface'}`}
+                  className={`w-9 h-9 rounded-lg items-center justify-center ${props.level === lvl ? 'bg-legacy-primary' : 'bg-legacy-surface'}`}
                 >
-                  <Text className={`font-bold ${props.level === lvl ? 'text-base' : 'text-text'}`}>{lvl}</Text>
+                  <Text className={`font-bold ${props.level === lvl ? 'text-legacy-base' : 'text-legacy-text'}`}>{lvl}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -251,9 +251,9 @@ export default function EditContentScreen() {
               { label: 'CLASSES (comma-separated)', key: 'classes_text' },
             ].map(({ label, key }) => (
               <View key={key} className="mb-4">
-                <Text className="text-muted text-xs font-bold mb-1">{label}</Text>
+                <Text className="text-legacy-muted text-xs font-bold mb-1">{label}</Text>
                 <TextInput
-                  className="bg-surface text-text rounded-xl px-4 py-3"
+                  className="bg-legacy-surface text-legacy-text rounded-xl px-4 py-3"
                   value={(props[key] as string) ?? ''}
                   onChangeText={(v) => setProp(key, v)}
                   placeholderTextColor="#6c7086"
@@ -261,7 +261,7 @@ export default function EditContentScreen() {
               </View>
             ))}
             <View className="flex-row justify-between items-center mb-3">
-              <Text className="text-text">Ritual</Text>
+              <Text className="text-legacy-text">Ritual</Text>
               <Switch
                 value={Boolean(props.is_ritual)}
                 onValueChange={(v) => setProp('is_ritual', v)}
@@ -270,7 +270,7 @@ export default function EditContentScreen() {
               />
             </View>
             <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-text">Concentration</Text>
+              <Text className="text-legacy-text">Concentration</Text>
               <Switch
                 value={Boolean(props.requires_concentration)}
                 onValueChange={(v) => setProp('requires_concentration', v)}
@@ -283,16 +283,16 @@ export default function EditContentScreen() {
 
         {item.content_type === 'feat' && (
           <>
-            <Text className="text-muted text-xs font-bold mb-1">PREREQUISITES</Text>
+            <Text className="text-legacy-muted text-xs font-bold mb-1">PREREQUISITES</Text>
             <TextInput
-              className="bg-surface text-text rounded-xl px-4 py-3 mb-4"
+              className="bg-legacy-surface text-legacy-text rounded-xl px-4 py-3 mb-4"
               value={(props.prerequisites as string) ?? ''}
               onChangeText={(v) => setProp('prerequisites', v)}
               placeholderTextColor="#6c7086"
             />
-            <Text className="text-muted text-xs font-bold mb-1">BENEFITS</Text>
+            <Text className="text-legacy-muted text-xs font-bold mb-1">BENEFITS</Text>
             <TextInput
-              className="bg-surface text-text rounded-xl px-4 py-3 mb-4"
+              className="bg-legacy-surface text-legacy-text rounded-xl px-4 py-3 mb-4"
               value={(props.benefits as string) ?? ''}
               onChangeText={(v) => setProp('benefits', v)}
               multiline
@@ -307,9 +307,9 @@ export default function EditContentScreen() {
           <>
             {['category', 'cost', 'weight'].map((key) => (
               <View key={key} className="mb-4">
-                <Text className="text-muted text-xs font-bold mb-1">{key.toUpperCase()}</Text>
+                <Text className="text-legacy-muted text-xs font-bold mb-1">{key.toUpperCase()}</Text>
                 <TextInput
-                  className="bg-surface text-text rounded-xl px-4 py-3"
+                  className="bg-legacy-surface text-legacy-text rounded-xl px-4 py-3"
                   value={(props[key] as string) ?? ''}
                   onChangeText={(v) => setProp(key, v)}
                   placeholderTextColor="#6c7086"
@@ -320,15 +320,15 @@ export default function EditContentScreen() {
         )}
       </ScrollView>
 
-      <View className="absolute bottom-0 left-0 right-0 p-4 bg-base border-t border-overlay">
+      <View className="absolute bottom-0 left-0 right-0 p-4 bg-legacy-base border-t border-legacy-overlay">
         <TouchableOpacity
-          className={`rounded-xl py-3 items-center ${name.trim() && !saving ? 'bg-primary' : 'bg-overlay'}`}
+          className={`rounded-xl py-3 items-center ${name.trim() && !saving ? 'bg-legacy-primary' : 'bg-legacy-overlay'}`}
           onPress={handleSave}
           disabled={!name.trim() || saving}
         >
           {saving
             ? <ActivityIndicator color="#cba6f7" />
-            : <Text className={`font-semibold ${name.trim() ? 'text-base' : 'text-muted'}`}>Save Changes →</Text>
+            : <Text className={`font-semibold ${name.trim() ? 'text-legacy-base' : 'text-legacy-muted'}`}>Save Changes →</Text>
           }
         </TouchableOpacity>
       </View>

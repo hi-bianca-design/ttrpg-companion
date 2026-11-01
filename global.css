@@ -1,3 +1,62 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Moss blend tokens (spec §4.2). Each variable holds a complete colour value.
+   Tailwind maps them in tailwind.config.js; src/lib/theme.ts mirrors them for JS. */
+@layer base {
+  :root {
+    --background: #FBF8F3;
+    --glow: #F3DDA0;
+    --foreground: #1E1A12;
+    --card: #F0EAE0;
+    --card-foreground: #1E1A12;
+    --muted: #F0EAE0;
+    /* spec value #7A6F5E fails AA on card (4.12:1); darkened to #726755 (4.63:1 on card) */
+    --muted-foreground: #726755;
+    --label: #9B8F7C;
+    --border: rgba(63, 122, 84, 0.16);
+    --rule: #E5DDD0;
+    --input: #E9E1D3;
+    --ring: #3F7A54;
+    --primary: #3F7A54;
+    --primary-foreground: #FBF8F3;
+    --accent-foreground: #3F7A54;
+    --highlight: #E8B547;
+    --highlight-foreground: #1E1A12;
+    --destructive: #D96A47;
+    --destructive-foreground: #1E1A12;
+    --resource-sky: #4F8FB8;
+    --resource-sky-glow: rgba(79, 143, 184, 0.55);
+    --resource-plum: #8B4A5E;
+    --resource-sage: #7A9A55;
+    --resource-ochre: #E8B547;
+  }
+
+  .dark:root {
+    --background: #173832;
+    --glow: #5A5F36;
+    --foreground: #F5E4C3;
+    --card: rgba(245, 228, 195, 0.06);
+    --card-foreground: #F5E4C3;
+    --muted: rgba(245, 228, 195, 0.06);
+    --muted-foreground: #A9BFB4;
+    --label: #8FB3A6;
+    --border: rgba(245, 228, 195, 0.10);
+    --rule: rgba(245, 228, 195, 0.14);
+    --input: rgba(245, 228, 195, 0.10);
+    --ring: #5B9268;
+    --primary: #5B9268;
+    --primary-foreground: #112D28;
+    --accent-foreground: #B5C995;
+    --highlight: #ECC15B;
+    --highlight-foreground: #1E1A12;
+    --destructive: #E68763;
+    --destructive-foreground: #1E1A12;
+    --resource-sky: #BFE0F2;
+    --resource-sky-glow: rgba(157, 196, 222, 0.7);
+    --resource-plum: #D79AAE;
+    --resource-sage: #B5C995;
+    --resource-ochre: #ECC15B;
+  }
+}

@@ -3,7 +3,7 @@ import { View } from 'react-native'
 
 export default function AuthLayout() {
   return (
-    <View className="flex-1 bg-base">
+    <View className="flex-1 bg-legacy-base">
       <Slot />
     </View>
   )

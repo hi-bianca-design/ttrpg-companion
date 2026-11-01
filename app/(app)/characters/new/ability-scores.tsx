@@ -57,10 +57,10 @@ export default function AbilityScoresStep() {
   }
 
   return (
-    <View className="flex-1 bg-base">
+    <View className="flex-1 bg-legacy-base">
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
-        <Text className="text-2xl font-bold text-text">Ability Scores</Text>
-        <Text className="text-muted mt-1 mb-4 text-sm">
+        <Text className="text-2xl font-bold text-legacy-text">Ability Scores</Text>
+        <Text className="text-legacy-muted mt-1 mb-4 text-sm">
           Assign the Standard Array to your 6 abilities. Tap an ability to assign or change its value.
         </Text>
 
@@ -70,9 +70,9 @@ export default function AbilityScoresStep() {
             return (
               <View
                 key={v}
-                className={`px-3 py-1 rounded-lg ${isUsed ? 'bg-overlay opacity-40' : 'bg-surface border border-primary'}`}
+                className={`px-3 py-1 rounded-lg ${isUsed ? 'bg-legacy-overlay opacity-40' : 'bg-legacy-surface border border-legacy-primary'}`}
               >
-                <Text className={`font-bold ${isUsed ? 'text-muted' : 'text-primary'}`}>{v}</Text>
+                <Text className={`font-bold ${isUsed ? 'text-legacy-muted' : 'text-legacy-primary'}`}>{v}</Text>
               </View>
             )
           })}
@@ -84,7 +84,7 @@ export default function AbilityScoresStep() {
           return (
             <View key={key} className="flex-row items-center mb-3 gap-3">
               <View className="w-28">
-                <Text className="text-text font-medium">{ABILITY_LABELS[key]}</Text>
+                <Text className="text-legacy-text font-medium">{ABILITY_LABELS[key]}</Text>
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
                 <View className="flex-row gap-2">
@@ -96,18 +96,18 @@ export default function AbilityScoresStep() {
                         key={v}
                         onPress={() => isAvailable && assignValue(key, isThisSlot ? null : v)}
                         className={`w-9 h-9 rounded-lg items-center justify-center ${
-                          isThisSlot ? 'bg-primary' : isAvailable ? 'bg-surface' : 'bg-overlay opacity-30'
+                          isThisSlot ? 'bg-legacy-primary' : isAvailable ? 'bg-legacy-surface' : 'bg-legacy-overlay opacity-30'
                         }`}
                         disabled={!isAvailable}
                       >
-                        <Text className={`font-bold text-sm ${isThisSlot ? 'text-base' : 'text-text'}`}>{v}</Text>
+                        <Text className={`font-bold text-sm ${isThisSlot ? 'text-legacy-base' : 'text-legacy-text'}`}>{v}</Text>
                       </TouchableOpacity>
                     )
                   })}
                 </View>
               </ScrollView>
               {assigned !== null && (
-                <Text className="text-primary font-bold w-8 text-center">
+                <Text className="text-legacy-primary font-bold w-8 text-center">
                   {assigned + bgBonus}
                 </Text>
               )}
@@ -117,12 +117,12 @@ export default function AbilityScoresStep() {
 
         {bgEligible.length > 0 && (
           <View className="mt-6">
-            <Text className="text-lg font-bold text-text mb-2">Background Bonus</Text>
-            <Text className="text-muted text-sm mb-3">
+            <Text className="text-lg font-bold text-legacy-text mb-2">Background Bonus</Text>
+            <Text className="text-legacy-muted text-sm mb-3">
               Your background grants +2 to one ability and +1 to another.
             </Text>
 
-            <Text className="text-text mb-2 font-medium">Which ability gets +2?</Text>
+            <Text className="text-legacy-text mb-2 font-medium">Which ability gets +2?</Text>
             <View className="flex-row flex-wrap gap-2 mb-4">
               {bgEligible.map((key) => (
                 <TouchableOpacity
@@ -131,24 +131,24 @@ export default function AbilityScoresStep() {
                     if (bgBonusOne === key) setBgBonusOne(null)
                     setBgBonusTwo(key)
                   }}
-                  className={`px-3 py-2 rounded-lg border ${bgBonusTwo === key ? 'bg-primary border-primary' : 'bg-surface border-overlay'}`}
+                  className={`px-3 py-2 rounded-lg border ${bgBonusTwo === key ? 'bg-legacy-primary border-legacy-primary' : 'bg-legacy-surface border-legacy-overlay'}`}
                 >
-                  <Text className={`font-medium ${bgBonusTwo === key ? 'text-base' : 'text-text'}`}>
+                  <Text className={`font-medium ${bgBonusTwo === key ? 'text-legacy-base' : 'text-legacy-text'}`}>
                     {(ABILITY_KEYS as readonly string[]).includes(key) ? ABILITY_LABELS[key as AbilityKey] : key} +2
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text className="text-text mb-2 font-medium">Which ability gets +1?</Text>
+            <Text className="text-legacy-text mb-2 font-medium">Which ability gets +1?</Text>
             <View className="flex-row flex-wrap gap-2">
               {bgEligible.filter((k) => k !== bgBonusTwo).map((key) => (
                 <TouchableOpacity
                   key={key}
                   onPress={() => setBgBonusOne(key)}
-                  className={`px-3 py-2 rounded-lg border ${bgBonusOne === key ? 'bg-primary border-primary' : 'bg-surface border-overlay'}`}
+                  className={`px-3 py-2 rounded-lg border ${bgBonusOne === key ? 'bg-legacy-primary border-legacy-primary' : 'bg-legacy-surface border-legacy-overlay'}`}
                 >
-                  <Text className={`font-medium ${bgBonusOne === key ? 'text-base' : 'text-text'}`}>
+                  <Text className={`font-medium ${bgBonusOne === key ? 'text-legacy-base' : 'text-legacy-text'}`}>
                     {(ABILITY_KEYS as readonly string[]).includes(key) ? ABILITY_LABELS[key as AbilityKey] : key} +1
                   </Text>
                 </TouchableOpacity>
@@ -158,13 +158,13 @@ export default function AbilityScoresStep() {
         )}
       </ScrollView>
 
-      <View className="absolute bottom-0 left-0 right-0 p-4 bg-base border-t border-overlay">
+      <View className="absolute bottom-0 left-0 right-0 p-4 bg-legacy-base border-t border-legacy-overlay">
         <TouchableOpacity
-          className={`rounded-xl py-3 items-center ${canProceed ? 'bg-primary' : 'bg-overlay'}`}
+          className={`rounded-xl py-3 items-center ${canProceed ? 'bg-legacy-primary' : 'bg-legacy-overlay'}`}
           onPress={handleNext}
           disabled={!canProceed}
         >
-          <Text className={`font-semibold ${canProceed ? 'text-base' : 'text-muted'}`}>
+          <Text className={`font-semibold ${canProceed ? 'text-legacy-base' : 'text-legacy-muted'}`}>
             {canProceed ? 'Confirm Ability Scores →' : 'Assign all 6 scores to continue'}
           </Text>
         </TouchableOpacity>

@@ -21,22 +21,22 @@ export default function PersonalityStep() {
   }
 
   return (
-    <View className="flex-1 bg-base">
+    <View className="flex-1 bg-legacy-base">
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
-        <Text className="text-2xl font-bold text-text">Alignment & Personality</Text>
-        <Text className="text-muted mt-1 mb-6 text-sm">
+        <Text className="text-2xl font-bold text-legacy-text">Alignment & Personality</Text>
+        <Text className="text-legacy-muted mt-1 mb-6 text-sm">
           Alignment and personality traits are optional but help roleplay your character.
         </Text>
 
-        <Text className="text-text font-medium mb-2">Alignment</Text>
+        <Text className="text-legacy-text font-medium mb-2">Alignment</Text>
         <View className="flex-row flex-wrap gap-2 mb-6">
           {ALIGNMENTS.map((a) => (
             <TouchableOpacity
               key={a}
               onPress={() => setAlignment(a === alignment ? '' : a)}
-              className={`px-3 py-2 rounded-lg border ${alignment === a ? 'bg-primary border-primary' : 'bg-surface border-overlay'}`}
+              className={`px-3 py-2 rounded-lg border ${alignment === a ? 'bg-legacy-primary border-legacy-primary' : 'bg-legacy-surface border-legacy-overlay'}`}
             >
-              <Text className={`text-sm font-medium ${alignment === a ? 'text-base' : 'text-text'}`}>{a}</Text>
+              <Text className={`text-sm font-medium ${alignment === a ? 'text-legacy-base' : 'text-legacy-text'}`}>{a}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -48,9 +48,9 @@ export default function PersonalityStep() {
           { label: 'Flaw', value: flaw, setter: setFlaw, placeholder: 'e.g. My hatred of my enemies is blinding and unreasoning.' },
         ].map(({ label, value, setter, placeholder }) => (
           <View key={label} className="mb-4">
-            <Text className="text-text font-medium mb-1">{label}</Text>
+            <Text className="text-legacy-text font-medium mb-1">{label}</Text>
             <TextInput
-              className="bg-surface text-text rounded-xl px-4 py-3 min-h-[56px]"
+              className="bg-legacy-surface text-legacy-text rounded-xl px-4 py-3 min-h-[56px]"
               placeholder={placeholder}
               placeholderTextColor="#6c7086"
               value={value}
@@ -61,12 +61,12 @@ export default function PersonalityStep() {
         ))}
       </ScrollView>
 
-      <View className="absolute bottom-0 left-0 right-0 p-4 bg-base border-t border-overlay">
+      <View className="absolute bottom-0 left-0 right-0 p-4 bg-legacy-base border-t border-legacy-overlay">
         <TouchableOpacity
-          className="bg-primary rounded-xl py-3 items-center"
+          className="bg-legacy-primary rounded-xl py-3 items-center"
           onPress={handleNext}
         >
-          <Text className="text-base font-semibold">
+          <Text className="text-legacy-base font-semibold">
             {SPELLCASTING_CLASSES.includes(draft.class_name ?? '')
               ? 'Choose Spells →'
               : 'Remaining Details →'}

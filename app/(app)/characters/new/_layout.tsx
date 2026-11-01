@@ -8,7 +8,7 @@ export default function WizardLayout() {
   const currentStep = segments[segments.length - 1] ?? 'class'
 
   return (
-    <SafeAreaView className="flex-1 bg-base" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-legacy-base" edges={['top']}>
       <WizardProgress currentStep={currentStep} />
       <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right' }} />
     </SafeAreaView>

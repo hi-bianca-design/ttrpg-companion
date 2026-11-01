@@ -26,11 +26,11 @@ export default function SignupScreen() {
 
   return (
     <View className="flex-1 justify-center px-6">
-      <Text className="text-4xl font-bold text-primary mb-2">Create Account</Text>
-      <Text className="text-muted mb-10">Join D&D Companion</Text>
+      <Text className="text-4xl font-bold text-legacy-primary mb-2">Create Account</Text>
+      <Text className="text-legacy-muted mb-10">Join D&D Companion</Text>
 
       <TextInput
-        className="bg-surface text-text rounded-xl px-4 py-3 mb-3"
+        className="bg-legacy-surface text-legacy-text rounded-xl px-4 py-3 mb-3"
         placeholder="Email"
         placeholderTextColor="#6c7086"
         value={email}
@@ -39,7 +39,7 @@ export default function SignupScreen() {
         keyboardType="email-address"
       />
       <TextInput
-        className="bg-surface text-text rounded-xl px-4 py-3 mb-3"
+        className="bg-legacy-surface text-legacy-text rounded-xl px-4 py-3 mb-3"
         placeholder="Username"
         placeholderTextColor="#6c7086"
         value={username}
@@ -47,7 +47,7 @@ export default function SignupScreen() {
         autoCapitalize="none"
       />
       <TextInput
-        className="bg-surface text-text rounded-xl px-4 py-3 mb-6"
+        className="bg-legacy-surface text-legacy-text rounded-xl px-4 py-3 mb-6"
         placeholder="Password"
         placeholderTextColor="#6c7086"
         value={password}
@@ -56,19 +56,19 @@ export default function SignupScreen() {
       />
 
       <TouchableOpacity
-        className="bg-primary rounded-xl py-3 items-center mb-4"
+        className="bg-legacy-primary rounded-xl py-3 items-center mb-4"
         onPress={handleSignup}
         disabled={loading}
       >
         {loading
           ? <ActivityIndicator color="#1e1e2e" />
-          : <Text className="text-base font-semibold text-[#1e1e2e]">Create Account</Text>
+          : <Text className="text-legacy-base font-semibold text-[#1e1e2e]">Create Account</Text>
         }
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => router.back()}>
-        <Text className="text-muted text-center">
-          Already have an account? <Text className="text-primary">Sign in</Text>
+        <Text className="text-legacy-muted text-center">
+          Already have an account? <Text className="text-legacy-primary">Sign in</Text>
         </Text>
       </TouchableOpacity>
     </View>

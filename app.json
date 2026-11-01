@@ -4,6 +4,7 @@
     "slug": "dnd-companion",
     "version": "1.0.0",
     "scheme": "dnd-companion",
+    "userInterfaceStyle": "automatic",
     "web": {
       "bundler": "metro",
       "output": "single"

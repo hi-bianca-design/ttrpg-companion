@@ -25,7 +25,7 @@ export default function LevelUpScreen() {
   }, [id])
 
   if (loading || !character) {
-    return <View className="flex-1 bg-base justify-center items-center"><ActivityIndicator color="#cba6f7" /></View>
+    return <View className="flex-1 bg-legacy-base justify-center items-center"><ActivityIndicator color="#cba6f7" /></View>
   }
 
   const newLevel = character.level + 1
@@ -80,20 +80,20 @@ export default function LevelUpScreen() {
   }
 
   return (
-    <View className="flex-1 bg-base">
+    <View className="flex-1 bg-legacy-base">
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
         <TouchableOpacity onPress={() => router.back()} className="mb-4">
-          <Text className="text-primary">← Back</Text>
+          <Text className="text-legacy-primary">← Back</Text>
         </TouchableOpacity>
 
-        <Text className="text-2xl font-bold text-text">Level Up</Text>
-        <Text className="text-muted mt-1 mb-6 text-sm">
+        <Text className="text-2xl font-bold text-legacy-text">Level Up</Text>
+        <Text className="text-legacy-muted mt-1 mb-6 text-sm">
           {character.name} reaches level {newLevel}.
         </Text>
 
-        <View className="bg-surface rounded-xl p-4 mb-4">
-          <Text className="text-text font-bold mb-3">Hit Points</Text>
-          <Text className="text-muted text-sm mb-3">
+        <View className="bg-legacy-surface rounded-xl p-4 mb-4">
+          <Text className="text-legacy-text font-bold mb-3">Hit Points</Text>
+          <Text className="text-legacy-muted text-sm mb-3">
             Your Constitution modifier ({conMod >= 0 ? `+${conMod}` : conMod}) is added each level.
           </Text>
           {[
@@ -103,18 +103,18 @@ export default function LevelUpScreen() {
             <TouchableOpacity
               key={mode}
               onPress={() => setHpChoice(mode)}
-              className={`flex-row items-center p-3 rounded-xl mb-2 border ${hpChoice === mode ? 'border-primary bg-overlay' : 'border-transparent bg-overlay/50'}`}
+              className={`flex-row items-center p-3 rounded-xl mb-2 border ${hpChoice === mode ? 'border-legacy-primary bg-legacy-overlay' : 'border-transparent bg-legacy-overlay/50'}`}
             >
-              <View className={`w-4 h-4 rounded-full border-2 mr-3 ${hpChoice === mode ? 'bg-primary border-primary' : 'border-muted'}`} />
-              <Text className={hpChoice === mode ? 'text-primary font-medium' : 'text-text'}>{label}</Text>
+              <View className={`w-4 h-4 rounded-full border-2 mr-3 ${hpChoice === mode ? 'bg-legacy-primary border-legacy-primary' : 'border-legacy-muted'}`} />
+              <Text className={hpChoice === mode ? 'text-legacy-primary font-medium' : 'text-legacy-text'}>{label}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
         {isASILevel && (
-          <View className="bg-surface rounded-xl p-4 mb-4">
-            <Text className="text-text font-bold mb-1">Ability Score Improvement</Text>
-            <Text className="text-muted text-sm mb-3">
+          <View className="bg-legacy-surface rounded-xl p-4 mb-4">
+            <Text className="text-legacy-text font-bold mb-1">Ability Score Improvement</Text>
+            <Text className="text-legacy-muted text-sm mb-3">
               Distribute +2 across your ability scores (up to +2 in one or +1 to two).
               Selected: {totalASI}/2
             </Text>
@@ -128,9 +128,9 @@ export default function LevelUpScreen() {
                     key={key}
                     onPress={() => !capped && toggleASI(key)}
                     disabled={capped}
-                    className={`px-3 py-2 rounded-lg border ${bonus > 0 ? 'bg-primary border-primary' : capped ? 'bg-overlay border-transparent opacity-40' : 'bg-overlay border-overlay'}`}
+                    className={`px-3 py-2 rounded-lg border ${bonus > 0 ? 'bg-legacy-primary border-legacy-primary' : capped ? 'bg-legacy-overlay border-transparent opacity-40' : 'bg-legacy-overlay border-legacy-overlay'}`}
                   >
-                    <Text className={`text-sm font-medium ${bonus > 0 ? 'text-base' : 'text-text'}`}>
+                    <Text className={`text-sm font-medium ${bonus > 0 ? 'text-legacy-base' : 'text-legacy-text'}`}>
                       {ABILITY_LABELS[key].slice(0, 3)} {currentScore}{bonus > 0 ? ` → ${currentScore + bonus}` : ''}
                     </Text>
                   </TouchableOpacity>
@@ -140,23 +140,23 @@ export default function LevelUpScreen() {
           </View>
         )}
 
-        <View className="bg-surface rounded-xl p-4">
-          <Text className="text-muted text-xs font-bold mb-2">SUMMARY</Text>
-          <Text className="text-text">Level: {character.level} → {newLevel}</Text>
-          <Text className="text-text mt-1">HP: {character.hp_max} → {character.hp_max + hpIncrease}</Text>
-          <Text className="text-text mt-1">Proficiency Bonus: +{getProficiencyBonus(newLevel)}</Text>
+        <View className="bg-legacy-surface rounded-xl p-4">
+          <Text className="text-legacy-muted text-xs font-bold mb-2">SUMMARY</Text>
+          <Text className="text-legacy-text">Level: {character.level} → {newLevel}</Text>
+          <Text className="text-legacy-text mt-1">HP: {character.hp_max} → {character.hp_max + hpIncrease}</Text>
+          <Text className="text-legacy-text mt-1">Proficiency Bonus: +{getProficiencyBonus(newLevel)}</Text>
         </View>
       </ScrollView>
 
-      <View className="absolute bottom-0 left-0 right-0 p-4 bg-base border-t border-overlay">
+      <View className="absolute bottom-0 left-0 right-0 p-4 bg-legacy-base border-t border-legacy-overlay">
         <TouchableOpacity
-          className={`rounded-xl py-3 items-center ${saving || !asiValid ? 'bg-overlay' : 'bg-primary'}`}
+          className={`rounded-xl py-3 items-center ${saving || !asiValid ? 'bg-legacy-overlay' : 'bg-legacy-primary'}`}
           onPress={handleLevelUp}
           disabled={saving || !asiValid}
         >
           {saving
             ? <ActivityIndicator color="#cba6f7" />
-            : <Text className={`font-semibold ${asiValid ? 'text-base' : 'text-muted'}`}>
+            : <Text className={`font-semibold ${asiValid ? 'text-legacy-base' : 'text-legacy-muted'}`}>
                 {asiValid ? `Confirm Level ${newLevel} →` : `Assign ${2 - totalASI} more ability points`}
               </Text>
           }

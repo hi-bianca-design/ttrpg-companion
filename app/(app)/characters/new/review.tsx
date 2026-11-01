@@ -36,23 +36,23 @@ export default function ReviewStep() {
   }
 
   return (
-    <View className="flex-1 bg-base">
+    <View className="flex-1 bg-legacy-base">
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
-        <Text className="text-2xl font-bold text-text">{draft.name || 'Your Character'}</Text>
-        <Text className="text-muted mt-1 mb-6">Review before finalizing.</Text>
+        <Text className="text-2xl font-bold text-legacy-text">{draft.name || 'Your Character'}</Text>
+        <Text className="text-legacy-muted mt-1 mb-6">Review before finalizing.</Text>
 
-        <View className="bg-surface rounded-xl p-4 mb-3">
-          <Text className="text-muted text-xs mb-2 font-bold">CLASS & ORIGIN</Text>
-          <Text className="text-text">
+        <View className="bg-legacy-surface rounded-xl p-4 mb-3">
+          <Text className="text-legacy-muted text-xs mb-2 font-bold">CLASS & ORIGIN</Text>
+          <Text className="text-legacy-text">
             <Text className="font-bold">Class:</Text> {draft.class_name ?? '—'} (d{draft.hit_die})
           </Text>
-          <Text className="text-text mt-1">
+          <Text className="text-legacy-text mt-1">
             <Text className="font-bold">HP at Level 1:</Text> {hpMax}
           </Text>
         </View>
 
-        <View className="bg-surface rounded-xl p-4 mb-3">
-          <Text className="text-muted text-xs mb-3 font-bold">ABILITY SCORES</Text>
+        <View className="bg-legacy-surface rounded-xl p-4 mb-3">
+          <Text className="text-legacy-muted text-xs mb-3 font-bold">ABILITY SCORES</Text>
           <View className="flex-row flex-wrap gap-2">
             {ABILITY_KEYS.map((key) => {
               const base = draft[key]
@@ -60,11 +60,11 @@ export default function ReviewStep() {
               const total = base + bonus
               const mod = getAbilityModifier(total)
               return (
-                <View key={key} className="items-center bg-overlay rounded-lg px-3 py-2 min-w-[64px]">
-                  <Text className="text-muted text-xs">{ABILITY_LABELS[key].slice(0, 3).toUpperCase()}</Text>
-                  <Text className="text-text font-bold text-lg">{total}</Text>
-                  <Text className="text-primary text-xs">{formatModifier(mod)}</Text>
-                  {bonus > 0 && <Text className="text-green text-xs">+{bonus} bg</Text>}
+                <View key={key} className="items-center bg-legacy-overlay rounded-lg px-3 py-2 min-w-[64px]">
+                  <Text className="text-legacy-muted text-xs">{ABILITY_LABELS[key].slice(0, 3).toUpperCase()}</Text>
+                  <Text className="text-legacy-text font-bold text-lg">{total}</Text>
+                  <Text className="text-legacy-primary text-xs">{formatModifier(mod)}</Text>
+                  {bonus > 0 && <Text className="text-legacy-green text-xs">+{bonus} bg</Text>}
                 </View>
               )
             })}
@@ -72,30 +72,30 @@ export default function ReviewStep() {
         </View>
 
         {(draft.alignment || draft.personality_trait) && (
-          <View className="bg-surface rounded-xl p-4 mb-3">
-            <Text className="text-muted text-xs mb-2 font-bold">PERSONALITY</Text>
-            {draft.alignment && <Text className="text-text"><Text className="font-bold">Alignment:</Text> {draft.alignment}</Text>}
-            {draft.personality_trait && <Text className="text-text mt-1">{draft.personality_trait}</Text>}
+          <View className="bg-legacy-surface rounded-xl p-4 mb-3">
+            <Text className="text-legacy-muted text-xs mb-2 font-bold">PERSONALITY</Text>
+            {draft.alignment && <Text className="text-legacy-text"><Text className="font-bold">Alignment:</Text> {draft.alignment}</Text>}
+            {draft.personality_trait && <Text className="text-legacy-text mt-1">{draft.personality_trait}</Text>}
           </View>
         )}
 
         {draft.selected_spell_ids.length > 0 && (
-          <View className="bg-surface rounded-xl p-4 mb-3">
-            <Text className="text-muted text-xs mb-1 font-bold">SPELLS</Text>
-            <Text className="text-text">{draft.selected_spell_ids.length} spell{draft.selected_spell_ids.length !== 1 ? 's' : ''} selected</Text>
+          <View className="bg-legacy-surface rounded-xl p-4 mb-3">
+            <Text className="text-legacy-muted text-xs mb-1 font-bold">SPELLS</Text>
+            <Text className="text-legacy-text">{draft.selected_spell_ids.length} spell{draft.selected_spell_ids.length !== 1 ? 's' : ''} selected</Text>
           </View>
         )}
       </ScrollView>
 
-      <View className="absolute bottom-0 left-0 right-0 p-4 bg-base border-t border-overlay">
+      <View className="absolute bottom-0 left-0 right-0 p-4 bg-legacy-base border-t border-legacy-overlay">
         <TouchableOpacity
-          className={`rounded-xl py-3 items-center ${saving ? 'bg-overlay' : 'bg-primary'}`}
+          className={`rounded-xl py-3 items-center ${saving ? 'bg-legacy-overlay' : 'bg-legacy-primary'}`}
           onPress={handleCreate}
           disabled={saving}
         >
           {saving
             ? <ActivityIndicator color="#cba6f7" />
-            : <Text className="text-base font-semibold">Create {draft.name} →</Text>
+            : <Text className="text-legacy-base font-semibold">Create {draft.name} →</Text>
           }
         </TouchableOpacity>
       </View>

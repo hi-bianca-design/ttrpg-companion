@@ -99,41 +99,41 @@ export default function SpellsStep() {
   }, [allSpells, query, maxSpellLevel])
 
   if (loading) {
-    return <View className="flex-1 bg-base justify-center items-center"><ActivityIndicator color="#cba6f7" size="large" /></View>
+    return <View className="flex-1 bg-legacy-base justify-center items-center"><ActivityIndicator color="#cba6f7" size="large" /></View>
   }
 
   return (
-    <View className="flex-1 bg-base">
+    <View className="flex-1 bg-legacy-base">
       <View className="px-4 pt-2 pb-3">
-        <Text className="text-2xl font-bold text-text mb-1">Choose Spells</Text>
-        <Text className="text-muted text-sm mb-3">
+        <Text className="text-2xl font-bold text-legacy-text mb-1">Choose Spells</Text>
+        <Text className="text-legacy-muted text-sm mb-3">
           Select starting spells for your Level {level} {draft.class_name}.
         </Text>
 
         {/* Limit indicators */}
         <View className="flex-row gap-2 mb-3">
           {maxCantrips > 0 && (
-            <View className={`flex-1 rounded-xl px-3 py-2 ${selectedCantrips >= maxCantrips ? 'bg-primary/20 border border-primary' : 'bg-surface'}`}>
-              <Text className="text-muted text-xs">Cantrips</Text>
-              <Text className={`font-bold text-sm ${selectedCantrips >= maxCantrips ? 'text-primary' : 'text-text'}`}>
+            <View className={`flex-1 rounded-xl px-3 py-2 ${selectedCantrips >= maxCantrips ? 'bg-legacy-primary/20 border border-legacy-primary' : 'bg-legacy-surface'}`}>
+              <Text className="text-legacy-muted text-xs">Cantrips</Text>
+              <Text className={`font-bold text-sm ${selectedCantrips >= maxCantrips ? 'text-legacy-primary' : 'text-legacy-text'}`}>
                 {selectedCantrips} / {maxCantrips}
               </Text>
             </View>
           )}
           {maxSpells > 0 && (
-            <View className={`flex-1 rounded-xl px-3 py-2 ${selectedLeveled >= maxSpells ? 'bg-primary/20 border border-primary' : 'bg-surface'}`}>
-              <Text className="text-muted text-xs">Spells</Text>
-              <Text className={`font-bold text-sm ${selectedLeveled >= maxSpells ? 'text-primary' : 'text-text'}`}>
+            <View className={`flex-1 rounded-xl px-3 py-2 ${selectedLeveled >= maxSpells ? 'bg-legacy-primary/20 border border-legacy-primary' : 'bg-legacy-surface'}`}>
+              <Text className="text-legacy-muted text-xs">Spells</Text>
+              <Text className={`font-bold text-sm ${selectedLeveled >= maxSpells ? 'text-legacy-primary' : 'text-legacy-text'}`}>
                 {selectedLeveled} / {maxSpells}
               </Text>
             </View>
           )}
         </View>
 
-        <View className="flex-row items-center bg-surface rounded-xl px-3 gap-2">
+        <View className="flex-row items-center bg-legacy-surface rounded-xl px-3 gap-2">
           <MagnifyingGlass size={18} color="#6c7086" />
           <TextInput
-            className="flex-1 text-text py-3 text-sm"
+            className="flex-1 text-legacy-text py-3 text-sm"
             placeholder="Search spells..."
             placeholderTextColor="#6c7086"
             value={query}
@@ -156,10 +156,10 @@ export default function SpellsStep() {
             : selectedLeveled >= maxSpells
           const limit = section.isCantrips ? maxCantrips : maxSpells
           return (
-            <View className="flex-row items-center justify-between py-2 bg-base">
-              <Text className="text-muted text-xs font-bold tracking-widest uppercase">{section.title}</Text>
+            <View className="flex-row items-center justify-between py-2 bg-legacy-base">
+              <Text className="text-legacy-muted text-xs font-bold tracking-widest uppercase">{section.title}</Text>
               {limit > 0 && (
-                <Text className={`text-xs font-bold ${atLimit ? 'text-primary' : 'text-muted'}`}>
+                <Text className={`text-xs font-bold ${atLimit ? 'text-legacy-primary' : 'text-legacy-muted'}`}>
                   {section.isCantrips ? `${selectedCantrips}/${maxCantrips}` : `${selectedLeveled}/${maxSpells}`}
                 </Text>
               )}
@@ -168,7 +168,7 @@ export default function SpellsStep() {
         }}
         ListEmptyComponent={
           <View className="items-center py-12">
-            <Text className="text-muted text-sm">No spells match "{query}"</Text>
+            <Text className="text-legacy-muted text-sm">No spells match "{query}"</Text>
           </View>
         }
         renderItem={({ item }) => {
@@ -193,31 +193,31 @@ export default function SpellsStep() {
                 <View style={{ width: 3, alignSelf: 'stretch', backgroundColor: schoolColor, borderRadius: 2 }} />
                 <View className="flex-1">
                   <View className="flex-row items-center gap-1.5 flex-wrap">
-                    <Text className={`font-bold text-sm flex-shrink ${isSelected ? 'text-primary' : 'text-text'}`}>
+                    <Text className={`font-bold text-sm flex-shrink ${isSelected ? 'text-legacy-primary' : 'text-legacy-text'}`}>
                       {item.name}
                     </Text>
                     {item.is_custom && (
-                      <View className="bg-overlay px-1.5 py-0.5 rounded-full">
-                        <Text className="text-muted text-xs">Custom</Text>
+                      <View className="bg-legacy-overlay px-1.5 py-0.5 rounded-full">
+                        <Text className="text-legacy-muted text-xs">Custom</Text>
                       </View>
                     )}
                     {item.is_ritual && (
-                      <View className="bg-overlay px-1.5 py-0.5 rounded-full">
-                        <Text className="text-yellow text-xs">Ritual</Text>
+                      <View className="bg-legacy-overlay px-1.5 py-0.5 rounded-full">
+                        <Text className="text-legacy-yellow text-xs">Ritual</Text>
                       </View>
                     )}
                     {item.requires_concentration && (
-                      <View className="bg-overlay px-1.5 py-0.5 rounded-full">
-                        <Text className="text-blue text-xs">Conc.</Text>
+                      <View className="bg-legacy-overlay px-1.5 py-0.5 rounded-full">
+                        <Text className="text-legacy-blue text-xs">Conc.</Text>
                       </View>
                     )}
                   </View>
-                  <Text className="text-muted text-xs mt-0.5">
+                  <Text className="text-legacy-muted text-xs mt-0.5">
                     {item.casting_time} · {item.range} · {item.school}
                   </Text>
                 </View>
                 {isSelected && (
-                  <View className="w-6 h-6 rounded-full bg-primary items-center justify-center mt-0.5 flex-shrink-0">
+                  <View className="w-6 h-6 rounded-full bg-legacy-primary items-center justify-center mt-0.5 flex-shrink-0">
                     <Check size={13} color="#1e1e2e" weight="bold" />
                   </View>
                 )}
@@ -227,13 +227,13 @@ export default function SpellsStep() {
         }}
       />
 
-      <View className="absolute bottom-0 left-0 right-0 px-4 pb-8 pt-3 bg-base border-t border-overlay">
+      <View className="absolute bottom-0 left-0 right-0 px-4 pb-8 pt-3 bg-legacy-base border-t border-legacy-overlay">
         <TouchableOpacity
-          className="bg-primary rounded-2xl py-4 items-center"
+          className="bg-legacy-primary rounded-2xl py-4 items-center"
           onPress={handleNext}
           activeOpacity={0.8}
         >
-          <Text className="text-base font-bold">
+          <Text className="text-legacy-base font-bold">
             {(selectedSrd.size + selectedCustom.size) > 0
               ? `Continue with ${selectedSrd.size + selectedCustom.size} spell${selectedSrd.size + selectedCustom.size !== 1 ? 's' : ''} →`
               : 'Skip Spells →'}

@@ -93,7 +93,7 @@ export default function CharacterTab() {
   }
 
   if (loading || !character) {
-    return <View className="flex-1 bg-base justify-center items-center"><ActivityIndicator color="#cba6f7" /></View>
+    return <View className="flex-1 bg-legacy-base justify-center items-center"><ActivityIndicator color="#cba6f7" /></View>
   }
 
   const profBonus = getProficiencyBonus(character.level)
@@ -109,38 +109,38 @@ export default function CharacterTab() {
   const backgroundName = character.background?.name ?? character.custom_background?.name ?? '—'
 
   return (
-    <View className="flex-1 bg-base">
+    <View className="flex-1 bg-legacy-base">
       {/* XP bar */}
       <View className="px-4 pt-4 pb-2">
         <View className="flex-row justify-between items-center mb-1">
-          <Text className="text-text font-bold text-lg">{character.name}</Text>
+          <Text className="text-legacy-text font-bold text-lg">{character.name}</Text>
           <TouchableOpacity
             onPress={() => router.push(`/(app)/characters/${id}/level-up`)}
-            className="bg-surface px-3 py-1 rounded-lg"
+            className="bg-legacy-surface px-3 py-1 rounded-lg"
           >
-            <Text className="text-primary text-sm">Level {character.level}</Text>
+            <Text className="text-legacy-primary text-sm">Level {character.level}</Text>
           </TouchableOpacity>
         </View>
-        <Text className="text-muted text-xs mb-2">
+        <Text className="text-legacy-muted text-xs mb-2">
           {character.class?.name ?? '—'} · {speciesName}
         </Text>
-        <View className="h-2 bg-overlay rounded-full overflow-hidden">
-          <View className="h-full bg-primary/70 rounded-full" style={{ width: `${xpProgress * 100}%` }} />
+        <View className="h-2 bg-legacy-overlay rounded-full overflow-hidden">
+          <View className="h-full bg-legacy-primary/70 rounded-full" style={{ width: `${xpProgress * 100}%` }} />
         </View>
-        <Text className="text-muted text-xs mt-1">
+        <Text className="text-legacy-muted text-xs mt-1">
           {xp.toLocaleString()} XP{xpForNext ? ` / ${xpForNext.toLocaleString()} to Level ${character.level + 1}` : ' (Max Level)'}
         </Text>
       </View>
 
       {/* Sub-tab bar */}
-      <View className="flex-row mx-4 mb-3 bg-surface rounded-xl overflow-hidden">
+      <View className="flex-row mx-4 mb-3 bg-legacy-surface rounded-xl overflow-hidden">
         {(['combat', 'profile'] as const).map((t) => (
           <TouchableOpacity
             key={t}
             onPress={() => setSubTab(t)}
-            className={`flex-1 py-2 items-center ${subTab === t ? 'bg-primary' : ''}`}
+            className={`flex-1 py-2 items-center ${subTab === t ? 'bg-legacy-primary' : ''}`}
           >
-            <Text className={`font-medium text-sm ${subTab === t ? 'text-base' : 'text-muted'}`}>
+            <Text className={`font-medium text-sm ${subTab === t ? 'text-legacy-base' : 'text-legacy-muted'}`}>
               {t === 'combat' ? 'Combat' : 'Profile'}
             </Text>
           </TouchableOpacity>
@@ -169,9 +169,9 @@ export default function CharacterTab() {
                 { label: 'Speed', value: `${character.speed} ft` },
                 { label: 'Prof', value: `+${profBonus}` },
               ].map(({ label, value }) => (
-                <View key={label} className="flex-1 bg-overlay rounded-xl p-3 items-center">
-                  <Text className="text-muted text-xs">{label}</Text>
-                  <Text className="text-text font-bold text-lg">{value}</Text>
+                <View key={label} className="flex-1 bg-legacy-overlay rounded-xl p-3 items-center">
+                  <Text className="text-legacy-muted text-xs">{label}</Text>
+                  <Text className="text-legacy-text font-bold text-lg">{value}</Text>
                 </View>
               ))}
             </View>
@@ -180,11 +180,11 @@ export default function CharacterTab() {
           <CollapsibleSection sectionKey={`${id}:conditions`} title="CONDITIONS">
             <View className="flex-row justify-end mb-2">
               <TouchableOpacity onPress={() => setConditionPickerOpen(true)}>
-                <Text className="text-primary text-xs">+ Add</Text>
+                <Text className="text-legacy-primary text-xs">+ Add</Text>
               </TouchableOpacity>
             </View>
             {(character.conditions ?? []).length === 0 ? (
-              <Text className="text-muted text-xs">None</Text>
+              <Text className="text-legacy-muted text-xs">None</Text>
             ) : (
               <View className="flex-row flex-wrap">
                 {(character.conditions ?? []).map((c) => (
@@ -235,10 +235,10 @@ export default function CharacterTab() {
           )}
 
           <CollapsibleSection sectionKey={`${id}:character-info`} title="CHARACTER INFO">
-            <Text className="text-text"><Text className="text-muted">Class: </Text>{character.class?.name ?? '—'}</Text>
-            <Text className="text-text mt-1"><Text className="text-muted">Species: </Text>{speciesName}</Text>
-            <Text className="text-text mt-1"><Text className="text-muted">Background: </Text>{backgroundName}</Text>
-            <Text className="text-text mt-1"><Text className="text-muted">Alignment: </Text>{character.alignment ?? '—'}</Text>
+            <Text className="text-legacy-text"><Text className="text-legacy-muted">Class: </Text>{character.class?.name ?? '—'}</Text>
+            <Text className="text-legacy-text mt-1"><Text className="text-legacy-muted">Species: </Text>{speciesName}</Text>
+            <Text className="text-legacy-text mt-1"><Text className="text-legacy-muted">Background: </Text>{backgroundName}</Text>
+            <Text className="text-legacy-text mt-1"><Text className="text-legacy-muted">Alignment: </Text>{character.alignment ?? '—'}</Text>
           </CollapsibleSection>
 
           <CollapsibleSection sectionKey={`${id}:ability-scores`} title="ABILITY SCORES">
@@ -247,10 +247,10 @@ export default function CharacterTab() {
                 const score = character[key]
                 const mod = getAbilityModifier(score)
                 return (
-                  <View key={key} className="items-center bg-overlay rounded-xl px-3 py-2 flex-1 min-w-[80px]">
-                    <Text className="text-muted text-xs">{ABILITY_LABELS[key].slice(0, 3).toUpperCase()}</Text>
-                    <Text className="text-text font-bold text-xl">{score}</Text>
-                    <Text className="text-primary text-sm">{formatModifier(mod)}</Text>
+                  <View key={key} className="items-center bg-legacy-overlay rounded-xl px-3 py-2 flex-1 min-w-[80px]">
+                    <Text className="text-legacy-muted text-xs">{ABILITY_LABELS[key].slice(0, 3).toUpperCase()}</Text>
+                    <Text className="text-legacy-text font-bold text-xl">{score}</Text>
+                    <Text className="text-legacy-primary text-sm">{formatModifier(mod)}</Text>
                   </View>
                 )
               })}
@@ -263,12 +263,12 @@ export default function CharacterTab() {
               const isProficient = savingThrowProfs.includes(key)
               const total = mod + (isProficient ? profBonus : 0)
               return (
-                <View key={key} className="flex-row justify-between items-center py-1.5 border-b border-overlay/30">
+                <View key={key} className="flex-row justify-between items-center py-1.5 border-b border-legacy-overlay/30">
                   <View className="flex-row items-center gap-2">
-                    <View className={`w-3 h-3 rounded-full border ${isProficient ? 'bg-primary border-primary' : 'border-overlay'}`} />
-                    <Text className="text-text text-sm">{ABILITY_LABELS[key]}</Text>
+                    <View className={`w-3 h-3 rounded-full border ${isProficient ? 'bg-legacy-primary border-legacy-primary' : 'border-legacy-overlay'}`} />
+                    <Text className="text-legacy-text text-sm">{ABILITY_LABELS[key]}</Text>
                   </View>
-                  <Text className={`text-sm font-medium ${isProficient ? 'text-primary' : 'text-muted'}`}>
+                  <Text className={`text-sm font-medium ${isProficient ? 'text-legacy-primary' : 'text-legacy-muted'}`}>
                     {formatModifier(total)}
                   </Text>
                 </View>
@@ -278,14 +278,14 @@ export default function CharacterTab() {
 
           <CollapsibleSection sectionKey={`${id}:personality`} title="PERSONALITY TRAITS">
             {(character as any).personality_trait
-              ? <Text className="text-text text-sm">{(character as any).personality_trait}</Text>
-              : <Text className="text-muted text-sm">None recorded</Text>}
+              ? <Text className="text-legacy-text text-sm">{(character as any).personality_trait}</Text>
+              : <Text className="text-legacy-muted text-sm">None recorded</Text>}
           </CollapsibleSection>
 
           <CollapsibleSection sectionKey={`${id}:backstory`} title="BACKSTORY">
             {character.notes
-              ? <Text className="text-text text-sm">{character.notes}</Text>
-              : <Text className="text-muted text-sm">None recorded</Text>}
+              ? <Text className="text-legacy-text text-sm">{character.notes}</Text>
+              : <Text className="text-legacy-muted text-sm">None recorded</Text>}
           </CollapsibleSection>
         </ScrollView>
       )}
@@ -293,11 +293,11 @@ export default function CharacterTab() {
       {/* Condition picker modal */}
       <Modal visible={conditionPickerOpen} transparent animationType="slide">
         <View className="flex-1 justify-end bg-black/60">
-          <View className="bg-surface rounded-t-2xl p-4 pb-8">
+          <View className="bg-legacy-surface rounded-t-2xl p-4 pb-8">
             <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-text font-bold text-lg">Add Condition</Text>
+              <Text className="text-legacy-text font-bold text-lg">Add Condition</Text>
               <TouchableOpacity onPress={() => setConditionPickerOpen(false)}>
-                <Text className="text-muted">Cancel</Text>
+                <Text className="text-legacy-muted">Cancel</Text>
               </TouchableOpacity>
             </View>
             <View className="flex-row flex-wrap gap-2">
@@ -308,9 +308,9 @@ export default function CharacterTab() {
                     key={c}
                     onPress={() => addCondition(c)}
                     disabled={active}
-                    className={`px-3 py-2 rounded-full border ${active ? 'border-overlay bg-overlay opacity-40' : 'border-red bg-red/20'}`}
+                    className={`px-3 py-2 rounded-full border ${active ? 'border-legacy-overlay bg-legacy-overlay opacity-40' : 'border-legacy-red bg-legacy-red/20'}`}
                   >
-                    <Text className={`text-sm ${active ? 'text-muted' : 'text-red'}`}>{c}</Text>
+                    <Text className={`text-sm ${active ? 'text-legacy-muted' : 'text-legacy-red'}`}>{c}</Text>
                   </TouchableOpacity>
                 )
               })}

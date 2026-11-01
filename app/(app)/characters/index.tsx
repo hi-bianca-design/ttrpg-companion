@@ -54,32 +54,32 @@ export default function CharactersScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-base justify-center items-center">
+      <View className="flex-1 bg-legacy-base justify-center items-center">
         <ActivityIndicator color="#cba6f7" />
       </View>
     )
   }
 
   return (
-    <View className="flex-1 bg-base">
+    <View className="flex-1 bg-legacy-base">
       <View className="px-4 pt-12 pb-4 flex-row justify-between items-center">
-        <Text className="text-2xl font-bold text-text">Characters</Text>
+        <Text className="text-2xl font-bold text-legacy-text">Characters</Text>
         <TouchableOpacity
-          className="bg-primary px-4 py-2 rounded-lg"
+          className="bg-legacy-primary px-4 py-2 rounded-lg"
           onPress={() => router.push('/(app)/characters/new/class')}
         >
-          <Text className="text-base font-semibold">+ New</Text>
+          <Text className="text-legacy-base font-semibold">+ New</Text>
         </TouchableOpacity>
       </View>
 
       {characters.length === 0 ? (
         <View className="flex-1 justify-center items-center px-6">
-          <Text className="text-muted text-center mb-4">No characters yet.</Text>
+          <Text className="text-legacy-muted text-center mb-4">No characters yet.</Text>
           <TouchableOpacity
-            className="bg-primary px-6 py-3 rounded-xl"
+            className="bg-legacy-primary px-6 py-3 rounded-xl"
             onPress={() => router.push('/(app)/characters/new/class')}
           >
-            <Text className="text-base font-semibold">Create Your First Character</Text>
+            <Text className="text-legacy-base font-semibold">Create Your First Character</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -89,18 +89,18 @@ export default function CharactersScreen() {
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
           renderItem={({ item }) => (
             <TouchableOpacity
-              className="bg-surface rounded-xl p-4 mb-3"
+              className="bg-legacy-surface rounded-xl p-4 mb-3"
               onPress={() => router.push(`/(app)/characters/${item.id}`)}
               onLongPress={() => confirmDelete(item.id, item.name)}
               accessibilityRole="button"
               accessibilityLabel={`${item.name}, Level ${item.level} ${item.class?.name ?? ''}`}
               accessibilityHint="Double tap to view. Long press to delete."
             >
-              <Text className="text-lg font-bold text-text">{item.name}</Text>
-              <Text className="text-muted mt-1 text-sm">
+              <Text className="text-lg font-bold text-legacy-text">{item.name}</Text>
+              <Text className="text-legacy-muted mt-1 text-sm">
                 Level {item.level} {item.class?.name ?? '—'} · {item.species?.name ?? '—'}
               </Text>
-              <Text className="text-overlay text-xs mt-1">Long-press to delete</Text>
+              <Text className="text-legacy-overlay text-xs mt-1">Long-press to delete</Text>
             </TouchableOpacity>
           )}
         />

@@ -49,7 +49,7 @@ export default function ContentScreen() {
   }
 
   if (loading) {
-    return <View className="flex-1 bg-base justify-center items-center"><ActivityIndicator color="#cba6f7" /></View>
+    return <View className="flex-1 bg-legacy-base justify-center items-center"><ActivityIndicator color="#cba6f7" /></View>
   }
 
   const grouped = CONTENT_TYPE_ORDER.reduce<Partial<Record<ContentType, DBUserContent[]>>>(
@@ -62,45 +62,45 @@ export default function ContentScreen() {
   )
 
   return (
-    <View className="flex-1 bg-base">
+    <View className="flex-1 bg-legacy-base">
       <View className="px-4 pt-12 pb-4 flex-row justify-between items-center">
-        <Text className="text-2xl font-bold text-text">My Content</Text>
+        <Text className="text-2xl font-bold text-legacy-text">My Content</Text>
         <TouchableOpacity
-          className="bg-primary px-4 py-2 rounded-lg"
+          className="bg-legacy-primary px-4 py-2 rounded-lg"
           onPress={() => router.push('/(app)/content/new')}
         >
-          <Text className="text-base font-semibold">+ New</Text>
+          <Text className="text-legacy-base font-semibold">+ New</Text>
         </TouchableOpacity>
       </View>
 
       {items.length === 0 ? (
         <View className="flex-1 justify-center items-center px-6">
-          <Text className="text-muted text-center mb-4">No custom content yet.</Text>
+          <Text className="text-legacy-muted text-center mb-4">No custom content yet.</Text>
           <TouchableOpacity
-            className="bg-primary px-6 py-3 rounded-xl"
+            className="bg-legacy-primary px-6 py-3 rounded-xl"
             onPress={() => router.push('/(app)/content/new')}
           >
-            <Text className="text-base font-semibold">Add Your First Entry</Text>
+            <Text className="text-legacy-base font-semibold">Add Your First Entry</Text>
           </TouchableOpacity>
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>
           {(Object.entries(grouped) as [ContentType, DBUserContent[]][]).map(([type, group]) => (
             <View key={type} className="mb-6">
-              <Text className="text-muted text-xs font-bold mb-2">{CONTENT_TYPE_LABELS[type].toUpperCase()}</Text>
+              <Text className="text-legacy-muted text-xs font-bold mb-2">{CONTENT_TYPE_LABELS[type].toUpperCase()}</Text>
               {group.map((item) => (
                 <TouchableOpacity
                   key={item.id}
-                  className="bg-surface rounded-xl p-4 mb-2"
+                  className="bg-legacy-surface rounded-xl p-4 mb-2"
                   onPress={() => router.push(`/(app)/content/${item.id}`)}
                   onLongPress={() => confirmDelete(item.id, item.name)}
                   accessibilityRole="button"
                   accessibilityLabel={item.name}
                   accessibilityHint="Tap to edit. Long press to delete."
                 >
-                  <Text className="text-text font-bold">{item.name}</Text>
+                  <Text className="text-legacy-text font-bold">{item.name}</Text>
                   {item.description && (
-                    <Text className="text-muted text-sm mt-1" numberOfLines={2}>{item.description}</Text>
+                    <Text className="text-legacy-muted text-sm mt-1" numberOfLines={2}>{item.description}</Text>
                   )}
                 </TouchableOpacity>
               ))}
