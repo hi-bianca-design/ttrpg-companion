@@ -1,5 +1,5 @@
 import { useId, type ReactNode } from 'react'
-import { Image, ScrollView, View } from 'react-native'
+import { Image, PixelRatio, ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg'
 import { SKY_BANDS, THEME_COLORS } from '@/lib/theme'
@@ -15,10 +15,13 @@ const VIGNETTE_EDGE_OPACITY = 0.82
 const GRAIN_OPACITY = 0.3
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const GRAIN = require('../../../assets/grain.png')
+// Overriding the asset's scale makes the repeat tile 1 image pixel per physical pixel, so specks stay
+// fine-grained on 2x and 3x screens instead of growing to 2x2 or 3x3 physical pixels.
+const GRAIN_SOURCE = Image.resolveAssetSource(GRAIN)
 
 /**
  * Screen root: flat night background, posterized sky bands, a vignette that frames a lit centre, the
- * safe-area top inset applied to the content, and film grain over everything. Each instance owns its
+ * safe-area top inset applied to the content, and film grain between the backdrop and the content (never over text). Each instance owns its
  * gradient id: web keeps several screens mounted, and a shared id would resolve to a hidden screen's.
  */
 export function ScreenBackground({ children, scroll = false }: ScreenBackgroundProps) {
@@ -42,12 +45,12 @@ export function ScreenBackground({ children, scroll = false }: ScreenBackgroundP
           <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${vignetteId})`} />
         </Svg>
       </View>
+      <View testID="screen-grain" className="absolute inset-0" pointerEvents="none" style={{ opacity: GRAIN_OPACITY }}>
+        <Image source={{ ...GRAIN_SOURCE, scale: PixelRatio.get() }} resizeMode="repeat" style={{ width: '100%', height: '100%' }} />
+      </View>
       <SafeAreaView edges={['top']} className="flex-1">
         {scroll ? <ScrollView>{content}</ScrollView> : content}
       </SafeAreaView>
-      <View testID="screen-grain" className="absolute inset-0" pointerEvents="none" style={{ opacity: GRAIN_OPACITY }}>
-        <Image source={GRAIN} resizeMode="repeat" style={{ width: '100%', height: '100%' }} />
-      </View>
     </View>
   )
 }
