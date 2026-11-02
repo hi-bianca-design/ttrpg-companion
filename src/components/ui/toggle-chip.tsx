@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 type ToggleChipProps = Omit<React.ComponentProps<typeof Pressable>, 'children'> & {
   label: string
   selected?: boolean
-  /** default: 44pt. sm: 32pt with a 6px hitSlop (44pt target), for dense groups. square: 44x44 with
+  /** default: 44pt. sm: 28pt with an 8px hitSlop (44pt target), for dense groups. square: 44x44 with
    *  no side padding, for short labels such as numbers. */
   size?: 'default' | 'sm' | 'square'
   /** fill (default): selected is filled gold. outline: selected is a mint outline + check, for
@@ -17,8 +17,8 @@ type ToggleChipProps = Omit<React.ComponentProps<typeof Pressable>, 'children'> 
   className?: string
 }
 
-// Same padding the sm Button uses to reach a 44pt touch target.
-const SMALL_HIT_SLOP = { top: 6, bottom: 6, left: 6, right: 6 }
+// 28pt chip + 8px each side reaches a 44pt touch target.
+const SMALL_HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 }
 
 /**
  * The one selectable pill: single- or multi-choice options (kinds, conditions, sources, characters)
@@ -47,20 +47,20 @@ function ToggleChip({
       accessibilityState={{ ...accessibilityState, selected, disabled: !!disabled }}
       disabled={disabled}
       hitSlop={hitSlop ?? (size === 'sm' ? SMALL_HIT_SLOP : undefined)}
-      className={cn(size === 'sm' ? 'h-8' : size === 'square' ? 'h-11 w-11' : 'h-11', disabled && 'opacity-50', className)}
+      className={cn(size === 'sm' ? 'h-7' : size === 'square' ? 'h-11 w-11' : 'h-11', disabled && 'opacity-50', className)}
       {...props}
     >
       <ShapedSurface
         fill={filled ? 'primary' : outlined ? 'rockDeep' : 'card'}
         stroke={filled ? 'ink' : outlined ? 'secondary' : 'border'}
-        glow={selected && !disabled ? 'torch' : undefined}
-        strokeWidth={2}
-        shadowOffset={2}
-        className={cn('flex-1 flex-row items-center justify-center gap-1', size === 'sm' ? 'px-4' : size === 'square' ? 'px-0' : 'px-6')}
+        glow={filled && !disabled ? 'torch' : undefined}
+        strokeWidth={size === 'sm' ? 1.5 : 2}
+        shadowOffset={size === 'sm' ? 1 : 2}
+        className={cn('flex-1 flex-row items-center justify-center gap-1', size === 'sm' ? 'px-3' : size === 'square' ? 'px-0' : 'px-6')}
       >
-        {outlined ? <Check testID="toggle-chip-check" size={14} weight="bold" color={checkColor} /> : null}
+        {outlined ? <Check testID="toggle-chip-check" size={size === 'sm' ? 12 : 14} weight="bold" color={checkColor} /> : null}
         <Text
-          variant="body-sm"
+          variant={size === 'sm' ? 'caption' : 'body-sm'}
           className={cn(
             'font-sans-semibold',
             filled ? 'text-primary-foreground' : outlined ? 'text-accent-foreground' : 'text-foreground',
