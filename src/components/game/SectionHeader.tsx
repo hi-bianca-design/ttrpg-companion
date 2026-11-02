@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Pressable, View } from 'react-native'
-import { RuleOrnament } from '@/components/ui/ornament'
+import { Disclosure, RuleOrnament } from '@/components/ui/ornament'
 import { Text } from '@/components/ui/text'
 import { useSectionStore } from './section-store'
 
@@ -18,12 +18,12 @@ export function SectionHeader({ id, title, collapsible = false, action, children
 
   const label = <Text variant="label">{title}</Text>
   // A faint gold rule runs from the title to a diamond ornament on the same row, so the header and its
-  // content read as one section (a separate divider under the header read as a section break). The
-  // ornament is hollow when a collapsible section is closed.
+  // content read as one section (a separate divider under the header read as a section break). A collapsible
+  // section ends in a triangle (down while open, up once collapsed) instead of the diamond ornament.
   const rule = (
     <>
       <View testID="section-rule" className="h-px flex-1 bg-rule opacity-60" />
-      <RuleOrnament testID="section-ornament" open={!collapsed} />
+      {collapsible ? <Disclosure testID="section-ornament" open={!collapsed} /> : <RuleOrnament testID="section-ornament" />}
     </>
   )
 

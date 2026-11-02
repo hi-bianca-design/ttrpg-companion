@@ -21,6 +21,17 @@ export function RuleOrnament({ open = true, testID }: { open?: boolean; testID?:
   )
 }
 
+/** Disclosure triangle: points down while the content is shown, up once it is collapsed. */
+export function Disclosure({ open, testID }: { open: boolean; testID?: string }) {
+  return (
+    <View testID={testID} pointerEvents="none" importantForAccessibility="no-hide-descendants">
+      <Svg width={16} height={16} viewBox="0 0 16 16">
+        <Path d={open ? 'M2 4 L14 4 L8 12 Z' : 'M2 12 L14 12 L8 4 Z'} fill={THEME_COLORS.primary} />
+      </Svg>
+    </View>
+  )
+}
+
 /**
  * Back arrow drawn as a heraldic pointer: a barbed head, a long shaft and a diamond pommel.
  * Stroke and fill are passed in because SVG cannot read the text colour.

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { SectionHeader } from '@/components/game/SectionHeader'
+import { Disclosure } from '@/components/ui/ornament'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
 import { cn } from '@/lib/utils'
@@ -51,6 +52,7 @@ function SkillList({ rows }: { rows: Row[] }) {
             className="min-h-11 flex-row items-center justify-center gap-2"
           >
             <Text variant="label" tone="accent">{open ? 'Hide other skills' : `Show ${others.length} other skills`}</Text>
+            <Disclosure open={open} />
           </Pressable>
           {open ? <RowList rows={others} /> : null}
         </>

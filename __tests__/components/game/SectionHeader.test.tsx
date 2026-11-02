@@ -61,16 +61,21 @@ test('the ornament sits at the end of the row, after the rule, and the press tar
   expect(row.indexOf('section-rule')).toBeLessThan(row.indexOf('section-ornament'))
 })
 
-test('the ornament is hollow while a collapsible section is closed', () => {
+test('a collapsible header ends in a triangle: down while open, up once collapsed', () => {
   render(
     <SectionHeader id="rule4" title="Closed" collapsible>
       <Text>child</Text>
     </SectionHeader>,
   )
-  const centre = () => screen.UNSAFE_getAllByType(Path)[1].props.fill
-  expect(centre()).not.toBe('none')
+  const d = () => screen.UNSAFE_getAllByType(Path)[0].props.d
+  expect(d()).toBe('M2 4 L14 4 L8 12 Z')
   fireEvent.press(screen.getByLabelText('Closed'))
-  expect(centre()).toBe('none')
+  expect(d()).toBe('M2 12 L14 12 L8 4 Z')
+})
+
+test('a fixed header keeps the diamond ornament', () => {
+  render(<SectionHeader id="fixed2" title="Fixed" />)
+  expect(screen.UNSAFE_getAllByType(Path)).toHaveLength(3)
 })
 
 test('the action sits at the trailing edge of the same row', () => {
