@@ -1,9 +1,10 @@
 // D&D 5e (2024) character builder: step declarations. Draft lifecycle lives in draft.ts.
 import type { BuilderStepDef, GameSystem } from '../types'
 import {
-  abilitiesAssigned, bonusesComplete, classSkillCount, classSkillsComplete, equipmentComplete, fightingStyleComplete, hasFightingStyle, hasSlots, initialDraft, pruneDraft, spellsWithinLimits, str, strList, toCharacter,
+  abilitiesAssigned, bonusesComplete, classSkillCount, classSkillsComplete, equipmentComplete, fightingStyleComplete, hasFightingStyle, hasSlots, weaponMasteryComplete, weaponMasteryCount, initialDraft, pruneDraft, spellsWithinLimits, str, strList, toCharacter,
 } from './draft'
 import { AbilityScoresStep } from './steps/AbilityScoresStep'
+import { WeaponMasteryStep } from './steps/WeaponMasteryStep'
 import { FightingStyleStep } from './steps/FightingStyleStep'
 import { EquipmentStep } from './steps/EquipmentStep'
 import { ClassSkillsStep } from './steps/ClassSkillsStep'
@@ -28,6 +29,10 @@ const steps: BuilderStepDef[] = [
     isComplete: equipmentComplete, skip: (d) => strList(d.class_equipment_options).length === 0,
   },
   { id: 'fighting-style', title: 'Fighting Style', component: FightingStyleStep, isComplete: fightingStyleComplete, skip: (d) => !hasFightingStyle(d) },
+  {
+    id: 'weapon-mastery', title: 'Weapon Mastery', component: WeaponMasteryStep,
+    isComplete: weaponMasteryComplete, skip: (d) => weaponMasteryCount(d) === 0,
+  },
   {
     id: 'ability-scores', title: 'Ability Scores', component: AbilityScoresStep,
     isComplete: (d) => abilitiesAssigned(d) && bonusesComplete(d),

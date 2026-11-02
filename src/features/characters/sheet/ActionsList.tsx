@@ -32,6 +32,9 @@ function segmentFor(castingTime: string): Segment {
 /** Equipped weapons (always actions) and spells (by casting time) as card entries. */
 export function buildEntries(picks: PickRecord[]): Entry[] {
   const out: Entry[] = []
+  // A class that picks masteries stores the mastered weapon ids; characters without that list show every weapon's property.
+  const mastered = asRecord(picks.find((p) => p.kind === 'class')?.state).mastery
+  const masteredIds = Array.isArray(mastered) ? mastered : null
   for (const p of picks) {
     const data = asRecord(p.content.data)
     if (p.kind === 'spell') {
@@ -52,7 +55,7 @@ export function buildEntries(picks: PickRecord[]): Entry[] {
         key: `weapon:${p.content_id}`,
         segment: 'actions',
         title: p.content.name,
-        meta: typeof props.mastery === 'string' ? `Mastery · ${props.mastery}` : undefined,
+        meta: typeof props.mastery === 'string' && (!masteredIds || masteredIds.includes(p.content_id)) ? `Mastery · ${props.mastery}` : undefined,
         tags: damage ? ['Weapon', damage] : ['Weapon'],
       })
     }

@@ -8,7 +8,7 @@ import { Text } from '@/components/ui/text'
 import type { BuilderStepProps } from '../../types'
 import { ABILITY_LABELS, type AbilityKey } from '../definition'
 import { levelOf } from '../draft'
-import { skillKey } from '../rules'
+import { skillKey, weaponMasteryCountFor } from '../rules'
 import { ChoiceCard, Chip, type ContentItem, QueryState, StepIntro, useDndContent, useThemeColors } from './shared'
 
 /** Role grouping and one-line taglines for the SRD classes (D&D-specific presentation). */
@@ -105,6 +105,7 @@ export function ClassStep({ draft, update }: BuilderStepProps) {
                       class_id: cls.id, class_name: cls.name, hit_die: cls.data.hit_die,
                       class_skill_count: cls.data.features.skill_choices?.count ?? 0,
                       class_fighting_style: (cls.data.features.level_features?.['1'] ?? []).includes('Fighting Style'),
+                      class_mastery_count: weaponMasteryCountFor(cls.name, cls.data.features.level_features?.['1'] ?? []),
                       class_equipment_options: cls.data.features.starting_equipment_options ?? [],
                       class_skill_options: (cls.data.features.skill_choices?.from ?? []).map(skillKey),
                     })

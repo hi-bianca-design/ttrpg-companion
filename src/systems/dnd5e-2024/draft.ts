@@ -66,6 +66,14 @@ export function fightingStyleComplete(draft: Draft): boolean {
   return !hasFightingStyle(draft) || str(draft.fighting_style_id).length > 0
 }
 
+export const weaponMasteryCount = (draft: Draft): number => num(draft.class_mastery_count, 0)
+
+/** Exactly the class's number of weapons is mastered (trivially true for a class without the feature). */
+export function weaponMasteryComplete(draft: Draft): boolean {
+  const ids = strList(draft.mastery_ids)
+  return new Set(ids).size === weaponMasteryCount(draft) && ids.length === weaponMasteryCount(draft)
+}
+
 const spellLevel = (draft: Draft, id: string): number | undefined => {
   const v = ((draft.spell_levels ?? {}) as Record<string, unknown>)[id]
   return typeof v === 'number' ? v : undefined
@@ -127,6 +135,8 @@ export function abilitiesAssigned(draft: Draft): boolean {
  *   picked), equipment_items / equipment_other / equipment_gold (the picked option, resolved when chosen)
  * - class_fighting_style (the class has a level-1 Fighting Style, cached on the class pick) and
  *   fighting_style_id (the chosen feat)
+ * - class_mastery_count (weapons the class masters, cached on the class pick) and mastery_ids (the picked
+ *   weapon item ids)
  * - the six ability keys (null until assigned from the standard array),
  *   bg_bonus_two / bg_bonus_one (ability keys receiving +2 / +1)
  * - spell_ids, spell_classes (spell id → lowercase class list) and spell_levels (spell id →
@@ -154,6 +164,8 @@ export function initialDraft(): Draft {
     equipment_gold: 0,
     class_fighting_style: false,
     fighting_style_id: null,
+    class_mastery_count: 0,
+    mastery_ids: [],
     ...Object.fromEntries(ABILITY_KEYS.map((k) => [k, null])),
     bg_bonus_two: null,
     bg_bonus_one: null,
@@ -204,6 +216,8 @@ export function pruneDraft(draft: Draft, changed: Partial<Draft>): Draft {
     next.equipment_gold = 0
     if (!('class_fighting_style' in changed)) next.class_fighting_style = false
     next.fighting_style_id = null
+    if (!('class_mastery_count' in changed)) next.class_mastery_count = 0
+    next.mastery_ids = []
   }
   else next.class_skills = validClassSkills(next)
   if (classChanged || levelChanged) next.spell_ids = fitSpells(next)
@@ -243,7 +257,7 @@ export function toCharacter(draft: Draft): NewCharacter {
     items: Array.isArray(draft.equipment_items) ? (draft.equipment_items as NewCharacter['items']) : [],
     picks: [
       ...(typeof draft.class_id === 'string' && draft.class_id
-        ? [{ content_id: draft.class_id, kind: 'class', state: { skills: validClassSkills(draft) }, acquired_at_level: 1 }]
+        ? [{ content_id: draft.class_id, kind: 'class', state: { skills: validClassSkills(draft), ...(weaponMasteryCount(draft) > 0 ? { mastery: strList(draft.mastery_ids) } : {}) }, acquired_at_level: 1 }]
         : []),
       ...(hasFightingStyle(draft) ? pick('feat', draft.fighting_style_id, 1) : []),
       ...pick('subclass', draft.subclass_id, level),

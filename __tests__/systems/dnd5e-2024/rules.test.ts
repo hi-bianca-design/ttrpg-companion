@@ -7,7 +7,9 @@ import {
   getMaxSpellLevel,
   getSpellLimits,
   slotsFor,
+  canMaster,
   derived,
+  weaponMasteryCountFor,
   rest,
   proficiencies,
 } from '@/systems/dnd5e-2024/rules'
@@ -274,7 +276,7 @@ test('definition values', () => {
 // ── Builder ──
 
 test('builder step ids', () => {
-  expect(dnd5eBuilder.steps.map((s) => s.id)).toEqual(['class', 'origin', 'skills', 'equipment', 'fighting-style', 'ability-scores', 'spells', 'details', 'personality', 'review'])
+  expect(dnd5eBuilder.steps.map((s) => s.id)).toEqual(['class', 'origin', 'skills', 'equipment', 'fighting-style', 'weapon-mastery', 'ability-scores', 'spells', 'details', 'personality', 'review'])
 })
 
 test('spells step is skipped when the class has no slots at the starting level', () => {
@@ -479,5 +481,41 @@ describe('fighting style pick', () => {
     const picked = { ...fighter, fighting_style_id: 'defense' }
     expect(dnd5eBuilder.pruneDraft(picked, { class_id: 'wiz', class_name: 'Wizard' })).toMatchObject({ fighting_style_id: null, class_fighting_style: false })
     expect(dnd5eBuilder.toCharacter(picked).picks).toContainEqual({ content_id: 'defense', kind: 'feat', state: {}, acquired_at_level: 1 })
+  })
+})
+
+describe('weapon mastery', () => {
+  const fighter = { ...dnd5eBuilder.initialDraft(), class_id: 'ftr', class_name: 'Fighter', class_mastery_count: 3 }
+  const step = dnd5eBuilder.steps.find((s) => s.id === 'weapon-mastery')!
+
+  test('class counts come from the Weapon Mastery feature', () => {
+    expect(weaponMasteryCountFor('Fighter', ['Weapon Mastery'])).toBe(3)
+    expect(weaponMasteryCountFor('Rogue', ['Weapon Mastery'])).toBe(2)
+    expect(weaponMasteryCountFor('Wizard', ['Spellcasting'])).toBe(0)
+  })
+
+  test('barbarians master melee weapons, rogues Finesse or Light ones', () => {
+    const longbow = { category: 'Martial Ranged Weapon', properties: { mastery: 'Slow', weapon_properties: ['Heavy'] } }
+    const dagger = { category: 'Simple Melee Weapon', properties: { mastery: 'Nick', weapon_properties: ['Finesse', 'Light'] } }
+    const greataxe = { category: 'Martial Melee Weapon', properties: { mastery: 'Cleave', weapon_properties: ['Heavy'] } }
+    expect([longbow, dagger, greataxe].map((w) => canMaster('Fighter', w))).toEqual([true, true, true])
+    expect([longbow, dagger, greataxe].map((w) => canMaster('Barbarian', w))).toEqual([false, true, true])
+    expect([longbow, dagger, greataxe].map((w) => canMaster('Rogue', w))).toEqual([false, true, false])
+    expect(canMaster('Fighter', { category: 'Light Armor', properties: {} })).toBe(false)
+  })
+
+  test('step is skipped without the feature and needs exactly the count', () => {
+    const ids = dnd5eBuilder.steps.map((s) => s.id)
+    expect(ids.indexOf('weapon-mastery')).toBe(ids.indexOf('fighting-style') + 1)
+    expect(step.skip?.({ ...fighter, class_mastery_count: 0 })).toBe(true)
+    expect(step.isComplete({ ...fighter, mastery_ids: ['a', 'b'] })).toBe(false)
+    expect(step.isComplete({ ...fighter, mastery_ids: ['a', 'b', 'c'] })).toBe(true)
+    expect(step.isComplete({ ...fighter, mastery_ids: ['a', 'a', 'b'] })).toBe(false)
+  })
+
+  test('changing class clears the picks; they are stored on the class pick', () => {
+    const picked = { ...fighter, mastery_ids: ['a', 'b', 'c'] }
+    expect(dnd5eBuilder.pruneDraft(picked, { class_id: 'wiz', class_name: 'Wizard' })).toMatchObject({ mastery_ids: [], class_mastery_count: 0 })
+    expect(dnd5eBuilder.toCharacter(picked).picks.find((p) => p.kind === 'class')?.state).toMatchObject({ mastery: ['a', 'b', 'c'] })
   })
 })

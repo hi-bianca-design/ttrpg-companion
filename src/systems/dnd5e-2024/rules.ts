@@ -347,3 +347,20 @@ export function levelUp(
 
   return { level, resources, stats }
 }
+
+// ── Weapon Mastery ───────────────────────────────────────────
+
+/** Weapons mastered at level 1 (SRD 5.2); a class with the Weapon Mastery feature but not listed here gets 2. */
+const MASTERY_COUNTS: Record<string, number> = { Barbarian: 2, Fighter: 3, Paladin: 2, Ranger: 2, Rogue: 2 }
+
+export function weaponMasteryCountFor(className: string, level1Features: string[]): number {
+  return level1Features.includes('Weapon Mastery') ? MASTERY_COUNTS[className] ?? 2 : 0
+}
+
+/** Whether a class may master an item: Barbarians take melee weapons, Rogues Finesse or Light ones, everyone else any weapon with a mastery property. */
+export function canMaster(className: string, item: { category?: string; properties?: { mastery?: string; weapon_properties?: string[] } }): boolean {
+  if (typeof item.properties?.mastery !== 'string' || !item.category?.includes('Weapon')) return false
+  if (className === 'Barbarian') return item.category.includes('Melee')
+  if (className === 'Rogue') return (item.properties.weapon_properties ?? []).some((w) => w === 'Finesse' || w === 'Light')
+  return true
+}

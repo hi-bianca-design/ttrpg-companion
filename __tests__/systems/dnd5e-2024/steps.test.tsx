@@ -10,6 +10,7 @@ import { createCharacter } from '@/features/characters/characters.api'
 import { listContent } from '@/features/content/content.api'
 import { AbilityScoresStep } from '@/systems/dnd5e-2024/steps/AbilityScoresStep'
 import { OriginStep } from '@/systems/dnd5e-2024/steps/OriginStep'
+import { WeaponMasteryStep } from '@/systems/dnd5e-2024/steps/WeaponMasteryStep'
 import { FightingStyleStep } from '@/systems/dnd5e-2024/steps/FightingStyleStep'
 import { ClassSkillsStep } from '@/systems/dnd5e-2024/steps/ClassSkillsStep'
 import { ClassStep } from '@/systems/dnd5e-2024/steps/ClassStep'
@@ -54,6 +55,12 @@ const CONTENT: Record<string, unknown[]> = {
     row('feat', 'defense', 'Defense', { prerequisites: { feature: 'Fighting Style' }, benefits: 'While wearing armor, +1 AC.' }),
     row('feat', 'archery', 'Archery', { prerequisites: { feature: 'Fighting Style' }, benefits: '+2 to ranged attacks.' }),
     row('feat', 'alert', 'Alert', { prerequisites: {}, benefits: 'Add proficiency to initiative.' }),
+  ],
+  item: [
+    row('item', 'gs', 'Greatsword', { category: 'Martial Melee Weapon', properties: { mastery: 'Graze', weapon_properties: ['Heavy'] } }),
+    row('item', 'lb', 'Longbow', { category: 'Martial Ranged Weapon', properties: { mastery: 'Slow', weapon_properties: ['Heavy'] } }),
+    row('item', 'dg', 'Dagger', { category: 'Simple Melee Weapon', properties: { mastery: 'Nick', weapon_properties: ['Finesse', 'Light'] } }),
+    row('item', 'cm', 'Chain Mail', { category: 'Heavy Armor', properties: { armor_class: '16' } }),
   ],
   subclass: [],
   species: [],
@@ -306,5 +313,21 @@ describe('Fighting style step', () => {
     expect(screen.getByRole('button', { name: /^Archery/ })).toBeTruthy()
     expect(screen.queryByRole('button', { name: /^Alert/ })).toBeNull()
     expect(useBuilderStore.getState().draft.fighting_style_id).toBe('defense')
+  })
+})
+
+describe('Weapon mastery step', () => {
+  beforeEach(() => act(() => useBuilderStore.getState().update({ class_id: 'ftr', class_name: 'Fighter', class_mastery_count: 2 })))
+
+  test('offers only weapons, picks up to the count and disables the rest once full', async () => {
+    renderWithQuery(<Bound Step={WeaponMasteryStep} />)
+    fireEvent.press(await screen.findByRole('button', { name: 'Greatsword' }))
+    fireEvent.press(screen.getByRole('button', { name: 'Dagger' }))
+    expect(screen.queryByRole('button', { name: 'Chain Mail' })).toBeNull()
+    expect(useBuilderStore.getState().draft.mastery_ids).toEqual(['gs', 'dg'])
+    expect(screen.getByText('2/2 chosen')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Longbow' })).toBeDisabled()
+    fireEvent.press(screen.getByRole('button', { name: 'Dagger' }))
+    expect(useBuilderStore.getState().draft.mastery_ids).toEqual(['gs'])
   })
 })
