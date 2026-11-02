@@ -39,6 +39,20 @@ export function bonusesComplete(draft: Draft): boolean {
   return eligible.includes(two) && eligible.includes(one) && two !== one
 }
 
+/** Class skill picks that are still valid: on the class's list and not already granted by the background. */
+export function validClassSkills(draft: Draft): string[] {
+  const options = strList(draft.class_skill_options)
+  const granted = strList(draft.bg_skills)
+  return [...new Set(strList(draft.class_skills))].filter((k) => options.includes(k) && !granted.includes(k))
+}
+
+export const classSkillCount = (draft: Draft): number => num(draft.class_skill_count, 0)
+
+/** True when exactly the class's number of skills is picked (trivially true for a class with none). */
+export function classSkillsComplete(draft: Draft): boolean {
+  return validClassSkills(draft).length === classSkillCount(draft) && strList(draft.class_skills).length === classSkillCount(draft)
+}
+
 const spellLevel = (draft: Draft, id: string): number | undefined => {
   const v = ((draft.spell_levels ?? {}) as Record<string, unknown>)[id]
   return typeof v === 'number' ? v : undefined
@@ -92,7 +106,10 @@ export function abilitiesAssigned(draft: Draft): boolean {
 /**
  * Draft keys:
  * - class_id, class_name, hit_die (cached from the class pick), subclass_id, level
- * - species_id, background_id, bg_abilities (the background's eligible abilities, cached on pick)
+ * - species_id, background_id, bg_abilities (the background's eligible abilities, cached on pick),
+ *   bg_skills (its granted skills, kebab-case, cached on pick)
+ * - class_skill_count, class_skill_options (the class's skill picks, cached on the class pick) and
+ *   class_skills (the picks)
  * - the six ability keys (null until assigned from the standard array),
  *   bg_bonus_two / bg_bonus_one (ability keys receiving +2 / +1)
  * - spell_ids, spell_classes (spell id → lowercase class list) and spell_levels (spell id →
@@ -109,6 +126,10 @@ export function initialDraft(): Draft {
     species_id: null,
     background_id: null,
     bg_abilities: [],
+    bg_skills: [],
+    class_skill_count: 0,
+    class_skill_options: [],
+    class_skills: [],
     ...Object.fromEntries(ABILITY_KEYS.map((k) => [k, null])),
     bg_bonus_two: null,
     bg_bonus_one: null,
@@ -129,7 +150,9 @@ export function initialDraft(): Draft {
 /**
  * Merges `changed` into `draft`, then keeps dependent choices valid:
  * - a background change clears the bonuses (and its cached ability list) unless the patch sets them;
- * - a class change resets the subclass and drops spells off the new class list;
+ * - a class change resets the subclass, clears the class skill picks (unless the patch carries the new
+ *   class's skill list) and drops spells off the new class list;
+ * - a background or class change drops class skill picks the background now grants;
  * - a class or level change drops spells above the new max spell level and trims to the new limits.
  */
 export function pruneDraft(draft: Draft, changed: Partial<Draft>): Draft {
@@ -138,6 +161,7 @@ export function pruneDraft(draft: Draft, changed: Partial<Draft>): Draft {
     if (!('bg_bonus_two' in changed)) next.bg_bonus_two = null
     if (!('bg_bonus_one' in changed)) next.bg_bonus_one = null
     if (!('bg_abilities' in changed)) next.bg_abilities = []
+    if (!('bg_skills' in changed)) next.bg_skills = []
   }
   const classChanged = 'class_id' in changed && changed.class_id !== draft.class_id
   const levelChanged = 'level' in changed && changed.level !== draft.level
@@ -145,8 +169,11 @@ export function pruneDraft(draft: Draft, changed: Partial<Draft>): Draft {
     const cls = str(next.class_name).toLowerCase()
     const lists = (next.spell_classes ?? {}) as Record<string, string[]>
     next.subclass_id = null
+    if (!('class_skill_options' in changed)) next.class_skills = []
     next.spell_ids = strList(next.spell_ids).filter((id) => strList(lists[id]).map((c) => c.toLowerCase()).includes(cls))
   }
+  if (classChanged) next.class_skills = []
+  else next.class_skills = validClassSkills(next)
   if (classChanged || levelChanged) next.spell_ids = fitSpells(next)
   return next
 }
@@ -181,7 +208,9 @@ export function toCharacter(draft: Draft): NewCharacter {
       backstory: str(draft.backstory),
     },
     picks: [
-      ...pick('class', draft.class_id, 1),
+      ...(typeof draft.class_id === 'string' && draft.class_id
+        ? [{ content_id: draft.class_id, kind: 'class', state: { skills: validClassSkills(draft) }, acquired_at_level: 1 }]
+        : []),
       ...pick('subclass', draft.subclass_id, level),
       ...pick('species', draft.species_id, 1),
       ...pick('background', draft.background_id, 1),

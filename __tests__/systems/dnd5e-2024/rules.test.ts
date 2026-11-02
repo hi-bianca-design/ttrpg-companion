@@ -267,7 +267,7 @@ test('definition values', () => {
 // ── Builder ──
 
 test('builder step ids', () => {
-  expect(dnd5eBuilder.steps.map((s) => s.id)).toEqual(['class', 'origin', 'ability-scores', 'spells', 'details', 'personality', 'review'])
+  expect(dnd5eBuilder.steps.map((s) => s.id)).toEqual(['class', 'origin', 'skills', 'ability-scores', 'spells', 'details', 'personality', 'review'])
 })
 
 test('spells step is skipped when the class has no slots at the starting level', () => {
@@ -412,4 +412,45 @@ test('derived XP progress only when details.xp is set', () => {
 test('details schema keeps xp and inspiration', () => {
   const parsed = getSystem('dnd5e-2024').schemas.details.parse({ xp: 300, inspiration: true })
   expect(parsed).toEqual({ xp: 300, inspiration: true })
+})
+
+describe('class skill picks', () => {
+  const fighter = {
+    ...dnd5eBuilder.initialDraft(), class_id: 'ftr', class_name: 'Fighter',
+    class_skill_count: 2, class_skill_options: ['acrobatics', 'athletics', 'history', 'perception'],
+    bg_skills: ['athletics', 'intimidation'],
+  }
+  const step = dnd5eBuilder.steps.find((s) => s.id === 'skills')!
+
+  test('step sits after origin, is skipped for a class with no picks and needs exactly the count', () => {
+    const ids = dnd5eBuilder.steps.map((s) => s.id)
+    expect(ids.indexOf('skills')).toBe(ids.indexOf('origin') + 1)
+    expect(step.skip?.({ ...fighter, class_skill_count: 0 })).toBe(true)
+    expect(step.skip?.(fighter)).toBe(false)
+    expect(step.isComplete(fighter)).toBe(false)
+    expect(step.isComplete({ ...fighter, class_skills: ['history'] })).toBe(false)
+    expect(step.isComplete({ ...fighter, class_skills: ['history', 'perception'] })).toBe(true)
+  })
+
+  test('a pick the background already grants, or off the class list, does not count', () => {
+    expect(step.isComplete({ ...fighter, class_skills: ['history', 'athletics'] })).toBe(false)
+    expect(step.isComplete({ ...fighter, class_skills: ['history', 'stealth'] })).toBe(false)
+  })
+
+  test('changing class clears the picks; changing background drops only the overlap', () => {
+    const picked = { ...fighter, class_skills: ['history', 'perception'] }
+    expect(dnd5eBuilder.pruneDraft(picked, { class_id: 'rog', class_name: 'Rogue' }).class_skills).toEqual([])
+    const newClass = dnd5eBuilder.pruneDraft(picked, {
+      class_id: 'rog', class_name: 'Rogue', class_skill_count: 4, class_skill_options: ['history', 'stealth'],
+    })
+    expect(newClass.class_skills).toEqual([])
+    expect(dnd5eBuilder.pruneDraft(picked, { background_id: 'sage', bg_skills: ['history', 'arcana'] }).class_skills).toEqual(['perception'])
+    expect(dnd5eBuilder.pruneDraft(picked, { name: 'X' }).class_skills).toEqual(['history', 'perception'])
+  })
+
+  test('toCharacter stores the picks as skills on the class pick', () => {
+    const draft = { ...fighter, class_skills: ['history', 'perception'] }
+    const c = dnd5eBuilder.toCharacter(draft)
+    expect(c.picks.find((p) => p.kind === 'class')?.state).toEqual({ skills: ['history', 'perception'] })
+  })
 })
