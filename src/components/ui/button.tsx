@@ -46,9 +46,11 @@ type ButtonProps = React.ComponentProps<typeof Pressable> &
     className?: string
     /** Torch glow for an active or lit state. Never combined with disabled. */
     lit?: boolean
+    /** Recolours the plate edge (e.g. tinted +/- controls). */
+    stroke?: ThemeColorKey
   }
 
-function Button({ className, variant, size, disabled, hitSlop, lit, onPressIn, onPressOut, style, children, ...props }: ButtonProps) {
+function Button({ className, variant, size, disabled, hitSlop, lit, stroke, onPressIn, onPressOut, style, children, ...props }: ButtonProps) {
   const [pressed, setPressed] = useState(false)
   const v = variant ?? 'primary'
   const s = size ?? 'default'
@@ -78,7 +80,7 @@ function Button({ className, variant, size, disabled, hitSlop, lit, onPressIn, o
           <ShapedSurface
             shape={s === 'icon' ? 'chamfer' : 'auto'}
             fill={plate.fill}
-            stroke={plate.stroke}
+            stroke={stroke ?? plate.stroke}
             shadowOffset={sunk ? SHADOW - SINK : SHADOW}
             glow={lit && !disabled ? 'torch' : undefined}
             className={cn('flex-1 flex-row items-center justify-center gap-2', padding)}

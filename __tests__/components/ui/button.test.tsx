@@ -112,3 +112,8 @@ test('still calls a caller-supplied onPressIn/onPressOut', () => {
   expect(onPressIn).toHaveBeenCalledTimes(1)
   expect(onPressOut).toHaveBeenCalledTimes(1)
 })
+
+test('stroke recolours the plate edge (tinted +/- controls)', () => {
+  render(<Button variant="outline" stroke="resourceSage"><Text>+</Text></Button>)
+  expect(surface().stroke).toBe('resourceSage')
+})

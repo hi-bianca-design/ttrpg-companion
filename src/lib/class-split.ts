@@ -1,5 +1,5 @@
 // Placement classes belong to a shaped plate; everything else (text, padding, gap, height) styles its content.
-const LAYOUT = /^(?:[a-z0-9-]+:)*-?(?:m[trblxyse]?|flex|grow|shrink|basis|w|min-w|max-w|self)(?:-|$)/
+const LAYOUT = /^(?:[a-z0-9-]+:)*(?:-?(?:m[trblxyse]?|grow|shrink|basis|w|min-w|max-w|self)(?:-|$)|flex-(?:\d+|auto|none|initial)$)/
 
 export function splitClassName(className?: string): { plate: string; content: string } {
   const plate: string[] = []

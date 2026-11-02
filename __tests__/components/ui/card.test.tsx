@@ -47,3 +47,9 @@ test('compact is tighter, and other View props reach the content', () => {
   expect(screen.getByTestId('c').props.className).toContain('p-3')
   expect(screen.getByTestId('c').props.accessibilityLabel).toBe('Stat')
 })
+
+test('flex-row is content layout, not plate placement', () => {
+  render(<Card testID="c" className="flex-row items-center justify-between gap-3"><Text>x</Text></Card>)
+  expect(screen.getByTestId('c').props.className).toContain('flex-row')
+  expect(surface().className ?? '').not.toContain('flex-row')
+})

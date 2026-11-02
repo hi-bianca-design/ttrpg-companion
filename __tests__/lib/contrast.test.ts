@@ -1,6 +1,6 @@
 // Spec §6: body and typed text 7:1, large text / placeholder / button labels 4.5:1.
 import { THEME_COLORS as C } from '@/lib/theme'
-import { contrastRatio } from '../helpers/contrast'
+import { colorDistance, contrastRatio } from '../helpers/contrast'
 
 const ratio = (fg: string, bg: string) => contrastRatio(C[fg], C[bg], C.background)
 
@@ -23,4 +23,16 @@ test.each([
 
 test.each(['sky1', 'sky2', 'sky3', 'sky4', 'sky5', 'sky6'])('foreground text on %s holds 4.5:1', (band) => {
   expect(ratio('foreground', band)).toBeGreaterThanOrEqual(4.5)
+})
+
+const TINTS = ['resourceSky', 'resourcePlum', 'resourceSage', 'resourceOchre', 'resourceTerracotta']
+
+test.each(TINTS)('%s reads at 3:1 on the background', (tint) => {
+  expect(ratio(tint, 'background')).toBeGreaterThanOrEqual(3)
+})
+
+test('the five resource tints are mutually distinguishable', () => {
+  for (const [i, a] of TINTS.entries()) {
+    for (const b of TINTS.slice(i + 1)) expect([a, b, colorDistance(C[a], C[b]) >= 40]).toEqual([a, b, true])
+  }
 })
