@@ -2,6 +2,7 @@
 // content-kind metadata. Content-kind Zod schemas live in schemas.ts and are joined
 // to this metadata in index.ts (keeps this file free of a definition↔schemas cycle).
 import type { ContentKindDef, ResourceDef, StatDef } from '../types'
+import { FEATURE_RESOURCE_DEFS } from './features'
 
 export const ABILITY_KEYS = [
   'strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma',
@@ -64,6 +65,7 @@ export const DND_RESOURCES: ResourceDef[] = [
   // Counted up from empty, and only relevant while the character is down (0 HP).
   { key: 'death_saves_success', label: 'Death Save Successes', kind: 'slots', display: 'pips', tint: 'sage', count: 'marked', showWhenEmpty: 'hp' },
   { key: 'death_saves_failure', label: 'Death Save Failures', kind: 'slots', display: 'pips', tint: 'terracotta', count: 'marked', showWhenEmpty: 'hp' },
+  ...FEATURE_RESOURCE_DEFS,
 ]
 
 /** The 15 SRD 5.2 conditions plus concentration, keyed lowercase. */
