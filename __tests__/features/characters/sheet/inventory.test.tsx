@@ -12,6 +12,7 @@ import { showToast } from '@/components/ui/toast'
 import { variantOf } from '../../../helpers/button'
 import { ShapedSurface } from '@/components/ui/shaped-surface'
 
+jest.mock('@/features/sessions/SessionBadge', () => ({ SessionBadge: () => null }))
 jest.mock('@/features/characters/characters.api', () => ({
   getCharacter: jest.fn(),
   addItem: jest.fn(),
