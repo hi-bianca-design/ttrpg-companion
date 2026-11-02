@@ -3,6 +3,7 @@
 import type {
   CharacterRecord, DerivedValue, PickRecord, PoolValue, ResourceValue, SlotsValue,
 } from '../types'
+import type { ChoiceKey } from './classChoices'
 import { ABILITY_KEYS, ABILITY_LABELS, type AbilityKey } from './definition'
 import { featuresFor, grownFeatures, rechargedFeature } from './features'
 
@@ -162,6 +163,16 @@ function stringList(v: unknown): string[] {
   return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []
 }
 
+/** Trimmed, case-insensitive string equality; false for non-strings. */
+export function sameName(a: unknown, b: unknown): boolean {
+  return typeof a === 'string' && typeof b === 'string' && a.trim().toLowerCase() === b.trim().toLowerCase()
+}
+
+/** A class choice as typed or picked, read from the class pick's `state.choices[key]` (non-strings dropped). */
+export function classChoice(picks: PickRecord[], key: ChoiceKey): string[] {
+  return stringList(asRecord(asRecord(picks.find((p) => p.kind === 'class')?.state).choices)[key])
+}
+
 /** "Animal Handling" / "animal-handling" → "animal-handling". */
 export function skillKey(name: string): string {
   return name.trim().toLowerCase().replace(/\s+/g, '-')
@@ -169,19 +180,26 @@ export function skillKey(name: string): string {
 
 /**
  * Saving throws from the class pick's `saving_throw_proficiencies`; skills from every pick's
- * `skill_proficiencies` (background) plus chosen `state.skills`. Keys are lowercase / kebab-case.
+ * `skill_proficiencies` (background) plus chosen `state.skills`; expertise from the class pick's
+ * `choices.expertise`, kept only for skills the character is proficient in. Keys are lowercase / kebab-case.
  */
-export function proficiencies(picks: PickRecord[]): { saves: string[]; skills: string[] } {
+export function proficiencies(picks: PickRecord[]): { saves: string[]; skills: string[]; expertise: string[] } {
   const cls = picks.find((p) => p.kind === 'class')
   const saves = stringList(asRecord(cls?.content.data).saving_throw_proficiencies).map((s) => s.toLowerCase())
   const skills = picks.flatMap((p) =>
     [...stringList(asRecord(p.content.data).skill_proficiencies), ...stringList(p.state.skills)].map(skillKey),
   )
-  return { saves: [...new Set(saves)], skills: [...new Set(skills)] }
+  const expertise = classChoice(picks, 'expertise').map(skillKey).filter((k) => skills.includes(k))
+  return { saves: [...new Set(saves)], skills: [...new Set(skills)], expertise: [...new Set(expertise)] }
 }
 
-function hasSkill(picks: PickRecord[], skill: string): boolean {
-  return proficiencies(picks).skills.includes(skill)
+/** Proficiency bonus added to a skill check: none, once when proficient, twice with Expertise. */
+export function skillProficiencyBonus(prof: number, skill: string, known: { skills: string[]; expertise: string[] }): number {
+  return known.expertise.includes(skill) ? prof * 2 : known.skills.includes(skill) ? prof : 0
+}
+
+function skillBonus(picks: PickRecord[], skill: string, prof: number): number {
+  return skillProficiencyBonus(prof, skill, proficiencies(picks))
 }
 
 /** Progress (0–100) through the current level's XP band, and the next level's threshold. */
@@ -198,10 +216,14 @@ function xpValues(level: number, xp: number): DerivedValue[] {
 
 // ── Derived values ───────────────────────────────────────────
 
-/** Armor Class: 10 + DEX unarmored, or equipped armor (parsed from SRD "13 + Dex modifier (max 2)"), plus shield. */
+/**
+ * Armor Class: 10 + DEX unarmored, or equipped armor (parsed from SRD "13 + Dex modifier (max 2)"), plus shield,
+ * plus 1 while armored when the class's Fighting Style is Defense.
+ */
 function armorClass(dexMod: number, picks: PickRecord[]): number {
   let base = 10 + dexMod
   let shield = 0
+  let armored = false
   for (const p of picks) {
     if ((p.kind !== 'item' && p.kind !== 'magic_item') || p.state.equipped !== true) continue
     const props = asRecord(asRecord(p.content.data).properties)
@@ -212,9 +234,11 @@ function armorClass(dexMod: number, picks: PickRecord[]): number {
       const cap = props.armor_class.match(/max\s*(\d+)/i)
       const dex = /dex/i.test(props.armor_class) ? (cap ? Math.min(dexMod, Number(cap[1])) : dexMod) : 0
       base = Number(flat[1]) + dex
+      armored = true
     }
   }
-  return base + shield
+  const defense = armored && classChoice(picks, 'fighting_style').some((v) => sameName(v, 'Defense'))
+  return base + shield + (defense ? 1 : 0)
 }
 
 export function derived(c: CharacterRecord, picks: PickRecord[]): DerivedValue[] {
@@ -228,7 +252,7 @@ export function derived(c: CharacterRecord, picks: PickRecord[]): DerivedValue[]
     { key: 'proficiency', label: 'Proficiency', value: prof, format: 'modifier' },
     { key: 'ac', label: 'Armor Class', value: armorClass(mod('dexterity'), picks), format: 'plain' },
     { key: 'initiative', label: 'Initiative', value: mod('dexterity') + (alert ? prof : 0), format: 'modifier' },
-    { key: 'passive_perception', label: 'Passive Perception', value: 10 + mod('wisdom') + (hasSkill(picks, 'perception') ? prof : 0), format: 'plain' },
+    { key: 'passive_perception', label: 'Passive Perception', value: 10 + mod('wisdom') + skillBonus(picks, 'perception', prof), format: 'plain' },
     { key: 'speed', label: 'Speed', value: typeof speciesSpeed === 'number' ? speciesSpeed : 30, format: 'plain' },
     ...(typeof c.details.xp === 'number' ? xpValues(c.level, c.details.xp) : []),
   ]
@@ -350,4 +374,55 @@ export function levelUp(
   if (cls) Object.assign(resources, grownFeatures(c.resources, cls, level, stats))
 
   return { level, resources, stats }
+}
+
+// ── Weapon Mastery ───────────────────────────────────────────
+
+/** Weapons mastered at level 1 (SRD 5.2); a class with the Weapon Mastery feature but not listed here gets 2. */
+const MASTERY_COUNTS: Record<string, number> = { Barbarian: 2, Fighter: 3, Paladin: 2, Ranger: 2, Rogue: 2 }
+
+export function weaponMasteryCountFor(className: string, level1Features: string[]): number {
+  return level1Features.includes('Weapon Mastery') ? MASTERY_COUNTS[className] ?? 2 : 0
+}
+
+/** Whether a class may master an item: Barbarians take melee weapons, Rogues Finesse or Light ones, everyone else any weapon with a mastery property. */
+export function canMaster(className: string, item: { category?: string; properties?: { mastery?: string; weapon_properties?: string[] } }): boolean {
+  if (typeof item.properties?.mastery !== 'string' || !item.category?.includes('Weapon')) return false
+  if (className === 'Barbarian') return item.category.includes('Melee')
+  if (className === 'Rogue') return (item.properties.weapon_properties ?? []).some((w) => w === 'Finesse' || w === 'Light')
+  return true
+}
+
+// ── Divine / Primal Order ────────────────────────────────────
+
+export type OrderOption = { key: string; label: string; description: string; cantrip: boolean; skills: string[] }
+
+/** The level-1 order choice of the Cleric (Divine Order) and Druid (Primal Order), SRD 5.2. */
+const ORDERS: Record<string, { feature: string; options: OrderOption[] }> = {
+  Cleric: {
+    feature: 'Divine Order',
+    options: [
+      { key: 'protector', label: 'Protector', description: 'Trained in martial weapons and heavy armor.', cantrip: false, skills: [] },
+      { key: 'thaumaturge', label: 'Thaumaturge', description: 'One extra cantrip, and a bonus to Arcana and Religion checks equal to your Wisdom modifier (minimum +1).', cantrip: true, skills: ['arcana', 'religion'] },
+    ],
+  },
+  Druid: {
+    feature: 'Primal Order',
+    options: [
+      { key: 'warden', label: 'Warden', description: 'Trained in martial weapons and medium armor.', cantrip: false, skills: [] },
+      { key: 'magician', label: 'Magician', description: 'One extra cantrip, and a bonus to Arcana and Nature checks equal to your Wisdom modifier (minimum +1).', cantrip: true, skills: ['arcana', 'nature'] },
+    ],
+  },
+}
+
+export const orderFeature = (className: string): string | null => ORDERS[className]?.feature ?? null
+export const orderOptions = (className: string): OrderOption[] => ORDERS[className]?.options ?? []
+/** The official order whose key or label matches `value` (trimmed, case-insensitive); undefined for anything else. */
+export const findOrder = (className: string, value: unknown): OrderOption | undefined =>
+  orderOptions(className).find((o) => sameName(o.key, value) || sameName(o.label, value))
+
+/** The bonus a chosen order adds to its skills: Wisdom modifier, minimum +1. */
+export function orderSkillBonus(picks: PickRecord[], wisdomMod: number): { skills: string[]; bonus: number } {
+  const order = findOrder(className(picks) ?? '', classChoice(picks, 'order')[0])
+  return { skills: order?.skills ?? [], bonus: Math.max(1, wisdomMod) }
 }

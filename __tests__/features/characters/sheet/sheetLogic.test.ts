@@ -1,4 +1,5 @@
-import { lowestBlockedLevel } from '@/features/characters/sheet/ActionsList'
+import { buildEntries, lowestBlockedLevel } from '@/features/characters/sheet/ActionsList'
+import type { PickRecord } from '@/systems/types'
 import { sortItems } from '@/features/characters/sheet/InventoryList'
 import type { ItemWithContent } from '@/features/characters/characters.api'
 
@@ -19,4 +20,23 @@ test('lowestBlockedLevel: the lowest spell level no remaining slot can pay for',
   expect(lowestBlockedLevel(s(0, 1))).toBe(2)
   expect(lowestBlockedLevel(s(2, 1))).toBe(1)
   expect(lowestBlockedLevel(undefined)).toBeNull()
+})
+
+describe('buildEntries weapon mastery', () => {
+  const weapon = (name: string, mastery: string): PickRecord => ({
+    content_id: `w-${name}`, kind: 'item', state: { equipped: true }, acquired_at_level: 1,
+    content: { name, data: { category: 'Martial Melee Weapon', properties: { damage: '1d8', damage_type: 'Slashing', mastery } } },
+  })
+  const cls = (state: Record<string, unknown>): PickRecord => ({ content_id: 'ftr', kind: 'class', state, acquired_at_level: 1, content: { name: 'Fighter', data: {} } })
+  const metas = (picks: PickRecord[]) => Object.fromEntries(buildEntries(picks).map((e) => [e.title, e.meta]))
+  const weapons = [weapon('Longsword', 'Sap'), weapon('Greataxe', 'Cleave')]
+
+  test('only weapons named in the mastery list show their property', () => {
+    expect(metas([cls({ choices: { weapon_mastery: ['longsword'] } }), ...weapons])).toEqual({ Longsword: 'Mastery · Sap', Greataxe: undefined })
+  })
+
+  test('without a mastery list every weapon shows it', () => {
+    expect(metas([cls({}), ...weapons])).toEqual({ Longsword: 'Mastery · Sap', Greataxe: 'Mastery · Cleave' })
+    expect(metas([cls({ choices: { weapon_mastery: [] } }), ...weapons])).toEqual({ Longsword: 'Mastery · Sap', Greataxe: 'Mastery · Cleave' })
+  })
 })

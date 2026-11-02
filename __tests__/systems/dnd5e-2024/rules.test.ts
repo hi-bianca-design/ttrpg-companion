@@ -7,7 +7,13 @@ import {
   getMaxSpellLevel,
   getSpellLimits,
   slotsFor,
+  canMaster,
+  classChoice,
+  findOrder,
+  orderSkillBonus,
+  skillProficiencyBonus,
   derived,
+  weaponMasteryCountFor,
   rest,
   proficiencies,
 } from '@/systems/dnd5e-2024/rules'
@@ -405,7 +411,7 @@ test('proficiencies: class saves and background / state skills, normalised to ke
 })
 
 test('proficiencies are empty without picks', () => {
-  expect(proficiencies([])).toEqual({ saves: [], skills: [] })
+  expect(proficiencies([])).toEqual({ saves: [], skills: [], expertise: [] })
 })
 
 test('derived XP progress only when details.xp is set', () => {
@@ -460,5 +466,133 @@ describe('class skill picks', () => {
     const draft = { ...fighter, class_skills: ['history', 'perception'] }
     const c = dnd5eBuilder.toCharacter(draft)
     expect(c.picks.find((p) => p.kind === 'class')?.state).toEqual({ skills: ['history', 'perception'] })
+  })
+})
+
+// ── Class choices (free text on the class pick's state.choices) ──
+
+const classWith = (name: string, state: Record<string, unknown>, data: unknown = {}) => pick('class', name, data, state)
+
+describe('classChoice', () => {
+  test('reads the class pick state.choices list, dropping non-strings', () => {
+    const cls = classWith('Fighter', { choices: { weapon_mastery: ['Longsword', 3, null, 'Dagger'] } })
+    expect(classChoice([cls], 'weapon_mastery')).toEqual(['Longsword', 'Dagger'])
+    expect(classChoice([cls], 'expertise')).toEqual([])
+    expect(classChoice([classWith('Fighter', {})], 'fighting_style')).toEqual([])
+    expect(classChoice([], 'order')).toEqual([])
+  })
+})
+
+describe('Defense fighting style', () => {
+  const chain = pick('item', 'Chain Mail', { category: 'Heavy Armor', properties: { armor_class: '16' } }, { equipped: true })
+
+  test('adds 1 while armored when the typed style matches Defense', () => {
+    const defense = classWith('Fighter', { choices: { fighting_style: ['defense'] } })
+    expect(value(makeCharacter(), [chain, defense], 'ac')?.value).toBe(17)
+    expect(value(makeCharacter(), [defense], 'ac')?.value).toBe(9)
+  })
+
+  test('a style that is not an official match changes nothing', () => {
+    const typed = classWith('Fighter', { choices: { fighting_style: ['Pike and Shield'] } })
+    expect(value(makeCharacter(), [chain, typed], 'ac')?.value).toBe(16)
+  })
+})
+
+describe('expertise', () => {
+  test('skillProficiencyBonus: none, once when proficient, twice with expertise', () => {
+    const known = { skills: ['stealth', 'perception'], expertise: ['stealth'] }
+    expect(skillProficiencyBonus(2, 'stealth', known)).toBe(4)
+    expect(skillProficiencyBonus(2, 'perception', known)).toBe(2)
+    expect(skillProficiencyBonus(2, 'arcana', known)).toBe(0)
+  })
+
+  test('a typed skill the character is proficient in gains expertise', () => {
+    const rogue = classWith('Rogue', { skills: ['Stealth'], choices: { expertise: ['Stealth'] } })
+    expect(proficiencies([rogue]).expertise).toEqual(['stealth'])
+  })
+
+  test('unknown or non-proficient typed skills change nothing', () => {
+    const rogue = classWith('Rogue', { skills: ['Stealth'], choices: { expertise: ['Underwater Basket Weaving', 'Arcana'] } })
+    expect(proficiencies([rogue]).expertise).toEqual([])
+  })
+
+  test('expertise in Perception doubles it for passive Perception', () => {
+    const expert = classWith('Rogue', { skills: ['perception'], choices: { expertise: ['Perception'] } })
+    const plain = classWith('Rogue', { skills: ['perception'] })
+    const prof = value(makeCharacter(), [], 'proficiency')?.value as number
+    const pp = (picks: PickRecord[]) => value(makeCharacter(), picks, 'passive_perception')?.value as number
+    expect(pp([plain])).toBe(11 + prof)
+    expect(pp([expert])).toBe(11 + prof * 2)
+  })
+})
+
+describe('weapon mastery rules', () => {
+  test('class counts come from the Weapon Mastery feature', () => {
+    expect(weaponMasteryCountFor('Fighter', ['Weapon Mastery'])).toBe(3)
+    expect(weaponMasteryCountFor('Rogue', ['Weapon Mastery'])).toBe(2)
+    expect(weaponMasteryCountFor('Wizard', ['Spellcasting'])).toBe(0)
+  })
+
+  test('barbarians master melee weapons, rogues Finesse or Light ones', () => {
+    const longbow = { category: 'Martial Ranged Weapon', properties: { mastery: 'Slow', weapon_properties: ['Heavy'] } }
+    const dagger = { category: 'Simple Melee Weapon', properties: { mastery: 'Nick', weapon_properties: ['Finesse', 'Light'] } }
+    const greataxe = { category: 'Martial Melee Weapon', properties: { mastery: 'Cleave', weapon_properties: ['Heavy'] } }
+    expect([longbow, dagger, greataxe].map((w) => canMaster('Fighter', w))).toEqual([true, true, true])
+    expect([longbow, dagger, greataxe].map((w) => canMaster('Barbarian', w))).toEqual([false, true, true])
+    expect([longbow, dagger, greataxe].map((w) => canMaster('Rogue', w))).toEqual([false, true, false])
+    expect(canMaster('Fighter', { category: 'Light Armor', properties: {} })).toBe(false)
+  })
+})
+
+describe('divine and primal order', () => {
+  test('findOrder matches an option key or label, case-insensitively', () => {
+    expect(findOrder('Cleric', 'Thaumaturge')?.key).toBe('thaumaturge')
+    expect(findOrder('Cleric', 'thaumaturge')?.key).toBe('thaumaturge')
+    expect(findOrder('Druid', ' MAGICIAN ')?.key).toBe('magician')
+    expect(findOrder('Cleric', 'Warlord')).toBeUndefined()
+    expect(findOrder('Fighter', 'Protector')).toBeUndefined()
+  })
+
+  test('the order skill bonus is the Wisdom modifier, minimum +1, on the order skills only', () => {
+    const cls = classWith('Cleric', { choices: { order: ['Thaumaturge'] } })
+    expect(orderSkillBonus([cls], 3)).toEqual({ skills: ['arcana', 'religion'], bonus: 3 })
+    expect(orderSkillBonus([cls], -1).bonus).toBe(1)
+    expect(orderSkillBonus([classWith('Cleric', { choices: { order: ['protector'] } })], 3).skills).toEqual([])
+    expect(orderSkillBonus([classWith('Cleric', { choices: { order: ['Warlord'] } })], 3).skills).toEqual([])
+    expect(orderSkillBonus([classWith('Cleric', {})], 3).skills).toEqual([])
+  })
+})
+
+describe('class choices in the draft', () => {
+  const cleric = {
+    ...dnd5eBuilder.initialDraft(), class_id: 'clr', class_name: 'Cleric',
+    spell_ids: ['a', 'b', 'c', 'd'], spell_levels: { a: 0, b: 0, c: 0, d: 0 }, spell_classes: { a: ['cleric'], b: ['cleric'], c: ['cleric'], d: ['cleric'] },
+  }
+  const spells = () => dnd5eBuilder.steps.find((s) => s.id === 'spells')!
+
+  test('initial draft holds empty class features and choices', () => {
+    expect(dnd5eBuilder.initialDraft()).toMatchObject({ class_features: [], class_choices: {} })
+  })
+
+  test('a class change empties class_choices', () => {
+    const picked = { ...cleric, class_choices: { order: ['Thaumaturge'] } }
+    expect(dnd5eBuilder.pruneDraft(picked, { class_id: 'drd', class_name: 'Druid' }).class_choices).toEqual({})
+    expect(dnd5eBuilder.pruneDraft(picked, { name: 'X' }).class_choices).toEqual({ order: ['Thaumaturge'] })
+  })
+
+  test('an order with a cantrip raises the cantrip cap by one; dropping it trims spells', () => {
+    const thaum = { ...cleric, class_choices: { order: ['thaumaturge'] } }
+    expect(spells().isComplete(cleric)).toBe(false)
+    expect(spells().isComplete(thaum)).toBe(true)
+    expect(spells().isComplete({ ...cleric, class_choices: { order: ['Warlord'] } })).toBe(false)
+    expect(dnd5eBuilder.pruneDraft(thaum, { class_choices: { order: ['Protector'] } }).spell_ids).toEqual(['a', 'b', 'c'])
+    expect(dnd5eBuilder.pruneDraft(thaum, { class_choices: { order: ['Magician'] } }).spell_ids).toEqual(['a', 'b', 'c'])
+  })
+
+  test('toCharacter writes non-empty choices on the class pick, omitting them when none', () => {
+    const draft = { ...dnd5eBuilder.initialDraft(), class_id: 'ftr', class_name: 'Fighter', class_choices: { fighting_style: ['Defense'], weapon_mastery: [], expertise: ['x', 3] } }
+    expect(dnd5eBuilder.toCharacter(draft).picks.find((p) => p.kind === 'class')?.state).toEqual({ skills: [], choices: { fighting_style: ['Defense'], expertise: ['x'] } })
+    const none = { ...draft, class_choices: { weapon_mastery: [] } }
+    expect(dnd5eBuilder.toCharacter(none).picks.find((p) => p.kind === 'class')?.state).toEqual({ skills: [] })
   })
 })

@@ -4,7 +4,7 @@
 import type { Draft, NewCharacter } from '../types'
 import { ABILITY_KEYS } from './definition'
 import { featureResources } from './features'
-import { getAbilityModifier, getMaxHP, getMaxSpellLevel, getSpellLimits, slotsFor } from './rules'
+import { findOrder, getAbilityModifier, getMaxHP, getMaxSpellLevel, getSpellLimits, slotsFor } from './rules'
 
 export const str = (v: unknown): string => (typeof v === 'string' ? v : '')
 export const num = (v: unknown, fallback: number): number => (typeof v === 'number' && Number.isFinite(v) ? v : fallback)
@@ -59,6 +59,16 @@ export function equipmentComplete(draft: Draft): boolean {
   return strList(draft.class_equipment_options).length === 0 || typeof draft.equipment_option === 'number'
 }
 
+/** The class choices typed or picked so far (choice key → values), non-string entries dropped. */
+export function classChoices(draft: Draft): Record<string, string[]> {
+  const raw = draft.class_choices && typeof draft.class_choices === 'object' ? (draft.class_choices as Record<string, unknown>) : {}
+  return Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, strList(v)]))
+}
+
+/** An order that grants a cantrip (Thaumaturge, Magician) raises the cantrip limit by one. */
+export const extraCantrips = (draft: Draft): number =>
+  findOrder(str(draft.class_name), classChoices(draft).order?.[0])?.cantrip ? 1 : 0
+
 const spellLevel = (draft: Draft, id: string): number | undefined => {
   const v = ((draft.spell_levels ?? {}) as Record<string, unknown>)[id]
   return typeof v === 'number' ? v : undefined
@@ -81,7 +91,9 @@ export function spellCounts(draft: Draft) {
 
 /** True when the chosen spells fit the class's SRD 5.2 limits and max spell level. */
 export function spellsWithinLimits(draft: Draft): boolean {
-  const { maxCantrips, maxSpells } = getSpellLimits(str(draft.class_name), levelOf(draft))
+  const limits = getSpellLimits(str(draft.class_name), levelOf(draft))
+  const maxCantrips = limits.maxCantrips + extraCantrips(draft)
+  const maxSpells = limits.maxSpells
   const { cantrips, spells, tooHigh } = spellCounts(draft)
   return !tooHigh && cantrips <= maxCantrips && spells <= maxSpells
 }
@@ -91,7 +103,9 @@ function fitSpells(draft: Draft): string[] {
   const cls = str(draft.class_name)
   const level = levelOf(draft)
   const max = getMaxSpellLevel(cls, level)
-  const { maxCantrips, maxSpells } = getSpellLimits(cls, level)
+  const limits = getSpellLimits(cls, level)
+  const maxCantrips = limits.maxCantrips + extraCantrips(draft)
+  const maxSpells = limits.maxSpells
   let cantrips = 0
   let spells = 0
   return strList(draft.spell_ids).filter((id) => {
@@ -116,6 +130,8 @@ export function abilitiesFilled(draft: Draft): boolean {
  *   class_skills (the picks)
  * - class_equipment_options (the class's option strings, cached on the class pick), equipment_option (index
  *   picked), equipment_items / equipment_other / equipment_gold (the picked option, resolved when chosen)
+ * - class_features (the class's level-1 feature names, cached on the class pick) and class_choices
+ *   (choice key → typed or picked values: fighting_style, weapon_mastery, expertise, order)
  * - the six ability keys (null until assigned from the standard array),
  *   bg_bonus_two / bg_bonus_one (ability keys receiving +2 / +1)
  * - spell_ids, spell_classes (spell id → lowercase class list) and spell_levels (spell id →
@@ -141,6 +157,8 @@ export function initialDraft(): Draft {
     equipment_items: [],
     equipment_other: [],
     equipment_gold: 0,
+    class_features: [],
+    class_choices: {},
     ...Object.fromEntries(ABILITY_KEYS.map((k) => [k, null])),
     bg_bonus_two: null,
     bg_bonus_one: null,
@@ -164,7 +182,9 @@ export function initialDraft(): Draft {
  * - a class change resets the subclass, clears the class skill picks (unless the patch carries the new
  *   class's skill list) and drops spells off the new class list;
  * - a background or class change drops class skill picks the background now grants;
- * - a class or level change drops spells above the new max spell level and trims to the new limits.
+ * - a class change clears the class choices;
+ * - a class or level change, or a class choices change (an order may grant a cantrip), drops spells above
+ *   the new max spell level and trims to the new limits.
  */
 export function pruneDraft(draft: Draft, changed: Partial<Draft>): Draft {
   const next: Draft = { ...draft, ...changed }
@@ -189,9 +209,10 @@ export function pruneDraft(draft: Draft, changed: Partial<Draft>): Draft {
     next.equipment_items = []
     next.equipment_other = []
     next.equipment_gold = 0
+    next.class_choices = {}
   }
   else next.class_skills = validClassSkills(next)
-  if (classChanged || levelChanged) next.spell_ids = fitSpells(next)
+  if (classChanged || levelChanged || 'class_choices' in changed) next.spell_ids = fitSpells(next)
   return next
 }
 
@@ -204,6 +225,7 @@ export function toCharacter(draft: Draft): NewCharacter {
   const level = levelOf(draft)
   const stats = Object.fromEntries(ABILITY_KEYS.map((k) => [k, Math.min(20, num(draft[k], 10) + bonusFor(draft, k))]))
   const hpMax = Math.max(1, getMaxHP(level, num(draft.hit_die, 8), getAbilityModifier(stats.constitution)))
+  const choices = Object.fromEntries(Object.entries(classChoices(draft)).filter(([, v]) => v.length > 0))
   const pick = (kind: string, id: unknown, acquired_at_level: number) =>
     typeof id === 'string' && id ? [{ content_id: id, kind, state: {}, acquired_at_level }] : []
 
@@ -234,7 +256,7 @@ export function toCharacter(draft: Draft): NewCharacter {
     items: Array.isArray(draft.equipment_items) ? (draft.equipment_items as NewCharacter['items']) : [],
     picks: [
       ...(typeof draft.class_id === 'string' && draft.class_id
-        ? [{ content_id: draft.class_id, kind: 'class', state: { skills: validClassSkills(draft) }, acquired_at_level: 1 }]
+        ? [{ content_id: draft.class_id, kind: 'class', state: { skills: validClassSkills(draft), ...(Object.keys(choices).length > 0 ? { choices } : {}) }, acquired_at_level: 1 }]
         : []),
       ...pick('subclass', draft.subclass_id, level),
       ...pick('species', draft.species_id, 1),
