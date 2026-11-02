@@ -10,6 +10,7 @@ import { createCharacter } from '@/features/characters/characters.api'
 import { listContent } from '@/features/content/content.api'
 import { AbilityScoresStep } from '@/systems/dnd5e-2024/steps/AbilityScoresStep'
 import { OriginStep } from '@/systems/dnd5e-2024/steps/OriginStep'
+import { ExpertiseStep } from '@/systems/dnd5e-2024/steps/ExpertiseStep'
 import { WeaponMasteryStep } from '@/systems/dnd5e-2024/steps/WeaponMasteryStep'
 import { FightingStyleStep } from '@/systems/dnd5e-2024/steps/FightingStyleStep'
 import { ClassSkillsStep } from '@/systems/dnd5e-2024/steps/ClassSkillsStep'
@@ -329,5 +330,23 @@ describe('Weapon mastery step', () => {
     expect(screen.getByRole('button', { name: 'Longbow' })).toBeDisabled()
     fireEvent.press(screen.getByRole('button', { name: 'Dagger' }))
     expect(useBuilderStore.getState().draft.mastery_ids).toEqual(['gs'])
+  })
+})
+
+describe('Expertise step', () => {
+  beforeEach(() => {
+    act(() => useBuilderStore.getState().update({ class_id: 'rog', class_name: 'Rogue', class_expertise_count: 2 }))
+    act(() => useBuilderStore.getState().update({
+      class_skill_options: ['stealth', 'perception', 'acrobatics'], class_skills: ['stealth', 'perception'], bg_skills: ['insight'],
+    }))
+  })
+
+  test('offers only proficient skills and stops at the count', () => {
+    renderWithQuery(<Bound Step={ExpertiseStep} />)
+    expect(screen.queryByRole('button', { name: 'Acrobatics' })).toBeNull()
+    fireEvent.press(screen.getByRole('button', { name: 'Stealth' }))
+    fireEvent.press(screen.getByRole('button', { name: 'Insight' }))
+    expect(useBuilderStore.getState().draft.expertise).toEqual(['stealth', 'insight'])
+    expect(screen.getByRole('button', { name: 'Perception' })).toBeDisabled()
   })
 })

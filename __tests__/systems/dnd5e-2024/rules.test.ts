@@ -8,6 +8,7 @@ import {
   getSpellLimits,
   slotsFor,
   canMaster,
+  skillProficiencyBonus,
   derived,
   weaponMasteryCountFor,
   rest,
@@ -276,7 +277,7 @@ test('definition values', () => {
 // ── Builder ──
 
 test('builder step ids', () => {
-  expect(dnd5eBuilder.steps.map((s) => s.id)).toEqual(['class', 'origin', 'skills', 'equipment', 'fighting-style', 'weapon-mastery', 'ability-scores', 'spells', 'details', 'personality', 'review'])
+  expect(dnd5eBuilder.steps.map((s) => s.id)).toEqual(['class', 'origin', 'skills', 'equipment', 'fighting-style', 'weapon-mastery', 'expertise', 'ability-scores', 'spells', 'details', 'personality', 'review'])
 })
 
 test('spells step is skipped when the class has no slots at the starting level', () => {
@@ -406,7 +407,7 @@ test('proficiencies: class saves and background / state skills, normalised to ke
 })
 
 test('proficiencies are empty without picks', () => {
-  expect(proficiencies([])).toEqual({ saves: [], skills: [] })
+  expect(proficiencies([])).toEqual({ saves: [], skills: [], expertise: [] })
 })
 
 test('derived XP progress only when details.xp is set', () => {
@@ -517,5 +518,39 @@ describe('weapon mastery', () => {
     const picked = { ...fighter, mastery_ids: ['a', 'b', 'c'] }
     expect(dnd5eBuilder.pruneDraft(picked, { class_id: 'wiz', class_name: 'Wizard' })).toMatchObject({ mastery_ids: [], class_mastery_count: 0 })
     expect(dnd5eBuilder.toCharacter(picked).picks.find((p) => p.kind === 'class')?.state).toMatchObject({ mastery: ['a', 'b', 'c'] })
+  })
+})
+
+describe('rogue expertise', () => {
+  const rogue = {
+    ...dnd5eBuilder.initialDraft(), class_id: 'rog', class_name: 'Rogue', class_expertise_count: 2,
+    class_skill_count: 2, class_skill_options: ['stealth', 'perception', 'acrobatics'], class_skills: ['stealth', 'perception'], bg_skills: ['insight'],
+  }
+  const step = dnd5eBuilder.steps.find((s) => s.id === 'expertise')!
+
+  test('step is skipped without the feature and needs exactly the count from proficient skills', () => {
+    expect(step.skip?.({ ...rogue, class_expertise_count: 0 })).toBe(true)
+    expect(step.isComplete({ ...rogue, expertise: ['stealth'] })).toBe(false)
+    expect(step.isComplete({ ...rogue, expertise: ['stealth', 'insight'] })).toBe(true)
+    expect(step.isComplete({ ...rogue, expertise: ['stealth', 'arcana'] })).toBe(false)
+  })
+
+  test('dropping a class skill drops its expertise; changing class clears it; picks go on the class pick', () => {
+    const picked = { ...rogue, expertise: ['stealth', 'perception'] }
+    expect(dnd5eBuilder.pruneDraft(picked, { class_skills: ['stealth', 'acrobatics'] }).expertise).toEqual(['stealth'])
+    expect(dnd5eBuilder.pruneDraft(picked, { class_id: 'ftr', class_name: 'Fighter' })).toMatchObject({ expertise: [], class_expertise_count: 0 })
+    expect(dnd5eBuilder.toCharacter(picked).picks.find((p) => p.kind === 'class')?.state).toMatchObject({ expertise: ['stealth', 'perception'] })
+  })
+
+  test('expertise doubles the proficiency bonus, including passive Perception', () => {
+    const known = { skills: ['stealth', 'perception'], expertise: ['stealth'] }
+    expect(skillProficiencyBonus(2, 'stealth', known)).toBe(4)
+    expect(skillProficiencyBonus(2, 'perception', known)).toBe(2)
+    expect(skillProficiencyBonus(2, 'arcana', known)).toBe(0)
+    const cls = { content_id: 'c', kind: 'class', state: { expertise: ['perception'], skills: ['perception'] }, acquired_at_level: 1, content: { name: 'Rogue', data: {} } } as PickRecord
+    expect(proficiencies([cls]).expertise).toEqual(['perception'])
+    const plain = { ...cls, state: { skills: ['perception'] } }
+    const prof = (value(makeCharacter(), [], 'proficiency')?.value as number)
+    expect((value(makeCharacter(), [cls], 'passive_perception')?.value as number) - (value(makeCharacter(), [plain], 'passive_perception')?.value as number)).toBe(prof)
   })
 })

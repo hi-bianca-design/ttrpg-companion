@@ -1,9 +1,10 @@
 // D&D 5e (2024) character builder: step declarations. Draft lifecycle lives in draft.ts.
 import type { BuilderStepDef, GameSystem } from '../types'
 import {
-  abilitiesAssigned, bonusesComplete, classSkillCount, classSkillsComplete, equipmentComplete, fightingStyleComplete, hasFightingStyle, hasSlots, weaponMasteryComplete, weaponMasteryCount, initialDraft, pruneDraft, spellsWithinLimits, str, strList, toCharacter,
+  abilitiesAssigned, bonusesComplete, classSkillCount, classSkillsComplete, equipmentComplete, fightingStyleComplete, hasFightingStyle, expertiseComplete, expertiseCount, hasSlots, weaponMasteryComplete, weaponMasteryCount, initialDraft, pruneDraft, spellsWithinLimits, str, strList, toCharacter,
 } from './draft'
 import { AbilityScoresStep } from './steps/AbilityScoresStep'
+import { ExpertiseStep } from './steps/ExpertiseStep'
 import { WeaponMasteryStep } from './steps/WeaponMasteryStep'
 import { FightingStyleStep } from './steps/FightingStyleStep'
 import { EquipmentStep } from './steps/EquipmentStep'
@@ -32,6 +33,10 @@ const steps: BuilderStepDef[] = [
   {
     id: 'weapon-mastery', title: 'Weapon Mastery', component: WeaponMasteryStep,
     isComplete: weaponMasteryComplete, skip: (d) => weaponMasteryCount(d) === 0,
+  },
+  {
+    id: 'expertise', title: 'Expertise', component: ExpertiseStep,
+    isComplete: expertiseComplete, skip: (d) => expertiseCount(d) === 0,
   },
   {
     id: 'ability-scores', title: 'Ability Scores', component: AbilityScoresStep,

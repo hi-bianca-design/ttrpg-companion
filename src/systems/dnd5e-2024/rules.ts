@@ -170,17 +170,23 @@ export function skillKey(name: string): string {
  * Saving throws from the class pick's `saving_throw_proficiencies`; skills from every pick's
  * `skill_proficiencies` (background) plus chosen `state.skills`. Keys are lowercase / kebab-case.
  */
-export function proficiencies(picks: PickRecord[]): { saves: string[]; skills: string[] } {
+export function proficiencies(picks: PickRecord[]): { saves: string[]; skills: string[]; expertise: string[] } {
   const cls = picks.find((p) => p.kind === 'class')
   const saves = stringList(asRecord(cls?.content.data).saving_throw_proficiencies).map((s) => s.toLowerCase())
   const skills = picks.flatMap((p) =>
     [...stringList(asRecord(p.content.data).skill_proficiencies), ...stringList(p.state.skills)].map(skillKey),
   )
-  return { saves: [...new Set(saves)], skills: [...new Set(skills)] }
+  const expertise = stringList(cls?.state.expertise).map(skillKey).filter((k) => skills.includes(k))
+  return { saves: [...new Set(saves)], skills: [...new Set(skills)], expertise: [...new Set(expertise)] }
 }
 
-function hasSkill(picks: PickRecord[], skill: string): boolean {
-  return proficiencies(picks).skills.includes(skill)
+/** Proficiency bonus added to a skill check: none, once when proficient, twice with Expertise. */
+export function skillProficiencyBonus(prof: number, skill: string, known: { skills: string[]; expertise: string[] }): number {
+  return known.expertise.includes(skill) ? prof * 2 : known.skills.includes(skill) ? prof : 0
+}
+
+function skillBonus(picks: PickRecord[], skill: string, prof: number): number {
+  return skillProficiencyBonus(prof, skill, proficiencies(picks))
 }
 
 /** Progress (0–100) through the current level's XP band, and the next level's threshold. */
@@ -230,7 +236,7 @@ export function derived(c: CharacterRecord, picks: PickRecord[]): DerivedValue[]
     { key: 'proficiency', label: 'Proficiency', value: prof, format: 'modifier' },
     { key: 'ac', label: 'Armor Class', value: armorClass(mod('dexterity'), picks), format: 'plain' },
     { key: 'initiative', label: 'Initiative', value: mod('dexterity') + (alert ? prof : 0), format: 'modifier' },
-    { key: 'passive_perception', label: 'Passive Perception', value: 10 + mod('wisdom') + (hasSkill(picks, 'perception') ? prof : 0), format: 'plain' },
+    { key: 'passive_perception', label: 'Passive Perception', value: 10 + mod('wisdom') + skillBonus(picks, 'perception', prof), format: 'plain' },
     { key: 'speed', label: 'Speed', value: typeof speciesSpeed === 'number' ? speciesSpeed : 30, format: 'plain' },
     ...(typeof c.details.xp === 'number' ? xpValues(c.level, c.details.xp) : []),
   ]

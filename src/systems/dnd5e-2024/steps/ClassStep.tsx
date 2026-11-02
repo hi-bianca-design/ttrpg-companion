@@ -106,6 +106,7 @@ export function ClassStep({ draft, update }: BuilderStepProps) {
                       class_skill_count: cls.data.features.skill_choices?.count ?? 0,
                       class_fighting_style: (cls.data.features.level_features?.['1'] ?? []).includes('Fighting Style'),
                       class_mastery_count: weaponMasteryCountFor(cls.name, cls.data.features.level_features?.['1'] ?? []),
+                      class_expertise_count: (cls.data.features.level_features?.['1'] ?? []).includes('Expertise') ? 2 : 0,
                       class_equipment_options: cls.data.features.starting_equipment_options ?? [],
                       class_skill_options: (cls.data.features.skill_choices?.from ?? []).map(skillKey),
                     })
