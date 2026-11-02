@@ -22,6 +22,10 @@ export const CLASS_FEATURES: FeatureUse[] = [
     key: 'second_wind', label: 'Second Wind', className: 'Fighter',
     uses: byLevel([[1, 2], [4, 3], [10, 4]]), short: () => 'one',
   },
+  {
+    key: 'rage', label: 'Rage', className: 'Barbarian',
+    uses: byLevel([[1, 2], [3, 3], [6, 4], [12, 5], [17, 6]]), short: () => 'one',
+  },
 ]
 
 export const FEATURE_KEYS = CLASS_FEATURES.map((f) => f.key)
