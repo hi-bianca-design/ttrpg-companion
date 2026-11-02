@@ -68,7 +68,7 @@ export function SpellsStep({ draft, update }: BuilderStepProps) {
     <View className="gap-6">
       <StepIntro
         title="Choose spells"
-        description={`Pick the cantrips and prepared spells your level ${level} ${className} starts with. You can change these later.`}
+        description={`Pick the cantrips and prepared spells your level ${level} ${className} starts with. Suggestions are only suggestions. You can skip this and come back.`}
       />
       <View className="flex-row gap-2">
         {maxCantrips > 0 ? <Badge>{`Cantrips ${chosenCantrips}/${maxCantrips}`}</Badge> : null}

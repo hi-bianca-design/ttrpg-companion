@@ -38,7 +38,7 @@ export function AbilityScoresStep({ draft, update }: BuilderStepProps) {
     <View className="gap-6">
       <StepIntro
         title="Ability scores"
-        description="Type each score, or use the standard array to start."
+        description="Type each score, or use the standard array to start. You can skip this and come back."
       />
 
       <Button variant="outline" onPress={useStandardArray} accessibilityLabel="Use standard array">

@@ -31,7 +31,7 @@ export function ClassFeaturesStep({ draft, update }: BuilderStepProps) {
     <View className="gap-6">
       <StepIntro
         title="Class features"
-        description={`${className || 'Your class'} makes these choices at level 1. Type your own or pick a suggestion; you can leave any blank.`}
+        description={`${className || 'Your class'} makes these choices at level 1. Type your own or pick a suggestion, which is only a suggestion. You can skip this and come back.`}
       />
       {choices.map((choice) => (
         <View key={choice.key} className="gap-2">

@@ -1,7 +1,7 @@
 // D&D 5e (2024) character builder: step declarations. Draft lifecycle lives in draft.ts.
 import type { BuilderStepDef, Draft, GameSystem } from '../types'
 import {
-  abilitiesFilled, bonusesComplete, canCreate, classChoices, classSkillCount, classSkillsComplete, equipmentComplete, hasSlots, initialDraft, pruneDraft, spellsWithinLimits, str, strList, toCharacter,
+  abilitiesFilled, canCreate, classChoices, classSkillCount, classSkillsComplete, equipmentComplete, hasSlots, initialDraft, pruneDraft, spellsWithinLimits, str, strList, toCharacter,
 } from './draft'
 import { classChoicesFor } from './classChoices'
 import { AbilityScoresStep } from './steps/AbilityScoresStep'

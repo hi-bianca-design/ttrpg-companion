@@ -24,7 +24,7 @@ export function PersonalityStep({ draft, update }: BuilderStepProps) {
 
   return (
     <View className="gap-6">
-      <StepIntro title="Alignment and personality" description="Optional, but helpful for roleplay. Every field can stay blank." />
+      <StepIntro title="Alignment and personality" description="Helpful for roleplay, but you can skip this and come back. Every field can stay blank." />
 
       <SectionHeader id="builder-alignment" title="Alignment">
         <View className="gap-2" role="radiogroup" accessibilityLabel="Alignment">

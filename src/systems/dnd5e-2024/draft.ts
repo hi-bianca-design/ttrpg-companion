@@ -28,18 +28,6 @@ export function bonusAbilities(draft: Draft): string[] {
   return strList(draft.bg_abilities).filter((a) => (ABILITY_KEYS as readonly string[]).includes(a))
 }
 
-/**
- * Background bonuses are needed only when the background offers at least two abilities
- * (homebrew backgrounds may offer none); then +2 and +1 go to two different listed abilities.
- */
-export function bonusesComplete(draft: Draft): boolean {
-  const eligible = bonusAbilities(draft)
-  if (eligible.length < 2) return true
-  const two = str(draft.bg_bonus_two)
-  const one = str(draft.bg_bonus_one)
-  return eligible.includes(two) && eligible.includes(one) && two !== one
-}
-
 /** Class skill picks that are still valid: on the class's list and not already granted by the background. */
 export function validClassSkills(draft: Draft): string[] {
   const options = strList(draft.class_skill_options)

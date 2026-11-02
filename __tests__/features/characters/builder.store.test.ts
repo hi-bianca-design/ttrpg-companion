@@ -44,10 +44,20 @@ describe('useBuilderStore', () => {
 describe('visibleSteps', () => {
   const { builder } = getSystem('dnd5e-2024')
 
-  test('skip hides Spells for a Fighter', () => {
-    const ids = visibleSteps(builder.steps, { ...builder.initialDraft(), class_name: 'Fighter' }).map((s) => s.id)
+  test('a Fighter sees every step but Spells, in the final order', () => {
+    const draft = {
+      ...builder.initialDraft(), class_name: 'Fighter', class_skill_count: 2,
+      class_features: ['Fighting Style', 'Second Wind', 'Weapon Mastery'],
+    }
+    const ids = visibleSteps(builder.steps, draft).map((s) => s.id)
     expect(ids).not.toContain('spells')
-    expect(ids).toEqual(['class', 'origin', 'equipment', 'ability-scores', 'details', 'personality', 'review'])
+    expect(ids).toEqual(['class', 'origin', 'skills', 'equipment', 'ability-scores', 'class-features', 'details', 'personality', 'review'])
+  })
+
+  test('a Wizard has no Class features step and sees Spells', () => {
+    const ids = visibleSteps(builder.steps, { ...builder.initialDraft(), class_name: 'Wizard', class_skill_count: 2, class_features: ['Spellcasting'] }).map((s) => s.id)
+    expect(ids).not.toContain('class-features')
+    expect(ids).toEqual(['class', 'origin', 'skills', 'equipment', 'ability-scores', 'spells', 'details', 'personality', 'review'])
   })
 
   test('a level-1 Wizard and Paladin see Spells', () => {

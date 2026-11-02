@@ -16,7 +16,7 @@ export function DetailsStep({ draft, update }: BuilderStepProps) {
 
   return (
     <View className="gap-6">
-      <StepIntro title="Final details" description="Give your character a name. Appearance and backstory are optional." />
+      <StepIntro title="Final details" description="Give your character a name, or skip this and come back. Appearance and backstory are optional too." />
 
       <View className="gap-2">
         <View className="flex-row items-center justify-between">

@@ -31,7 +31,7 @@ export function EquipmentStep({ draft, update }: BuilderStepProps) {
 
   return (
     <View className="gap-6">
-      <StepIntro title="Starting equipment" description={`Choose how ${className} begins. Weapons and armor start equipped.`} />
+      <StepIntro title="Starting equipment" description={`${options.length > 0 ? `Choose how ${className} begins.` : 'Add the gear your character carries.'} Weapons and armor start equipped. You can skip this and come back.`} />
       <QueryState isLoading={items.isLoading} isError={items.isError} onRetry={() => items.refetch()} />
       {items.isLoading || items.isError ? null : (
         <View className="gap-2">
