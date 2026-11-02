@@ -20,34 +20,41 @@ function CharacterCard({ character, onPress, onLongPress }: CardProps) {
   const subtitle = `Level ${character.level}${character.class_name ? ` ${character.class_name}` : ''}`
   const hp = character.hp
   return (
-    <Pressable
-      role="button"
-      accessibilityLabel={`${character.name}, ${subtitle}`}
-      accessibilityHint="Long press to delete"
-      onPress={onPress}
-      onLongPress={onLongPress}
-    >
-      <Card className="gap-3">
-        <View className="flex-row items-start gap-3">
-          <View className="flex-1 gap-1">
+    // The delete button is a sibling of the card's button, not inside it: web forbids nested buttons.
+    <View>
+      <Pressable
+        role="button"
+        accessibilityLabel={`${character.name}, ${subtitle}`}
+        accessibilityHint="Long press to delete"
+        onPress={onPress}
+        onLongPress={onLongPress}
+      >
+        <Card className="gap-3">
+          <View className="gap-1 pr-10">
             <Text variant="subhead" numberOfLines={1}>{character.name}</Text>
             <Text variant="body-sm" tone="muted">{subtitle}</Text>
           </View>
-          <Button variant="ghost" size="icon" accessibilityLabel={`Delete ${character.name}`} onPress={onLongPress}>
-            <Trash size={16} color={THEME_COLORS.mutedForeground} />
-          </Button>
-        </View>
-        {hp ? (
-          <View className="gap-1">
-            <View className="flex-row items-center justify-between">
-              <Text variant="label">HP</Text>
-              <Text variant="label">{`${hp.current} / ${hp.max}`}</Text>
+          {hp ? (
+            <View className="gap-1">
+              <View className="flex-row items-center justify-between">
+                <Text variant="label">HP</Text>
+                <Text variant="label">{`${hp.current} / ${hp.max}`}</Text>
+              </View>
+              <Progress value={hp.max > 0 ? (hp.current / hp.max) * 100 : 0} accessibilityLabel={`Hit points ${hp.current} of ${hp.max}`} />
             </View>
-            <Progress value={hp.max > 0 ? (hp.current / hp.max) * 100 : 0} accessibilityLabel={`Hit points ${hp.current} of ${hp.max}`} />
-          </View>
-        ) : null}
-      </Card>
-    </Pressable>
+          ) : null}
+        </Card>
+      </Pressable>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute right-2 top-2"
+        accessibilityLabel={`Delete ${character.name}`}
+        onPress={onLongPress}
+      >
+        <Trash size={16} color={THEME_COLORS.mutedForeground} />
+      </Button>
+    </View>
   )
 }
 
