@@ -4,8 +4,10 @@ import { Badge } from '@/components/ui/badge'
 import { Text } from '@/components/ui/text'
 import type { BuilderStepProps } from '../../types'
 import { ABILITY_LABELS, type AbilityKey } from '../definition'
+import { customData, type CustomEntry } from '../customEntries'
+import { customEntry } from '../draft'
 import { skillKey } from '../rules'
-import { ChoiceCard, QueryState, StepIntro, useDndContent } from './shared'
+import { ChoiceCard, CustomChoice, QueryState, StepIntro, useDndContent } from './shared'
 
 const titleCase = (s: string) => s.replace(/\b\w/g, (c) => c.toUpperCase())
 const abilityLabel = (key: string) => ABILITY_LABELS[key as AbilityKey] ?? key
@@ -17,6 +19,14 @@ function Selected({ name }: { name?: string }) {
 export function OriginStep({ draft, update }: BuilderStepProps) {
   const backgrounds = useDndContent('background')
   const species = useDndContent('species')
+  const customBg = customEntry(draft.background_custom)
+  const customSp = customEntry(draft.species_custom)
+  const officialNames = (items: Array<{ name: string; owned: boolean }>) => items.filter((i) => !i.owned).map((i) => i.name)
+
+  const saveBackground = (entry: CustomEntry) => update({
+    background_custom: entry, background_id: null, bg_abilities: [],
+    bg_skills: (customData('background', entry.extras, false) as { skill_proficiencies: string[] }).skill_proficiencies,
+  })
 
   return (
     <View className="gap-6">
@@ -25,7 +35,7 @@ export function OriginStep({ draft, update }: BuilderStepProps) {
       <SectionHeader
         id="builder-background"
         title="Background"
-        action={<Selected name={backgrounds.items.find((b) => b.id === draft.background_id)?.name} />}
+        action={<Selected name={backgrounds.items.find((b) => b.id === draft.background_id)?.name ?? customBg?.name} />}
       >
         <QueryState isLoading={backgrounds.isLoading} isError={backgrounds.isError} onRetry={() => backgrounds.refetch()} />
         <View className="gap-2">
@@ -52,13 +62,23 @@ export function OriginStep({ draft, update }: BuilderStepProps) {
               ) : null}
             </ChoiceCard>
           ))}
+          {backgrounds.isLoading ? null : (
+            <CustomChoice
+              kind="background"
+              kindLabel="Background"
+              entry={customBg}
+              officialNames={officialNames(backgrounds.items)}
+              onSave={saveBackground}
+              onRemove={() => update({ background_custom: null, bg_abilities: [], bg_skills: [] })}
+            />
+          )}
         </View>
       </SectionHeader>
 
       <SectionHeader
         id="builder-species"
         title="Species"
-        action={<Selected name={species.items.find((s) => s.id === draft.species_id)?.name} />}
+        action={<Selected name={species.items.find((s) => s.id === draft.species_id)?.name ?? customSp?.name} />}
       >
         <QueryState isLoading={species.isLoading} isError={species.isError} onRetry={() => species.refetch()} />
         <View className="gap-2">
@@ -79,6 +99,16 @@ export function OriginStep({ draft, update }: BuilderStepProps) {
               </ChoiceCard>
             )
           })}
+          {species.isLoading ? null : (
+            <CustomChoice
+              kind="species"
+              kindLabel="Species"
+              entry={customSp}
+              officialNames={officialNames(species.items)}
+              onSave={(entry) => update({ species_custom: entry, species_id: null })}
+              onRemove={() => update({ species_custom: null })}
+            />
+          )}
         </View>
       </SectionHeader>
     </View>

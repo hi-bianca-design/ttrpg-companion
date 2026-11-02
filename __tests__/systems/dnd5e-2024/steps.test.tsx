@@ -17,6 +17,8 @@ import { ClassFeaturesStep } from '@/systems/dnd5e-2024/steps/ClassFeaturesStep'
 import { EquipmentStep } from '@/systems/dnd5e-2024/steps/EquipmentStep'
 import { ClassSkillsStep } from '@/systems/dnd5e-2024/steps/ClassSkillsStep'
 import { ClassStep } from '@/systems/dnd5e-2024/steps/ClassStep'
+import { ReviewStep } from '@/systems/dnd5e-2024/steps/ReviewStep'
+import { getSystem } from '@/systems/registry'
 import { filterSpells, SpellsStep } from '@/systems/dnd5e-2024/steps/SpellsStep'
 import type { Draft } from '@/systems/types'
 import { variantOf } from '../../helpers/button'
@@ -586,5 +588,206 @@ describe('Equipment step: your own items', () => {
     act(() => useBuilderStore.getState().update({ class_equipment_options: [] }))
     renderWithQuery(<Bound Step={EquipmentStep} />)
     expect(await screen.findByLabelText('Item name')).toBeTruthy()
+  })
+})
+
+describe('Make your own', () => {
+  /** A step bound to the real store, with `update` spied so each call's patch can be checked. */
+  function spied(Step: (props: { draft: Draft; update(patch: Partial<Draft>): void }) => ReactElement) {
+    const update = jest.fn((patch: Partial<Draft>) => useBuilderStore.getState().update(patch))
+    function Spy() {
+      const draft = useBuilderStore((s) => s.draft)
+      return <Step draft={draft} update={update} />
+    }
+    renderWithQuery(<Spy />)
+    return update
+  }
+  const draft = () => useBuilderStore.getState().draft
+  const steps = getSystem('dnd5e-2024').builder.steps
+  const ids = (d: Draft) => visibleSteps(steps, { ...dnd5eBuilder.initialDraft(), ...d }).map((s) => s.id)
+
+  describe('class', () => {
+    test('the Class step lists "Make your own" after the classes', async () => {
+      renderWithQuery(<Bound Step={ClassStep} />)
+      await screen.findByRole('button', { name: /^Wizard/ })
+      expect(screen.getByRole('button', { name: 'Make your own class' })).toHaveTextContent(/Make your own/)
+    })
+
+    test('saving a name-only class calls update once with the entry and the class cache', async () => {
+      const update = spied(ClassStep)
+      fireEvent.press(await screen.findByRole('button', { name: 'Make your own class' }))
+      fireEvent.changeText(screen.getByLabelText('Class name'), 'Ashen Knight')
+      expect(update).not.toHaveBeenCalled()
+      fireEvent.press(screen.getByLabelText('Save class'))
+      expect(update).toHaveBeenCalledTimes(1)
+      expect(update.mock.calls[0][0]).toMatchObject({
+        class_custom: { name: 'Ashen Knight', library: false },
+        class_id: null, class_name: 'Ashen Knight', hit_die: 8, class_skill_count: 0, class_skill_options: [], class_features: [],
+      })
+      expect(screen.queryByLabelText('Class name')).toBeNull()
+      const card = screen.getByRole('button', { name: 'Ashen Knight, custom class' })
+      expect(card).toHaveTextContent(/Custom/)
+      expect(card).toHaveTextContent(/Only for this character/)
+    })
+
+    test('a custom class with two skill picks caches the count and the options', async () => {
+      const update = spied(ClassStep)
+      fireEvent.press(await screen.findByRole('button', { name: 'Make your own class' }))
+      fireEvent.changeText(screen.getByLabelText('Class name'), 'Ashen Knight')
+      fireEvent.changeText(screen.getByLabelText('Skills to choose'), '2')
+      for (const k of ['athletics', 'history', 'stealth']) fireEvent.press(screen.getByRole('button', { name: k }))
+      fireEvent.press(screen.getByRole('button', { name: 'Add to my homebrew library' }))
+      fireEvent.press(screen.getByLabelText('Save class'))
+      expect(update).toHaveBeenCalledTimes(1)
+      expect(update.mock.calls[0][0]).toMatchObject({ class_skill_count: 2, class_skill_options: ['athletics', 'history', 'stealth'] })
+      expect(draft()).toMatchObject({ class_skill_count: 2, class_skill_options: ['athletics', 'history', 'stealth'] })
+      expect(screen.getByRole('button', { name: 'Ashen Knight, custom class' })).toHaveTextContent(/Saved to your homebrew library/)
+    })
+
+    test('Edit prefills the form; Remove clears the entry and the class cache', async () => {
+      const update = spied(ClassStep)
+      fireEvent.press(await screen.findByRole('button', { name: 'Make your own class' }))
+      fireEvent.changeText(screen.getByLabelText('Class name'), 'Ashen Knight')
+      fireEvent.changeText(screen.getByLabelText('Skills to choose'), '1')
+      fireEvent.press(screen.getByRole('button', { name: 'athletics' }))
+      fireEvent.press(screen.getByLabelText('Save class'))
+
+      fireEvent.press(screen.getByRole('button', { name: 'Edit custom class' }))
+      expect(screen.getByLabelText('Class name').props.value).toBe('Ashen Knight')
+      expect(screen.getByLabelText('Skills to choose').props.value).toBe('1')
+      fireEvent.changeText(screen.getByLabelText('Class name'), 'Ember Knight')
+      fireEvent.press(screen.getByLabelText('Save class'))
+      expect(update).toHaveBeenCalledTimes(2)
+      expect(draft()).toMatchObject({ class_custom: { name: 'Ember Knight' }, class_name: 'Ember Knight' })
+
+      fireEvent.press(screen.getByRole('button', { name: 'Remove custom class' }))
+      expect(update).toHaveBeenCalledTimes(3)
+      const fresh = dnd5eBuilder.initialDraft()
+      expect(draft()).toMatchObject({
+        class_custom: null, class_id: null, class_name: fresh.class_name, hit_die: fresh.hit_die,
+        class_skill_count: 0, class_skill_options: [], class_features: [], class_equipment_options: [],
+      })
+      // Reopening after a remove starts empty (the form is remounted).
+      fireEvent.press(screen.getByRole('button', { name: 'Make your own class' }))
+      expect(screen.getByLabelText('Class name').props.value).toBe('')
+    })
+
+    test('Cancel closes the form without an update', async () => {
+      const update = spied(ClassStep)
+      fireEvent.press(await screen.findByRole('button', { name: 'Make your own class' }))
+      fireEvent.changeText(screen.getByLabelText('Class name'), 'Ashen Knight')
+      fireEvent.press(screen.getByRole('button', { name: 'Cancel' }))
+      expect(update).not.toHaveBeenCalled()
+      expect(screen.queryByLabelText('Class name')).toBeNull()
+      fireEvent.press(screen.getByRole('button', { name: 'Make your own class' }))
+      expect(screen.getByLabelText('Class name').props.value).toBe('')
+    })
+
+    test('the form warns about official class names', async () => {
+      renderWithQuery(<Bound Step={ClassStep} />)
+      fireEvent.press(await screen.findByRole('button', { name: 'Make your own class' }))
+      fireEvent.changeText(screen.getByLabelText('Class name'), 'wizard')
+      expect(screen.getByText(/An official class has this name/)).toBeTruthy()
+    })
+
+    test('picking an official class after a custom one leaves class_custom null', async () => {
+      renderWithQuery(<Bound Step={ClassStep} />)
+      fireEvent.press(await screen.findByRole('button', { name: 'Make your own class' }))
+      fireEvent.changeText(screen.getByLabelText('Class name'), 'Ashen Knight')
+      fireEvent.press(screen.getByLabelText('Save class'))
+      fireEvent.press(screen.getByRole('button', { name: /^Fighter/ }))
+      expect(draft()).toMatchObject({ class_id: 'ftr', class_name: 'Fighter', hit_die: 10, class_custom: null })
+      expect(screen.queryByRole('button', { name: 'Ashen Knight, custom class' })).toBeNull()
+      expect(screen.getByRole('button', { name: 'Make your own class' })).toBeTruthy()
+    })
+
+    test('a saved homebrew class shows the Homebrew badge', async () => {
+      mockList.mockImplementation(async ({ kind }: { kind: string }) => kind === 'class'
+        ? [...CONTENT.class, { ...row('class', 'hb-cls', 'Runeblade', { hit_die: 10, primary_abilities: [], saving_throw_proficiencies: [] }), owner_id: 'me' }]
+        : CONTENT[kind] ?? [])
+      renderWithQuery(<Bound Step={ClassStep} />)
+      const card = await screen.findByRole('button', { name: /^Runeblade/ })
+      await waitFor(() => expect(card).toHaveTextContent(/Homebrew/))
+      expect(screen.getByRole('button', { name: /^Wizard/ })).not.toHaveTextContent(/Homebrew/)
+    })
+
+    test('the Skills step shows for a custom class with skill picks (its options) and is skipped without', () => {
+      const withSkills = { class_custom: { name: 'Ashen Knight', description: '', library: false, extras: {} }, class_name: 'Ashen Knight', class_skill_count: 2, class_skill_options: ['athletics', 'history', 'stealth'], class_features: [] }
+      expect(ids(withSkills)).toContain('skills')
+      expect(ids({ ...withSkills, class_skill_count: 0, class_skill_options: [] })).not.toContain('skills')
+
+      act(() => useBuilderStore.getState().update(withSkills))
+      renderWithQuery(<Bound Step={ClassSkillsStep} />)
+      expect(screen.getByText('Ashen Knight trains in 2 of these skills.')).toBeTruthy()
+      for (const name of ['Athletics', 'History', 'Stealth']) expect(screen.getByRole('button', { name })).toBeTruthy()
+      expect(screen.queryByRole('button', { name: 'Arcana' })).toBeNull()
+    })
+
+    test('a custom class skips Class features and Spells', () => {
+      const custom = { class_custom: { name: 'Ashen Knight', description: '', library: false, extras: {} }, class_name: 'Ashen Knight', class_features: [] }
+      expect(ids(custom)).not.toContain('class-features')
+      expect(ids(custom)).not.toContain('spells')
+    })
+  })
+
+  describe('species', () => {
+    test('save and remove', async () => {
+      const update = spied(OriginStep)
+      fireEvent.press(await screen.findByRole('button', { name: 'Make your own species' }))
+      fireEvent.changeText(screen.getByLabelText('Species name'), 'Moonkin')
+      fireEvent.press(screen.getByLabelText('Save species'))
+      expect(update).toHaveBeenCalledTimes(1)
+      expect(update.mock.calls[0][0]).toEqual({ species_custom: { name: 'Moonkin', description: '', library: false, extras: {} }, species_id: null })
+      expect(screen.getByRole('button', { name: 'Moonkin, custom species' })).toHaveTextContent(/Custom/)
+
+      fireEvent.press(screen.getByRole('button', { name: 'Remove custom species' }))
+      expect(update).toHaveBeenLastCalledWith({ species_custom: null })
+      expect(draft().species_custom).toBeNull()
+      expect(screen.getByRole('button', { name: 'Make your own species' })).toBeTruthy()
+    })
+  })
+
+  describe('background', () => {
+    test('save with two typed skills caches them; Remove clears them', async () => {
+      const update = spied(OriginStep)
+      fireEvent.press(await screen.findByRole('button', { name: 'Make your own background' }))
+      fireEvent.changeText(screen.getByLabelText('Background name'), 'Lighthouse Keeper')
+      for (const k of ['perception', 'survival']) fireEvent.press(screen.getByRole('button', { name: k }))
+      fireEvent.press(screen.getByLabelText('Save background'))
+      expect(update).toHaveBeenCalledTimes(1)
+      expect(update.mock.calls[0][0]).toMatchObject({
+        background_custom: { name: 'Lighthouse Keeper' }, background_id: null, bg_abilities: [], bg_skills: ['perception', 'survival'],
+      })
+      expect(draft()).toMatchObject({ bg_skills: ['perception', 'survival'], bg_abilities: [] })
+      expect(screen.getByRole('button', { name: 'Lighthouse Keeper, custom background' })).toHaveTextContent(/Custom/)
+
+      fireEvent.press(screen.getByRole('button', { name: 'Remove custom background' }))
+      expect(update).toHaveBeenLastCalledWith({ background_custom: null, bg_abilities: [], bg_skills: [] })
+      expect(draft()).toMatchObject({ background_custom: null, bg_skills: [], bg_abilities: [] })
+    })
+
+    test('picking an official background afterwards clears the custom one', async () => {
+      renderWithQuery(<Bound Step={OriginStep} />)
+      fireEvent.press(await screen.findByRole('button', { name: 'Make your own background' }))
+      fireEvent.changeText(screen.getByLabelText('Background name'), 'Lighthouse Keeper')
+      fireEvent.press(screen.getByLabelText('Save background'))
+      fireEvent.press(screen.getByRole('button', { name: 'Sage' }))
+      expect(draft()).toMatchObject({ background_id: 'sage', background_custom: null, bg_skills: ['arcana'] })
+    })
+  })
+
+  test('Review shows the custom class, species and background names', async () => {
+    act(() => useBuilderStore.getState().update({
+      class_custom: { name: 'Ashen Knight', description: '', library: false, extras: {} },
+      species_custom: { name: 'Moonkin', description: '', library: false, extras: { speed: 35 } },
+      background_custom: { name: 'Lighthouse Keeper', description: '', library: true, extras: {} },
+      name: 'Mira',
+    }))
+    renderWithQuery(<Bound Step={ReviewStep} />)
+    expect(await screen.findByText('Level 1 Ashen Knight')).toBeTruthy()
+    expect(screen.getByText('Moonkin')).toBeTruthy()
+    expect(screen.getByText('Lighthouse Keeper')).toBeTruthy()
+    expect(screen.getByText('35')).toBeTruthy()
+    await act(async () => {})
   })
 })

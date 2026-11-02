@@ -2,16 +2,19 @@
 // selectable cards and chips, loading/error states.
 import { CheckCircle } from 'phosphor-react-native'
 import type { ReactNode } from 'react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Pressable, View } from 'react-native'
 import type { z } from 'zod'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
 import { ToggleChip } from '@/components/ui/toggle-chip'
+import { CustomEntryForm } from '@/features/characters/builder/CustomEntryForm'
 import { useContentList, useCurrentUserId } from '@/features/content/content.queries'
 import { THEME_COLORS } from '@/lib/theme'
 import { cn } from '@/lib/utils'
+import { customExtraFields, type CustomEntry, type CustomKind } from '../customEntries'
 import { dnd5eContentSchemas } from '../schemas'
 
 export function useThemeColors() {
@@ -123,4 +126,79 @@ type ChipProps = {
 /** Builder steps' selectable pill: the shared ToggleChip. */
 export function Chip(props: ChipProps) {
   return <ToggleChip {...props} />
+}
+
+type CustomChoiceProps = {
+  kind: CustomKind
+  kindLabel: string
+  /** The pending custom entry from the draft, or null. */
+  entry: CustomEntry | null
+  /** Names of the official (not the user's own) items in the list, for the form's warning. */
+  officialNames: string[]
+  onSave(entry: CustomEntry): void
+  onRemove(): void
+}
+
+/**
+ * The end of a pick list: a "Make your own" card that opens the custom entry form inline, or the
+ * pending custom entry as a selected card with Edit and Remove. The form keeps its own state and
+ * calls `onSave` once per Save, never per keystroke.
+ */
+export function CustomChoice({ kind, kindLabel, entry, officialNames, onSave, onRemove }: CustomChoiceProps) {
+  const [open, setOpen] = useState(false)
+  // Bumped on every open so the form (which reads `initial` once) remounts with fresh state.
+  const [opened, setOpened] = useState(0)
+  const show = () => { setOpened((n) => n + 1); setOpen(true) }
+
+  if (open) {
+    return (
+      <Card className="gap-3">
+        <Text variant="subhead">{entry ? `Edit your ${kind}` : `Make your own ${kind}`}</Text>
+        <CustomEntryForm
+          key={`${kind}-${entry ? 'edit' : 'new'}-${opened}`}
+          kindLabel={kindLabel}
+          fields={customExtraFields(kind)}
+          initial={entry ?? undefined}
+          officialNames={officialNames}
+          onSubmit={(e) => { setOpen(false); onSave(e) }}
+          onCancel={() => setOpen(false)}
+        />
+      </Card>
+    )
+  }
+
+  if (entry) {
+    // Edit and Remove sit below the card, not inside it: buttons nested in a pressable card are not
+    // reachable by screen readers.
+    return (
+      <View className="gap-2">
+        <ChoiceCard
+          title={entry.name}
+          accessibilityLabel={`${entry.name}, custom ${kind}`}
+          selected
+          aside={<Badge>Custom</Badge>}
+          onPress={show}
+        >
+          {entry.description.trim() ? <Text variant="body-sm" tone="muted" numberOfLines={2}>{entry.description.trim()}</Text> : null}
+          <Text variant="caption" tone="muted">
+            {entry.library ? 'Saved to your homebrew library when you create the character' : 'Only for this character'}
+          </Text>
+        </ChoiceCard>
+        <View className="flex-row gap-2">
+          <Button variant="outline" size="sm" accessibilityLabel={`Edit custom ${kind}`} onPress={show}>
+            <Text>Edit</Text>
+          </Button>
+          <Button variant="outline" size="sm" accessibilityLabel={`Remove custom ${kind}`} onPress={onRemove}>
+            <Text>Remove</Text>
+          </Button>
+        </View>
+      </View>
+    )
+  }
+
+  return (
+    <ChoiceCard title="Make your own" accessibilityLabel={`Make your own ${kind}`} selected={false} onPress={show}>
+      <Text variant="body-sm" tone="muted">{`Describe a ${kind} that isn't in the list.`}</Text>
+    </ChoiceCard>
+  )
 }

@@ -7,9 +7,10 @@ import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
 import type { BuilderStepProps } from '../../types'
 import { ABILITY_LABELS, type AbilityKey } from '../definition'
-import { levelOf } from '../draft'
+import { cachedClassFields, type CustomEntry } from '../customEntries'
+import { customEntry, initialDraft, levelOf } from '../draft'
 import { skillKey } from '../rules'
-import { ChoiceCard, Chip, type ContentItem, QueryState, StepIntro, useDndContent, useThemeColors } from './shared'
+import { ChoiceCard, Chip, type ContentItem, CustomChoice, QueryState, StepIntro, useDndContent, useThemeColors } from './shared'
 
 /** Role grouping and one-line taglines for the SRD classes (D&D-specific presentation). */
 export const CLASS_GROUPS: Array<{ role: string; classes: string[] }> = [
@@ -38,6 +39,14 @@ const DEFAULT_SUBCLASS_LEVEL = 3
 const abilityLabel = (key: string) => ABILITY_LABELS[key as AbilityKey] ?? key
 
 type ClassItem = ContentItem<'class'>
+
+/** The class cache keys a class pick fills; Remove puts them back to the starting draft's values. */
+const CLASS_CACHE_KEYS = ['class_name', 'hit_die', 'class_skill_count', 'class_skill_options', 'class_features', 'class_equipment_options'] as const
+
+function clearedClassCache() {
+  const start = initialDraft()
+  return Object.fromEntries(CLASS_CACHE_KEYS.map((k) => [k, start[k]]))
+}
 
 function groupClasses(classes: ClassItem[]) {
   const known = new Set(CLASS_GROUPS.flatMap((g) => g.classes))
@@ -74,6 +83,10 @@ export function ClassStep({ draft, update }: BuilderStepProps) {
   const classes = useDndContent('class')
   const subclasses = useDndContent('subclass')
   const level = levelOf(draft)
+  const custom = customEntry(draft.class_custom)
+
+  const saveCustom = (entry: CustomEntry) => update({ class_custom: entry, class_id: null, ...cachedClassFields(entry) })
+  const removeCustom = () => update({ class_custom: null, class_id: null, ...clearedClassCache() })
 
   function changeLevel(next: number) {
     const sub = subclasses.items.find((s) => s.id === draft.subclass_id)
@@ -99,7 +112,12 @@ export function ClassStep({ draft, update }: BuilderStepProps) {
                   title={cls.name}
                   accessibilityLabel={`${cls.name}, d${cls.data.hit_die} hit die`}
                   selected={selected}
-                  aside={<Badge>{`d${cls.data.hit_die}`}</Badge>}
+                  aside={(
+                    <>
+                      <Badge>{`d${cls.data.hit_die}`}</Badge>
+                      {cls.owned ? <Badge>Homebrew</Badge> : null}
+                    </>
+                  )}
                   onPress={() => {
                     if (!selected) update({
                       class_id: cls.id, class_name: cls.name, hit_die: cls.data.hit_die,
@@ -153,6 +171,16 @@ export function ClassStep({ draft, update }: BuilderStepProps) {
           </View>
         </SectionHeader>
       ))}
+      {classes.isLoading ? null : (
+        <CustomChoice
+          kind="class"
+          kindLabel="Class"
+          entry={custom}
+          officialNames={classes.items.filter((c) => !c.owned).map((c) => c.name)}
+          onSave={saveCustom}
+          onRemove={removeCustom}
+        />
+      )}
     </View>
   )
 }
