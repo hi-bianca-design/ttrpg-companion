@@ -7,7 +7,7 @@ import type { BuilderStepProps } from '../../types'
 import { levelOf, str } from '../draft'
 import { StepIntro } from './shared'
 
-const MULTILINE = 'h-auto min-h-11 rounded-card py-3'
+const MULTILINE = 'h-auto min-h-11 py-3'
 
 export function DetailsStep({ draft, update }: BuilderStepProps) {
   const name = str(draft.name)

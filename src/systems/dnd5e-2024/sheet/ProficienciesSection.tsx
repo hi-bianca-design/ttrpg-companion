@@ -21,7 +21,7 @@ function RowList({ rows }: { rows: Row[] }) {
           accessibilityLabel={`${r.a11y} ${formatModifier(r.value)}${r.proficient ? ', proficient' : ''}`}
           className={cn('flex-row items-center gap-3 py-2', i < rows.length - 1 && 'border-b border-rule')}
         >
-          <View className={cn('h-2 w-2 rounded-full', r.proficient ? 'bg-primary' : 'border border-rule')} />
+          <View className={cn('h-2 w-2 rotate-45', r.proficient ? 'bg-primary' : 'border border-rule')} />
           <Text variant="body-sm" className="flex-1">{r.label}</Text>
           <Text variant="label">{r.aside}</Text>
           <Text variant="subhead" tone={r.proficient ? 'accent' : 'default'}>{formatModifier(r.value)}</Text>

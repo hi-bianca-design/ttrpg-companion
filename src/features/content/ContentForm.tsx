@@ -177,7 +177,7 @@ export function ContentForm({ systemId, kind, initial, onSaved, onDeleted }: Con
         return (
           <Input
             multiline
-            className="h-auto min-h-11 rounded-card py-3"
+            className="h-auto min-h-11 py-3"
             numberOfLines={4}
             textAlignVertical="top"
             value={typeof value === 'string' ? value : ''}
@@ -263,7 +263,7 @@ export function ContentForm({ systemId, kind, initial, onSaved, onDeleted }: Con
       <FieldBlock label="Description">
         <Input
           multiline
-          className="h-auto min-h-11 rounded-card py-3"
+          className="h-auto min-h-11 py-3"
             numberOfLines={4}
           textAlignVertical="top"
           value={String(values[DESCRIPTION_KEY] ?? '')}

@@ -35,3 +35,8 @@ test('empty state when no profile fields are set', () => {
   render(<ProfileSection character={character({ alignment: '', backstory: '  ' })} picks={[]} />)
   expect(screen.getByText('No personality or backstory recorded yet.')).toBeTruthy()
 })
+
+test('backstory and personality values are narrative text', () => {
+  render(<ProfileSection character={character({ backstory: 'Raised in a library.' })} picks={[]} />)
+  expect(screen.getByText('Raised in a library.').props.className).toContain('font-narrative')
+})

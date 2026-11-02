@@ -65,7 +65,7 @@ export default function NewCampaignScreen() {
           onChangeText={setDescription}
           placeholder="Optional"
           multiline
-          className="h-auto min-h-11 rounded-card py-3"
+          className="h-auto min-h-11 py-3"
         />
       </View>
 

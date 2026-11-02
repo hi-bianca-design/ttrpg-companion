@@ -104,7 +104,7 @@ export function AddItemSheet({ open, onOpenChange, characterId, systemId }: AddI
             </View>
           ) : results.isLoading ? (
             <View accessibilityLabel="Loading items" className="gap-2">
-              {[0, 1, 2].map((i) => <View key={i} className="h-11 w-full rounded-card bg-muted" />)}
+              {[0, 1, 2].map((i) => <View key={i} className="h-11 w-full rounded-sm bg-muted" />)}
             </View>
           ) : results.data.length === 0 ? (
             <Text variant="body-sm" tone="muted">No items match your search.</Text>

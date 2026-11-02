@@ -39,8 +39,8 @@ export default function LevelUpScreen() {
         <View className="gap-2" accessibilityLabel="Loading level up">
           {[0, 1].map((i) => (
             <Card key={i} className="gap-3">
-              <View className="h-4 w-1/2 rounded-full bg-muted" />
-              <View className="h-11 w-full rounded-card bg-muted" />
+              <View className="h-4 w-1/2 rounded-sm bg-muted" />
+              <View className="h-11 w-full rounded-sm bg-muted" />
             </Card>
           ))}
         </View>

@@ -88,3 +88,10 @@ describe('back affordance', () => {
     expect(mockNavigation.reset).toHaveBeenCalledWith({ index: 0, routes: [{ name: 'index' }] })
   })
 })
+
+test('the campaign description reads as narrative text', async () => {
+  ;(getCampaign as jest.Mock).mockResolvedValue({ ...campaign, description: 'A siege in the salt marshes.' })
+  renderDetail()
+  const text = await screen.findByText('A siege in the salt marshes.')
+  expect(text.props.className).toContain('font-narrative')
+})

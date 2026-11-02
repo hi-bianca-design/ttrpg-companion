@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { SectionHeader } from '@/components/game'
 import { Card } from '@/components/ui/card'
+import { ShapedSurface } from '@/components/ui/shaped-surface'
 import { Text } from '@/components/ui/text'
 import { cn } from '@/lib/utils'
 import type { BuilderStepProps } from '../../types'
@@ -47,15 +48,16 @@ export function AbilityScoresStep({ draft, update }: BuilderStepProps) {
       <SectionHeader id="builder-standard-array" title="Standard array" action={<Text variant="label" tone="accent">{`${assignedCount}/6 assigned`}</Text>}>
         <View className="flex-row flex-wrap gap-2">
           {STANDARD_ARRAY.map((v) => (
-            <View
+            <ShapedSurface
               key={v}
-              className={cn(
-                'h-11 w-11 items-center justify-center rounded-full border',
-                used.includes(v) ? 'border-border opacity-50' : 'border-primary',
-              )}
+              shape="chamfer"
+              fill="card"
+              stroke={used.includes(v) ? 'border' : 'primary'}
+              shadowOffset={0}
+              className={cn('h-11 w-11 items-center justify-center', used.includes(v) && 'opacity-50')}
             >
               <Text variant="subhead">{v}</Text>
-            </View>
+            </ShapedSurface>
           ))}
         </View>
       </SectionHeader>

@@ -71,7 +71,7 @@ export function PersonalityStep({ draft, update }: BuilderStepProps) {
               <Text variant="caption" tone="muted">{f.hint}</Text>
               <Input
                 aria-labelledby={`personality-${f.key}`}
-                className="mt-1 h-auto min-h-11 rounded-card py-3"
+                className="mt-1 h-auto min-h-11 py-3"
                 placeholder={f.placeholder}
                 value={str(draft[f.key])}
                 onChangeText={(v) => update({ [f.key]: v })}

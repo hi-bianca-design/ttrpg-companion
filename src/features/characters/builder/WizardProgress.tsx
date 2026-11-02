@@ -19,7 +19,7 @@ export function WizardProgress({ title, index, total }: WizardProgressProps) {
       </View>
       <View className="flex-row gap-1">
         {Array.from({ length: total }, (_, i) => (
-          <View key={i} className={cn('h-1 flex-1 rounded-full', i <= index ? 'bg-primary' : 'bg-rule')} />
+          <View key={i} className={cn('h-1 flex-1', i <= index ? 'bg-primary' : 'bg-rule')} />
         ))}
       </View>
     </View>

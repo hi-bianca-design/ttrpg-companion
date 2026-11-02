@@ -50,7 +50,7 @@ export function StepIntro({ title, description }: { title: string; description: 
   return (
     <View className="gap-1">
       <Text variant="title">{title}</Text>
-      <Text variant="body-sm" tone="muted">{description}</Text>
+      <Text variant="narrative" tone="muted">{description}</Text>
     </View>
   )
 }
@@ -62,8 +62,8 @@ export function QueryState({ isLoading, isError, onRetry }: { isLoading: boolean
       <View className="gap-2" accessibilityLabel="Loading">
         {[0, 1, 2].map((i) => (
           <Card key={i} className="gap-2">
-            <View className="h-4 w-1/2 rounded-full bg-muted" />
-            <View className="h-3 w-3/4 rounded-full bg-muted" />
+            <View className="h-4 w-1/2 rounded-sm bg-muted" />
+            <View className="h-3 w-3/4 rounded-sm bg-muted" />
           </Card>
         ))}
       </View>
