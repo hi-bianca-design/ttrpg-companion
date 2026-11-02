@@ -75,6 +75,14 @@ export default function InventoryTab() {
     <ScreenBackground scroll>
       <SheetHeader name={character.name} eyebrow="Inventory" />
       {saveError ? <Text variant="caption" tone="destructive">{saveError}</Text> : null}
+      {typeof character.details.gold === 'number' ? (
+        <View className="gap-1">
+          <Text variant="subhead">{`${character.details.gold} GP`}</Text>
+          {Array.isArray(character.details.other_gear) && character.details.other_gear.length > 0 ? (
+            <Text variant="caption" tone="muted">{`Also carrying: ${character.details.other_gear.join(', ')}`}</Text>
+          ) : null}
+        </View>
+      ) : null}
       <SectionHeader
         id="inventory"
         title="Items"

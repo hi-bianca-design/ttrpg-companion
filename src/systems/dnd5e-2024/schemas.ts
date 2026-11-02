@@ -33,6 +33,8 @@ export const dnd5eDetailsSchema = z.object({
   flaw: z.string().optional(),
   appearance: z.string().optional(),
   backstory: z.string().optional(),
+  gold: nonNegInt.optional(),
+  other_gear: z.array(z.string()).optional(),
   xp: nonNegInt.optional(),
   inspiration: z.boolean().optional(),
 })
