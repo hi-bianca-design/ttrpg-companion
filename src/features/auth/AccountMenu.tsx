@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { View } from 'react-native'
-import { useColorScheme } from 'nativewind'
 import { UserCircle } from 'phosphor-react-native'
 import { AdjustSheet } from '@/components/game/AdjustSheet'
 import { Button } from '@/components/ui/button'
@@ -20,8 +19,7 @@ import { THEME_COLORS } from '@/lib/theme'
  */
 export function AccountMenu() {
   const { user } = useAuth()
-  const { colorScheme } = useColorScheme()
-  const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
+  const colors = THEME_COLORS
   const [sheetOpen, setSheetOpen] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [pending, setPending] = useState(false)

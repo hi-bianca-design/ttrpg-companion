@@ -1,6 +1,5 @@
 // Building blocks shared by the D&D builder steps: content loading, intro text,
 // selectable cards and chips, loading/error states.
-import { useColorScheme } from 'nativewind'
 import { CheckCircle } from 'phosphor-react-native'
 import type { ReactNode } from 'react'
 import { useMemo } from 'react'
@@ -16,8 +15,7 @@ import { cn } from '@/lib/utils'
 import { dnd5eContentSchemas } from '../schemas'
 
 export function useThemeColors() {
-  const { colorScheme } = useColorScheme()
-  return THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
+  return THEME_COLORS
 }
 
 type Kind = keyof typeof dnd5eContentSchemas
@@ -52,7 +50,7 @@ export function StepIntro({ title, description }: { title: string; description: 
   return (
     <View className="gap-1">
       <Text variant="title">{title}</Text>
-      <Text variant="body-sm" tone="muted">{description}</Text>
+      <Text variant="narrative" tone="muted">{description}</Text>
     </View>
   )
 }
@@ -64,8 +62,8 @@ export function QueryState({ isLoading, isError, onRetry }: { isLoading: boolean
       <View className="gap-2" accessibilityLabel="Loading">
         {[0, 1, 2].map((i) => (
           <Card key={i} className="gap-2">
-            <View className="h-4 w-1/2 rounded-full bg-muted" />
-            <View className="h-3 w-3/4 rounded-full bg-muted" />
+            <View className="h-4 w-1/2 rounded-sm bg-muted" />
+            <View className="h-3 w-3/4 rounded-sm bg-muted" />
           </Card>
         ))}
       </View>
@@ -94,7 +92,7 @@ type ChoiceCardProps = {
   children?: ReactNode
 }
 
-/** A selectable card: border-primary and a check when selected; dimmed and inert when disabled. */
+/** A selectable card: a gold edge and a check when selected; dimmed and inert when disabled. */
 export function ChoiceCard({ title, selected, disabled = false, onPress, accessibilityLabel, aside, children }: ChoiceCardProps) {
   const colors = useThemeColors()
   return (
@@ -105,7 +103,7 @@ export function ChoiceCard({ title, selected, disabled = false, onPress, accessi
       disabled={disabled}
       onPress={onPress}
     >
-      <Card compact className={cn('gap-2', selected && 'border-primary', disabled && 'opacity-50')}>
+      <Card compact tone={selected ? 'selected' : 'default'} className={cn('gap-2', disabled && 'opacity-50')}>
         <View className="flex-row items-center gap-2">
           <Text variant="subhead" className="flex-shrink">{title}</Text>
           {aside}

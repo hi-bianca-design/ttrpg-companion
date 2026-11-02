@@ -2,78 +2,49 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Moss blend tokens (spec §4.2). Each variable holds a complete colour value.
-   Tailwind maps them in tailwind.config.js; src/lib/theme.ts mirrors them for JS. */
+/* Night Vigil tokens (spec 2026-11-02-night-vigil-design-system-design §4.1). One palette, dark only.
+   Each variable holds a complete colour value. Tailwind maps them in tailwind.config.js;
+   src/lib/theme.ts mirrors them for JS (shapes, SVG, navigation). Keep the two in sync. */
 @layer base {
   :root {
-    --background: #FBF8F3;
-    --glow: #F3DDA0;
-    /* glow gradient stops (mockup): mid at 22%, fade at 50%, background at 75% — decorative, not text */
-    --glow-mid: #EDE6C8;
-    --glow-fade: #F6F1E6;
-    --foreground: #1E1A12;
-    --card: #F0EAE0;
-    --card-foreground: #1E1A12;
-    --muted: #F0EAE0;
-    /* spec value #7A6F5E fails AA on card (4.12:1); darkened to #726755 (4.63:1 on card) */
-    --muted-foreground: #726755;
-    --label-foreground: #736858;
-    --border: rgba(63, 122, 84, 0.16);
-    --rule: #E5DDD0;
-    --input: #E9E1D3;
-    --ring: #3F7A54;
-    --primary: #3F7A54;
-    --primary-foreground: #FBF8F3;
-    --accent-foreground: #3C7551;
-    --highlight: #E8B547;
-    --highlight-foreground: #1E1A12;
-    /* ochre for text (stat numbers); mockup #C88A1E is 2.47:1 on card, darkened to #8F5E0E (4.65:1 on card, 5.25:1 on background) */
-    --highlight-text: #8F5E0E;
-    --destructive: #D96A47;
-    --destructive-foreground: #1E1A12;
-    --resource-sky: #4F8FB8;
-    --resource-sky-glow: rgba(79, 143, 184, 0.55);
-    --resource-plum: #8B4A5E;
-    --resource-sage: #7A9A55;
-    --resource-ochre: #E8B547;
-    --resource-plum-glow: rgba(139, 74, 94, 0.55);
-    --resource-sage-glow: rgba(122, 154, 85, 0.55);
-    --resource-ochre-glow: rgba(232, 181, 71, 0.55);
-    /* terracotta = the destructive hue, as a resource tint (death-save failures) */
-    --resource-terracotta: #D96A47;
-    --resource-terracotta-glow: rgba(217, 106, 71, 0.55);
-    /* tinted badge (active conditions): plum text 5.4:1 on the tinted surface */
-    --tinted: rgba(139, 74, 94, 0.10);
-    --tinted-foreground: #8B4A5E;
-    --tinted-border: rgba(139, 74, 94, 0.35);
-    --overlay: rgba(14, 12, 8, 0.6);
-  }
-
-  .dark:root {
-    --background: #173832;
-    --glow: #5A5F36;
-    /* glow gradient stops (mockup): mid at 38%, background at 70% and beyond. The mockup's darker 100% edge
-       (#112D28) is not drawn: it left a tonal step above the tab bar (background). glow-fade is light-only. */
-    --glow-mid: #24433D;
-    --foreground: #F5E4C3;
-    --card: rgba(245, 228, 195, 0.06);
-    --card-foreground: #F5E4C3;
-    --muted: rgba(245, 228, 195, 0.06);
-    --muted-foreground: #A9BFB4;
-    --label-foreground: #8FB3A6;
-    --border: rgba(245, 228, 195, 0.10);
-    --rule: rgba(245, 228, 195, 0.14);
-    --input: rgba(245, 228, 195, 0.10);
-    --ring: #5B9268;
-    --primary: #5B9268;
-    --primary-foreground: #0D221E;
-    --accent-foreground: #B5C995;
-    --highlight: #ECC15B;
-    --highlight-foreground: #1E1A12;
-    /* #ECC15B: 6.44:1 on card, 7.49:1 on background */
-    --highlight-text: #ECC15B;
-    --destructive: #E68763;
-    --destructive-foreground: #1E1A12;
+    --background: #0B1D20;
+    --foreground: #E6D9B6;
+    --card: #12212C;
+    --card-foreground: #E6D9B6;
+    --muted: rgba(166, 216, 204, 0.08);
+    --muted-foreground: #C2D6CE;
+    --label-foreground: #B0E0D2;
+    --border: rgba(166, 216, 204, 0.28);
+    --rule: rgba(227, 177, 48, 0.45);
+    --input: #08141A;
+    --ring: #F0902F;
+    --primary: #E3B130;
+    --primary-foreground: #241602;
+    --accent-foreground: #B0E0D2;
+    --secondary: #9BD3C4;
+    --secondary-foreground: #06211F;
+    /* highlight-text: gold for stat numbers and ochre text */
+    --highlight-text: #F5D170;
+    /* destructive: text/border tone. blood + blood-fill are the destructive button's edge and fill. */
+    --destructive: #F7B3A2;
+    --destructive-foreground: #F0B9A8;
+    --blood: #B8321F;
+    --blood-fill: #3A110C;
+    --ink: #070F15;
+    --rock: #12212C;
+    --rock-deep: #0C1822;
+    --torch: #F0902F;
+    --torch-glow: rgba(240, 144, 47, 0.55);
+    --well: #08141A;
+    --placeholder: #6B8F8A;
+    --typed: #FFE08A;
+    /* posterized sky bands, top to bottom; every one holds 4.5:1 with foreground text */
+    --sky-1: #185653;
+    --sky-2: #164F4C;
+    --sky-3: #134744;
+    --sky-4: #10403E;
+    --sky-5: #0E3737;
+    --sky-6: #0C2D2F;
     --resource-sky: #BFE0F2;
     --resource-sky-glow: rgba(157, 196, 222, 0.7);
     --resource-plum: #D79AAE;
@@ -82,9 +53,9 @@
     --resource-plum-glow: rgba(215, 154, 174, 0.7);
     --resource-sage-glow: rgba(181, 201, 149, 0.7);
     --resource-ochre-glow: rgba(236, 193, 91, 0.7);
+    /* terracotta = the destructive hue, as a resource tint (death-save failures) */
     --resource-terracotta: #E68763;
     --resource-terracotta-glow: rgba(230, 135, 99, 0.7);
-    /* plum text 4.8:1 on the tinted surface */
     --tinted: rgba(215, 154, 174, 0.14);
     --tinted-foreground: #D79AAE;
     --tinted-border: rgba(215, 154, 174, 0.35);

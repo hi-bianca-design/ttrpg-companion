@@ -1,5 +1,6 @@
 import { act, render, screen } from '@testing-library/react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { ShapedSurface } from '@/components/ui/shaped-surface'
 import { showToast, Toaster, TOAST_MS } from '@/components/ui/toast'
 
 const METRICS = { frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 47, left: 0, right: 0, bottom: 34 } }
@@ -35,10 +36,11 @@ test('a second toast replaces the first and restarts the timer', () => {
   expect(screen.getByText('Second')).toBeTruthy()
 })
 
-test('the toast uses the inverse ink surface (readable over any screen)', () => {
+test('the toast is an ink plate with light text (readable over any screen)', () => {
   renderToaster()
   act(() => showToast('Saved'))
-  expect(screen.getByText('Saved').props.className).toContain('text-background')
+  expect(screen.UNSAFE_getByType(ShapedSurface).props.fill).toBe('ink')
+  expect(screen.getByText('Saved').props.className).toContain('text-foreground')
 })
 
 test('sits above the tab bar: bottom = inset + tab bar height + 8; style holds only opacity and bottom', () => {

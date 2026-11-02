@@ -1,7 +1,6 @@
 import { Pressable } from 'react-native'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
-import { cn } from '@/lib/utils'
 
 type StatTileProps = {
   label: string
@@ -21,7 +20,8 @@ export function StatTile({ label, value, sub, tone = 'default', accessibilityLab
   const body = (
     <Card
       compact
-      className={cn('items-center gap-1', tone === 'destructive' && 'border-destructive')}
+      tone={tone === 'destructive' ? 'destructive' : 'default'}
+      className="items-center gap-1"
       accessible={!onPress}
       accessibilityLabel={onPress ? undefined : a11yLabel}
     >

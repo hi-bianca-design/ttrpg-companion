@@ -4,6 +4,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-
 import { usePreventRemove } from '@react-navigation/native'
 import { DiscardDraftGuard } from '@/features/characters/builder/DiscardDraftGuard'
 import { isDraftDirty, useBuilderStore } from '@/features/characters/builder/builder.store'
+import { variantOf } from '../../helpers/button'
 
 const mockDispatch = jest.fn()
 jest.mock('@react-navigation/native', () => ({
@@ -51,8 +52,8 @@ test('leaving a named draft asks "Discard <name>?" with Keep editing / Discard',
   renderGuard()
   leave()
   expect(screen.getByText('Discard Mira?')).toBeTruthy()
-  expect(screen.getByRole('button', { name: 'Keep editing' }).props.className).toContain('border-primary')
-  expect(screen.getByRole('button', { name: 'Discard' }).props.className).toContain('bg-destructive')
+  expect(variantOf(screen.getByRole('button', { name: 'Keep editing' }))).toBe('outline')
+  expect(variantOf(screen.getByRole('button', { name: 'Discard' }))).toBe('destructive')
 })
 
 test('an unnamed draft is "this character"', () => {

@@ -40,7 +40,11 @@ module.exports = {
       full: '999px',
     },
     fontFamily: {
-      display: ['Fraunces_600SemiBold'],
+      display: ['Cinzel_700Bold'],
+      'display-medium': ['Cinzel_500Medium'],
+      narrative: ['CormorantGaramond_500Medium'],
+      'narrative-semibold': ['CormorantGaramond_600SemiBold'],
+      'narrative-italic': ['CormorantGaramond_400Regular_Italic'],
       // NativeWind special-cases the default font-sans/font-mono keys and drops custom families on native, so these have their own names.
       inter: ['Inter_400Regular'],
       'sans-semibold': ['Inter_600SemiBold'],
@@ -49,7 +53,6 @@ module.exports = {
     extend: {
       colors: {
         background: token('background'),
-        glow: { DEFAULT: token('glow'), mid: token('glow-mid'), fade: token('glow-fade') },
         foreground: token('foreground'),
         card: { DEFAULT: token('card'), foreground: token('card-foreground') },
         muted: { DEFAULT: token('muted'), foreground: token('muted-foreground') },
@@ -61,7 +64,16 @@ module.exports = {
         overlay: token('overlay'),
         primary: { DEFAULT: token('primary'), foreground: token('primary-foreground') },
         accent: { foreground: token('accent-foreground') },
-        highlight: { DEFAULT: token('highlight'), foreground: token('highlight-foreground'), text: token('highlight-text') },
+        secondary: { DEFAULT: token('secondary'), foreground: token('secondary-foreground') },
+        blood: token('blood'),
+        'blood-fill': token('blood-fill'),
+        ink: token('ink'),
+        rock: token('rock'),
+        torch: token('torch'),
+        well: token('well'),
+        placeholder: token('placeholder'),
+        typed: token('typed'),
+        highlight: { text: token('highlight-text') },
         destructive: { DEFAULT: token('destructive'), foreground: token('destructive-foreground') },
         'resource-sky': { DEFAULT: token('resource-sky'), glow: token('resource-sky-glow') },
         'resource-plum': { DEFAULT: token('resource-plum'), glow: token('resource-plum-glow') },

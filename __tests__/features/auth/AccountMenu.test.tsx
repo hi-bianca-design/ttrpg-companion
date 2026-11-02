@@ -4,6 +4,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import { AccountMenu } from '@/features/auth/AccountMenu'
 import { signOut } from '@/features/auth/auth.api'
 import { ERROR_COPY } from '@/features/errors'
+import { variantOf } from '../../helpers/button'
 
 jest.mock('@/features/auth/auth.api', () => ({ signOut: jest.fn() }))
 jest.mock('@/features/auth/useAuth', () => ({
@@ -24,7 +25,7 @@ function openSignOutDialog() {
 test('the header button is a ghost icon button with a 44pt hit area', () => {
   renderMenu()
   const button = screen.getByRole('button', { name: 'Account' })
-  expect(button.props.className).toContain('bg-transparent')
+  expect(variantOf(button)).toBe('ghost')
   expect(button.props.hitSlop).toEqual({ top: 6, bottom: 6, left: 6, right: 6 })
 })
 
@@ -33,14 +34,14 @@ test('the account sheet shows the username and email and an outline Sign out', (
   fireEvent.press(screen.getByRole('button', { name: 'Account' }))
   expect(screen.getByText('mira')).toBeTruthy()
   expect(screen.getByText('mira@example.com')).toBeTruthy()
-  expect(screen.getByRole('button', { name: 'Sign out' }).props.className).toContain('border-primary')
+  expect(variantOf(screen.getByRole('button', { name: 'Sign out' }))).toBe('outline')
 })
 
 test('Sign out asks for confirmation before signing out', () => {
   renderMenu()
   openSignOutDialog()
   expect(screen.getByText('Sign out of D&D Companion?')).toBeTruthy()
-  expect(screen.getByRole('button', { name: 'Stay signed in' }).props.className).toContain('border-primary')
+  expect(variantOf(screen.getByRole('button', { name: 'Stay signed in' }))).toBe('outline')
   expect(signOut).not.toHaveBeenCalled()
 })
 
@@ -57,7 +58,7 @@ test('confirming signs out (AuthProvider then routes to login and clears the cac
   renderMenu()
   openSignOutDialog()
   const confirm = screen.getByRole('button', { name: 'Sign out' })
-  expect(confirm.props.className).toContain('bg-primary')
+  expect(variantOf(confirm)).toBe('primary')
   fireEvent.press(confirm)
   await waitFor(() => expect(signOut).toHaveBeenCalledTimes(1))
 })
@@ -75,8 +76,8 @@ test('the account sheet has a ghost Close that dismisses it without signing out'
   renderMenu()
   fireEvent.press(screen.getByRole('button', { name: 'Account' }))
   const close = screen.getByRole('button', { name: 'Close' })
-  expect(close.props.className).toContain('bg-transparent')
-  expect(close.props.className).not.toContain('border-primary')
+  expect(variantOf(close)).toBe('ghost')
+  expect(variantOf(close)).not.toBe('outline')
   fireEvent.press(close)
   expect(screen.queryByText('mira@example.com')).toBeNull()
   expect(signOut).not.toHaveBeenCalled()

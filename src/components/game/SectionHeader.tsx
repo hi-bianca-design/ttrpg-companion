@@ -1,4 +1,3 @@
-import { useColorScheme } from 'nativewind'
 import { CaretDown, CaretRight } from 'phosphor-react-native'
 import type { ReactNode } from 'react'
 import { Pressable, View } from 'react-native'
@@ -18,15 +17,17 @@ export function SectionHeader({ id, title, collapsible = false, action, children
   const collapsed = useSectionStore((s) => collapsible && (s.collapsed[id] ?? false))
   const toggle = useSectionStore((s) => s.toggle)
 
-  const { colorScheme } = useColorScheme()
-  const iconColor = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light'].labelForeground
+  const iconColor = THEME_COLORS.labelForeground
   const Chevron = collapsed ? CaretRight : CaretDown
 
   const label = <Text variant="label">{title}</Text>
+  // A faint gold rule runs from the title to the trailing edge on the same row, so the header and its
+  // content read as one section (a separate divider under the header read as a section break).
+  const rule = <View testID="section-rule" className="h-px flex-1 bg-rule opacity-60" />
 
   return (
     <View>
-      <View className="flex-row items-center justify-between border-b border-rule pb-2">
+      <View className="flex-row items-center gap-3">
         {collapsible ? (
           <Pressable
             role="button"
@@ -34,17 +35,21 @@ export function SectionHeader({ id, title, collapsible = false, action, children
             accessibilityState={{ expanded: !collapsed }}
             onPress={() => toggle(id)}
             hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-            className="min-h-11 flex-1 flex-row items-center gap-2"
+            className="min-h-11 flex-1 flex-row items-center gap-3"
           >
             {label}
+            {rule}
             <Chevron testID="icon-chevron" size={16} color={iconColor} />
           </Pressable>
         ) : (
-          label
+          <>
+            {label}
+            {rule}
+          </>
         )}
         {action}
       </View>
-      {!collapsed && children != null ? <View className="mt-3">{children}</View> : null}
+      {!collapsed && children != null ? <View className="mt-2">{children}</View> : null}
     </View>
   )
 }

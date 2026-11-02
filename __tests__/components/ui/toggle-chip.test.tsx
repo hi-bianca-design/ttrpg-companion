@@ -1,5 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react-native'
+import { ShapedSurface } from '@/components/ui/shaped-surface'
 import { ToggleChip } from '@/components/ui/toggle-chip'
+
+const surfaces = () => screen.UNSAFE_getAllByType(ShapedSurface).map((n) => n.props)
 
 test('fixed 44pt height, selected state styles and a11y', () => {
   render(
@@ -12,8 +15,11 @@ test('fixed 44pt height, selected state styles and a11y', () => {
   const off = screen.getByTestId('off')
   expect(on.props.className).toContain('h-11')
   expect(off.props.className).toContain('h-11')
-  expect(on.props.className).toContain('bg-primary')
-  expect(off.props.className).not.toContain('bg-primary')
+  const [onPlate, offPlate] = surfaces()
+  expect(onPlate.fill).toBe('primary')
+  expect(onPlate.glow).toBe('torch')
+  expect(offPlate.fill).toBe('card')
+  expect(offPlate.glow).toBeUndefined()
   expect(on.props.accessibilityState).toMatchObject({ selected: true })
   expect(screen.getByText('Fire').props.className).toContain('text-primary-foreground')
   expect(screen.getByText('Cold').props.className).toContain('text-foreground')
@@ -42,9 +48,10 @@ test('compact size is h-8 with a 6px hitSlop (44pt target), like sm buttons', ()
   expect(chip.props.hitSlop).toEqual({ top: 6, bottom: 6, left: 6, right: 6 })
 })
 
-test('chips share the outline button stroke weight (border-1.5)', () => {
+test('chips are pointed plates with a 2px stroke, like the buttons', () => {
   render(<ToggleChip label="A" onPress={() => {}} testID="c" />)
-  expect(screen.getByTestId('c').props.className).toContain('border-1.5')
+  expect(surfaces()[0].strokeWidth).toBe(2)
+  expect(screen.getByTestId('c').props.className).not.toContain('rounded-full')
 })
 
 test('outline tone: selected is a moss outline with accent text, not a filled pill', () => {
@@ -55,9 +62,10 @@ test('outline tone: selected is a moss outline with accent text, not a filled pi
     </>,
   )
   const on = screen.getByTestId('on')
-  expect(on.props.className).toContain('border-primary')
-  expect(on.props.className).not.toContain('bg-primary')
+  const [onPlate, offPlate] = surfaces()
+  expect(onPlate.stroke).toBe('secondary')
+  expect(onPlate.fill).toBe('rockDeep')
   expect(screen.getByText('Equipped').props.className).toContain('text-accent-foreground')
   expect(on.props.accessibilityState).toMatchObject({ selected: true })
-  expect(screen.getByTestId('off').props.className).toContain('border-border')
+  expect(offPlate.stroke).toBe('border')
 })

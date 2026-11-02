@@ -1,5 +1,7 @@
 import * as DialogPrimitive from '@rn-primitives/dialog'
 import { View } from 'react-native'
+import { ShapedSurface } from '@/components/ui/shaped-surface'
+import { splitClassName } from '@/lib/class-split'
 import { cn } from '@/lib/utils'
 
 const Dialog = DialogPrimitive.Root
@@ -29,14 +31,14 @@ function DialogContent({
   ...props
 }: DialogPrimitive.ContentProps &
   React.RefAttributes<DialogPrimitive.ContentRef> & { portalHost?: string }) {
+  const { plate, content } = splitClassName(className)
   return (
     <DialogPortal hostName={portalHost}>
       <DialogOverlay>
-        <DialogPrimitive.Content
-          className={cn('w-full max-w-md gap-4 rounded-card border border-border bg-background p-4', className)}
-          {...props}
-        >
-          {children}
+        <DialogPrimitive.Content className={cn('w-full max-w-md', plate)} {...props}>
+          <ShapedSurface shape="chamfer" fill="rock" stroke="rule" strokeWidth={1}>
+            <View className={cn('gap-4 p-4', content)}>{children}</View>
+          </ShapedSurface>
         </DialogPrimitive.Content>
       </DialogOverlay>
     </DialogPortal>

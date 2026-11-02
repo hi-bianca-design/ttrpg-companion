@@ -79,7 +79,7 @@ export default function JoinCampaignScreen() {
       <View className="gap-2">
         <Text variant="label">Character</Text>
         {characters.isLoading ? (
-          <View className="h-11 rounded-full bg-muted" accessibilityLabel="Loading characters" />
+          <View className="h-11 rounded-sm bg-muted" accessibilityLabel="Loading characters" />
         ) : characters.isError ? (
           <View className="items-start gap-2">
             <Text variant="caption" tone="destructive">{ERROR_COPY.load_failed}</Text>

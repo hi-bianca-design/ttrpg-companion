@@ -75,7 +75,7 @@ export function VitalsSection({ character, onEditHp, onBonusHp, onSpendInspirati
             </Button>
           ) : null}
           {inspired ? (
-            <Button variant="highlight" className="flex-1" accessibilityLabel="Spend inspiration" onPress={onSpendInspiration}>
+            <Button variant="secondary" className="flex-1" accessibilityLabel="Spend inspiration" onPress={onSpendInspiration}>
               <Text numberOfLines={1}>Spend inspiration</Text>
             </Button>
           ) : null}

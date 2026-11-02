@@ -31,7 +31,7 @@ export function ProfileSection({ character }: { character: CharacterRecord; pick
           {set.map((f) => (
             <View key={f.key} className="gap-1">
               <Text variant="label">{f.label}</Text>
-              <Text variant="body">{f.value}</Text>
+              <Text variant="narrative">{f.value}</Text>
             </View>
           ))}
         </Card>

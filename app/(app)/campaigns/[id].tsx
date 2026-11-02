@@ -39,8 +39,8 @@ export default function CampaignDetailScreen() {
         <View className="gap-2" accessibilityLabel="Loading campaign">
           {[0, 1].map((i) => (
             <Card key={i} className="gap-3">
-              <View className="h-4 w-1/2 rounded-full bg-muted" />
-              <View className="h-4 w-1/3 rounded-full bg-muted" />
+              <View className="h-4 w-1/2 rounded-sm bg-muted" />
+              <View className="h-4 w-1/3 rounded-sm bg-muted" />
             </Card>
           ))}
         </View>
@@ -73,7 +73,7 @@ export default function CampaignDetailScreen() {
         <Badge variant={isGm ? 'accent' : 'default'}>{isGm ? 'GM' : 'Player'}</Badge>
         <Badge>{systemName(data.system_id)}</Badge>
       </View>
-      {data.description ? <Text variant="body-sm" tone="muted">{data.description}</Text> : null}
+      {data.description ? <Text variant="narrative" tone="muted">{data.description}</Text> : null}
       {isGm ? <InviteCode code={data.invite_code} /> : null}
       <SectionHeader id={`campaign:${data.id}:members`} title="Members">
         <MemberList members={data.members} />

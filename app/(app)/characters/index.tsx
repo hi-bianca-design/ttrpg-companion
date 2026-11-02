@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { useRouter } from 'expo-router'
-import { useColorScheme } from 'nativewind'
 import { Plus, Sword } from 'phosphor-react-native'
 import { EmptyState, ScreenBackground } from '@/components/game'
 import { Button } from '@/components/ui/button'
@@ -54,8 +53,7 @@ export default function CharactersScreen() {
   const remove = useDeleteCharacter()
   const [pendingDelete, setPendingDelete] = useState<CharacterSummary | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
-  const { colorScheme } = useColorScheme()
-  const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
+  const colors = THEME_COLORS
   const create = () => router.push('/(app)/characters/new')
   const characters = data ?? []
 
@@ -85,8 +83,8 @@ export default function CharactersScreen() {
         <View className="gap-2" accessibilityLabel="Loading characters">
           {[0, 1, 2].map((i) => (
             <Card key={i} className="gap-3">
-              <View className="h-4 w-1/2 rounded-full bg-muted" />
-              <View className="h-2 w-full rounded-full bg-muted" />
+              <View className="h-4 w-1/2 rounded-sm bg-muted" />
+              <View className="h-2 w-full rounded-sm bg-muted" />
             </Card>
           ))}
         </View>

@@ -39,8 +39,8 @@ export default function LevelUpScreen() {
         <View className="gap-2" accessibilityLabel="Loading level up">
           {[0, 1].map((i) => (
             <Card key={i} className="gap-3">
-              <View className="h-4 w-1/2 rounded-full bg-muted" />
-              <View className="h-11 w-full rounded-card bg-muted" />
+              <View className="h-4 w-1/2 rounded-sm bg-muted" />
+              <View className="h-11 w-full rounded-sm bg-muted" />
             </Card>
           ))}
         </View>
@@ -121,7 +121,7 @@ export default function LevelUpScreen() {
       </Card>
 
       {saveError ? <Text variant="caption" tone="destructive">{saveError}</Text> : null}
-      <Button variant="highlight" disabled={!ready || levelUp.isPending} onPress={submit}>
+      <Button variant="secondary" disabled={!ready || levelUp.isPending} onPress={submit}>
         <Text>{levelUp.isPending ? 'Leveling up…' : 'Level up'}</Text>
       </Button>
     </ScreenBackground>

@@ -12,12 +12,12 @@ function Progress({
   return (
     <ProgressPrimitive.Root
       value={value}
-      // rule, not muted: muted equals the card colour, so the empty track vanished on cards.
-      className={cn('h-2 w-full overflow-hidden rounded-full bg-rule', className)}
+      // well, not card: the empty track must stay visible on cards.
+      className={cn('h-2 w-full overflow-hidden border border-ink bg-well', className)}
       {...props}
     >
       <ProgressPrimitive.Indicator asChild>
-        <View className={cn('h-full rounded-full bg-primary', indicatorClassName)} style={{ width: `${pct}%` }} />
+        <View className={cn('h-full bg-primary', indicatorClassName)} style={{ width: `${pct}%` }} />
       </ProgressPrimitive.Indicator>
     </ProgressPrimitive.Root>
   )

@@ -6,6 +6,7 @@ import type { CharacterFull } from '@/features/characters/characters.api'
 import { useCharacter, useResourceMutation } from '@/features/characters/characters.queries'
 import type { SlotsValue } from '@/systems/types'
 import { showToast } from '@/components/ui/toast'
+import { variantOf } from '../../../helpers/button'
 
 jest.mock('@/features/characters/characters.queries', () => ({
   useCharacter: jest.fn(),
@@ -123,7 +124,7 @@ test('no actions at all → EmptyState title + Open inventory (outline)', () => 
   setup(character(slots(0), { picks: [], items: [] } as never))
   expect(screen.getByText('No actions yet')).toBeTruthy()
   const open = screen.getByRole('button', { name: 'Open inventory' })
-  expect(open.props.className).toContain('border-primary')
+  expect(variantOf(open)).toBe('outline')
   fireEvent.press(open)
   expect(mockRouter.push).toHaveBeenCalledWith('/(app)/characters/ch1/inventory')
 })
@@ -216,8 +217,8 @@ test('a short rest with nothing to recharge says so in a toast', () => {
 
 test('rests: Short is outline and Long is the one primary', () => {
   setup(character(slots(0)))
-  expect(screen.getByRole('button', { name: 'Short rest' }).props.className).toContain('border-primary')
-  expect(screen.getByRole('button', { name: 'Long rest' }).props.className).toContain('bg-primary')
+  expect(variantOf(screen.getByRole('button', { name: 'Short rest' }))).toBe('outline')
+  expect(variantOf(screen.getByRole('button', { name: 'Long rest' }))).toBe('primary')
 })
 
 test('cancel leaves resources untouched', () => {

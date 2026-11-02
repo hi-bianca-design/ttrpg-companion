@@ -9,6 +9,8 @@ import * as charApi from '@/features/characters/characters.api'
 import { listContent } from '@/features/content/content.api'
 import { getCharacterCampaign } from '@/features/campaigns/campaigns.api'
 import { showToast } from '@/components/ui/toast'
+import { variantOf } from '../../../helpers/button'
+import { ShapedSurface } from '@/components/ui/shaped-surface'
 
 jest.mock('@/features/characters/characters.api', () => ({
   getCharacter: jest.fn(),
@@ -217,11 +219,11 @@ test('controls live inside the item card; equip/attune are outline toggles; no d
   setup(character([owned('a', 'Ring A', true, true, { equipped: true })]))
   const equip = await screen.findByRole('button', { name: 'Unequip Ring A' })
   expect(equip.props.accessibilityState).toMatchObject({ selected: true })
-  expect(equip.props.className).not.toContain('bg-primary')
+  expect(variantOf(equip)).not.toBe('primary')
   expect(screen.queryByText('EQUIPPED')).toBeNull()
   // the Remove control shares the card container with the title
   let box = screen.getByRole('button', { name: 'Remove Ring A' }).parent
-  while (box && !String(box.props.className ?? '').includes('rounded-card')) box = box.parent
+  while (box && box.type !== ShapedSurface) box = box.parent
   expect(box).toBeTruthy()
   expect(within(box!).getByText('Ring A')).toBeTruthy()
 })

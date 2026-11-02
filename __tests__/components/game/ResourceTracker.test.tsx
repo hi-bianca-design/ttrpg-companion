@@ -1,6 +1,9 @@
 import '@testing-library/jest-native/extend-expect'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import { ResourceTracker } from '@/components/game/ResourceTracker'
+import { ShapedSurface } from '@/components/ui/shaped-surface'
+
+const strokeOf = (name: string) => screen.getByRole('button', { name }).findAllByType(ShapedSurface)[0].props.stroke
 
 test('pips: renders max pips, used ones marked spent', () => {
   render(<ResourceTracker display="pips" label="Level 1" max={4} used={1} onSpend={jest.fn()} onRestore={jest.fn()} />)
@@ -104,16 +107,25 @@ test('every variant titles itself with the mono label role', () => {
 
 test('marked mode: + takes the tracker tint, − is a neutral outline', () => {
   render(<ResourceTracker display="pips" count="marked" tint="terracotta" label="Failures" max={3} used={1} onSpend={jest.fn()} onRestore={jest.fn()} />)
-  expect(screen.getByRole('button', { name: 'Mark Failures' }).props.className).toContain('border-resource-terracotta')
-  const clear = screen.getByRole('button', { name: 'Clear Failures' }).props.className
-  expect(clear).toContain('border-border')
-  expect(clear).not.toContain('border-destructive')
+  expect(strokeOf('Mark Failures')).toBe('resourceTerracotta')
+  expect(strokeOf('Clear Failures')).toBe('border')
 })
 
-test('bar at 0: destructive value and fill; the track is visible on cards (bg-rule)', () => {
+test('bar at 0: destructive value and fill; the track is visible on cards (bg-well)', () => {
   render(<ResourceTracker display="bar" label="HP" current={0} max={10} onAdjust={jest.fn()} />)
   expect(screen.getByText('0/10').props.className).toContain('text-destructive')
   const json = JSON.stringify(screen.toJSON())
-  expect(json).toContain('bg-rule')
+  expect(json).toContain('bg-well')
   expect(json).toContain('bg-destructive')
+})
+
+test('the +/- controls keep their meaning in the plate edge: spend is destructive, restore is primary', () => {
+  render(<ResourceTracker display="pips" label="Level 1" max={3} used={1} onSpend={jest.fn()} onRestore={jest.fn()} />)
+  expect(strokeOf('Spend Level 1')).toBe('destructive')
+  expect(strokeOf('Restore Level 1')).toBe('primary')
+})
+
+test('an empty bar redraws its card edge in the destructive colour', () => {
+  render(<ResourceTracker display="bar" label="HP" current={0} max={10} onAdjust={jest.fn()} />)
+  expect(screen.UNSAFE_getAllByType(ShapedSurface)[0].props.stroke).toBe('destructive')
 })

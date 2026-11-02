@@ -30,9 +30,9 @@ export function ReviewStep({ draft }: BuilderStepProps) {
 
   return (
     <View className="gap-6">
-      <Card className="gap-3">
+      <Card variant="hero" className="gap-3">
         <View className="gap-1">
-          <Text variant="label" tone="accent">Your character</Text>
+          <Text variant="eyebrow">Your character</Text>
           <Text variant="title">{c.name || 'Unnamed hero'}</Text>
           <Text variant="body-sm" tone="muted">
             {[`Level ${level} ${str(draft.class_name) || 'adventurer'}`, sub?.name].filter(Boolean).join(' · ')}
@@ -86,7 +86,7 @@ export function ReviewStep({ draft }: BuilderStepProps) {
             {personality.map(([label, value]) => (
               <View key={label} className="gap-1">
                 <Text variant="label">{label}</Text>
-                <Text variant="body-sm">{value}</Text>
+                <Text variant="narrative">{value}</Text>
               </View>
             ))}
           </Card>

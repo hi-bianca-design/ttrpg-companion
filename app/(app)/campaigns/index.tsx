@@ -33,8 +33,8 @@ export default function CampaignsIndex() {
         <View className="gap-2" accessibilityLabel="Loading campaigns">
           {[0, 1, 2].map((i) => (
             <Card key={i} className="gap-3">
-              <View className="h-4 w-1/2 rounded-full bg-muted" />
-              <View className="h-4 w-1/3 rounded-full bg-muted" />
+              <View className="h-4 w-1/2 rounded-sm bg-muted" />
+              <View className="h-4 w-1/3 rounded-sm bg-muted" />
             </Card>
           ))}
         </View>

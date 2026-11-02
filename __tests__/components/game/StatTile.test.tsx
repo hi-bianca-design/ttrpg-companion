@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import { StatTile } from '@/components/game/StatTile'
+import { ShapedSurface } from '@/components/ui/shaped-surface'
 
 test('long value fits on one line', () => {
   render(<StatTile label="HP" value="120/120" />)
@@ -35,5 +36,15 @@ test('a static tile is one accessible element with its value', () => {
 test('destructive tone: destructive border and number', () => {
   render(<StatTile label="HP" value={0} tone="destructive" />)
   expect(screen.getByText('0').props.className).toContain('text-destructive')
-  expect(JSON.stringify(screen.toJSON())).toContain('border-destructive')
+  expect(screen.UNSAFE_getByType(ShapedSurface).props.stroke).toBe('destructive')
+})
+
+test('the value is Plex Mono, not the display face', () => {
+  render(<StatTile label="AC" value={16} />)
+  expect(screen.getByText('16').props.className).toContain('font-plex')
+})
+
+test('destructive tone draws the tile edge in the destructive colour', () => {
+  render(<StatTile label="HP" value={0} tone="destructive" />)
+  expect(screen.UNSAFE_getByType(ShapedSurface).props.stroke).toBe('destructive')
 })

@@ -1,5 +1,4 @@
 import { Minus, Plus } from 'phosphor-react-native'
-import { useColorScheme } from 'nativewind'
 import { useEffect, useState } from 'react'
 import { View } from 'react-native'
 import { ContentCard } from '@/components/game/ContentCard'
@@ -34,8 +33,7 @@ function asRecord(v: unknown): Record<string, unknown> {
 
 /** Search the system's items (SRD, own homebrew, campaign) and add one with a quantity. */
 export function AddItemSheet({ open, onOpenChange, characterId, systemId }: AddItemSheetProps) {
-  const { colorScheme } = useColorScheme()
-  const iconColor = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light'].accentForeground
+  const iconColor = THEME_COLORS.accentForeground
   const { data: campaign } = useCharacterCampaign(characterId)
   const [search, setSearch] = useState('')
   const [source, setSource] = useState<SourceKey>('srd')
@@ -106,7 +104,7 @@ export function AddItemSheet({ open, onOpenChange, characterId, systemId }: AddI
             </View>
           ) : results.isLoading ? (
             <View accessibilityLabel="Loading items" className="gap-2">
-              {[0, 1, 2].map((i) => <View key={i} className="h-11 w-full rounded-card bg-muted" />)}
+              {[0, 1, 2].map((i) => <View key={i} className="h-11 w-full rounded-sm bg-muted" />)}
             </View>
           ) : results.data.length === 0 ? (
             <Text variant="body-sm" tone="muted">No items match your search.</Text>
