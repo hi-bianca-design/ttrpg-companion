@@ -33,7 +33,7 @@ const steps: BuilderStepDef[] = [
   },
   {
     id: 'equipment', title: 'Equipment', component: EquipmentStep,
-    isComplete: equipmentComplete, skip: (d) => strList(d.class_equipment_options).length === 0,
+    isComplete: equipmentComplete,
   },
   {
     id: 'ability-scores', title: 'Ability Scores', component: AbilityScoresStep,

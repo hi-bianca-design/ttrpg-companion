@@ -59,11 +59,10 @@ describe('equipment in the draft', () => {
     equipment_other: ["Dungeoneer's Pack"], equipment_gold: 4,
   }
 
-  test('step follows skills, is skipped for a class without options and needs a choice', () => {
+  test('step follows skills, is never skipped and needs a choice', () => {
     const ids = dnd5eBuilder.steps.map((s) => s.id)
     expect(ids.indexOf('equipment')).toBe(ids.indexOf('skills') + 1)
-    expect(step.skip?.({ ...base, class_equipment_options: [] })).toBe(true)
-    expect(step.skip?.(base)).toBe(false)
+    expect(step.skip).toBeUndefined()
     expect(step.isComplete(base)).toBe(false)
     expect(step.isComplete(picked)).toBe(true)
   })
@@ -78,5 +77,19 @@ describe('equipment in the draft', () => {
     const c = dnd5eBuilder.toCharacter({ ...picked, name: 'Kara' })
     expect(c.items).toEqual([{ content_id: 'cm', quantity: 1, equipped: true }])
     expect(c.details).toMatchObject({ gold: 4, other_gear: ["Dungeoneer's Pack"] })
+  })
+
+  test('typed items reach other_gear without an option, and merge after the option items', () => {
+    const typed = { ...base, equipment_custom: ["Grandfather's sword"], name: 'Kara' }
+    expect(dnd5eBuilder.toCharacter(typed).details.other_gear).toEqual(["Grandfather's sword"])
+    expect(dnd5eBuilder.toCharacter({ ...picked, equipment_custom: ['Rope, 50 ft'], name: 'Kara' }).details)
+      .toMatchObject({ gold: 4, other_gear: ["Dungeoneer's Pack", 'Rope, 50 ft'] })
+    expect(dnd5eBuilder.toCharacter({ ...base, name: 'Kara' }).details).not.toHaveProperty('other_gear')
+  })
+
+  test('typed items survive a class change and a new draft starts with none', () => {
+    const next = dnd5eBuilder.pruneDraft({ ...picked, equipment_custom: ['Rope'] }, { class_id: 'wiz', class_name: 'Wizard', class_equipment_options: [] })
+    expect(next.equipment_custom).toEqual(['Rope'])
+    expect(dnd5eBuilder.initialDraft().equipment_custom).toEqual([])
   })
 })

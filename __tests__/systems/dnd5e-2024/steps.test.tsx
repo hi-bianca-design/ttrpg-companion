@@ -14,6 +14,7 @@ import { abilitiesFilled } from '@/systems/dnd5e-2024/draft'
 import { AbilityScoresStep } from '@/systems/dnd5e-2024/steps/AbilityScoresStep'
 import { OriginStep } from '@/systems/dnd5e-2024/steps/OriginStep'
 import { ClassFeaturesStep } from '@/systems/dnd5e-2024/steps/ClassFeaturesStep'
+import { EquipmentStep } from '@/systems/dnd5e-2024/steps/EquipmentStep'
 import { ClassSkillsStep } from '@/systems/dnd5e-2024/steps/ClassSkillsStep'
 import { ClassStep } from '@/systems/dnd5e-2024/steps/ClassStep'
 import { filterSpells, SpellsStep } from '@/systems/dnd5e-2024/steps/SpellsStep'
@@ -504,5 +505,59 @@ describe('Class features step', () => {
     expect(useBuilderStore.getState().draft.class_choices).toEqual({ order: ['Thaumaturge'] })
     expect(screen.getByText(/Trained in martial weapons and heavy armor/)).toBeTruthy()
     await act(async () => {})
+  })
+})
+
+describe('Equipment step: your own items', () => {
+  const fighter = {
+    class_id: 'ftr', class_name: 'Fighter',
+    class_equipment_options: ["Option A: Longsword, Rope, 4 GP", 'Option C: 155 GP'],
+  }
+  beforeEach(() => act(() => useBuilderStore.getState().update(fighter)))
+  const custom = () => useBuilderStore.getState().draft.equipment_custom
+
+  test('typing an item and pressing "Add item" appends it and clears the input', async () => {
+    renderWithQuery(<Bound Step={EquipmentStep} />)
+    fireEvent.changeText(await screen.findByLabelText('Item name'), '  Rope, 50 ft ')
+    fireEvent.press(screen.getByRole('button', { name: 'Add item' }))
+    expect(custom()).toEqual(['Rope, 50 ft'])
+    expect(screen.getByLabelText('Item name').props.value).toBe('')
+    expect(screen.getByText('Rope, 50 ft')).toBeTruthy()
+  })
+
+  test('empty and duplicate entries are ignored', async () => {
+    renderWithQuery(<Bound Step={EquipmentStep} />)
+    const input = await screen.findByLabelText('Item name')
+    fireEvent.press(screen.getByRole('button', { name: 'Add item' }))
+    fireEvent.changeText(input, '   ')
+    fireEvent.press(screen.getByRole('button', { name: 'Add item' }))
+    expect(custom()).toEqual([])
+    fireEvent.changeText(input, 'Lute')
+    fireEvent.press(screen.getByRole('button', { name: 'Add item' }))
+    fireEvent.changeText(input, ' Lute ')
+    fireEvent.press(screen.getByRole('button', { name: 'Add item' }))
+    expect(custom()).toEqual(['Lute'])
+  })
+
+  test('each entry has a remove button', async () => {
+    act(() => useBuilderStore.getState().update({ equipment_custom: ['Lute', 'Rope'] }))
+    renderWithQuery(<Bound Step={EquipmentStep} />)
+    fireEvent.press(await screen.findByRole('button', { name: 'Remove Lute' }))
+    expect(custom()).toEqual(['Rope'])
+  })
+
+  test('picking an official option keeps typed entries', async () => {
+    act(() => useBuilderStore.getState().update({ equipment_custom: ['Lute'] }))
+    renderWithQuery(<Bound Step={EquipmentStep} />)
+    fireEvent.press(await screen.findByText('Option A'))
+    const d = useBuilderStore.getState().draft
+    expect(d.equipment_option).toBe(0)
+    expect(d.equipment_custom).toEqual(['Lute'])
+  })
+
+  test('the section shows for a class with no starting options', async () => {
+    act(() => useBuilderStore.getState().update({ class_equipment_options: [] }))
+    renderWithQuery(<Bound Step={EquipmentStep} />)
+    expect(await screen.findByLabelText('Item name')).toBeTruthy()
   })
 })

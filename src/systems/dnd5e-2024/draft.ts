@@ -54,6 +54,13 @@ export function classSkillsComplete(draft: Draft): boolean {
   return validClassSkills(draft).length === classSkillCount(draft) && strList(draft.class_skills).length === classSkillCount(draft)
 }
 
+/** Gold and other gear (option-resolved plus typed) for `details`; omitted when the draft has neither. */
+function gearDetails(draft: Draft): { gold?: number; other_gear?: string[] } {
+  const other = [...strList(draft.equipment_other), ...strList(draft.equipment_custom)]
+  if (typeof draft.equipment_option !== 'number' && other.length === 0) return {}
+  return { gold: num(draft.equipment_gold, 0), other_gear: other }
+}
+
 /** The class's starting equipment is chosen once an option is picked (trivially true with no options). */
 export function equipmentComplete(draft: Draft): boolean {
   return strList(draft.class_equipment_options).length === 0 || typeof draft.equipment_option === 'number'
@@ -134,7 +141,8 @@ export function abilitiesFilled(draft: Draft): boolean {
  * - class_skill_count, class_skill_options (the class's skill picks, cached on the class pick) and
  *   class_skills (the picks)
  * - class_equipment_options (the class's option strings, cached on the class pick), equipment_option (index
- *   picked), equipment_items / equipment_other / equipment_gold (the picked option, resolved when chosen)
+ *   picked), equipment_items / equipment_other / equipment_gold (the picked option, resolved when chosen),
+ *   equipment_custom (items the player typed; kept across class and option changes)
  * - class_features (the class's level-1 feature names, cached on the class pick) and class_choices
  *   (choice key → typed or picked values: fighting_style, weapon_mastery, expertise, order)
  * - the six ability keys (null until assigned from the standard array),
@@ -162,6 +170,7 @@ export function initialDraft(): Draft {
     equipment_items: [],
     equipment_other: [],
     equipment_gold: 0,
+    equipment_custom: [],
     class_features: [],
     class_choices: {},
     ...Object.fromEntries(ABILITY_KEYS.map((k) => [k, null])),
@@ -251,7 +260,7 @@ export function toCharacter(draft: Draft): NewCharacter {
     },
     conditions: [],
     details: {
-      ...(typeof draft.equipment_option === 'number' ? { gold: num(draft.equipment_gold, 0), other_gear: strList(draft.equipment_other) } : {}),
+      ...gearDetails(draft),
       alignment: str(draft.alignment),
       personality_trait: str(draft.personality_trait),
       ideal: str(draft.ideal),
