@@ -370,3 +370,36 @@ export function canMaster(className: string, item: { category?: string; properti
   if (className === 'Rogue') return (item.properties.weapon_properties ?? []).some((w) => w === 'Finesse' || w === 'Light')
   return true
 }
+
+// ── Divine / Primal Order ────────────────────────────────────
+
+export type OrderOption = { key: string; label: string; description: string; cantrip: boolean; skills: string[] }
+
+/** The level-1 order choice of the Cleric (Divine Order) and Druid (Primal Order), SRD 5.2. */
+const ORDERS: Record<string, { feature: string; options: OrderOption[] }> = {
+  Cleric: {
+    feature: 'Divine Order',
+    options: [
+      { key: 'protector', label: 'Protector', description: 'Trained in martial weapons and heavy armor.', cantrip: false, skills: [] },
+      { key: 'thaumaturge', label: 'Thaumaturge', description: 'One extra cantrip, and a bonus to Arcana and Religion checks equal to your Wisdom modifier (minimum +1).', cantrip: true, skills: ['arcana', 'religion'] },
+    ],
+  },
+  Druid: {
+    feature: 'Primal Order',
+    options: [
+      { key: 'warden', label: 'Warden', description: 'Trained in martial weapons and medium armor.', cantrip: false, skills: [] },
+      { key: 'magician', label: 'Magician', description: 'One extra cantrip, and a bonus to Arcana and Nature checks equal to your Wisdom modifier (minimum +1).', cantrip: true, skills: ['arcana', 'nature'] },
+    ],
+  },
+}
+
+export const orderFeature = (className: string): string | null => ORDERS[className]?.feature ?? null
+export const orderOptions = (className: string): OrderOption[] => ORDERS[className]?.options ?? []
+export const findOrder = (className: string, key: unknown): OrderOption | undefined => orderOptions(className).find((o) => o.key === key)
+
+/** The bonus a chosen order adds to its skills: Wisdom modifier, minimum +1. */
+export function orderSkillBonus(picks: PickRecord[], wisdomMod: number): { skills: string[]; bonus: number } {
+  const cls = picks.find((p) => p.kind === 'class')
+  const order = findOrder(cls?.content.name ?? '', cls?.state.order)
+  return { skills: order?.skills ?? [], bonus: Math.max(1, wisdomMod) }
+}

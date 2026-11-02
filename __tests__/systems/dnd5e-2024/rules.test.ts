@@ -8,6 +8,7 @@ import {
   getSpellLimits,
   slotsFor,
   canMaster,
+  orderSkillBonus,
   skillProficiencyBonus,
   derived,
   weaponMasteryCountFor,
@@ -277,7 +278,7 @@ test('definition values', () => {
 // ── Builder ──
 
 test('builder step ids', () => {
-  expect(dnd5eBuilder.steps.map((s) => s.id)).toEqual(['class', 'origin', 'skills', 'equipment', 'fighting-style', 'weapon-mastery', 'expertise', 'ability-scores', 'spells', 'details', 'personality', 'review'])
+  expect(dnd5eBuilder.steps.map((s) => s.id)).toEqual(['class', 'origin', 'skills', 'equipment', 'fighting-style', 'weapon-mastery', 'expertise', 'order', 'ability-scores', 'spells', 'details', 'personality', 'review'])
 })
 
 test('spells step is skipped when the class has no slots at the starting level', () => {
@@ -552,5 +553,39 @@ describe('rogue expertise', () => {
     const plain = { ...cls, state: { skills: ['perception'] } }
     const prof = (value(makeCharacter(), [], 'proficiency')?.value as number)
     expect((value(makeCharacter(), [cls], 'passive_perception')?.value as number) - (value(makeCharacter(), [plain], 'passive_perception')?.value as number)).toBe(prof)
+  })
+})
+
+describe('divine and primal order', () => {
+  const cleric = { ...dnd5eBuilder.initialDraft(), class_id: 'clr', class_name: 'Cleric' }
+  const step = dnd5eBuilder.steps.find((s) => s.id === 'order')!
+
+  test('step applies to Cleric and Druid only and needs a valid pick', () => {
+    expect(step.skip?.(cleric)).toBe(false)
+    expect(step.skip?.({ ...cleric, class_name: 'Druid' })).toBe(false)
+    expect(step.skip?.({ ...cleric, class_name: 'Fighter' })).toBe(true)
+    expect(step.isComplete(cleric)).toBe(false)
+    expect(step.isComplete({ ...cleric, class_order: 'protector' })).toBe(true)
+    expect(step.isComplete({ ...cleric, class_order: 'magician' })).toBe(false)
+  })
+
+  test('the cantrip orders raise the cantrip limit by one, and dropping one trims spells', () => {
+    const base = { ...cleric, class_order: 'thaumaturge', spell_ids: ['a', 'b', 'c', 'd'], spell_levels: { a: 0, b: 0, c: 0, d: 0 }, spell_classes: {} }
+    expect(dnd5eBuilder.steps.find((s) => s.id === 'spells')!.isComplete(base)).toBe(true)
+    expect(dnd5eBuilder.steps.find((s) => s.id === 'spells')!.isComplete({ ...base, class_order: 'protector' })).toBe(false)
+    expect(dnd5eBuilder.pruneDraft(base, { class_order: 'protector' }).spell_ids).toHaveLength(3)
+  })
+
+  test('changing class clears the order; the pick goes on the class pick', () => {
+    const picked = { ...cleric, class_order: 'protector' }
+    expect(dnd5eBuilder.pruneDraft(picked, { class_id: 'drd', class_name: 'Druid' }).class_order).toBeNull()
+    expect(dnd5eBuilder.toCharacter(picked).picks.find((p) => p.kind === 'class')?.state).toMatchObject({ order: 'protector' })
+  })
+
+  test('the skill bonus is the Wisdom modifier, minimum +1, on the order skills only', () => {
+    const cls = { content_id: 'c', kind: 'class', state: { order: 'thaumaturge' }, acquired_at_level: 1, content: { name: 'Cleric', data: {} } } as PickRecord
+    expect(orderSkillBonus([cls], 3)).toEqual({ skills: ['arcana', 'religion'], bonus: 3 })
+    expect(orderSkillBonus([cls], -1).bonus).toBe(1)
+    expect(orderSkillBonus([{ ...cls, state: { order: 'protector' } }], 3).skills).toEqual([])
   })
 })

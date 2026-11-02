@@ -3,7 +3,7 @@
 // import it without a builder ↔ steps require cycle.
 import type { Draft, NewCharacter } from '../types'
 import { ABILITY_KEYS, STANDARD_ARRAY } from './definition'
-import { getAbilityModifier, getMaxHP, getMaxSpellLevel, getSpellLimits, slotsFor } from './rules'
+import { findOrder, getAbilityModifier, getMaxHP, getMaxSpellLevel, getSpellLimits, orderOptions, slotsFor } from './rules'
 
 export const str = (v: unknown): string => (typeof v === 'string' ? v : '')
 export const num = (v: unknown, fallback: number): number => (typeof v === 'number' && Number.isFinite(v) ? v : fallback)
@@ -91,6 +91,13 @@ export function expertiseComplete(draft: Draft): boolean {
   return validExpertise(draft).length === expertiseCount(draft) && strList(draft.expertise).length === expertiseCount(draft)
 }
 
+/** The class has a level-1 order to choose (Cleric, Druid) and one is picked. */
+export const hasOrder = (draft: Draft): boolean => orderOptions(str(draft.class_name)).length > 0
+export const orderComplete = (draft: Draft): boolean => !hasOrder(draft) || !!findOrder(str(draft.class_name), draft.class_order)
+
+/** An order that grants a cantrip raises the cantrip limit by one. */
+export const extraCantrips = (draft: Draft): number => (findOrder(str(draft.class_name), draft.class_order)?.cantrip ? 1 : 0)
+
 const spellLevel = (draft: Draft, id: string): number | undefined => {
   const v = ((draft.spell_levels ?? {}) as Record<string, unknown>)[id]
   return typeof v === 'number' ? v : undefined
@@ -113,7 +120,8 @@ export function spellCounts(draft: Draft) {
 
 /** True when the chosen spells fit the class's SRD 5.2 limits and max spell level. */
 export function spellsWithinLimits(draft: Draft): boolean {
-  const { maxCantrips, maxSpells } = getSpellLimits(str(draft.class_name), levelOf(draft))
+  const { maxCantrips: base, maxSpells } = getSpellLimits(str(draft.class_name), levelOf(draft))
+  const maxCantrips = base + extraCantrips(draft)
   const { cantrips, spells, tooHigh } = spellCounts(draft)
   return !tooHigh && cantrips <= maxCantrips && spells <= maxSpells
 }
@@ -123,7 +131,9 @@ function fitSpells(draft: Draft): string[] {
   const cls = str(draft.class_name)
   const level = levelOf(draft)
   const max = getMaxSpellLevel(cls, level)
-  const { maxCantrips, maxSpells } = getSpellLimits(cls, level)
+  const limits = getSpellLimits(cls, level)
+  const maxCantrips = limits.maxCantrips + extraCantrips(draft)
+  const maxSpells = limits.maxSpells
   let cantrips = 0
   let spells = 0
   return strList(draft.spell_ids).filter((id) => {
@@ -155,6 +165,7 @@ export function abilitiesAssigned(draft: Draft): boolean {
  * - class_mastery_count (weapons the class masters, cached on the class pick) and mastery_ids (the picked
  *   weapon item ids)
  * - class_expertise_count (skills the class doubles, cached on the class pick) and expertise (the picks)
+ * - class_order (the Divine / Primal Order key, for classes that choose one)
  * - the six ability keys (null until assigned from the standard array),
  *   bg_bonus_two / bg_bonus_one (ability keys receiving +2 / +1)
  * - spell_ids, spell_classes (spell id → lowercase class list) and spell_levels (spell id →
@@ -186,6 +197,7 @@ export function initialDraft(): Draft {
     mastery_ids: [],
     class_expertise_count: 0,
     expertise: [],
+    class_order: null,
     ...Object.fromEntries(ABILITY_KEYS.map((k) => [k, null])),
     bg_bonus_two: null,
     bg_bonus_one: null,
@@ -239,10 +251,11 @@ export function pruneDraft(draft: Draft, changed: Partial<Draft>): Draft {
     if (!('class_mastery_count' in changed)) next.class_mastery_count = 0
     next.mastery_ids = []
     if (!('class_expertise_count' in changed)) next.class_expertise_count = 0
+    next.class_order = null
   }
   else next.class_skills = validClassSkills(next)
   next.expertise = classChanged ? [] : validExpertise(next)
-  if (classChanged || levelChanged) next.spell_ids = fitSpells(next)
+  if (classChanged || levelChanged || 'class_order' in changed) next.spell_ids = fitSpells(next)
   return next
 }
 
@@ -279,7 +292,7 @@ export function toCharacter(draft: Draft): NewCharacter {
     items: Array.isArray(draft.equipment_items) ? (draft.equipment_items as NewCharacter['items']) : [],
     picks: [
       ...(typeof draft.class_id === 'string' && draft.class_id
-        ? [{ content_id: draft.class_id, kind: 'class', state: { skills: validClassSkills(draft), ...(weaponMasteryCount(draft) > 0 ? { mastery: strList(draft.mastery_ids) } : {}), ...(expertiseCount(draft) > 0 ? { expertise: validExpertise(draft) } : {}) }, acquired_at_level: 1 }]
+        ? [{ content_id: draft.class_id, kind: 'class', state: { skills: validClassSkills(draft), ...(weaponMasteryCount(draft) > 0 ? { mastery: strList(draft.mastery_ids) } : {}), ...(expertiseCount(draft) > 0 ? { expertise: validExpertise(draft) } : {}), ...(hasOrder(draft) ? { order: str(draft.class_order) } : {}) }, acquired_at_level: 1 }]
         : []),
       ...(hasFightingStyle(draft) ? pick('feat', draft.fighting_style_id, 1) : []),
       ...pick('subclass', draft.subclass_id, level),
