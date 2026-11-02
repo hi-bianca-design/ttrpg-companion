@@ -67,7 +67,7 @@ This PRD covers the smallest slice that makes those mockups real. It is phase 1 
 - *AC:* Given no active session, when a player taps Open session, then all active members show "Session: Active" after reload or realtime update. Given two members open simultaneously, then exactly one session row exists. Given the session ends, then no badge or banner shows on any screen.
 
 **2. Status badges (sheet header)**
-- Shown at the top of **all four character-sheet tabs** (Character, Actions, Inventory, Campaign) whenever the character's campaign has an active session. Hidden otherwise. They are rendered once in the sheet layout, not per tab.
+- Shown at the top of **all four character-sheet tabs** (Character, Actions, Inventory, Campaign) whenever the character's campaign has an active session. Hidden otherwise. They are rendered once, in `SheetHeader` (the one header every sheet tab already shares), not per tab and not in the tab layout (which would double the safe-area spacing).
 - Left: `Session: Active` (green dot). Right, any member, out of combat: `Enter combat` (shield icon, tappable). Right, in combat: `In combat` (red dot); tappable by the GM or whoever entered combat, opening an End combat confirm; static for everyone else.
 - *AC:* Every member sees Enter combat when the session is active and combat is off. In combat, everyone sees In combat, and only the GM or the combat starter can end it. Badges meet the existing contrast tests and the single-theme/token rules (no hardcoded colors).
 

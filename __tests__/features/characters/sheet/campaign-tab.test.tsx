@@ -4,6 +4,7 @@ import CampaignTab from '../../../../app/(app)/characters/[id]/campaign'
 import { useCharacter } from '@/features/characters/characters.queries'
 import { useCampaign, useCharacterCampaign } from '@/features/campaigns/campaigns.queries'
 
+jest.mock('@/features/sessions/SessionBadge', () => ({ SessionBadge: () => null }))
 jest.mock('@/features/characters/characters.queries', () => ({ useCharacter: jest.fn() }))
 jest.mock('@/features/campaigns/campaigns.queries', () => ({ useCampaign: jest.fn(), useCharacterCampaign: jest.fn() }))
 jest.mock('@/features/auth/useAuth', () => ({ useAuth: () => ({ user: { id: 'u1' } }) }))
