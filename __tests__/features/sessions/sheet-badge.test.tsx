@@ -23,7 +23,7 @@ beforeEach(() => {
   ;(useCharacterCampaign as jest.Mock).mockReturnValue({ data: { id: 'camp1' }, isLoading: false, isError: false })
   ;(useCampaign as jest.Mock).mockReturnValue({ data: { id: 'camp1', gm_id: 'gm1' } })
   ;(useActiveSession as jest.Mock).mockReturnValue({ data: outOfCombat, isError: false })
-  ;(useSetCombat as jest.Mock).mockReturnValue({ mutate: jest.fn() })
+  ;(useSetCombat as jest.Mock).mockReturnValue({ mutateAsync: jest.fn() })
 })
 
 test('the shared sheet header shows Session: Active and Enter combat while the campaign has a session', () => {

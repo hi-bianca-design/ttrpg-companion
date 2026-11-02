@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Pressable } from 'react-native'
+import { Pressable, View } from 'react-native'
 import { Shield } from 'phosphor-react-native'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -15,7 +15,8 @@ import { canEndCombat } from './combat'
 import { useSetCombat } from './sessions.queries'
 import { useCharacterSession } from './useCharacterSession'
 
-const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 }
+// The badge plate is ~22pt tall; 11pt above and below brings the touch target to 44pt.
+const HIT_SLOP = { top: 11, bottom: 11, left: 8, right: 8 }
 
 /**
  * Combat state for the sheet's session: `Enter combat` for any member out of combat, `In combat`
@@ -32,18 +33,22 @@ export function CombatBadge() {
 
   if (!session) return null
 
-  const change = (inCombat: boolean) =>
-    setCombat.mutate(
-      { sessionId: session.id, inCombat },
-      { onError: (e) => showToast(e instanceof Error ? e.message : ERROR_COPY.save_failed) },
-    )
+  // mutateAsync, not mutate's per-call onError: that callback is dropped if this badge unmounts
+  // first, which it does when a poll finds the session ended while the call is still in flight.
+  const change = (inCombat: boolean) => {
+    setCombat
+      .mutateAsync({ sessionId: session.id, inCombat })
+      .catch((e) => showToast(e instanceof Error ? e.message : ERROR_COPY.save_failed))
+  }
 
   if (!session.in_combat) {
     return (
       <Pressable accessibilityRole="button" accessibilityLabel="Enter combat" hitSlop={HIT_SLOP} onPress={() => change(true)}>
         <Badge>
-          <Shield size={14} color={THEME_COLORS.foreground} weight="duotone" />
-          <Text variant="label">Enter combat</Text>
+          <View className="flex-row items-center gap-2">
+            <Shield size={14} color={THEME_COLORS.foreground} weight="duotone" />
+            <Text variant="label">Enter combat</Text>
+          </View>
         </Badge>
       </Pressable>
     )
