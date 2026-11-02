@@ -10,6 +10,7 @@ import { DetailsStep } from '@/systems/dnd5e-2024/steps/DetailsStep'
 import { EquipmentStep } from '@/systems/dnd5e-2024/steps/EquipmentStep'
 import { PersonalityStep } from '@/systems/dnd5e-2024/steps/PersonalityStep'
 import { SpellsStep } from '@/systems/dnd5e-2024/steps/SpellsStep'
+import { dnd5eBuilder } from '@/systems/dnd5e-2024/builder'
 import type { Draft } from '@/systems/types'
 
 jest.mock('@/features/content/content.api', () => ({ listContent: jest.fn(async () => []) }))
@@ -39,7 +40,6 @@ describe('step intros tell a first-timer the step is optional', () => {
     ['Spells', SpellsStep, { class_name: 'Wizard', level: 1 }],
     ['Equipment', EquipmentStep, { class_name: 'Fighter', class_equipment_options: ['A: Longsword (10 GP)'] }],
     ['Equipment with no starting options', EquipmentStep, { class_name: 'Fighter' }],
-    ['Details', DetailsStep, {}],
     ['Personality', PersonalityStep, {}],
   ]
 
@@ -57,5 +57,19 @@ describe('step intros tell a first-timer the step is optional', () => {
     renderStep(EquipmentStep, { class_name: 'Fighter' })
     expect(screen.queryByText(/choose how/i)).toBeNull()
     expect(screen.getByText(/add the gear your character carries/i)).toBeTruthy()
+  })
+
+  test('Details intro and Name caption agree: a name is needed to create, but the step can be skipped', () => {
+    renderStep(DetailsStep, {})
+    expect(screen.getByText(/add a name to create your character/i)).toBeTruthy()
+    expect(screen.getByText(/skip this for now and come back/i)).toBeTruthy()
+    expect(screen.getByText('Required to create')).toBeTruthy()
+    expect(screen.queryByText('Required')).toBeNull()
+  })
+
+  test('Details never blocks Continue: the builder step only marks completeness', () => {
+    const details = dnd5eBuilder.steps.find((s) => s.id === 'details')!
+    expect(details.skip).toBeUndefined()
+    expect(details.isComplete({})).toBe(false) // an unmet name is shown as incomplete, not enforced by the step
   })
 })

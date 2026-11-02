@@ -16,12 +16,12 @@ export function DetailsStep({ draft, update }: BuilderStepProps) {
 
   return (
     <View className="gap-6">
-      <StepIntro title="Final details" description="Give your character a name, or skip this and come back. Appearance and backstory are optional too." />
+      <StepIntro title="Final details" description="Add a name to create your character. You can skip this for now and come back." />
 
       <View className="gap-2">
         <View className="flex-row items-center justify-between">
           <Label nativeID="details-name">Character name</Label>
-          <Text variant="caption" tone="muted">Required</Text>
+          <Text variant="caption" tone="muted">Required to create</Text>
         </View>
         <Input
           aria-labelledby="details-name"
