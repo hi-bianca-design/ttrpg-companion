@@ -20,7 +20,7 @@
 - `content.pack_id` FK is `on delete restrict`. `pack_entitlements` cascades from `profiles` and restricts from `packs`.
 - Client code follows the existing feature layout (`*.api.ts` + `*.queries.ts`, lazy `require` of the api inside query functions) and uses `unwrap` / `AppError` from `src/features/errors.ts`.
 - UI uses design tokens only. `npm test` runs `lint:tokens`, so no hex/rgb literals, arbitrary Tailwind values or off-scale spacing in `app/`, `src/features/`, `src/components/game/`.
-- Migrations are named `YYYYMMDDNNNNNN_name.sql` and sort after `20261101000008_username_taken.sql`.
+- Migrations are named `YYYYMMDDNNNNNN_name.sql` and sort after `20261102000002_session_rpcs.sql` (renumbered from 000001 when merging main, which added the sessions migrations).
 
 ## Review Focus
 
@@ -36,7 +36,7 @@
 
 | File | Responsibility |
 |---|---|
-| `supabase/migrations/20261102000001_packs.sql` | tables, `owns_pack`, `own_sheet_content_ids`, policy and function changes |
+| `supabase/migrations/20261102000003_packs.sql` | tables, `owns_pack`, `own_sheet_content_ids`, policy and function changes |
 | `supabase/tests/rls_packs.test.sql` | pgTAP coverage of every gating rule |
 | `src/types/database.types.ts` | regenerated, adds the two tables and `content.pack_id` |
 | `src/features/packs/packs.api.ts` | `listPacks`, `listMyEntitlements` |
@@ -54,7 +54,7 @@
 ### Task 1: Pack schema and RLS
 
 **Files:**
-- Create: `supabase/migrations/20261102000001_packs.sql`
+- Create: `supabase/migrations/20261102000003_packs.sql`
 - Test: `supabase/tests/rls_packs.test.sql`
 
 **Interfaces:**
@@ -77,7 +77,7 @@
 Run: `supabase test db`
 Expected: FAIL, `relation "public.packs" does not exist` (start the local stack first with `supabase start` if it is not running).
 
-- [ ] **Step 3: Write the migration** `supabase/migrations/20261102000001_packs.sql`: create the tables, add `content.pack_id` with check `pack_id is null or owner_id is null`, enable RLS on both new tables, create `owns_pack` and `own_sheet_content_ids` (own characters' picks and items, mirroring `campaign_sheet_content_ids`). Policies: `packs_select` for `authenticated` using `published`; `pack_entitlements_select` for `authenticated` using `user_id = (select auth.uid())`; no write policies. Replace `content_select` so the first branch becomes `(owner_id is null and (pack_id is null or public.owns_pack(pack_id)))` and add `or id in (select public.own_sheet_content_ids())`; `create or replace` `can_reference_content` so its official branch also requires `c.pack_id is null or public.owns_pack(c.pack_id)`. Keep the existing grants and revoke pattern, and the `(select auth.uid())` scalar-subquery convention from `20261101000005_rls.sql`.
+- [ ] **Step 3: Write the migration** `supabase/migrations/20261102000003_packs.sql`: create the tables, add `content.pack_id` with check `pack_id is null or owner_id is null`, enable RLS on both new tables, create `owns_pack` and `own_sheet_content_ids` (own characters' picks and items, mirroring `campaign_sheet_content_ids`). Policies: `packs_select` for `authenticated` using `published`; `pack_entitlements_select` for `authenticated` using `user_id = (select auth.uid())`; no write policies. Replace `content_select` so the first branch becomes `(owner_id is null and (pack_id is null or public.owns_pack(pack_id)))` and add `or id in (select public.own_sheet_content_ids())`; `create or replace` `can_reference_content` so its official branch also requires `c.pack_id is null or public.owns_pack(c.pack_id)`. Keep the existing grants and revoke pattern, and the `(select auth.uid())` scalar-subquery convention from `20261101000005_rls.sql`.
 
 - [ ] **Step 4: Run the test to verify it passes**
 
@@ -87,7 +87,7 @@ Expected: all files PASS, including the existing `rls_content`, `rls_characters`
 - [ ] **Step 5: Commit**
 
 ```bash
-git add supabase/migrations/20261102000001_packs.sql supabase/tests/rls_packs.test.sql
+git add supabase/migrations/20261102000003_packs.sql supabase/tests/rls_packs.test.sql
 git commit -m "feat(db): packs, entitlements and pack-gated content RLS"
 ```
 
