@@ -6,8 +6,8 @@
 
 1. **The core loop is free.** Building a character, joining a campaign and playing a session cost nothing. This is the product people recommend to their table.
 2. **DMs pay, players don't.** The person running the game has the reason and the budget. Every paying DM brings free players, so each sale is also distribution.
-3. **Sell what we can legally sell.** Original content, licensed content, commissioned art, and tools. Never non-SRD Wizards of the Coast content. See [Content licensing](../legal/content-licensing.md).
-4. **Never take away what someone already made.** A lapsed subscription limits what you can *add*, not what you can *use*. See decisions D6 and D11 in the [decision log](../decisions/decision-log.md).
+3. **Sell what we can legally sell.** Original content, licensed content, commissioned art, and tools. Never non-SRD Wizards of the Coast content. See [Content licensing](content-licensing.md).
+4. **Never take away what someone already made.** A lapsed subscription limits what you can *add*, not what you can *use*. See decisions D6 and D11 in the [decision log](decision-log.md).
 5. **No ads.** They hurt a tool used at the table and earn little at small scale.
 
 ## Revenue streams
@@ -17,7 +17,7 @@
 | **DM Pro subscription** | Campaign and session tools beyond the free caps (more campaigns, larger parties, session history and notes, backup and export), plus a new pack each season | DMs | Yes | 1 |
 | **Content packs** | Original subclasses, monsters, items, adventure hooks, with art | Anyone | One-time | 2 |
 | **Art packs** | Portrait sets by class or species, tokens, sheet art | Players | One-time | 2 |
-| **Themes and cosmetics** | Sheet and app re-skins, dice skins | Anyone | One-time | 3 (blocked, see [Themes](../design/themes-and-cosmetics.md)) |
+| **Themes and cosmetics** | Sheet and app re-skins, dice skins | Anyone | One-time | 3 (blocked, see [Themes](themes-and-cosmetics.md)) |
 | **Commissioned character art** | A portrait made for one character | Players | One-time, high price | 4 (later; needs artist capacity) |
 | **Tip jar / sponsorship** | Nothing, goodwill | Fans | Optional | Anytime |
 
@@ -55,9 +55,9 @@ break-even units       = pack production cost ÷ net revenue per sale
 production cost        = artist fees + rules-writing time + QA + any revenue share
 ```
 
-**Worked example (illustrative only, not a forecast):** a pack priced at $8 with a 15% platform fee nets about $6.80. If it cost $400 in commissioned art to make, break-even is about 59 sales. Revenue share with the artist lowers the upfront cost but also lowers net per sale. Decide that trade per pack in [Artist commissioning](../content/artist-commissioning.md).
+**Worked example (illustrative only, not a forecast):** a pack priced at $8 with a 15% platform fee nets about $6.80. If it cost $400 in commissioned art to make, break-even is about 59 sales. Revenue share with the artist lowers the upfront cost but also lowers net per sale. Decide that trade per pack in [Artist commissioning](artist-commissioning.md).
 
-**Platform fees (verify before relying on them):** Apple and Google take a share of in-app purchases, historically 15% to 30% depending on programme and revenue. Web checkout through a payment processor has its own, usually smaller, fee. Current rules on offering web checkout from inside a native app differ by platform and region. See [Payments, platforms and compliance](../legal/payments-and-platforms.md).
+**Platform fees (verify before relying on them):** Apple and Google take a share of in-app purchases, historically 15% to 30% depending on programme and revenue. Web checkout through a payment processor has its own, usually smaller, fee. Current rules on offering web checkout from inside a native app differ by platform and region. See [Payments, platforms and compliance](payments-and-platforms.md).
 
 ## What would make this not work
 
@@ -66,4 +66,4 @@ production cost        = artist fees + rules-writing time + QA + any revenue sha
 - **Art cost outruns sales.** Mitigated by one pack at a time and revenue-share options.
 - **Free is good enough.** If the free tier covers a DM's whole need, nobody upgrades. The DM Pro value has to be real, not just removing a nag.
 
-Each of these has an owner and a mitigation in [Risks and open questions](../roadmap/risks-and-open-questions.md).
+Each of these has an owner and a mitigation in [Risks and open questions](risks-and-open-questions.md).

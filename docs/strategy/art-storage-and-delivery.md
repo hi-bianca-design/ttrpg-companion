@@ -34,7 +34,7 @@ A character that **uses** a pack's portrait keeps showing it, since taking it aw
 | **A. Copy on pick** | When the user chooses a portrait, copy it into the user's own storage path (a private per-user bucket) | Simple rule, always works, costs storage; the file is now "owned" by the user |
 | **B. Storage policy mirrors the content rule** | The policy also allows reads of assets referenced by the user's own characters | More logic in policies; no duplication |
 
-Prefer **B** if the policy stays readable, otherwise **A**. Decide when the first art pack is scoped, and write the choice in the [decision log](../decisions/decision-log.md).
+Prefer **B** if the policy stays readable, otherwise **A**. Decide when the first art pack is scoped, and write the choice in the [decision log](decision-log.md).
 
 ## Formats and sizes
 

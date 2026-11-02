@@ -1,6 +1,6 @@
 # Pack pipeline
 
-**Status:** Proposed. No pack has been made yet. The database side exists (see [Entitlements architecture](../engineering/entitlements-architecture.md)); the process side is described here.
+**Status:** Proposed. No pack has been made yet. The database side exists (see [Entitlements architecture](entitlements-architecture.md)); the process side is described here.
 
 ## What a pack is
 
@@ -9,8 +9,8 @@ A row in `packs` (name, slug, description, `kind`, optional `system_id`, `artist
 | Kind | Contents | Dependency |
 |---|---|---|
 | `content` | Official-style rows: subclasses, monsters, items, spells, feats | None, works today |
-| `art` | Portraits, tokens, frames | Needs [art storage](../engineering/art-storage-and-delivery.md) |
-| `theme` | A palette definition | Needs the [theme provider](../design/themes-and-cosmetics.md) |
+| `art` | Portraits, tokens, frames | Needs [art storage](art-storage-and-delivery.md) |
+| `theme` | A palette definition | Needs the [theme provider](themes-and-cosmetics.md) |
 
 The first real pack should be a **`content` pack with a small amount of art** or a **small art pack**, with a single clear audience. That is the cheapest way to learn whether anyone pays.
 
@@ -21,7 +21,7 @@ The first real pack should be a **`content` pack with a small amount of art** or
 ```
 
 1. **Concept.** One sentence: who is it for, and what gap does it fill? ("Six cinder-themed subclasses and the monsters that go with them.") Check [Content policy](content-policy.md) before spending anything.
-2. **Rules and writing.** Write content in the app's own data shape. It must validate against the system's schema (the same Zod schemas used for homebrew). Original names and fiction. No Wizards of the Coast product identity (see [Content licensing](../legal/content-licensing.md)).
+2. **Rules and writing.** Write content in the app's own data shape. It must validate against the system's schema (the same Zod schemas used for homebrew). Original names and fiction. No Wizards of the Coast product identity (see [Content licensing](content-licensing.md)).
 3. **Art brief.** For each piece: purpose, size, mood, references (originals only), deliverables, deadline. See [Artist commissioning](artist-commissioning.md).
 4. **Commission.** Contract with usage rights *before* work starts.
 5. **Integrate.** Content rows with `pack_id` set and `owner_id` null. Art uploaded to the private bucket. A pack row, unpublished.
@@ -40,11 +40,11 @@ The first real pack should be a **`content` pack with a small amount of art** or
 - [ ] A character can use each piece of content end to end (build or edit a character, equip, level up if relevant).
 - [ ] Contrast and accessibility checks pass for any visual element.
 - [ ] Price, store product and pack row all match.
-- [ ] The pack's **production cost** is recorded, so [revenue](../business/revenue-model.md) can be compared with it.
+- [ ] The pack's **production cost** is recorded, so [revenue](revenue-model.md) can be compared with it.
 
 ## Keeping a record
 
-For each pack, keep a short file in this folder or a pack tracker: concept, cost, artists, rights, release date, sales. The aim is to make the third pack faster than the first, and to know which packs earned their cost.
+For each pack, keep a short record in this folder (`docs/strategy/`) or a pack tracker: concept, cost, artists, rights, release date, sales. The aim is to make the third pack faster than the first, and to know which packs earned their cost.
 
 ## Seasons (later)
 

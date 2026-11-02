@@ -6,7 +6,7 @@
 
 | Source | Allowed? | Notes |
 |---|---|---|
-| **SRD 5.2 material** (CC BY 4.0) | Yes, and it's already free in the app | We must keep the required attribution. See [Content licensing](../legal/content-licensing.md) |
+| **SRD 5.2 material** (CC BY 4.0) | Yes, and it's already free in the app | We must keep the required attribution. See [Content licensing](content-licensing.md) |
 | **Original content** written for us | Yes | Original names, fiction and mechanics. Our rules text, written in our own words |
 | **Licensed third-party content** | Yes, with a written licence | For example a publisher's content licensed to us, or content under an open licence such as the ORC licence. Check the exact terms before building on it |
 | **Content the user enters themselves** (homebrew) | Yes, it's theirs | This is what the Custom Content Manager is for; we don't sell it |
@@ -18,7 +18,7 @@
 
 - Don't use Wizards of the Coast product names, logos or distinctive monster names that aren't in the SRD (for example the iconic ones that were left out of it).
 - Describe compatibility factually where the licence allows it; don't imply endorsement.
-- See the open question about the app's own name in [Legal: content licensing](../legal/content-licensing.md).
+- See the open question about the app's own name in [Legal: content licensing](content-licensing.md).
 
 ## Quality bar
 
