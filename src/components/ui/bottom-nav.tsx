@@ -1,7 +1,6 @@
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs'
 import type { ComponentType } from 'react'
-import { BlurView } from 'expo-blur'
-import { Platform, Pressable, StyleSheet, View, type ViewStyle } from 'react-native'
+import { Pressable, View } from 'react-native'
 import { Text } from '@/components/ui/text'
 import { THEME_COLORS } from '@/lib/theme'
 import { cn } from '@/lib/utils'
@@ -60,13 +59,10 @@ export function BottomNav({ state, descriptors, navigation, insets, extra }: Bot
     <View
       testID="bottom-nav"
       className="flex-row items-center overflow-hidden border-t border-border px-2 pt-2"
-      style={[
-        // Frosted: a tinted translucent fill over a blur of the screen behind (CSS on web, expo-blur on native).
-        { backgroundColor: 'rgba(12, 24, 34, 0.72)', paddingBottom: Math.max(insets.bottom, 8) },
-        Platform.OS === 'web' && ({ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' } as ViewStyle),
-      ]}
+      // Solid: the bar sits below the scene (nothing scrolls under it to blur), so a translucent fill would only
+      // show the app's backdrop and turn grey.
+      style={{ backgroundColor: THEME_COLORS.rockDeep, paddingBottom: Math.max(insets.bottom, 8) }}
     >
-      {Platform.OS !== 'web' ? <BlurView intensity={40} tint="dark" experimentalBlurMethod="dimezisBlurView" style={StyleSheet.absoluteFill} /> : null}
       {items.map(({ route, index, options }) => {
         const active = state.index === index
         const label = typeof options.tabBarLabel === 'string' ? options.tabBarLabel : (options.title ?? route.name)
