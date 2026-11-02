@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Pressable, View } from 'react-native'
+import { Hairline } from '@/components/ui/hairline'
 import { Disclosure, RuleOrnament } from '@/components/ui/ornament'
 import { Text } from '@/components/ui/text'
 import { useSectionStore } from './section-store'
@@ -22,7 +23,7 @@ export function SectionHeader({ id, title, collapsible = false, action, children
   // section ends in a triangle (down while open, up once collapsed) instead of the diamond ornament.
   const rule = (
     <>
-      <View testID="section-rule" className="h-px flex-1 bg-rule opacity-60" />
+      <Hairline testID="section-rule" fade="end" className="flex-1" />
       {collapsible ? <Disclosure testID="section-ornament" open={!collapsed} /> : <RuleOrnament testID="section-ornament" />}
     </>
   )

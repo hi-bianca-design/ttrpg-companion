@@ -3,6 +3,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'rea
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router'
 import { CaretRight, CheckCircle, CircleIcon, X } from 'phosphor-react-native'
 import { BackButton, ScreenBackground, SectionHeader } from '@/components/game'
+import { Hairline } from '@/components/ui/hairline'
 import { StickyFooter } from '@/components/ui/sticky-footer'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -26,7 +27,8 @@ function Checklist({ steps, draft, onJump }: { steps: BuilderStepDef[]; draft: D
         {steps.map((s, i) => {
           const done = s.isComplete(draft)
           const row = (
-            <View className={cn('min-h-11 flex-row items-center gap-3 px-4 py-3', i < steps.length - 1 && 'border-b border-rule')}>
+            <View className="relative min-h-11 flex-row items-center gap-3 px-4 py-3">
+              {i < steps.length - 1 ? <Hairline className="absolute bottom-0 left-0 right-0" /> : null}
               {done
                 ? <CheckCircle size={20} weight="fill" color={colors.primary} />
                 : <CircleIcon size={20} color={colors.mutedForeground} />}

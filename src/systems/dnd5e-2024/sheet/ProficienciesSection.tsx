@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { SectionHeader } from '@/components/game/SectionHeader'
+import { Hairline } from '@/components/ui/hairline'
 import { Disclosure } from '@/components/ui/ornament'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
@@ -21,9 +22,10 @@ function RowList({ rows }: { rows: Row[] }) {
           key={r.key}
           accessible
           accessibilityLabel={`${r.a11y} ${formatModifier(r.value)}${r.proficient ? ', proficient' : ''}`}
-          className={cn('flex-row items-center gap-3 py-2', i < rows.length - 1 && 'border-b border-rule')}
+          className="relative flex-row items-center gap-3 py-2"
         >
-          <View className={cn('h-2 w-2 rotate-45', r.proficient ? 'bg-primary' : 'border border-rule')} />
+          {i < rows.length - 1 ? <Hairline className="absolute bottom-0 left-0 right-0" /> : null}
+          <View className={cn('h-2 w-2 rotate-45', r.proficient ? 'bg-primary' : 'border border-border')} />
           <Text variant="body-sm" className="flex-1">{r.label}</Text>
           <Text variant="label">{r.aside}</Text>
           <Text variant="subhead" tone={r.proficient ? 'accent' : 'default'}>{formatModifier(r.value)}</Text>
