@@ -93,7 +93,7 @@ export async function getCharacter(id: string): Promise<CharacterFull> {
 }
 
 export async function createCharacter(input: NewCharacter): Promise<string> {
-  const { picks, ...fields } = input
+  const { picks, items = [], ...fields } = input
   const owner_id = await currentUserId()
   const { id } = unwrap(
     await supabase
@@ -110,6 +110,15 @@ export async function createCharacter(input: NewCharacter): Promise<string> {
     )
     if (res.error) {
       await supabase.from('characters').delete().eq('id', id) // best-effort rollback; the original error is what matters
+      check(res)
+    }
+  }
+  if (items.length > 0) {
+    const res = await supabase.from('character_items').insert(
+      items.map((i) => ({ character_id: id, content_id: i.content_id, quantity: i.quantity, equipped: i.equipped })),
+    )
+    if (res.error) {
+      await supabase.from('characters').delete().eq('id', id) // picks and items cascade
       check(res)
     }
   }

@@ -88,6 +88,8 @@ export type BuilderStepDef = {
 
 export type NewCharacter = Omit<CharacterRecord, 'id'> & {
   picks: Array<Pick<PickRecord, 'content_id' | 'kind' | 'state' | 'acquired_at_level'>>
+  /** Starting inventory, written to character_items. */
+  items?: Array<{ content_id: string; quantity: number; equipped: boolean }>
 }
 
 /** Props every sheet section receives. `onChange` is only passed to the `levelUp` section: it reports the

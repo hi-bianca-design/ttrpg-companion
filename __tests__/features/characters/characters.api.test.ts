@@ -58,6 +58,26 @@ describe('createCharacter', () => {
   })
 })
 
+describe('createCharacter starting items', () => {
+  it('inserts the starting items into character_items', async () => {
+    const chars = builder({ data: { id: 'ch1' }, error: null })
+    const rows = builder({ error: null })
+    ;(supabase.from as jest.Mock).mockImplementation((t: string) => (t === 'characters' ? chars : rows))
+    await createCharacter({ ...newChar, items: [{ content_id: 'cm', quantity: 1, equipped: true }] })
+    expect(supabase.from).toHaveBeenCalledWith('character_items')
+    expect(rows.insert).toHaveBeenCalledWith([{ character_id: 'ch1', content_id: 'cm', quantity: 1, equipped: true }])
+  })
+
+  it('deletes the character when inserting items fails', async () => {
+    const chars = builder({ data: { id: 'ch1' }, error: null })
+    const ok = builder({ error: null })
+    const bad = builder({ error: { message: 'fk violation' } })
+    ;(supabase.from as jest.Mock).mockImplementation((t: string) => (t === 'characters' ? chars : t === 'character_items' ? bad : ok))
+    await expect(createCharacter({ ...newChar, items: [{ content_id: 'cm', quantity: 1, equipped: true }] })).rejects.toMatchObject({ code: 'unknown' })
+    expect(chars.delete).toHaveBeenCalled()
+  })
+})
+
 describe('getCharacter', () => {
   it('parses JSON via system schemas and feeds equipped items to derived values', async () => {
     const row = {
