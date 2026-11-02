@@ -4,7 +4,7 @@ import { DiscardDraftGuard } from '@/features/characters/builder/DiscardDraftGua
 export default function WizardLayout() {
   return (
     <>
-      <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right' }} />
+      <Stack screenOptions={{ headerShown: false, animation: 'none' }} />
       <DiscardDraftGuard />
     </>
   )
