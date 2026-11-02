@@ -4,7 +4,7 @@ import CampaignTab from '../../../../app/(app)/characters/[id]/campaign'
 import { useCharacter } from '@/features/characters/characters.queries'
 import { useCampaign, useCharacterCampaign } from '@/features/campaigns/campaigns.queries'
 
-jest.mock('@/features/sessions/SessionBadge', () => ({ SessionBadge: () => null }))
+jest.mock('@/features/sessions/SessionStatusRow', () => ({ SessionStatusRow: () => null }))
 jest.mock('@/features/sessions/SessionControls', () => ({
   SessionControls: () => { const { Text } = require('react-native'); return <Text>session controls</Text> },
 }))

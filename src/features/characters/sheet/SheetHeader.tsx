@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router'
 import { BackButton, NavRow } from '@/components/game/HeaderNav'
 import { Button } from '@/components/ui/button'
 import { Text } from '@/components/ui/text'
-import { SessionBadge } from '@/features/sessions/SessionBadge'
+import { SessionStatusRow } from '@/features/sessions/SessionStatusRow'
 
 type SheetHeaderProps = {
   /** The character's name; omitted while it loads. */
@@ -21,7 +21,7 @@ type SheetHeaderProps = {
 
 /**
  * The one header on every character-sheet tab: caret Back (leaves the sheet, whichever tab is
- * open), the Session: Active badge while the campaign has a session, optional Level up, then eyebrow + name. The nav row is separate from the name, so a long
+ * open), optional Level up, then the session status row (Session: Active + combat badge) while the campaign has a session, then eyebrow + name. The nav row is separate from the name, so a long
  * name can't push the actions off screen.
  */
 export function SheetHeader({ name, eyebrow, subtitle, onLevelUp, children }: SheetHeaderProps) {
@@ -34,15 +34,13 @@ export function SheetHeader({ name, eyebrow, subtitle, onLevelUp, children }: Sh
     <View className="gap-3">
       <NavRow>
         <BackButton onPress={leave} />
-        <View className="flex-1 flex-row items-center px-2">
-          <SessionBadge />
-        </View>
         {onLevelUp && name ? (
           <Button variant="ghost" size="sm" accessibilityLabel="Level up" onPress={onLevelUp}>
             <Text>Level up</Text>
           </Button>
         ) : null}
       </NavRow>
+      <SessionStatusRow />
       {name ? (
         <View className="gap-1">
           {eyebrow ? <Text variant="label" tone="accent">{eyebrow}</Text> : null}

@@ -9,7 +9,7 @@ import { HpSheet } from '@/features/characters/sheet/HpSheet'
 import { getSystem } from '@/systems/registry'
 import { ERROR_COPY } from '@/features/errors'
 
-jest.mock('@/features/sessions/SessionBadge', () => ({ SessionBadge: () => null }))
+jest.mock('@/features/sessions/SessionStatusRow', () => ({ SessionStatusRow: () => null }))
 jest.mock('@/features/characters/characters.queries', () => ({
   useCharacter: jest.fn(),
   useResourceMutation: jest.fn(),
