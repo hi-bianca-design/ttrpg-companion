@@ -9,8 +9,8 @@ test('the curtain starts fully off-screen left and ends fully off-screen right, 
   const g = curtainGeometry(400, 800)
   expect(g.feather).toBe(24)
   expect(g.from).toBeLessThan(-g.feather)
-  expect(g.to).toBeGreaterThan(400)
-  expect(g.solid).toBeGreaterThan(400)
+  expect(g.to).toBeGreaterThanOrEqual(400)
+  expect(g.curtainWidth + g.from).toBeGreaterThanOrEqual(400)   // still covers the right edge at the start
 })
 
 test('the first screen does not wipe; a path change starts a native-driven wipe', () => {

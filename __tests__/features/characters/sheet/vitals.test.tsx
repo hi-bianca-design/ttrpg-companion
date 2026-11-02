@@ -398,7 +398,7 @@ test('shared sheet header: caret Back leaves the sheet; Level up opens the level
 
 test('compact chips in the conditions sheet', () => {
   render(<><ConditionsSheet open onOpenChange={jest.fn()} options={['blinded', 'prone']} value={[]} onApply={jest.fn()} /><PortalHost /></>)
-  expect(screen.getByRole('button', { name: 'Blinded' }).props.className).toContain('h-7')
+  expect(screen.getByRole('button', { name: 'Blinded' }).props.className).toContain('h-8')
 })
 
 test('vitals order: Bonus HP sits directly under the tiles, before the resource cards', () => {
