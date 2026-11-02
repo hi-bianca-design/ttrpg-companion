@@ -593,3 +593,118 @@ describe('class choices in the draft', () => {
     expect(dnd5eBuilder.toCharacter(none).picks.find((p) => p.kind === 'class')?.state).toEqual({ skills: [] })
   })
 })
+
+// ── Custom class, species and background in the draft ──
+
+describe('custom class, species and background in the draft', () => {
+  const { dnd5eContentSchemas } = jest.requireActual('@/systems/dnd5e-2024/schemas')
+  const warden = { name: 'Warden', description: ' Guards the wood ', library: false, extras: { hit_die: 10, skill_count: 2, skill_from: ['stealth', 'arcana'] } }
+  const dryad = { name: '  Dryad   Kin ', description: '', library: true, extras: { speed: 35 } }
+  const wanderer = { name: 'Wanderer', description: '', library: false, extras: { skill_proficiencies: ['survival', 'nature'] } }
+  const base = () => dnd5eBuilder.initialDraft()
+  const fighter = () => ({
+    ...base(), class_id: 'ftr', class_name: 'Fighter', hit_die: 10, subclass_id: 'champ',
+    class_skill_count: 2, class_skill_options: ['history', 'perception'], class_skills: ['history'],
+    class_choices: { fighting_style: ['Defense'] }, equipment_option: 0, equipment_gold: 5,
+  })
+
+  test('initial draft has no custom entries', () => {
+    expect(base()).toMatchObject({ class_custom: null, species_custom: null, background_custom: null })
+  })
+
+  test('canCreate accepts a custom class with a non-blank name', () => {
+    expect(dnd5eBuilder.canCreate({ ...base(), class_custom: warden, name: 'Mira' })).toBe(true)
+    expect(dnd5eBuilder.canCreate({ ...base(), class_custom: { ...warden, name: '  ' }, name: 'Mira' })).toBe(false)
+    expect(dnd5eBuilder.canCreate({ ...base(), class_custom: warden, name: ' ' })).toBe(false)
+    expect(dnd5eBuilder.canCreate({ ...base(), class_custom: warden })).toBe(false)
+  })
+
+  test('switching an official class to a custom one clears class picks, choices, equipment and subclass', () => {
+    const next = dnd5eBuilder.pruneDraft(fighter(), { class_custom: warden })
+    expect(next).toMatchObject({
+      class_id: null, class_custom: warden, subclass_id: null, class_skills: [], class_choices: {},
+      equipment_option: null, equipment_gold: 0,
+    })
+  })
+
+  test('setting a custom class caches its fields, as ClassStep does for an official one', () => {
+    const next = dnd5eBuilder.pruneDraft(fighter(), { class_custom: warden })
+    expect(next).toMatchObject({ class_name: 'Warden', hit_die: 10, class_skill_count: 2, class_skill_options: ['stealth', 'arcana'] })
+  })
+
+  test('picking an official class clears the custom class', () => {
+    const custom = dnd5eBuilder.pruneDraft(base(), { class_custom: warden })
+    const next = dnd5eBuilder.pruneDraft({ ...custom, class_skills: ['stealth'] }, { class_id: 'ftr', class_name: 'Fighter' })
+    expect(next).toMatchObject({ class_id: 'ftr', class_custom: null, class_skills: [] })
+  })
+
+  test('editing or clearing the custom class counts as a class change', () => {
+    const custom = { ...dnd5eBuilder.pruneDraft(base(), { class_custom: warden }), class_skills: ['stealth'], class_choices: { x: ['y'] } }
+    expect(dnd5eBuilder.pruneDraft(custom, { class_custom: { ...warden, name: 'Warden II' } })).toMatchObject({ class_skills: [], class_choices: {}, class_name: 'Warden II' })
+    expect(dnd5eBuilder.pruneDraft(custom, { class_custom: null })).toMatchObject({ class_custom: null, class_skills: [], class_choices: {} })
+    expect(dnd5eBuilder.pruneDraft(custom, { name: 'X' })).toMatchObject({ class_skills: ['stealth'], class_choices: { x: ['y'] } })
+  })
+
+  test('a custom class never has a subclass', () => {
+    const custom = dnd5eBuilder.pruneDraft(base(), { class_custom: warden })
+    expect(dnd5eBuilder.pruneDraft(custom, { subclass_id: 'champ' }).subclass_id).toBeNull()
+  })
+
+  test('species: official and custom exclude each other', () => {
+    const custom = dnd5eBuilder.pruneDraft({ ...base(), species_id: 'elf' }, { species_custom: dryad })
+    expect(custom).toMatchObject({ species_id: null, species_custom: dryad })
+    expect(dnd5eBuilder.pruneDraft(custom, { species_id: 'elf' })).toMatchObject({ species_id: 'elf', species_custom: null })
+  })
+
+  test('background: a custom one has no ability options, takes its skills and resets bonuses', () => {
+    const sage = { ...base(), background_id: 'sage', bg_abilities: ['intelligence', 'wisdom'], bg_skills: ['history'], bg_bonus_two: 'intelligence', bg_bonus_one: 'wisdom' }
+    const fromExtras = dnd5eBuilder.pruneDraft(sage, { background_custom: wanderer })
+    expect(fromExtras).toMatchObject({ background_id: null, bg_abilities: [], bg_skills: ['survival', 'nature'], bg_bonus_two: null, bg_bonus_one: null })
+    expect(dnd5eBuilder.pruneDraft(sage, { background_custom: wanderer, bg_skills: ['nature'] }).bg_skills).toEqual(['nature'])
+    const cleared = dnd5eBuilder.pruneDraft(fromExtras, { background_custom: null })
+    expect(cleared).toMatchObject({ background_custom: null, bg_abilities: [], bg_skills: [] })
+    expect(dnd5eBuilder.pruneDraft(fromExtras, { background_id: 'sage', bg_abilities: ['wisdom'], bg_skills: ['history'] }))
+      .toMatchObject({ background_id: 'sage', background_custom: null, bg_abilities: ['wisdom'], bg_skills: ['history'] })
+  })
+
+  test('toCharacter turns custom class and species into custom entries, not picks', () => {
+    let draft = dnd5eBuilder.pruneDraft({ ...base(), name: 'Mira', constitution: 14 }, { class_custom: warden })
+    draft = dnd5eBuilder.pruneDraft(draft, { species_custom: dryad, background_id: 'sage', bg_skills: ['history'] })
+    draft = { ...draft, class_skills: ['stealth', 'arcana'], class_choices: { fighting_style: ['Defense'] } }
+    const c = dnd5eBuilder.toCharacter(draft)
+    expect(c.picks).toEqual([{ content_id: 'sage', kind: 'background', state: {}, acquired_at_level: 1 }])
+    expect(c.custom).toHaveLength(2)
+    const [cls, sp] = c.custom!
+    expect(cls).toMatchObject({
+      kind: 'class', name: 'Warden', description: 'Guards the wood', library: false,
+      pick: { state: { skills: ['stealth', 'arcana'], choices: { fighting_style: ['Defense'] } }, acquired_at_level: 1 },
+    })
+    expect(cls.data).toMatchObject({ one_off: true, hit_die: 10 })
+    expect(sp).toMatchObject({ kind: 'species', name: 'Dryad Kin', library: true, pick: { state: {}, acquired_at_level: 1 } })
+    expect((sp.data as Record<string, unknown>).one_off).toBeUndefined()
+    expect(dnd5eContentSchemas.class.safeParse(cls.data).success).toBe(true)
+    expect(dnd5eContentSchemas.species.safeParse(sp.data).success).toBe(true)
+    expect(c.resources.hp).toEqual({ current: 12, max: 12 })
+  })
+
+  test('toCharacter makes a custom background entry with empty pick state', () => {
+    const draft = dnd5eBuilder.pruneDraft({ ...base(), class_id: 'ftr', name: 'M' }, { background_custom: wanderer })
+    const c = dnd5eBuilder.toCharacter(draft)
+    expect(c.picks.map((p) => p.kind)).toEqual(['class'])
+    expect(c.custom).toEqual([expect.objectContaining({ kind: 'background', name: 'Wanderer', pick: { state: {}, acquired_at_level: 1 } })])
+    expect(dnd5eContentSchemas.background.safeParse(c.custom![0].data).success).toBe(true)
+  })
+
+  test('HP for a custom class without a cached hit die uses the entry (8 when empty)', () => {
+    const raw = { ...base(), name: 'M', class_custom: warden }
+    expect(dnd5eBuilder.toCharacter(raw).resources.hp).toEqual({ current: 10, max: 10 })
+    const plain = { ...base(), name: 'M', class_custom: { ...warden, extras: {} } }
+    expect(dnd5eBuilder.toCharacter(plain).resources.hp).toEqual({ current: 8, max: 8 })
+  })
+
+  test('official-only drafts have no custom entries', () => {
+    const c = dnd5eBuilder.toCharacter({ ...base(), class_id: 'ftr', class_name: 'Fighter', hit_die: 10, name: 'Mira', species_id: 'elf' })
+    expect(c.custom ?? []).toEqual([])
+    expect(c.picks.map((p) => p.kind)).toEqual(['class', 'species'])
+  })
+})

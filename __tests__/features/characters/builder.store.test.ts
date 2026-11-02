@@ -27,6 +27,19 @@ describe('useBuilderStore', () => {
     })
   })
 
+  test('a custom class replaces the official one and caches its skill choice', () => {
+    store().start('dnd5e-2024')
+    store().update({ class_id: 'ftr', class_name: 'Fighter', class_skills: ['history'], class_choices: { fighting_style: ['Defense'] } })
+    const warden = { name: 'Warden', description: '', library: false, extras: { skill_count: 2, skill_from: ['stealth', 'arcana'] } }
+    store().update({ class_custom: warden, class_id: null })
+    expect(store().draft).toMatchObject({
+      class_id: null, class_custom: warden, class_name: 'Warden', class_skills: [], class_choices: {},
+      class_skill_count: 2, class_skill_options: ['stealth', 'arcana'],
+    })
+    store().update({ class_id: 'ftr', class_name: 'Fighter' })
+    expect(store().draft).toMatchObject({ class_id: 'ftr', class_custom: null })
+  })
+
   test('update without a started system is a no-op', () => {
     store().update({ name: 'Nobody' })
     expect(store().draft.name).toBeUndefined()

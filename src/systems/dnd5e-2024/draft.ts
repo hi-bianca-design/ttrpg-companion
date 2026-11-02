@@ -1,7 +1,8 @@
 // D&D 5e (2024) builder draft: initial values, pruning on change, completeness checks and
 // the draft → NewCharacter conversion. Kept apart from builder.ts so step components can
 // import it without a builder ↔ steps require cycle.
-import type { Draft, NewCharacter } from '../types'
+import type { Draft, NewCharacter, NewCustomContent } from '../types'
+import { cachedClassFields, cleanName, customData, type CustomEntry, type CustomKind } from './customEntries'
 import { ABILITY_KEYS } from './definition'
 import { featureResources } from './features'
 import { findOrder, getAbilityModifier, getMaxHP, getMaxSpellLevel, getSpellLimits, slotsFor } from './rules'
@@ -116,6 +117,31 @@ function fitSpells(draft: Draft): string[] {
   })
 }
 
+const CUSTOM_KINDS: readonly CustomKind[] = ['class', 'species', 'background']
+
+/** A draft's `*_custom` value as a `CustomEntry`, or null when unset or malformed. */
+export function customEntry(v: unknown): CustomEntry | null {
+  if (!v || typeof v !== 'object') return null
+  const e = v as Record<string, unknown>
+  if (typeof e.name !== 'string') return null
+  const extras = e.extras && typeof e.extras === 'object' && !Array.isArray(e.extras) ? (e.extras as Record<string, unknown>) : {}
+  return { name: e.name, description: str(e.description), library: e.library === true, extras }
+}
+
+/** A custom class whose name is not blank (the only kind that counts towards canCreate). */
+const namedCustomClass = (draft: Draft): CustomEntry | null => {
+  const e = customEntry(draft.class_custom)
+  return e && cleanName(e.name) ? e : null
+}
+
+/** The class pick's state, shared by an official class pick and a custom class's pick so they cannot drift. */
+function classPickState(draft: Draft): Record<string, unknown> {
+  const choices = Object.fromEntries(Object.entries(classChoices(draft))
+    .map(([k, v]) => [k, v.map((s) => s.trim()).filter((s) => s.length > 0)] as const)
+    .filter(([, v]) => v.length > 0))
+  return { skills: validClassSkills(draft), ...(Object.keys(choices).length > 0 ? { choices } : {}) }
+}
+
 /** True when all six abilities hold a finite number (any value, not just the standard array). */
 export function abilitiesFilled(draft: Draft): boolean {
   return ABILITY_KEYS.every((k) => typeof draft[k] === 'number' && Number.isFinite(draft[k]))
@@ -124,6 +150,11 @@ export function abilitiesFilled(draft: Draft): boolean {
 /**
  * Draft keys:
  * - class_id, class_name, hit_die (cached from the class pick), subclass_id, level
+ * - class_custom, species_custom, background_custom: a pending "make your own" `CustomEntry` (or null),
+ *   turned into a content row at Create time. Each excludes its official id (class_id / species_id /
+ *   background_id): setting one nulls the other. A custom class fills the class cache (class_name, hit_die,
+ *   class_skill_count, class_skill_options, …) from `cachedClassFields` and never has a subclass; a custom
+ *   background has no ability options (bg_abilities []) and grants the skills in its extras (bg_skills)
  * - species_id, background_id, bg_abilities (the background's eligible abilities, cached on pick),
  *   bg_skills (its granted skills, kebab-case, cached on pick)
  * - class_skill_count, class_skill_options (the class's skill picks, cached on the class pick) and
@@ -148,6 +179,9 @@ export function initialDraft(): Draft {
     level: 1,
     species_id: null,
     background_id: null,
+    class_custom: null,
+    species_custom: null,
+    background_custom: null,
     bg_abilities: [],
     bg_skills: [],
     class_skill_count: 0,
@@ -180,6 +214,11 @@ export function initialDraft(): Draft {
 
 /**
  * Merges `changed` into `draft`, then keeps dependent choices valid:
+ * - an official id and its custom entry exclude each other (the one the patch sets non-null wins);
+ * - setting a custom class fills the class cache from it (keys the patch sets are kept) and a custom class
+ *   has no subclass; any change of class_custom (set, edit, clear) is a class change;
+ * - a change of background_custom is a background change; a custom background takes bg_skills from its
+ *   extras unless the patch sets them;
  * - a background change clears the bonuses (and its cached ability list) unless the patch sets them;
  * - a class change resets the subclass, clears the class skill picks (unless the patch carries the new
  *   class's skill list) and drops spells off the new class list;
@@ -190,13 +229,28 @@ export function initialDraft(): Draft {
  */
 export function pruneDraft(draft: Draft, changed: Partial<Draft>): Draft {
   const next: Draft = { ...draft, ...changed }
-  if ('background_id' in changed && changed.background_id !== draft.background_id) {
+  for (const kind of CUSTOM_KINDS) {
+    const idKey = `${kind}_id`
+    const customKey = `${kind}_custom`
+    if (changed[customKey] != null) next[idKey] = null
+    else if (changed[idKey] != null) next[customKey] = null
+  }
+  // undefined (a draft from before the key existed) and null both mean "unset".
+  const moved = (key: string) => (next[key] ?? null) !== (draft[key] ?? null)
+  const classEntry = customEntry(next.class_custom)
+  if (changed.class_custom != null && classEntry) {
+    for (const [k, v] of Object.entries(cachedClassFields(classEntry))) if (!(k in changed)) next[k] = v
+  }
+  if (moved('background_id') || moved('background_custom')) {
+    const bgEntry = customEntry(next.background_custom)
     if (!('bg_bonus_two' in changed)) next.bg_bonus_two = null
     if (!('bg_bonus_one' in changed)) next.bg_bonus_one = null
     if (!('bg_abilities' in changed)) next.bg_abilities = []
-    if (!('bg_skills' in changed)) next.bg_skills = []
+    if (!('bg_skills' in changed)) {
+      next.bg_skills = bgEntry ? (customData('background', bgEntry.extras, false) as { skill_proficiencies: string[] }).skill_proficiencies : []
+    }
   }
-  const classChanged = 'class_id' in changed && changed.class_id !== draft.class_id
+  const classChanged = moved('class_id') || moved('class_custom')
   const levelChanged = 'level' in changed && changed.level !== draft.level
   if (classChanged) {
     const cls = str(next.class_name).toLowerCase()
@@ -215,21 +269,41 @@ export function pruneDraft(draft: Draft, changed: Partial<Draft>): Draft {
   }
   else next.class_skills = validClassSkills(next)
   if (classChanged || levelChanged || 'class_choices' in changed) next.spell_ids = fitSpells(next)
+  if (classEntry) next.subclass_id = null
   return next
 }
 
-/** A character can be created once it has a class and a name; everything else is optional. */
+/** A character can be created once it has a class (official, or custom with a name) and a name; everything else is optional. */
 export function canCreate(draft: Draft): boolean {
-  return typeof draft.class_id === 'string' && draft.class_id !== '' && str(draft.name).trim().length > 0
+  const hasClass = (typeof draft.class_id === 'string' && draft.class_id !== '') || namedCustomClass(draft) !== null
+  return hasClass && str(draft.name).trim().length > 0
+}
+
+/** One `custom` entry per named `*_custom` in the draft; the class's pick state matches an official class pick's. */
+function customContent(draft: Draft): NewCustomContent[] {
+  return CUSTOM_KINDS.flatMap((kind) => {
+    const e = customEntry(draft[`${kind}_custom`])
+    const name = e ? cleanName(e.name) : ''
+    if (!e || !name) return []
+    return [{
+      kind,
+      name,
+      description: e.description.trim(),
+      data: customData(kind, e.extras, !e.library),
+      library: e.library,
+      pick: { state: kind === 'class' ? classPickState(draft) : {}, acquired_at_level: 1 },
+    }]
+  })
 }
 
 export function toCharacter(draft: Draft): NewCharacter {
   const level = levelOf(draft)
   const stats = Object.fromEntries(ABILITY_KEYS.map((k) => [k, Math.min(20, num(draft[k], 10) + bonusFor(draft, k))]))
-  const hpMax = Math.max(1, getMaxHP(level, num(draft.hit_die, 8), getAbilityModifier(stats.constitution)))
-  const choices = Object.fromEntries(Object.entries(classChoices(draft))
-    .map(([k, v]) => [k, v.map((s) => s.trim()).filter((s) => s.length > 0)] as const)
-    .filter(([, v]) => v.length > 0))
+  // The wizard caches hit_die from the class (custom ones too); without it a custom class falls back to its own.
+  const customClass = customEntry(draft.class_custom)
+  const hitDieFallback = customClass ? cachedClassFields(customClass).hit_die : 8
+  const hpMax = Math.max(1, getMaxHP(level, num(draft.hit_die, hitDieFallback), getAbilityModifier(stats.constitution)))
+  const custom = customContent(draft)
   const pick = (kind: string, id: unknown, acquired_at_level: number) =>
     typeof id === 'string' && id ? [{ content_id: id, kind, state: {}, acquired_at_level }] : []
 
@@ -260,12 +334,13 @@ export function toCharacter(draft: Draft): NewCharacter {
     items: Array.isArray(draft.equipment_items) ? (draft.equipment_items as NewCharacter['items']) : [],
     picks: [
       ...(typeof draft.class_id === 'string' && draft.class_id
-        ? [{ content_id: draft.class_id, kind: 'class', state: { skills: validClassSkills(draft), ...(Object.keys(choices).length > 0 ? { choices } : {}) }, acquired_at_level: 1 }]
+        ? [{ content_id: draft.class_id, kind: 'class', state: classPickState(draft), acquired_at_level: 1 }]
         : []),
-      ...pick('subclass', draft.subclass_id, level),
+      ...(customClass ? [] : pick('subclass', draft.subclass_id, level)),
       ...pick('species', draft.species_id, 1),
       ...pick('background', draft.background_id, 1),
       ...strList(draft.spell_ids).map((id) => ({ content_id: id, kind: 'spell', state: { prepared: false }, acquired_at_level: level })),
     ],
+    ...(custom.length > 0 ? { custom } : {}),
   }
 }

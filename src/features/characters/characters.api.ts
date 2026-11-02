@@ -93,7 +93,9 @@ export async function getCharacter(id: string): Promise<CharacterFull> {
 }
 
 export async function createCharacter(input: NewCharacter): Promise<string> {
-  const { picks, items = [], ...fields } = input
+  // `custom` is not a characters column; keep it out of the row insert.
+  // TODO(custom content): create these content rows and pick them.
+  const { picks, items = [], custom: _custom, ...fields } = input
   const owner_id = await currentUserId()
   const { id } = unwrap(
     await supabase
