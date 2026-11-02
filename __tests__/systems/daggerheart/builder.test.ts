@@ -5,8 +5,8 @@ import { daggerheartDetailsSchema, daggerheartResourcesSchema, daggerheartStatsS
 
 const dh = getSystem('daggerheart')
 
-test('Daggerheart is offered by the system picker with its seven steps', () => {
-  expect(visibleSystems().map((s) => s.id)).toEqual(['dnd5e-2024', 'daggerheart'])
+test('Daggerheart has its seven steps (still hidden from pickers)', () => {
+  expect(visibleSystems().map((s) => s.id)).toEqual(['dnd5e-2024'])
   expect(dh.builder.steps.map((s) => s.id)).toEqual(['heritage', 'class', 'traits', 'domain-cards', 'vitals', 'details', 'review'])
 })
 

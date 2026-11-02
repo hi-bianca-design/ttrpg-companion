@@ -16,6 +16,8 @@ const contentKinds: Record<string, ContentKindDef> = Object.fromEntries(
 export const daggerheart: GameSystem = {
   id: 'daggerheart',
   name: 'Daggerheart',
+  // Hidden until the character sheet supports Daggerheart's slot-based resources (HP/Stress/Armor) and shows the class from details.
+  hidden: true,
   stats: DH_STATS,
   resources: DH_RESOURCES,
   conditions: [],
