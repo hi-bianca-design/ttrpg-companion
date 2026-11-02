@@ -3,6 +3,7 @@
 // import it without a builder ↔ steps require cycle.
 import type { Draft, NewCharacter } from '../types'
 import { ABILITY_KEYS, STANDARD_ARRAY } from './definition'
+import { featureResources } from './features'
 import { getAbilityModifier, getMaxHP, getMaxSpellLevel, getSpellLimits, slotsFor } from './rules'
 
 export const str = (v: unknown): string => (typeof v === 'string' ? v : '')
@@ -212,6 +213,7 @@ export function toCharacter(draft: Draft): NewCharacter {
       hp: { current: hpMax, max: hpMax },
       spell_slots: slotsFor(str(draft.class_name), level),
       hit_dice: { current: level, max: level },
+      ...featureResources(str(draft.class_name), level, stats),
       death_saves_success: { tiers: { '1': { max: 3, used: 0 } } },
       death_saves_failure: { tiers: { '1': { max: 3, used: 0 } } },
     },

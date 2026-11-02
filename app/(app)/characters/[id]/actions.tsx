@@ -13,6 +13,7 @@ import { toRuleInput } from '@/features/characters/picks'
 import { ActionsList, lowestBlockedLevel, lowestTier, type Segment } from '@/features/characters/sheet/ActionsList'
 import { ConditionChips } from '@/features/characters/sheet/ConditionChips'
 import { EmptyPoolTrackers } from '@/features/characters/sheet/EmptyPoolTrackers'
+import { FeatureTrackers } from '@/features/characters/sheet/FeatureTrackers'
 import { HpSheet } from '@/features/characters/sheet/HpSheet'
 import { RestButtons } from '@/features/characters/sheet/RestButtons'
 import { restSummary } from '@/features/characters/sheet/restSummary'
@@ -121,6 +122,7 @@ export default function ActionsTab() {
             />
           ))}
           <EmptyPoolTrackers defs={system.resources} resources={character.resources} onChangeResource={change} />
+          <FeatureTrackers defs={system.resources} resources={character.resources} onChangeResource={change} />
           <ConditionChips conditions={character.conditions} />
         </View>
       ) : null}
