@@ -102,8 +102,19 @@ test('every content kind on the system has a schema', () => {
   )
   expect(sys.contentKinds.spell.schema).toBe(dnd5eContentSchemas.spell)
   expect(sys.contentKinds.subclass.parentKind).toBe('class')
-  expect(sys.contentKinds.class.homebrew).toBe(false)
-  expect(Object.values(sys.contentKinds).filter((k) => k.kind !== 'class').every((k) => k.homebrew)).toBe(true)
+  expect(sys.contentKinds.class.homebrew).toBe(true)
+  expect(Object.values(sys.contentKinds).every((k) => k.homebrew)).toBe(true)
+})
+
+test('class, species and background data keep an optional one_off flag', () => {
+  const cls = { hit_die: 8, primary_abilities: [], saving_throw_proficiencies: [] }
+  const species = { speed: 30, size: 'Medium', creature_type: 'Humanoid' }
+  const bg = { skill_proficiencies: [] }
+  for (const [kind, base] of [['class', cls], ['species', species], ['background', bg]] as const) {
+    const schema = dnd5eContentSchemas[kind]
+    expect((schema.parse({ ...base, one_off: true }) as { one_off?: boolean }).one_off).toBe(true)
+    expect(schema.safeParse(base).success).toBe(true)
+  }
 })
 
 test('details alignment uses SRD 5.2 naming ("Neutral", not "True Neutral")', () => {

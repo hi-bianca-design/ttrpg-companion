@@ -43,6 +43,7 @@ const levelFeatures = z.record(z.string(), z.array(z.string()))
 const looseRecord = z.record(z.string(), z.unknown())
 
 const classData = z.object({
+  one_off: z.boolean().optional(),
   hit_die: int.positive(),
   primary_abilities: z.array(z.string()),
   saving_throw_proficiencies: z.array(z.string()),
@@ -65,6 +66,7 @@ const subclassData = z.object({
 })
 
 const speciesData = z.object({
+  one_off: z.boolean().optional(),
   speed: nonNegInt,
   size: z.string(),
   creature_type: z.string(),
@@ -76,6 +78,7 @@ const speciesData = z.object({
 })
 
 const backgroundData = z.object({
+  one_off: z.boolean().optional(),
   skill_proficiencies: z.array(z.string()),
   ability_score_options: z.looseObject({ abilities: z.array(z.string()).optional() }).default({}),
   origin_feat: z.string().nullable().optional(),

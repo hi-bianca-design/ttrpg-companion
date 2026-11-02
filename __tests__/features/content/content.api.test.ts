@@ -60,6 +60,16 @@ describe('saveHomebrew', () => {
     }))
   })
 
+  it('uses the slug override verbatim instead of slugifying the name', async () => {
+    const b = builder({ data: { id: 'c1' }, error: null })
+    ;(supabase.from as jest.Mock).mockReturnValue(b)
+    await saveHomebrew({
+      systemId: 'dnd5e-2024', kind: 'class', name: 'My Class', slug: 'my-class-ab12',
+      data: { hit_die: 8, primary_abilities: [], saving_throw_proficiencies: [], one_off: true },
+    })
+    expect(b.insert).toHaveBeenCalledWith(expect.objectContaining({ slug: 'my-class-ab12' }))
+  })
+
   it('updates by id when one is given', async () => {
     const b = builder({ data: { id: 'c1' }, error: null })
     ;(supabase.from as jest.Mock).mockReturnValue(b)
@@ -89,6 +99,16 @@ describe('listContent', () => {
     await listContent({ systemId: 'dnd5e-2024', kind: 'spell', scope: 'mine' })
     expect(b.eq).toHaveBeenCalledWith('owner_id', 'u1')
     expect(b.is).toHaveBeenCalledWith('campaign_id', null)
+    expect(b.or).toHaveBeenCalledWith('data->>one_off.is.null,data->>one_off.neq.true')
+  })
+
+  it('official and campaign scopes do not hide one-off rows', async () => {
+    for (const scope of ['official', { campaignId: 'camp' }] as const) {
+      const b = builder({ data: [], error: null })
+      ;(supabase.from as jest.Mock).mockReturnValue(b)
+      await listContent({ systemId: 'dnd5e-2024', kind: 'class', scope })
+      expect(b.or).not.toHaveBeenCalled()
+    }
   })
 
   it('filters by campaign and escapes search wildcards', async () => {
@@ -106,6 +126,7 @@ describe('listContent', () => {
     await listContent({ systemId: 'dnd5e-2024', kind: 'spell', scope: 'pickable' })
     expect(campaigns.select).toHaveBeenCalledWith('id')
     expect(content.or).toHaveBeenCalledWith('owner_id.is.null,owner_id.eq.u1,campaign_id.in.(camp1,camp2)')
+    expect(content.or).toHaveBeenCalledWith('data->>one_off.is.null,data->>one_off.neq.true')
   })
 
   it('pickable without campaigns is official plus mine only (no sheet-visible homebrew of others)', async () => {

@@ -113,7 +113,7 @@ export type ContentKindMeta = Omit<ContentKindDef, 'schema'>
  */
 export const DND_CONTENT_KIND_META: Record<string, ContentKindMeta> = {
   class: {
-    kind: 'class', label: 'Class', plural: 'Classes', homebrew: false, isItem: false,
+    kind: 'class', label: 'Class', plural: 'Classes', homebrew: true, isItem: false,
     fields: [
       { key: 'hit_die', label: 'Hit die', type: 'select', options: ['6', '8', '10', '12'], required: true },
       { key: 'primary_abilities', label: 'Primary abilities', type: 'multiselect', options: [...ABILITY_KEYS], required: true },
