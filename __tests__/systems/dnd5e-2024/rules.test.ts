@@ -360,6 +360,28 @@ describe('pruneDraft keeps chosen spells within the level and limits', () => {
   })
 })
 
+describe('canCreate', () => {
+  const base = () => ({ ...dnd5eBuilder.initialDraft() })
+  test('needs a class and a non-blank name', () => {
+    expect(dnd5eBuilder.canCreate(base())).toBe(false)
+    expect(dnd5eBuilder.canCreate({ ...base(), class_id: 'x' })).toBe(false)
+    expect(dnd5eBuilder.canCreate({ ...base(), class_id: 'x', name: ' ' })).toBe(false)
+    expect(dnd5eBuilder.canCreate({ ...base(), class_id: 'x', name: 'Mira' })).toBe(true)
+  })
+  test('daggerheart stub never allows creation yet', () => {
+    expect(getSystem('daggerheart').builder.canCreate({ class_id: 'x', name: 'Mira' })).toBe(false)
+  })
+})
+
+test('toCharacter works for a draft with only a class and a name', () => {
+  const c = dnd5eBuilder.toCharacter({ ...dnd5eBuilder.initialDraft(), class_id: 'ftr', class_name: 'Fighter', hit_die: 10, name: 'Mira' })
+  expect(c.stats).toEqual({ strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 })
+  expect(c.resources.hp).toEqual({ current: 10, max: 10 })
+  expect(Object.keys((c.resources.spell_slots as SlotsValue).tiers)).toEqual([])
+  expect(c.items).toEqual([])
+  expect(c.picks).toEqual([{ content_id: 'ftr', kind: 'class', state: { skills: [] }, acquired_at_level: 1 }])
+})
+
 test('toCharacter treats unassigned abilities as 10', () => {
   expect(dnd5eBuilder.toCharacter(dnd5eBuilder.initialDraft()).stats).toMatchObject({ strength: 10, charisma: 10 })
 })

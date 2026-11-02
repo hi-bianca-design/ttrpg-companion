@@ -25,6 +25,7 @@ export const daggerheart: GameSystem = {
     steps: [],
     initialDraft: () => ({}),
     pruneDraft: (draft, changed) => ({ ...draft, ...changed }),
+    canCreate: () => false, // until the Daggerheart builder lands
     toCharacter: () => {
       throw new Error('Daggerheart character builder is not implemented')
     },

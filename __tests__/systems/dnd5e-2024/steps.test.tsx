@@ -101,30 +101,42 @@ describe('WizardProgress', () => {
 describe('Review step', () => {
   beforeEach(() => { mockParams.step = 'review' })
 
-  test('"Create character" is disabled until every step is complete', async () => {
+  test('"Create character" is disabled until the draft has a class and a name', async () => {
     renderWithQuery(<BuilderStepScreen />)
     await waitFor(() => expect(mockList).toHaveBeenCalledTimes(4))
     const create = await screen.findByRole('button', { name: 'Create character' })
     expect(create).toBeDisabled()
+    expect(screen.getByText('Choose a class and add a name to create your character.')).toBeTruthy()
 
-    act(() => useBuilderStore.getState().update({ ...completeWizard, name: '' }))
+    act(() => useBuilderStore.getState().update({ class_id: 'wiz', class_name: 'Wizard', hit_die: 6 }))
     expect(screen.getByRole('button', { name: 'Create character' })).toBeDisabled()
 
     act(() => useBuilderStore.getState().update({ name: 'Mira' }))
     expect(screen.getByRole('button', { name: 'Create character' })).toBeEnabled()
+    expect(screen.queryByText('Choose a class and add a name to create your character.')).toBeNull()
     await act(async () => {})
   })
 
-  test('lists incomplete steps in the checklist', async () => {
+  test('lists steps that are not filled in as skipped in the checklist', async () => {
     act(() => useBuilderStore.getState().update({ ...completeWizard, name: '' }))
     renderWithQuery(<BuilderStepScreen />)
-    expect(await screen.findByRole('button', { name: 'Details, incomplete' })).toBeTruthy()
-    expect(screen.queryByRole('button', { name: 'Class, incomplete' })).toBeNull()
+    expect(await screen.findByRole('button', { name: 'Details, not filled in' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Class, not filled in' })).toBeNull()
+    expect(screen.getAllByText('Skipped').length).toBeGreaterThan(0)
     await act(async () => {})
   })
 })
 
 describe('Class step', () => {
+  test('Continue is enabled with nothing chosen', async () => {
+    mockParams.step = 'class'
+    renderWithQuery(<BuilderStepScreen />)
+    const next = await screen.findByRole('button', { name: 'Continue' })
+    expect(next.props.accessibilityState?.disabled).toBeFalsy()
+    mockParams.step = 'review'
+    await act(async () => {})
+  })
+
   test('selecting a class patches class_name and hit_die together with class_id', async () => {
     renderWithQuery(<Bound Step={ClassStep} />)
     fireEvent.press(await screen.findByRole('button', { name: /^Wizard/ }))

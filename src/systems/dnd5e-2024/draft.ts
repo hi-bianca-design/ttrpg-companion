@@ -197,6 +197,11 @@ export function pruneDraft(draft: Draft, changed: Partial<Draft>): Draft {
   return next
 }
 
+/** A character can be created once it has a class and a name; everything else is optional. */
+export function canCreate(draft: Draft): boolean {
+  return typeof draft.class_id === 'string' && draft.class_id !== '' && str(draft.name).trim().length > 0
+}
+
 export function toCharacter(draft: Draft): NewCharacter {
   const level = levelOf(draft)
   const stats = Object.fromEntries(ABILITY_KEYS.map((k) => [k, Math.min(20, num(draft[k], 10) + bonusFor(draft, k))]))

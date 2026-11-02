@@ -18,7 +18,7 @@ import type { BuilderStepDef, Draft } from '@/systems/types'
 
 const stepHref = (id: string) => `/(app)/characters/new/${id}` as const
 
-/** "Ready to create" checklist; each incomplete step is a button that jumps back to it. */
+/** "Ready to create" checklist; each step not filled in is a button that jumps back to it. */
 function Checklist({ steps, draft, onJump }: { steps: BuilderStepDef[]; draft: Draft; onJump: (id: string) => void }) {
   const colors = THEME_COLORS
   return (
@@ -33,14 +33,14 @@ function Checklist({ steps, draft, onJump }: { steps: BuilderStepDef[]; draft: D
                 ? <CheckCircle size={20} weight="fill" color={colors.primary} />
                 : <CircleIcon size={20} color={colors.mutedForeground} />}
               <Text variant="body" tone={done ? 'default' : 'muted'} className="flex-1">{s.title}</Text>
-              {done ? null : <Text variant="label" tone="accent">Finish</Text>}
+              {done ? null : <Text variant="label" tone="accent">Skipped</Text>}
               {done ? null : <CaretRight size={16} color={colors.accentForeground} />}
             </View>
           )
           return done ? (
             <View key={s.id}>{row}</View>
           ) : (
-            <Pressable key={s.id} role="button" accessibilityLabel={`${s.title}, incomplete`} onPress={() => onJump(s.id)}>
+            <Pressable key={s.id} role="button" accessibilityLabel={`${s.title}, not filled in`} onPress={() => onJump(s.id)}>
               {row}
             </Pressable>
           )
@@ -76,7 +76,7 @@ export default function BuilderStepScreen() {
   const isLast = index === steps.length - 1
   const Step = current.component
   const before = steps.slice(0, -1)
-  const allComplete = steps.every((s) => s.isComplete(draft))
+  const canCreate = system.builder.canCreate(draft)
 
   async function handleCreate() {
     setError(null)
@@ -125,11 +125,12 @@ export default function BuilderStepScreen() {
 
         <StickyFooter className="-mx-4 -mb-8 -mt-6 gap-2">
           {error ? <Text variant="caption" tone="destructive">{error}</Text> : null}
+          {isLast && !canCreate ? <Text variant="caption" tone="muted">Choose a class and add a name to create your character.</Text> : null}
           {isLast ? (
             <Button
               variant="secondary"
               accessibilityLabel="Create character"
-              disabled={!allComplete || create.isPending}
+              disabled={!canCreate || create.isPending}
               onPress={handleCreate}
             >
               <Text>{create.isPending ? 'Creating…' : 'Create character'}</Text>
@@ -137,7 +138,6 @@ export default function BuilderStepScreen() {
           ) : (
             <Button
               accessibilityLabel="Continue"
-              disabled={!current.isComplete(draft)}
               onPress={() => router.push(stepHref(steps[index + 1].id))}
             >
               <Text>Continue</Text>

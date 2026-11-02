@@ -86,6 +86,7 @@ export type BuilderStepDef = {
   id: string
   title: string
   component: React.ComponentType<BuilderStepProps>
+  /** "Filled in" status only (checklist ticks); it never blocks Continue or Create. */
   isComplete(draft: Draft): boolean
   skip?(draft: Draft): boolean
 }
@@ -123,6 +124,8 @@ export interface GameSystem {
     initialDraft(): Draft
     pruneDraft(draft: Draft, changed: Partial<Draft>): Draft
     toCharacter(draft: Draft): NewCharacter
+    /** The only gate on creating a character. */
+    canCreate(draft: Draft): boolean
   }
   rules: {
     derived(c: CharacterRecord, picks: PickRecord[]): DerivedValue[]
