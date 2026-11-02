@@ -73,7 +73,10 @@
   </div>
 </div>
 <script>
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // The app will swap instantly when the OS asks for reduced motion. The mock always plays, so you can judge the motion.
+  const osReducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduced = false;
+  if (osReducedMotion) document.querySelector('p.sub').insertAdjacentHTML('afterend', '<p class="sub" style="color:#E3B130">Your system has Reduce Motion on. The app will respect that with an instant swap; this mock plays the animations anyway.</p>');
   const W = 260, DURATION = 760;
   let busy = false;
 
