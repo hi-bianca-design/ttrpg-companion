@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 const buttonVariants = cva('', {
   variants: {
     variant: { primary: '', secondary: '', outline: '', ghost: 'rounded-sm active:bg-muted', destructive: '' },
-    size: { default: 'h-11', sm: 'h-8', icon: 'h-8 w-8' },
+    size: { default: 'min-h-11', sm: 'min-h-8', icon: 'h-8 w-8' },
   },
   defaultVariants: { variant: 'primary', size: 'default' },
 })
@@ -56,7 +56,8 @@ function Button({ className, variant, size, disabled, hitSlop, lit, stroke, onPr
   const s = size ?? 'default'
   const sunk = pressed && !disabled
   const plate = v === 'ghost' ? null : PLATES[v]
-  const padding = s === 'icon' ? '' : s === 'sm' ? 'px-4' : 'px-6'
+  // The plate grows with a wrapped label (wide Cinzel at large font scales) instead of overflowing a fixed height.
+  const plateSize = s === 'icon' ? 'h-8 w-8' : s === 'sm' ? 'min-h-8 px-4 py-1' : 'min-h-11 px-6 py-2'
 
   return (
     <TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
@@ -83,7 +84,7 @@ function Button({ className, variant, size, disabled, hitSlop, lit, stroke, onPr
             stroke={stroke ?? plate.stroke}
             shadowOffset={sunk ? SHADOW - SINK : SHADOW}
             glow={lit && !disabled ? 'torch' : undefined}
-            className={cn('flex-1 flex-row items-center justify-center gap-2', padding)}
+            className={cn('flex-row items-center justify-center gap-2', plateSize)}
           >
             {children as React.ReactNode}
           </ShapedSurface>

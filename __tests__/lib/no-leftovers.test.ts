@@ -24,3 +24,10 @@ test.each([
   const hits = screens.filter((f) => pattern.test(fs.readFileSync(f, 'utf8'))).map((f) => path.relative(root, f))
   expect(hits).toEqual([])
 })
+
+// Card and Input draw their edge and fill in SVG; border-*/bg-* classes passed to them are silently ignored.
+test('no screen passes border-* or bg-* classes to Card or Input', () => {
+  const pattern = /<(?:Card|Input)\b[^>]*?\bclassName=(?:"[^"]*|\{[^}]*)\b(?:border|bg)-/
+  const hits = screens.filter((f) => pattern.test(fs.readFileSync(f, 'utf8'))).map((f) => path.relative(root, f))
+  expect(hits).toEqual([])
+})

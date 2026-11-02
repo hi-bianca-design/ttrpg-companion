@@ -13,8 +13,8 @@ type CardProps = ViewProps & {
   compact?: boolean
   /** flat: chamfered rock plate (lists, tiles). hero: gold-edged lancet arch lit from below (scenes, content detail). */
   variant?: 'flat' | 'hero'
-  /** destructive redraws the edge (e.g. HP at 0). */
-  tone?: 'default' | 'destructive'
+  /** destructive redraws the edge (e.g. HP at 0). selected: gold edge with torch glow (chosen option). */
+  tone?: 'default' | 'destructive' | 'selected'
 }
 
 function Card({ className, compact, variant = 'flat', tone = 'default', style, ...props }: CardProps) {
@@ -24,8 +24,9 @@ function Card({ className, compact, variant = 'flat', tone = 'default', style, .
     <ShapedSurface
       shape={hero ? 'arch' : 'chamfer'}
       fill="card"
-      stroke={tone === 'destructive' ? 'destructive' : hero ? 'primary' : 'border'}
-      strokeWidth={hero || tone === 'destructive' ? 2 : 1}
+      stroke={tone === 'destructive' ? 'destructive' : tone === 'selected' || hero ? 'primary' : 'border'}
+      strokeWidth={hero || tone !== 'default' ? 2 : 1}
+      glow={tone === 'selected' ? 'torch' : undefined}
       light={hero ? 'torch' : undefined}
       className={plate}
     >

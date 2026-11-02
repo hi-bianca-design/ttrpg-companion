@@ -36,3 +36,10 @@ test('the five resource tints are mutually distinguishable', () => {
     for (const b of TINTS.slice(i + 1)) expect([a, b, colorDistance(C[a], C[b]) >= 40]).toEqual([a, b, true])
   }
 })
+
+// Review fix I3: subtitles, labels, gold numbers and inline errors also sit over the top bands.
+test.each(['sky1', 'sky2', 'sky3', 'sky4', 'sky5', 'sky6'])('muted, label, accent, gold and error text hold 4.5:1 on %s', (band) => {
+  for (const fg of ['mutedForeground', 'labelForeground', 'accentForeground', 'highlightText', 'destructive']) {
+    expect([fg, ratio(fg, band) >= 4.5]).toEqual([fg, true])
+  }
+})

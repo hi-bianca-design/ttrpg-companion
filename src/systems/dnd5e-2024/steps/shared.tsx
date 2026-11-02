@@ -92,7 +92,7 @@ type ChoiceCardProps = {
   children?: ReactNode
 }
 
-/** A selectable card: border-primary and a check when selected; dimmed and inert when disabled. */
+/** A selectable card: a gold edge and a check when selected; dimmed and inert when disabled. */
 export function ChoiceCard({ title, selected, disabled = false, onPress, accessibilityLabel, aside, children }: ChoiceCardProps) {
   const colors = useThemeColors()
   return (
@@ -103,7 +103,7 @@ export function ChoiceCard({ title, selected, disabled = false, onPress, accessi
       disabled={disabled}
       onPress={onPress}
     >
-      <Card compact className={cn('gap-2', selected && 'border-primary', disabled && 'opacity-50')}>
+      <Card compact tone={selected ? 'selected' : 'default'} className={cn('gap-2', disabled && 'opacity-50')}>
         <View className="flex-row items-center gap-2">
           <Text variant="subhead" className="flex-shrink">{title}</Text>
           {aside}

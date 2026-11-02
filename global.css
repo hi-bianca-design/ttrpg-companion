@@ -12,21 +12,21 @@
     --card: #12212C;
     --card-foreground: #E6D9B6;
     --muted: rgba(166, 216, 204, 0.08);
-    --muted-foreground: #9FB8B0;
-    --label-foreground: #9BD3C4;
+    --muted-foreground: #C2D6CE;
+    --label-foreground: #B0E0D2;
     --border: rgba(166, 216, 204, 0.28);
     --rule: rgba(227, 177, 48, 0.45);
     --input: #08141A;
     --ring: #F0902F;
     --primary: #E3B130;
     --primary-foreground: #241602;
-    --accent-foreground: #9BD3C4;
+    --accent-foreground: #B0E0D2;
     --secondary: #9BD3C4;
     --secondary-foreground: #06211F;
     /* highlight-text: gold for stat numbers and ochre text */
-    --highlight-text: #E3B130;
+    --highlight-text: #F5D170;
     /* destructive: text/border tone. blood + blood-fill are the destructive button's edge and fill. */
-    --destructive: #E8806A;
+    --destructive: #F7B3A2;
     --destructive-foreground: #F0B9A8;
     --blood: #B8321F;
     --blood-fill: #3A110C;
@@ -39,11 +39,11 @@
     --placeholder: #6B8F8A;
     --typed: #FFE08A;
     /* posterized sky bands, top to bottom; every one holds 4.5:1 with foreground text */
-    --sky-1: #1D6560;
-    --sky-2: #1B5D59;
-    --sky-3: #175350;
-    --sky-4: #134744;
-    --sky-5: #0F3A3A;
+    --sky-1: #185653;
+    --sky-2: #164F4C;
+    --sky-3: #134744;
+    --sky-4: #10403E;
+    --sky-5: #0E3737;
     --sky-6: #0C2D2F;
     --resource-sky: #BFE0F2;
     --resource-sky-glow: rgba(157, 196, 222, 0.7);

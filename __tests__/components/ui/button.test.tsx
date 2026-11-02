@@ -124,3 +124,19 @@ test('a ghost text button reads as a link: mint and underlined', () => {
   expect(cls).toContain('underline')
   expect(cls).toContain('text-accent-foreground')
 })
+
+// Review fix I2: wide Cinzel labels wrap at large font scales, so the plate must be able to grow.
+test('the plate grows with a wrapped label: min height, not a fixed one', () => {
+  render(
+    <>
+      <Button testID="a"><Text>Create character</Text></Button>
+      <Button size="sm" testID="b"><Text>Cancel</Text></Button>
+    </>,
+  )
+  expect(screen.getByTestId('a').props.className).toContain('min-h-11')
+  expect(screen.getByTestId('a').props.className).not.toMatch(/(^|\s)h-11/)
+  expect(screen.getByTestId('b').props.className).toContain('min-h-8')
+  const plates = screen.UNSAFE_getAllByType(ShapedSurface).map((p) => p.props.className as string)
+  expect(plates[0]).toContain('min-h-11')
+  expect(plates[0]).not.toContain('flex-1')
+})

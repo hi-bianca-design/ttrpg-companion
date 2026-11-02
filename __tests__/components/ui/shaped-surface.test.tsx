@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import { Text } from 'react-native'
-import { Path, RadialGradient } from 'react-native-svg'
+import { StyleSheet } from 'react-native'
+import Svg, { G, Path, RadialGradient } from 'react-native-svg'
 import { ShapedSurface } from '@/components/ui/shaped-surface'
 import { shapePath } from '@/lib/shape-path'
 import { THEME_COLORS } from '@/lib/theme'
@@ -85,4 +86,28 @@ test('rise sets the arch height', () => {
   render(<ShapedSurface testID="s" shape="arch" rise={24} fill="rock" stroke="primary"><Text>x</Text></ShapedSurface>)
   layout('s', 300, 200)
   expect(fillPath('rock')?.props.d).toBe(shapePath('arch', 300, 200, { inset: 1, rise: 24 }))
+})
+
+// Review fix C2: iOS clips an SVG to its frame, so the hard shadow and glow need room past the box.
+test('the SVG extends past the measured box so the hard shadow and glow are not clipped', () => {
+  render(<ShapedSurface testID="s" glow="torch" fill="rock" stroke="primary"><Text>x</Text></ShapedSurface>)
+  layout('s', 200, 44)
+  const svg = screen.UNSAFE_getByType(Svg).props
+  expect(svg.width).toBe(200 + 2 * 8)
+  expect(svg.height).toBe(44 + 2 * 8)
+  expect(StyleSheet.flatten(svg.style)).toMatchObject({ top: -8, left: -8 })
+})
+
+test('the outline is drawn inset by the same padding, so its geometry is unchanged', () => {
+  render(<ShapedSurface testID="s" fill="rock" stroke="primary"><Text>x</Text></ShapedSurface>)
+  layout('s', 200, 44)
+  const group = screen.UNSAFE_getAllByType(G).find((g) => String(g.props.transform ?? '').includes('translate(8 8)'))
+  expect(group).toBeTruthy()
+})
+
+// Review fix C1: on web an unpositioned child (an icon's <svg>) paints under the absolute plate.
+test('the plate sits behind all content: SVG z-index -1 inside a root stacking context', () => {
+  render(<ShapedSurface testID="s" fill="rock" stroke="primary"><Text>x</Text></ShapedSurface>)
+  expect(StyleSheet.flatten(screen.UNSAFE_getByType(Svg).props.style).zIndex).toBe(-1)
+  expect(StyleSheet.flatten(screen.getByTestId('s').props.style).zIndex).toBe(0)
 })

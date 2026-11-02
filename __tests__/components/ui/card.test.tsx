@@ -53,3 +53,11 @@ test('flex-row is content layout, not plate placement', () => {
   expect(screen.getByTestId('c').props.className).toContain('flex-row')
   expect(surface().className ?? '').not.toContain('flex-row')
 })
+
+// Review fix I1: a selected choice card needs its gold edge back (border-* classes no longer reach a plate).
+test('selected tone draws a gold edge with torch glow', () => {
+  render(<Card tone="selected"><Text>x</Text></Card>)
+  expect(surface().stroke).toBe('primary')
+  expect(surface().strokeWidth).toBe(2)
+  expect(surface().glow).toBe('torch')
+})
