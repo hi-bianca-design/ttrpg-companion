@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Night Vigil transitions</title>
+<style>
+  :root { --bg:#0B1D20; --sky:#164F4C; --card:#12212C; --fg:#E6D9B6; --mint:#B0E0D2; --gold:#E3B130; --ink:#070F15; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:#1b1d1a; color:var(--fg); font-family: Inter, system-ui, sans-serif; padding:32px 16px; }
+  h1 { font:600 20px/1.2 Georgia, serif; text-align:center; margin:0 0 4px; letter-spacing:.04em; }
+  p.sub { text-align:center; margin:0 0 24px; color:#9fb3ab; font-size:14px; }
+  .row { display:flex; gap:32px; justify-content:center; flex-wrap:wrap; }
+  .col { display:flex; flex-direction:column; align-items:center; gap:12px; }
+  .col h2 { margin:0; font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--mint); font-weight:500; }
+  .phone { position:relative; width:260px; height:480px; border-radius:28px; overflow:hidden; background:var(--bg); border:1px solid rgba(166,216,204,.25); perspective:1100px; }
+  .screen { position:absolute; inset:0; padding:28px 18px; background:linear-gradient(var(--sky), var(--bg) 40%); }
+  .screen.b { background:linear-gradient(#1a4a3f, #0c2d2f 55%); }
+  .eyebrow { font:500 11px/1 ui-monospace, monospace; letter-spacing:.14em; color:var(--mint); text-transform:uppercase; }
+  .title { font:700 26px/1.1 Georgia, serif; margin:8px 0 14px; color:var(--fg); }
+  .plate { background:rgba(18,33,44,.8); border:1px solid rgba(166,216,204,.2); padding:12px; margin-bottom:10px; clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px); font-size:13px; color:#c9d6cf; }
+  .plate b { color:var(--fg); display:block; font-size:15px; margin-bottom:2px; }
+  .btn { position:absolute; left:18px; right:18px; bottom:20px; height:44px; background:var(--gold); color:#241602; text-align:center; line-height:44px; font:600 13px/44px Georgia, serif; letter-spacing:.18em; text-transform:uppercase; clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 14px 100%, 0 50%); cursor:pointer; }
+  button.go { background:none; color:var(--mint); border:1px solid rgba(166,216,204,.4); padding:10px 20px; font:500 12px Georgia, serif; letter-spacing:.16em; text-transform:uppercase; cursor:pointer; }
+  button.go:hover { background:rgba(166,216,204,.1); }
+
+  /* ---------- page turn ---------- */
+  .turn .front { transform-origin: left center; backface-visibility:hidden; z-index:2; }
+  .turn .shade { position:absolute; inset:0; z-index:3; pointer-events:none; opacity:0;
+    background:linear-gradient(90deg, rgba(0,0,0,.55), rgba(0,0,0,0) 45%); }
+  .turn .under { z-index:1; }
+  .turn.go .front { animation: peel 620ms cubic-bezier(.5,.05,.25,1) forwards; }
+  .turn.go .shade { animation: shade 620ms ease-in forwards; }
+  .turn.go .under { animation: under 620ms ease-out forwards; }
+  @keyframes peel { 0% { transform: rotateY(0); } 100% { transform: rotateY(-112deg); opacity:.2; } }
+  @keyframes shade { 0% { opacity:0; } 50% { opacity:1; } 100% { opacity:0; } }
+  @keyframes under { 0% { transform: scale(.97); filter:brightness(.6); } 100% { transform: scale(1); filter:none; } }
+
+  /* ---------- angled wipe ---------- */
+  .wipe .top { z-index:2; clip-path: polygon(-30% 0, -30% 0, -45% 100%, -45% 100%); }
+  .wipe .edge { position:absolute; inset:0; z-index:3; pointer-events:none; opacity:0;
+    background: linear-gradient(105deg, transparent calc(var(--x, -40%) - 2px), var(--gold) calc(var(--x, -40%) - 1px), var(--gold) var(--x, -40%), transparent calc(var(--x, -40%) + 1px)); }
+  .wipe.go .top { animation: wipe 420ms cubic-bezier(.65,0,.2,1) forwards; }
+  .wipe.go .edge { opacity:1; animation: edge 420ms cubic-bezier(.65,0,.2,1) forwards; }
+  @property --x { syntax:'<percentage>'; inherits:false; initial-value:-40%; }
+  @keyframes wipe {
+    0%   { clip-path: polygon(-40% 0, -40% 0, -70% 100%, -70% 100%); }
+    100% { clip-path: polygon(-40% 0, 140% 0, 110% 100%, -70% 100%); }
+  }
+  @keyframes edge { 0% { --x:-5%; opacity:1; } 90% { opacity:1; } 100% { --x:130%; opacity:0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .turn.go .front, .turn.go .shade, .turn.go .under, .wipe.go .top, .wipe.go .edge { animation-duration: 1ms; }
+  }
+</style>
+</head>
+<body>
+<h1>Choose a transition</h1>
+<p class="sub">Press the gold button or Replay. Both are under 650ms and fall back to an instant swap with reduced motion.</p>
+<div class="row">
+  <div class="col">
+    <h2>Page turn</h2>
+    <div class="phone turn" id="turn">
+      <div class="screen under b"><div class="eyebrow">Step 2 of 8 · Origin</div><div class="title">Determine origin</div><div class="plate"><b>Acolyte</b>Two skills, one tool, and a gift of faith.</div><div class="plate"><b>Criminal</b>Stealth, a thieves’ tool, and a contact.</div></div>
+      <div class="screen front"><div class="eyebrow">Step 1 of 8 · Class</div><div class="title">Choose a class</div><div class="plate"><b>Druid</b>Wild shape and nature magic.</div><div class="plate"><b>Fighter</b>Weapons, armour and grit.</div><div class="btn" onclick="play('turn')">Continue</div></div>
+      <div class="shade"></div>
+    </div>
+    <button class="go" onclick="play('turn')">Replay</button>
+  </div>
+  <div class="col">
+    <h2>Angled wipe</h2>
+    <div class="phone wipe" id="wipe">
+      <div class="screen"><div class="eyebrow">Step 1 of 8 · Class</div><div class="title">Choose a class</div><div class="plate"><b>Druid</b>Wild shape and nature magic.</div><div class="plate"><b>Fighter</b>Weapons, armour and grit.</div><div class="btn" onclick="play('wipe')">Continue</div></div>
+      <div class="screen b top"><div class="eyebrow">Step 2 of 8 · Origin</div><div class="title">Determine origin</div><div class="plate"><b>Acolyte</b>Two skills, one tool, and a gift of faith.</div><div class="plate"><b>Criminal</b>Stealth, a thieves’ tool, and a contact.</div></div>
+      <div class="edge"></div>
+    </div>
+    <button class="go" onclick="play('wipe')">Replay</button>
+  </div>
+</div>
+<script>
+  function play(id) {
+    const el = document.getElementById(id);
+    el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
+  }
+</script>
+</body>
+</html>
