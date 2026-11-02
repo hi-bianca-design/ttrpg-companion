@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { View } from 'react-native'
+import { useRouter } from 'expo-router'
 import { X } from 'phosphor-react-native'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -22,6 +23,7 @@ type AccountDrawerProps = { open: boolean; onOpenChange: (open: boolean) => void
  */
 export function AccountDrawer({ open, onOpenChange }: AccountDrawerProps) {
   const { user } = useAuth()
+  const router = useRouter()
   const [confirming, setConfirming] = useState(false)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -58,6 +60,16 @@ export function AccountDrawer({ open, onOpenChange }: AccountDrawerProps) {
               {user?.email ? <Text variant="body-sm" tone="muted" numberOfLines={1}>{user.email}</Text> : null}
             </View>
           </View>
+          <Button
+            variant="outline"
+            accessibilityLabel="Packs"
+            onPress={() => {
+              onOpenChange(false)
+              router.push('/(app)/shop')
+            }}
+          >
+            <Text>Packs</Text>
+          </Button>
           <Button
             variant="outline"
             accessibilityLabel="Sign out"
