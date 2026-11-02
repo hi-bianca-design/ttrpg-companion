@@ -19,6 +19,7 @@ jest.mock('expo-router', () => ({
 }))
 jest.mock('@/features/auth/useAuth', () => ({ useAuth: () => ({ user: { id: 'gm1' } }) }))
 jest.mock('@/features/campaigns/campaigns.api', () => ({ getCampaign: jest.fn() }))
+jest.mock('@/features/sessions/sessions.api', () => ({ getActiveSession: jest.fn().mockResolvedValue(null), openSession: jest.fn(), endSession: jest.fn() }))
 
 function renderDetail() {
   const client = makeTestQueryClient()
@@ -94,4 +95,10 @@ test('the campaign description reads as narrative text', async () => {
   renderDetail()
   const text = await screen.findByText('A siege in the salt marshes.')
   expect(text.props.className).toContain('font-narrative')
+})
+
+test('a GM sees the Open session control on the campaign screen', async () => {
+  ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
+  renderDetail()
+  expect(await screen.findByRole('button', { name: 'Open session' })).toBeTruthy()
 })

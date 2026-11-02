@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
 import { useAuth } from '@/features/auth/useAuth'
 import { CampaignCard } from '@/features/campaigns/CampaignCard'
+import { SessionControls } from '@/features/sessions/SessionControls'
 import { MemberList } from '@/features/campaigns/MemberList'
 import { useCampaign, useCharacterCampaign } from '@/features/campaigns/campaigns.queries'
 import { useCharacter } from '@/features/characters/characters.queries'
@@ -83,6 +84,7 @@ export default function CampaignTab() {
         isGm={c.gm_id === user?.id}
         onPress={() => router.push({ pathname: '/(app)/campaigns/[id]', params: { id: c.id, fromCharacter: id } })}
       />
+      <SessionControls campaign={c} />
       <SectionHeader id={`campaign:${c.id}:members`} title="Members">
         <MemberList members={c.members} />
       </SectionHeader>

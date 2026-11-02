@@ -5,6 +5,9 @@ import { useCharacter } from '@/features/characters/characters.queries'
 import { useCampaign, useCharacterCampaign } from '@/features/campaigns/campaigns.queries'
 
 jest.mock('@/features/sessions/SessionBadge', () => ({ SessionBadge: () => null }))
+jest.mock('@/features/sessions/SessionControls', () => ({
+  SessionControls: () => { const { Text } = require('react-native'); return <Text>session controls</Text> },
+}))
 jest.mock('@/features/characters/characters.queries', () => ({ useCharacter: jest.fn() }))
 jest.mock('@/features/campaigns/campaigns.queries', () => ({ useCampaign: jest.fn(), useCharacterCampaign: jest.fn() }))
 jest.mock('@/features/auth/useAuth', () => ({ useAuth: () => ({ user: { id: 'u1' } }) }))
@@ -54,4 +57,17 @@ test('Join a campaign passes the character, so join returns here', () => {
   render(<CampaignTab />)
   fireEvent.press(screen.getByRole('button', { name: 'Join a campaign' }))
   expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/(app)/campaigns/join', params: { characterId: 'ch1' } })
+})
+
+test('the Campaign tab shows the session controls once the character is in a campaign', () => {
+  const camp = { id: 'camp1', gm_id: 'gm1', name: 'Odd Game', description: null, invite_code: 'ABC123', system_id: 'dnd5e-2024', members: [] }
+  ;(useCharacterCampaign as jest.Mock).mockReturnValue({ data: { id: 'camp1' }, isLoading: false, isError: false })
+  ;(useCampaign as jest.Mock).mockReturnValue({ data: camp, isLoading: false, isError: false })
+  render(<CampaignTab />)
+  expect(screen.getByText('session controls')).toBeTruthy()
+})
+
+test('no session controls while the character is in no campaign', () => {
+  render(<CampaignTab />)
+  expect(screen.queryByText('session controls')).toBeNull()
 })
