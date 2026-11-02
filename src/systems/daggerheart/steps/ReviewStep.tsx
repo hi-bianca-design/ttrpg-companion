@@ -21,7 +21,7 @@ export function ReviewStep({ draft }: BuilderStepProps) {
 
   return (
     <View className="gap-6">
-      <Card variant="hero" className="gap-3">
+      <Card tone="accent" className="gap-3">
         <View className="gap-1">
           <Text variant="eyebrow">Your character</Text>
           <Text variant="title">{c.name || 'Unnamed hero'}</Text>

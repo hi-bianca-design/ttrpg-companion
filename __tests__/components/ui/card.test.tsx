@@ -62,6 +62,15 @@ test('selected tone draws a mint edge with a soft glow', () => {
   expect(surface().glow).toBe('secondary')
 })
 
+test('accent tone is a chamfered plate with a thin, translucent gold edge and no glow', () => {
+  render(<Card tone="accent"><Text>x</Text></Card>)
+  expect(surface().shape).toBe('chamfer')
+  expect(surface().stroke).toBe('rule')
+  expect(surface().strokeWidth).toBe(1)
+  expect(surface().glow).toBeUndefined()
+  expect(surface().light).toBeUndefined()
+})
+
 test('opacity classes dim the plate, not just the inner content', () => {
   render(<Card testID="c" className="opacity-50 gap-2"><Text>x</Text></Card>)
   expect(surface().className).toContain('opacity-50')
