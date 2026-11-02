@@ -39,7 +39,7 @@ export function VitalsSection({ character, onEditHp, onBonusHp, onSpendInspirati
 
   const counters = system.resources.flatMap((def) => {
     const v = character.resources[def.key] as PoolValue | undefined
-    return def.kind === 'pool' && def.display === 'counter' && v ? [{ def, v }] : []
+    return def.kind === 'pool' && def.display === 'counter' && def.group !== 'feature' && v ? [{ def, v }] : []
   })
 
   return (
