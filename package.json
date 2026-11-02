@@ -9,7 +9,8 @@
     "web": "expo start --web",
     "lint:tokens": "node scripts/check-tokens.mjs",
     "test": "npm run lint:tokens && jest",
-    "db:seed": "tsx scripts/seed/build-seed.ts"
+    "db:seed": "tsx scripts/seed/build-seed.ts",
+    "packs:dev": "tsx scripts/packs-dev.ts"
   },
   "dependencies": {
     "@expo-google-fonts/cinzel": "^0.4.2",
