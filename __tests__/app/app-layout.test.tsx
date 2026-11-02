@@ -2,35 +2,35 @@ import { render } from '@testing-library/react-native'
 import { useSegments } from 'expo-router'
 import AppLayout from '../../app/(app)/_layout'
 
-const captured: { screenOptions?: { tabBarStyle?: unknown } } = {}
+const captured: { tabBar?: (props: object) => unknown } = {}
 
+jest.mock('@/features/auth/AccountDrawer', () => ({ AccountDrawer: () => null }))
 jest.mock('expo-router', () => {
-  const Tabs = (props: { screenOptions: { tabBarStyle?: unknown } }) => {
-    captured.screenOptions = props.screenOptions
+  const Tabs = (props: { tabBar: (p: object) => unknown }) => {
+    captured.tabBar = props.tabBar
     return null
   }
   Tabs.Screen = () => null
   return { Tabs, useSegments: jest.fn() }
 })
-jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 34, left: 0, right: 0 }) }))
 
 function tabBarFor(segments: string[]) {
   ;(useSegments as jest.Mock).mockReturnValue(segments)
   render(<AppLayout />)
-  return captured.screenOptions?.tabBarStyle
+  return captured.tabBar?.({})
 }
 
 test('the root tab bar shows on the characters list', () => {
-  expect(tabBarFor(['(app)', 'characters'])).not.toEqual({ display: 'none' })
+  expect(tabBarFor(['(app)', 'characters'])).not.toBeNull()
 })
 
 test('the root tab bar is hidden in the character wizard, on every step', () => {
-  expect(tabBarFor(['(app)', 'characters', 'new'])).toEqual({ display: 'none' })
-  expect(tabBarFor(['(app)', 'characters', 'new', '[step]'])).toEqual({ display: 'none' })
+  expect(tabBarFor(['(app)', 'characters', 'new'])).toBeNull()
+  expect(tabBarFor(['(app)', 'characters', 'new', '[step]'])).toBeNull()
 })
 
 test('the root tab bar stays hidden in the character sheet', () => {
-  expect(tabBarFor(['(app)', 'characters', '[id]'])).toEqual({ display: 'none' })
+  expect(tabBarFor(['(app)', 'characters', '[id]'])).toBeNull()
 })
 
 test('other tabs keep the root tab bar on their pushed and modal-like screens', () => {
@@ -41,6 +41,6 @@ test('other tabs keep the root tab bar on their pushed and modal-like screens', 
     ['(app)', 'content', 'new'],
     ['(app)', 'content', '[id]'],
   ]) {
-    expect(tabBarFor(segs)).not.toEqual({ display: 'none' })
+    expect(tabBarFor(segs)).not.toBeNull()
   }
 })

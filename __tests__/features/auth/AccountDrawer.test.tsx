@@ -1,7 +1,8 @@
 import '@testing-library/jest-native/extend-expect'
 import { PortalHost } from '@rn-primitives/portal'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
-import { AccountMenu } from '@/features/auth/AccountMenu'
+import { useState } from 'react'
+import { AccountDrawer } from '@/features/auth/AccountDrawer'
 import { signOut } from '@/features/auth/auth.api'
 import { ERROR_COPY } from '@/features/errors'
 import { variantOf } from '../../helpers/button'
@@ -15,25 +16,23 @@ jest.mock('@/features/auth/useAuth', () => ({
 
 beforeEach(() => jest.clearAllMocks())
 
+// The Account tab owns the open state; this host stands in for it.
+function Host({ initiallyOpen = true }: { initiallyOpen?: boolean }) {
+  const [open, setOpen] = useState(initiallyOpen)
+  return <AccountDrawer open={open} onOpenChange={setOpen} />
+}
+
 function renderMenu() {
-  return render(<><AccountMenu /><PortalHost /></>)
+  return render(<><Host /><PortalHost /></>)
 }
 
 function openSignOutDialog() {
-  fireEvent.press(screen.getByRole('button', { name: 'Account' }))
   fireEvent.press(screen.getByRole('button', { name: 'Sign out' }))
 }
 
-test('the header button is a ghost icon button with a 44pt hit area', () => {
+test('the drawer shows an initial badge, the username and email, and an outline Sign out', () => {
   renderMenu()
-  const button = screen.getByRole('button', { name: 'Account' })
-  expect(variantOf(button)).toBe('ghost')
-  expect(button.props.hitSlop).toEqual({ top: 6, bottom: 6, left: 6, right: 6 })
-})
-
-test('the account sheet shows the username and email and an outline Sign out', () => {
-  renderMenu()
-  fireEvent.press(screen.getByRole('button', { name: 'Account' }))
+  expect(screen.getByText('M')).toBeTruthy()
   expect(screen.getByText('mira')).toBeTruthy()
   expect(screen.getByText('mira@example.com')).toBeTruthy()
   expect(variantOf(screen.getByRole('button', { name: 'Sign out' }))).toBe('outline')
@@ -74,26 +73,25 @@ test('a failed sign-out shows the shared error copy and keeps the dialog open', 
   expect(screen.getByText('Sign out of D&D Companion?')).toBeTruthy()
 })
 
-test('the account sheet has a ghost Close that dismisses it without signing out', () => {
+test('the drawer closes from a ghost X icon in its header, not a text button under Sign out', () => {
   renderMenu()
-  fireEvent.press(screen.getByRole('button', { name: 'Account' }))
   const close = screen.getByRole('button', { name: 'Close' })
   expect(variantOf(close)).toBe('ghost')
-  expect(variantOf(close)).not.toBe('outline')
+  expect(screen.queryByText('Close')).toBeNull()
   fireEvent.press(close)
   expect(screen.queryByText('mira@example.com')).toBeNull()
   expect(signOut).not.toHaveBeenCalled()
 })
 
-test('the menu is one layout box (its sheet and dialog roots must not become extra row children that take a gap)', () => {
-  const { toJSON } = render(<AccountMenu />)
+test('the drawer is one layout box (its sheet and dialog roots must not become extra row children that take a gap)', () => {
+  const { toJSON } = render(<Host initiallyOpen={false} />)
   const tree = toJSON()
   expect(Array.isArray(tree)).toBe(false)
 })
 
-test('the account sheet links to the packs shop', () => {
+test('the drawer links to the packs shop and closes', () => {
   renderMenu()
-  fireEvent.press(screen.getByRole('button', { name: 'Account' }))
   fireEvent.press(screen.getByRole('button', { name: 'Packs' }))
   expect(mockPush).toHaveBeenCalledWith('/(app)/shop')
+  expect(screen.queryByRole('button', { name: 'Packs' })).toBeNull()
 })

@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Night Vigil transitions</title>
+<style>
+  :root { --bg:#0B1D20; --sky:#164F4C; --fg:#E6D9B6; --mint:#B0E0D2; --gold:#E3B130; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:#1b1d1a; color:var(--fg); font-family: Inter, system-ui, sans-serif; padding:32px 16px; }
+  h1 { font:600 20px/1.2 Georgia, serif; text-align:center; margin:0 0 4px; letter-spacing:.04em; }
+  p.sub { text-align:center; margin:0 0 24px; color:#9fb3ab; font-size:14px; }
+  .row { display:flex; gap:32px; justify-content:center; flex-wrap:wrap; }
+  .col { display:flex; flex-direction:column; align-items:center; gap:12px; }
+  .col h2 { margin:0; font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--mint); font-weight:500; }
+  .phone { position:relative; width:260px; height:480px; border-radius:28px; overflow:hidden; background:var(--bg); border:1px solid rgba(166,216,204,.25); perspective:1300px; perspective-origin: 30% 50%; }
+  .screen { position:absolute; inset:0; padding:28px 18px; background:linear-gradient(var(--sky), var(--bg) 40%); }
+  .screen.b { background:linear-gradient(#1a4a3f, #0c2d2f 55%); }
+  .eyebrow { font:500 11px/1 ui-monospace, monospace; letter-spacing:.14em; color:var(--mint); text-transform:uppercase; }
+  .title { font:700 26px/1.1 Georgia, serif; margin:8px 0 14px; color:var(--fg); }
+  .plate { background:rgba(18,33,44,.8); border:1px solid rgba(166,216,204,.2); padding:12px; margin-bottom:10px; clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px); font-size:13px; color:#c9d6cf; }
+  .plate b { color:var(--fg); display:block; font-size:15px; margin-bottom:2px; }
+  .btn { position:absolute; left:18px; right:18px; bottom:20px; height:44px; background:var(--gold); color:#241602; text-align:center; font:600 13px/44px Georgia, serif; letter-spacing:.18em; text-transform:uppercase; clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 14px 100%, 0 50%); cursor:pointer; }
+  button.go { background:none; color:var(--mint); border:1px solid rgba(166,216,204,.4); padding:10px 20px; font:500 12px Georgia, serif; letter-spacing:.16em; text-transform:uppercase; cursor:pointer; }
+  button.go:hover { background:rgba(166,216,204,.1); }
+
+  /* ---------- page turn: the sheet folds over along a sweeping diagonal, like a book app's peel ---------- */
+  .peel { position:absolute; inset:0; }
+  .peel .flap { position:absolute; inset:0; filter:drop-shadow(-6px 4px 8px rgba(0,0,0,.45)); }
+  .peel .flap > i { position:absolute; inset:0; display:block; }
+  .peel .shade { position:absolute; inset:0; pointer-events:none; }
+
+  /* ---------- wipe: a hard-ish edge, driven from JS so the style and edge can be swapped ---------- */
+  .wipe .top { z-index:2; }
+  .wipe .under { filter:brightness(.85); }
+  .styles { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; max-width:280px; }
+  .styles button { background:none; color:#9fb3ab; border:1px solid rgba(166,216,204,.25); padding:6px 10px; font:500 11px Georgia, serif; letter-spacing:.12em; text-transform:uppercase; cursor:pointer; }
+  .styles button.on { color:var(--bg); background:var(--mint); border-color:var(--mint); }
+  label.edge { font-size:12px; color:#9fb3ab; display:flex; gap:8px; align-items:center; }
+</style>
+</head>
+<body>
+<h1>Choose a transition</h1>
+<p class="sub">Press the gold button or Replay. The page peels over along a diagonal, like a book app; the wipe has five film-style variants and an edge slider.</p>
+<div class="row">
+  <div class="col">
+    <h2>Page turn</h2>
+    <div class="phone" id="turn">
+      <div class="screen b"><div class="eyebrow">Step 2 of 8 · Origin</div><div class="title">Determine origin</div><div class="plate"><b>Acolyte</b>Two skills, one tool, and a gift of faith.</div><div class="plate"><b>Criminal</b>Stealth, a thieves’ tool, and a contact.</div></div>
+      <div class="screen" id="turn-front"><div class="eyebrow">Step 1 of 8 · Class</div><div class="title">Choose a class</div><div class="plate"><b>Druid</b>Wild shape and nature magic.</div><div class="plate"><b>Fighter</b>Weapons, armour and grit.</div><div class="btn" onclick="turnPage()">Continue</div></div>
+    </div>
+    <button class="go" onclick="turnPage()">Replay</button>
+  </div>
+  <div class="col">
+    <h2>Wipe</h2>
+    <div class="phone wipe" id="wipe">
+      <div class="screen under"><div class="eyebrow">Step 1 of 8 · Class</div><div class="title">Choose a class</div><div class="plate"><b>Druid</b>Wild shape and nature magic.</div><div class="plate"><b>Fighter</b>Weapons, armour and grit.</div><div class="btn" onclick="wipe()">Continue</div></div>
+      <div class="screen b top" id="wipe-top" style="visibility:hidden"><div class="eyebrow">Step 2 of 8 · Origin</div><div class="title">Determine origin</div><div class="plate"><b>Acolyte</b>Two skills, one tool, and a gift of faith.</div><div class="plate"><b>Criminal</b>Stealth, a thieves’ tool, and a contact.</div></div>
+    </div>
+    <div class="styles" id="wipe-styles">
+      <button data-s="diagonal" class="on">Diagonal</button><button data-s="vertical">Vertical</button><button data-s="clock">Clock</button><button data-s="iris">Iris</button><button data-s="barn">Barn door</button>
+    </div>
+    <label class="edge">Edge <input id="edge" type="range" min="0" max="12" value="2"> <span id="edge-v">2</span></label>
+    <button class="go" onclick="wipe()">Replay</button>
+  </div>
+  <div class="col">
+    <h2>Pixel dissolve</h2>
+    <div class="phone" id="pix">
+      <div class="screen"><div class="eyebrow">Step 1 of 8 · Class</div><div class="title">Choose a class</div><div class="plate"><b>Druid</b>Wild shape and nature magic.</div><div class="plate"><b>Fighter</b>Weapons, armour and grit.</div><div class="btn" onclick="pixel()">Continue</div></div>
+      <div class="screen b" id="pix-top" style="visibility:hidden;-webkit-mask-size:100% 100%;mask-size:100% 100%;image-rendering:pixelated"><div class="eyebrow">Step 2 of 8 · Origin</div><div class="title">Determine origin</div><div class="plate"><b>Acolyte</b>Two skills, one tool, and a gift of faith.</div><div class="plate"><b>Criminal</b>Stealth, a thieves’ tool, and a contact.</div></div>
+    </div>
+    <button class="go" onclick="pixel()">Replay</button>
+  </div>
+</div>
+<script>
+  // The app will swap instantly when the OS asks for reduced motion. The mock always plays, so you can judge the motion.
+  const osReducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduced = false;
+  if (osReducedMotion) document.querySelector('p.sub').insertAdjacentHTML('afterend', '<p class="sub" style="color:#E3B130">Your system has Reduce Motion on. The app will respect that with an instant swap; this mock plays the animations anyway.</p>');
+  const W = 260, DURATION = 760;
+  let busy = false;
+
+  // Wipe styles borrowed from film: a straight edge sweeping across (here at an angle), a clock hand,
+  // an iris opening from the middle, and barn doors parting. Edge softness is the feather in percent.
+  let wipeStyle = 'diagonal', wipeBusy = false;
+  const WIPE_MS = 560;
+  document.getElementById('wipe-styles').addEventListener('click', (ev) => {
+    const b = ev.target.closest('button'); if (!b) return;
+    wipeStyle = b.dataset.s;
+    document.querySelectorAll('#wipe-styles button').forEach((x) => x.classList.toggle('on', x === b));
+    wipe();
+  });
+  document.getElementById('edge').addEventListener('input', (ev) => { document.getElementById('edge-v').textContent = ev.target.value; });
+  function wipeMask(style, p, f) {      // p: 0..1 progress, f: feather in percent
+    const P = p * (100 + 2 * f) - f;    // lets the soft edge fully clear the screen at both ends
+    switch (style) {
+      case 'vertical': return `linear-gradient(90deg, #000 ${P - f}%, transparent ${P + f}%)`;
+      case 'clock': { const deg = p * 360, fd = f * 3.6; return `conic-gradient(from 0deg at 50% 50%, #000 ${deg - fd}deg, transparent ${deg + fd}deg)`; }
+      case 'iris': { const r = p * 80 + f; return `radial-gradient(circle at 50% 50%, #000 ${r - f}%, transparent ${r + f}%)`; }
+      case 'barn': { const h = p * (50 + f); return `linear-gradient(90deg, transparent calc(50% - ${h}%), #000 calc(50% - ${h}% + ${f * 2}%), #000 calc(50% + ${h}% - ${f * 2}%), transparent calc(50% + ${h}%))`; }
+      default: return `linear-gradient(105deg, #000 ${P - f}%, transparent ${P + f}%)`;
+    }
+  }
+  function setWipe(p) {
+    const top = document.getElementById('wipe-top'), f = +document.getElementById('edge').value;
+    const m = wipeMask(wipeStyle, p, f);
+    top.style.webkitMaskImage = m; top.style.maskImage = m;
+  }
+  function wipe(freezeAt) {
+    if (wipeBusy) return; wipeBusy = true;
+    const top = document.getElementById('wipe-top'); top.style.visibility = 'visible';
+    const end = () => { top.style.visibility = 'hidden'; top.style.maskImage = top.style.webkitMaskImage = ''; wipeBusy = false; };
+    if (reduced) { setWipe(1); setTimeout(end, 900); return; }
+    if (typeof freezeAt === 'number') { setWipe(freezeAt); return; }
+    const t0 = performance.now();
+    (function frame(now) {
+      const t = Math.min(1, (now - t0) / WIPE_MS);
+      setWipe(t < .5 ? 2 * t * t : 1 - 2 * (1 - t) * (1 - t));   // light ease: mostly steady, like the film wipes
+      if (t < 1) requestAnimationFrame(frame); else setTimeout(end, 650);
+    })(t0);
+  }
+
+  const ease = (t) => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const H = 480, TH = 28 * Math.PI / 180, N = [Math.cos(TH), Math.sin(TH)];
+  const dot = (p, q) => p[0] * q[0] + p[1] * q[1];
+  const PAGE = [[0, 0], [W, 0], [W, H], [0, H]];
+  // Keep the part of a polygon on one side of the line n·p = d (Sutherland–Hodgman).
+  function clip(poly, n, d, keepLE) {
+    const out = [];
+    const inside = (p) => (keepLE ? dot(p, n) <= d : dot(p, n) >= d);
+    poly.forEach((p, i) => {
+      const q = poly[(i + 1) % poly.length];
+      if (inside(p)) out.push(p);
+      if (inside(p) !== inside(q)) {
+        const tt = (d - dot(p, n)) / (dot(q, n) - dot(p, n));
+        out.push([p[0] + (q[0] - p[0]) * tt, p[1] + (q[1] - p[1]) * tt]);
+      }
+    });
+    return out;
+  }
+  const css = (poly) => poly.length < 3 ? 'polygon(0 0,0 0,0 0)' : 'polygon(' + poly.map((p) => `${p[0].toFixed(1)}px ${p[1].toFixed(1)}px`).join(',') + ')';
+
+  function buildPeel(front) {
+    const root = document.createElement('div'); root.className = 'peel';
+    const top = front.cloneNode(true); top.removeAttribute('id'); top.className = 'screen'; top.style.cssText = 'position:absolute;inset:0;';
+    const shade = document.createElement('div'); shade.className = 'shade';
+    const flap = document.createElement('div'); flap.className = 'flap';
+    const sheet = document.createElement('i');     // the back of the sheet: warm paper, lighter at the fold
+    flap.append(sheet);
+    root.append(top, shade, flap);
+    return { root, top, shade, flap, sheet };
+  }
+
+  function renderPeel(o, t) {
+    const e = ease(t);
+    const dMax = dot([W, H], N) + 2, dMin = -4;
+    const d = dMax + (dMin - dMax) * e;                 // the fold line sweeps from the corner to the top-left
+    const front = clip(PAGE, N, d, true);
+    let flapPoly = clip(PAGE, N, d, false).map((p) => {
+      const k = 2 * (dot(p, N) - d);
+      return [p[0] - k * N[0], p[1] - k * N[1]];
+    });
+    flapPoly = clip(clip(clip(clip(flapPoly, [1, 0], W, true), [0, 1], H, true), [-1, 0], 0, true), [0, -1], 0, true);
+    o.top.style.clipPath = css(front);
+    o.flap.style.clipPath = 'none';
+    o.sheet.style.clipPath = css(flapPoly);
+    // Gradient axis runs along N; s is a position along it in px.
+    const A = Math.atan2(N[0], -N[1]) * 180 / Math.PI, L = Math.abs(W * Math.sin(A * Math.PI / 180)) + Math.abs(H * Math.cos(A * Math.PI / 180));
+    const s = (v) => (v - dot([W / 2, H / 2], N) + L / 2).toFixed(1) + 'px';
+    o.shade.style.background = `linear-gradient(${A}deg, transparent ${s(d - 70)}, rgba(0,0,0,.38) ${s(d - 2)}, transparent ${s(d)})`;
+    o.sheet.style.background = `linear-gradient(${A}deg, #1a3433 ${s(d - 110)}, #35625c ${s(d - 14)}, #1d3a38 ${s(d)})`;
+  }
+
+  function turnPage(freezeAt) {
+    if (busy) return; busy = true;
+    const phone = document.getElementById('turn');
+    const front = document.getElementById('turn-front');
+    if (reduced) { front.style.visibility = 'hidden'; setTimeout(() => { front.style.visibility = ''; busy = false; }, 900); return; }
+    const o = buildPeel(front);
+    phone.append(o.root); front.style.visibility = 'hidden';
+    if (typeof freezeAt === 'number') { renderPeel(o, freezeAt); return; }   // for inspecting a single frame
+    const t0 = performance.now();
+    (function frame(now) {
+      const t = Math.min(1, (now - t0) / DURATION);
+      renderPeel(o, t);
+      if (t < 1) requestAnimationFrame(frame);
+      else setTimeout(() => { o.root.remove(); front.style.visibility = ''; busy = false; }, 650);
+    })(t0);
+  }
+
+  // Pixel dissolve: the next screen appears through a grid of square cells that switch on in a loose
+  // diagonal wave with some noise, so it reads as a low-resolution scan resolving rather than a fade.
+  const COLS = 13, ROWS = 24, PIX_MS = 640;
+  const noise = Array.from({ length: COLS * ROWS }, () => Math.random());
+  let pixBusy = false;
+  function pixel() {
+    if (pixBusy) return; pixBusy = true;
+    const top = document.getElementById('pix-top');
+    const c = document.createElement('canvas'); c.width = COLS; c.height = ROWS;
+    const g = c.getContext('2d');
+    top.style.visibility = 'visible';
+    const t0 = performance.now();
+    const paint = (p) => {
+      g.clearRect(0, 0, COLS, ROWS);
+      for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
+        const diag = (x / COLS + y / ROWS) / 2;                     // 0..1 along the diagonal
+        const when = diag * .6 + noise[y * COLS + x] * .4;          // 60% sweep, 40% scatter
+        if (p * 1.0001 >= when) g.fillRect(x, y, 1, 1);
+      }
+      const url = `url(${c.toDataURL()})`;
+      top.style.webkitMaskImage = url; top.style.maskImage = url;
+    };
+    if (reduced) { top.style.maskImage = top.style.webkitMaskImage = 'none'; setTimeout(done, 900); return; }
+    (function frame(now) {
+      const t = Math.min(1, (now - t0) / PIX_MS);
+      paint(t);
+      if (t < 1) requestAnimationFrame(frame); else setTimeout(done, 650);
+    })(t0);
+    function done() { top.style.visibility = 'hidden'; top.style.maskImage = top.style.webkitMaskImage = ''; pixBusy = false; }
+  }
+</script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 import { View } from 'react-native'
 import { SectionHeader } from '@/components/game'
+import { Banner } from '@/components/ui/banner'
 import { Text } from '@/components/ui/text'
 import type { BuilderStepProps } from '../../types'
 import { SKILLS } from '../definition'
@@ -40,9 +41,7 @@ export function ClassSkillsStep({ draft, update }: BuilderStepProps) {
           })}
         </View>
         {granted.some((k) => options.includes(k)) ? (
-          <Text variant="caption" tone="muted">
-            {`Dimmed skills come from your background (${granted.map(label).join(', ')}).`}
-          </Text>
+          <Banner>{`Dimmed skills come from your background (${granted.map(label).join(', ')}).`}</Banner>
         ) : null}
       </SectionHeader>
     </View>

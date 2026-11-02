@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar'
 import { ThemeProvider } from '@react-navigation/native'
 import { PortalHost } from '@rn-primitives/portal'
 import { Toaster } from '@/components/ui/toast'
+import { WipeCurtain } from '@/components/ui/wipe-curtain'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { useFonts } from 'expo-font'
 import { Cinzel_500Medium, Cinzel_700Bold } from '@expo-google-fonts/cinzel'
@@ -72,6 +73,7 @@ export default function RootLayout() {
           <RootRedirect />
         </AuthProvider>
       </QueryClientProvider>
+      <WipeCurtain />
       <PortalHost />
       <Toaster />
     </ThemeProvider>

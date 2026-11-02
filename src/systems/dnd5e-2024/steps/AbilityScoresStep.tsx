@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { SectionHeader } from '@/components/game'
 import { Card } from '@/components/ui/card'
+import { Hairline } from '@/components/ui/hairline'
 import { ShapedSurface } from '@/components/ui/shaped-surface'
 import { Text } from '@/components/ui/text'
 import { cn } from '@/lib/utils'
@@ -70,7 +71,8 @@ export function AbilityScoresStep({ draft, update }: BuilderStepProps) {
             const total = base === null ? null : base + bonus
             const isActive = active === key
             return (
-              <View key={key} className={cn(i < ABILITY_KEYS.length - 1 && 'border-b border-rule')}>
+              <View key={key} className="relative">
+                {i < ABILITY_KEYS.length - 1 ? <Hairline className="absolute bottom-0 left-0 right-0" /> : null}
                 <Pressable
                   role="button"
                   accessibilityLabel={`${ABILITY_LABELS[key]}${total === null ? ', unassigned' : `, ${total}`}`}

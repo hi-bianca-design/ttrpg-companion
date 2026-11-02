@@ -4,7 +4,7 @@ import { Text } from 'react-native'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { ShapedSurface } from '@/components/ui/shaped-surface'
 
-test('the dialog is a chamfered rock plate with a gold hairline and a hard shadow', () => {
+test('the dialog is a chamfered rock plate with a soft hairline and a hard shadow', () => {
   render(
     <>
       <Dialog open onOpenChange={jest.fn()}>
@@ -16,7 +16,7 @@ test('the dialog is a chamfered rock plate with a gold hairline and a hard shado
   const plate = screen.UNSAFE_getByType(ShapedSurface).props
   expect(plate.shape).toBe('chamfer')
   expect(plate.fill).toBe('rock')
-  expect(plate.stroke).toBe('rule')
+  expect(plate.stroke).toBe('border')
   expect(plate.glass).toBe('overlay')
   expect(screen.getByText('Hello')).toBeTruthy()
 })

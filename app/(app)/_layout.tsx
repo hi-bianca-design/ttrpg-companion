@@ -1,12 +1,13 @@
 import { Tabs, useSegments } from 'expo-router'
-import { BookOpen, Sword, UsersThree } from 'phosphor-react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { TAB_LABEL_STYLE, THEME_COLORS, tabBarStyle } from '@/lib/theme'
+import { BookOpen, Sword, User, UsersThree } from 'phosphor-react-native'
+import { useState } from 'react'
+import { BottomNav } from '@/components/ui/bottom-nav'
+import { AccountDrawer } from '@/features/auth/AccountDrawer'
+import { View } from 'react-native'
 
 export default function AppLayout() {
   const segments = useSegments()
-  const colors = THEME_COLORS
-  const insets = useSafeAreaInsets()
+  const [accountOpen, setAccountOpen] = useState(false)
   // No root tab bar inside a character sheet ([id], which has its own tabs) or the character creation
   // wizard (new): leaving the wizard goes through its Back / Cancel and the discard prompt, not a tab
   // switch. Other tabs' pushed and modal-like screens (campaign detail, join, homebrew forms) keep it.
@@ -16,14 +17,15 @@ export default function AppLayout() {
   return (
     // No top safe-area wrapper: ScreenBackground paints the glow up under the status bar and insets its own content.
     <Tabs
-      screenOptions={{
-        tabBarStyle: hideTabBar ? { display: 'none' } : tabBarStyle(insets.bottom),
-        // Mint (accent-foreground) keeps the active tab legible on the bar.
-        tabBarActiveTintColor: colors.accentForeground,
-        tabBarInactiveTintColor: colors.mutedForeground,
-        tabBarLabelStyle: TAB_LABEL_STYLE,
-        headerShown: false,
-      }}
+      tabBar={(props) =>
+        hideTabBar ? null : (
+          <View>
+            <BottomNav {...props} extra={{ label: 'Account', icon: User, onPress: () => setAccountOpen(true) }} />
+            <AccountDrawer open={accountOpen} onOpenChange={setAccountOpen} />
+          </View>
+        )
+      }
+      screenOptions={{ headerShown: false }}
     >
       <Tabs.Screen name="index" options={{ href: null }} />
       <Tabs.Screen name="shop" options={{ href: null }} />

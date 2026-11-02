@@ -269,7 +269,6 @@ test('ability scores show the modifier as value and the score as sub', () => {
 test('D&D proficiencies section: Sage skills and Wizard saves are marked proficient', () => {
   renderTab()
   expect(screen.getByLabelText('Arcana +5, proficient')).toBeTruthy()
-  expect(screen.getByLabelText('Athletics -1')).toBeTruthy()
   expect(screen.getByLabelText('Intelligence save +5, proficient')).toBeTruthy()
   expect(screen.getByLabelText('Strength save -1')).toBeTruthy()
 })
@@ -417,4 +416,13 @@ test('header: the class line sits 4px under the name (same tight group)', () => 
   const box = group(sub as unknown as N)
   expect(box).toBe(group(name as unknown as N))
   expect(String(box!.props.className)).toContain('gap-1')
+})
+
+test('D&D skills lead with the trained ones; the rest sit behind an expander', () => {
+  renderTab()
+  expect(screen.queryByLabelText('Athletics -1')).toBeNull()
+  fireEvent.press(screen.getByRole('button', { name: /^Other skills/ }))
+  expect(screen.getByLabelText('Athletics -1')).toBeTruthy()
+  fireEvent.press(screen.getByRole('button', { name: /^Other skills/ }))
+  expect(screen.queryByLabelText('Athletics -1')).toBeNull()
 })

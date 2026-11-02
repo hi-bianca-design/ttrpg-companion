@@ -23,7 +23,7 @@ export const dnd5eResourcesSchema = z.object({
   hit_dice: poolSchema,
   death_saves_success: slotsSchema,
   death_saves_failure: slotsSchema,
-})
+}).catchall(z.union([poolSchema, slotsSchema])) // class feature uses (second_wind, ...) sit beside the core resources
 
 export const dnd5eDetailsSchema = z.object({
   alignment: z.union([z.enum(ALIGNMENTS), z.literal('')]).optional(),

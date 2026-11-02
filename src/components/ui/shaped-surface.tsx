@@ -1,5 +1,6 @@
 import { useId, useState, type ReactNode } from 'react'
-import { Platform, View, type LayoutChangeEvent, type ViewStyle } from 'react-native'
+import { BlurView } from 'expo-blur'
+import { Platform, StyleSheet, View, type LayoutChangeEvent, type ViewStyle } from 'react-native'
 import Svg, { Defs, G, Mask, Path, RadialGradient, Rect, Stop } from 'react-native-svg'
 import { shapePath, type Shape } from '@/lib/shape-path'
 import { THEME_COLORS } from '@/lib/theme'
@@ -24,7 +25,10 @@ export const GLASS_FILL_OPACITY = {
   field: { web: 0.8, native: 0.85 },
 } as const
 export type GlassLevel = keyof typeof GLASS_FILL_OPACITY
-const GLASS_BLUR_PX = 10
+const GLASS_BLUR_PX = 16
+// Native blur (expo-blur) is rectangular, so it is clipped to a rounded rectangle that approximates the shape.
+const NATIVE_BLUR_INTENSITY = 40
+const NATIVE_BLUR_RADII = { sheet: { borderTopLeftRadius: 20, borderTopRightRadius: 20 }, chamfer: { borderRadius: 6 } } as const
 
 /** Surfaces up to this tall get pointed `hex` ends; taller ones fall back to `chamfer` (spec §4.3). */
 export const HEX_MAX_HEIGHT = 56
@@ -63,6 +67,8 @@ type ShapedSurfaceProps = {
   light?: ThemeColorKey
   /** Frosted glass: translucent fill, blurred backdrop on web, hard shadow kept out of the fill. */
   glass?: boolean | GlassLevel
+  /** Native only: also blur what is behind the plate (expo-blur). Use on a few large surfaces, not per list row. */
+  blur?: boolean
   children?: ReactNode
   className?: string
   testID?: string
@@ -83,6 +89,7 @@ export function ShapedSurface({
   glow,
   light,
   glass,
+  blur,
   children,
   className,
   testID,
@@ -96,7 +103,8 @@ export function ShapedSurface({
     setSize((prev) => (prev.width === width && prev.height === height ? prev : { width, height }))
   }
   const web = Platform.OS === 'web'
-  const fillOpacity = glass ? GLASS_FILL_OPACITY[glass === true ? 'surface' : glass][web ? 'web' : 'native'] : undefined
+  const nativeBlur = !!glass && !!blur && !web
+  const fillOpacity = glass ? GLASS_FILL_OPACITY[glass === true ? 'surface' : glass][web || nativeBlur ? 'web' : 'native'] : undefined
   const maskId = `${gradientId}-shadow`
   const resolved: Shape = shape === 'auto' ? (size.height <= HEX_MAX_HEIGHT ? 'hex' : 'chamfer') : shape
   const d = shapePath(resolved, size.width, size.height, { inset: strokeWidth / 2, point, rise })
@@ -120,6 +128,18 @@ export function ShapedSurface({
             clipPath: `path('${d}')`,
           } as ViewStyle}
         />
+      ) : null}
+      {nativeBlur && measured ? (
+        <View
+          testID={testID ? `${testID}-blur` : 'native-blur'}
+          pointerEvents="none"
+          style={[
+            { position: 'absolute', top: 0, left: 0, width: size.width, height: size.height, zIndex: -1, overflow: 'hidden' },
+            NATIVE_BLUR_RADII[resolved as 'sheet' | 'chamfer'],
+          ]}
+        >
+          <BlurView intensity={NATIVE_BLUR_INTENSITY} tint="dark" experimentalBlurMethod="dimezisBlurView" style={StyleSheet.absoluteFill} />
+        </View>
       ) : null}
       <Svg width={size.width + 2 * SVG_PAD} height={size.height + 2 * SVG_PAD} pointerEvents="none" style={SVG_STYLE}>
         {glass && shadowOffset > 0 ? (

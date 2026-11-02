@@ -1,16 +1,35 @@
-import { render, screen } from '@testing-library/react-native'
+import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import { Image, PixelRatio, Text } from 'react-native'
-import { Rect, RadialGradient } from 'react-native-svg'
+import Svg, { Rect, RadialGradient } from 'react-native-svg'
 import { ScreenBackground } from '@/components/game/ScreenBackground'
 import { SKY_BANDS } from '@/lib/theme'
+
+const layoutAll = (width = 400, height = 800) =>
+  act(() => {
+    for (const node of screen.getAllByTestId('screen-background')) {
+      fireEvent(node, 'layout', { nativeEvent: { layout: { width, height, x: 0, y: 0 } } })
+    }
+  })
 
 test('renders its children', () => {
   render(<ScreenBackground><Text>One</Text></ScreenBackground>)
   expect(screen.getByText('One')).toBeTruthy()
 })
 
+test('the sky is painted at the measured size, so it follows the screen when the tab bar resizes it', () => {
+  render(<ScreenBackground><Text>One</Text></ScreenBackground>)
+  expect(screen.UNSAFE_queryByType(Svg)).toBeNull()
+  layoutAll(400, 800)
+  expect(screen.UNSAFE_getByType(Svg).props.height).toBe(800)
+  layoutAll(400, 700)
+  expect(screen.UNSAFE_getByType(Svg).props.height).toBe(700)
+  const last = screen.UNSAFE_getAllByType(Rect).filter((r) => SKY_BANDS.includes(r.props.fill)).pop()
+  expect(last?.props.y + last?.props.height).toBeCloseTo(0.3 * 700)
+})
+
 test('the sky is six posterized bands in token order, top to bottom', () => {
   render(<ScreenBackground><Text>One</Text></ScreenBackground>)
+  layoutAll()
   const fills = screen.UNSAFE_getAllByType(Rect).map((r) => r.props.fill as string).filter((f) => SKY_BANDS.includes(f))
   expect(fills).toEqual(SKY_BANDS)
   const ys = screen.UNSAFE_getAllByType(Rect).filter((r) => SKY_BANDS.includes(r.props.fill)).map((r) => parseFloat(r.props.y))
@@ -24,6 +43,7 @@ test('each instance gets its own vignette gradient and its rect points at it', (
       <ScreenBackground><Text>Two</Text></ScreenBackground>
     </>,
   )
+  layoutAll()
   const ids = screen.UNSAFE_getAllByType(RadialGradient).map((g) => g.props.id as string)
   expect(new Set(ids).size).toBe(2)
   const fills = screen.UNSAFE_getAllByType(Rect).map((r) => r.props.fill as string).filter((f) => f?.startsWith('url('))
@@ -39,6 +59,7 @@ test('grain is a tiled image that never intercepts touches', () => {
 
 test('grain sits behind the content so text is never speckled, above the sky and vignette', () => {
   render(<ScreenBackground><Text>One</Text></ScreenBackground>)
+  layoutAll()
   const kids = (screen.toJSON() as { children: Array<{ props: { testID?: string } } | string> }).children
   const has = (node: unknown, pred: (n: any) => boolean): boolean =>
     typeof node === 'object' && node !== null && (pred(node) || ((node as any).children ?? []).some((c: unknown) => has(c, pred)))

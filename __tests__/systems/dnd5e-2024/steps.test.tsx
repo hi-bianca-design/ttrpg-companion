@@ -94,8 +94,7 @@ beforeEach(() => {
 describe('WizardProgress', () => {
   test('shows the step title and "Step X of N"', () => {
     render(<WizardProgress title="Spells" index={3} total={7} />)
-    expect(screen.getByText('Spells')).toBeTruthy()
-    expect(screen.getByText('Step 4 of 7')).toBeTruthy()
+    expect(screen.getByText('Step 4 of 7 · Spells')).toBeTruthy()
   })
 })
 
@@ -254,12 +253,12 @@ describe('wizard header Cancel', () => {
     expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull()
   })
 
-  test('from step 2 a trailing ghost Cancel dismisses the whole wizard (the discard guard prompts once)', () => {
+  test('from step 2 a ghost X, level with the progress dots, dismisses the whole wizard (the discard guard prompts once)', () => {
     mockParams.step = 'origin'
     renderWithQuery(<BuilderStepScreen />)
     const cancel = screen.getByRole('button', { name: 'Cancel' })
     expect(variantOf(cancel)).toBe('ghost')
-    expect(cancel.props.className).toContain('-mr-3')
+    expect(screen.queryByText('Cancel')).toBeNull()
     fireEvent.press(cancel)
     expect(mockRouter.dismissTo).toHaveBeenCalledWith('/(app)/characters')
   })

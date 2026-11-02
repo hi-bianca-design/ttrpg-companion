@@ -1,7 +1,10 @@
 // D&D sheet section: the 18 skills and 6 saving throws, with proficiency from class /
 // background picks. Registered as `sheet.sections.proficiencies` in the module index.
-import { View } from 'react-native'
+import { useState } from 'react'
+import { Pressable, View } from 'react-native'
 import { SectionHeader } from '@/components/game/SectionHeader'
+import { Hairline } from '@/components/ui/hairline'
+import { Disclosure } from '@/components/ui/ornament'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
 import { cn } from '@/lib/utils'
@@ -19,15 +22,44 @@ function RowList({ rows }: { rows: Row[] }) {
           key={r.key}
           accessible
           accessibilityLabel={`${r.a11y} ${formatModifier(r.value)}${r.proficient ? ', proficient' : ''}`}
-          className={cn('flex-row items-center gap-3 py-2', i < rows.length - 1 && 'border-b border-rule')}
+          className="relative flex-row items-center gap-3 py-2"
         >
-          <View className={cn('h-2 w-2 rotate-45', r.proficient ? 'bg-primary' : 'border border-rule')} />
+          {i < rows.length - 1 ? <Hairline className="absolute bottom-0 left-0 right-0" /> : null}
+          <View className={cn('h-2 w-2 rotate-45', r.proficient ? 'bg-primary' : 'border border-border')} />
           <Text variant="body-sm" className="flex-1">{r.label}</Text>
           <Text variant="label">{r.aside}</Text>
           <Text variant="subhead" tone={r.proficient ? 'accent' : 'default'}>{formatModifier(r.value)}</Text>
         </View>
       ))}
     </Card>
+  )
+}
+
+/** Trained skills lead; the rest tuck into an expander so the list opens on what matters. */
+function SkillList({ rows }: { rows: Row[] }) {
+  const [open, setOpen] = useState(false)
+  const trained = rows.filter((r) => r.proficient)
+  const others = rows.filter((r) => !r.proficient)
+  if (trained.length === 0) return <RowList rows={rows} />
+  return (
+    <View className="gap-2">
+      <RowList rows={trained} />
+      {others.length > 0 ? (
+        <>
+          <Pressable
+            role="button"
+            accessibilityLabel={`Other skills, ${others.length}`}
+            accessibilityState={{ expanded: open }}
+            onPress={() => setOpen((o) => !o)}
+            className="min-h-11 flex-row items-center justify-center gap-2"
+          >
+            <Text variant="label" tone="accent">{open ? 'Hide other skills' : `Show ${others.length} other skills`}</Text>
+            <Disclosure open={open} />
+          </Pressable>
+          {open ? <RowList rows={others} /> : null}
+        </>
+      ) : null}
+    </View>
   )
 }
 
@@ -49,7 +81,7 @@ export function ProficienciesSection({ character, picks }: { character: Characte
   return (
     <>
       <SectionHeader id={`${character.id}:skills`} title="Skills" collapsible>
-        <RowList rows={skillRows} />
+        <SkillList rows={skillRows} />
       </SectionHeader>
       <SectionHeader id={`${character.id}:saving-throws`} title="Saving throws" collapsible>
         <RowList rows={saveRows} />

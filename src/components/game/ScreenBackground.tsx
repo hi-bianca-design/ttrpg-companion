@@ -1,5 +1,5 @@
-import { useId, type ReactNode } from 'react'
-import { Image, PixelRatio, ScrollView, View, type ImageSourcePropType } from 'react-native'
+import { useId, useState, type ReactNode } from 'react'
+import { Image, PixelRatio, ScrollView, View, type ImageSourcePropType, type LayoutChangeEvent } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg'
 import { SKY_BANDS, THEME_COLORS } from '@/lib/theme'
@@ -12,7 +12,7 @@ type ScreenBackgroundProps = { children: ReactNode; scroll?: boolean }
 const BAND_STEPS = [0, 4.2, 8.4, 12.6, 16.8, 21]
 const BAND_ENDS = [4.2, 8.4, 12.6, 16.8, 21, 30]
 const VIGNETTE_EDGE_OPACITY = 0.82
-const GRAIN_OPACITY = 0.3
+const GRAIN_OPACITY = 0.14
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const GRAIN = require('../../../assets/grain.png')
 // Overriding the asset's scale makes the repeat tile 1 image pixel per physical pixel, so specks stay
@@ -29,25 +29,41 @@ const grainSource = (): ImageSourcePropType => {
  * gradient id: web keeps several screens mounted, and a shared id would resolve to a hidden screen's.
  */
 export function ScreenBackground({ children, scroll = false }: ScreenBackgroundProps) {
+  // Measured, not '100%': on iOS a percent-sized Svg kept the height it first had when the tab bar below it
+  // resized the screen, leaving a lighter unpainted strip at the bottom.
+  const [size, setSize] = useState<{ width: number; height: number } | null>(null)
+  const onLayout = (e: LayoutChangeEvent) => {
+    const { width, height } = e.nativeEvent.layout
+    setSize((prev) => (prev && prev.width === width && prev.height === height ? prev : { width, height }))
+  }
   const vignetteId = `screen-vignette-${useId().replace(/[^A-Za-z0-9_-]/g, '')}`
   // Fixed screens fill the height so a child can flex (e.g. a scroll area between header and footer).
-  const content = <View className={cn('gap-6 px-4 pb-8 pt-6', !scroll && 'flex-1')}>{children}</View>
+  const content = <View className={cn('gap-8 px-4 pb-8 pt-6', !scroll && 'flex-1')}>{children}</View>
 
   return (
-    <View className="flex-1 bg-background">
+    <View testID="screen-background" className="flex-1 bg-background" onLayout={onLayout}>
       <View className="absolute inset-0" pointerEvents="none">
-        <Svg width="100%" height="100%">
-          <Defs>
-            <RadialGradient id={vignetteId} cx="0.5" cy="0.4" r="0.75" gradientUnits="objectBoundingBox">
-              <Stop offset="0.5" stopColor={THEME_COLORS.ink} stopOpacity={0} />
-              <Stop offset="1" stopColor={THEME_COLORS.ink} stopOpacity={VIGNETTE_EDGE_OPACITY} />
-            </RadialGradient>
-          </Defs>
-          {SKY_BANDS.map((fill, i) => (
-            <Rect key={fill} x="0" y={`${BAND_STEPS[i]}%`} width="100%" height={`${BAND_ENDS[i] - BAND_STEPS[i]}%`} fill={fill} />
-          ))}
-          <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${vignetteId})`} />
-        </Svg>
+        {size ? (
+          <Svg width={size.width} height={size.height}>
+            <Defs>
+              <RadialGradient id={vignetteId} cx="0.5" cy="0.4" r="0.75" gradientUnits="objectBoundingBox">
+                <Stop offset="0.5" stopColor={THEME_COLORS.ink} stopOpacity={0} />
+                <Stop offset="1" stopColor={THEME_COLORS.ink} stopOpacity={VIGNETTE_EDGE_OPACITY} />
+              </RadialGradient>
+            </Defs>
+            {SKY_BANDS.map((fill, i) => (
+              <Rect
+                key={fill}
+                x={0}
+                y={(BAND_STEPS[i] / 100) * size.height}
+                width={size.width}
+                height={((BAND_ENDS[i] - BAND_STEPS[i]) / 100) * size.height}
+                fill={fill}
+              />
+            ))}
+            <Rect x={0} y={0} width={size.width} height={size.height} fill={`url(#${vignetteId})`} />
+          </Svg>
+        ) : null}
       </View>
       <View testID="screen-grain" className="absolute inset-0" pointerEvents="none" style={{ opacity: GRAIN_OPACITY }}>
         <Image source={grainSource()} resizeMode="repeat" style={{ width: '100%', height: '100%' }} />

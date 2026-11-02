@@ -35,13 +35,13 @@ test('a controlled value drives the style', () => {
   expect(field().props.className).toContain('text-typed')
 })
 
-test('focus lights the edge: torch stroke, 3px, with glow; blur restores it', () => {
+test('focus lights the edge: torch stroke, 2px, with glow; blur restores it', () => {
   render(<Input placeholder="Name thy character" />)
   expect(surface().stroke).toBe('border')
-  expect(surface().strokeWidth).toBe(2)
+  expect(surface().strokeWidth).toBe(1.5)
   fireEvent(field(), 'focus')
   expect(surface().stroke).toBe('torch')
-  expect(surface().strokeWidth).toBe(3)
+  expect(surface().strokeWidth).toBe(2)
   expect(surface().glow).toBe('torch')
   fireEvent(field(), 'blur')
   expect(surface().stroke).toBe('border')

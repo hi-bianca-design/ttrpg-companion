@@ -21,7 +21,7 @@ test('SheetContent avoids the keyboard on iOS, so inputs and the buttons under t
   expect(screen.getByLabelText('Amount')).toBeTruthy()
 })
 
-test('the sheet is a rock plate with an arched top edge and no hard shadow', () => {
+test('the sheet is a rock drawer with rounded top corners, a grabber, no border and no hard shadow', () => {
   render(
     <>
       <Sheet open onOpenChange={jest.fn()}>
@@ -31,9 +31,10 @@ test('the sheet is a rock plate with an arched top edge and no hard shadow', () 
     </>,
   )
   const plate = screen.UNSAFE_getByType(ShapedSurface).props
-  expect(plate.shape).toBe('arch')
-  expect(plate.rise).toBe(24)
+  expect(plate.shape).toBe('sheet')
+  expect(screen.getByTestId('sheet-grabber')).toBeTruthy()
   expect(plate.fill).toBe('rock')
+  expect(plate.stroke).toBe('transparent')
   expect(plate.shadowOffset).toBe(0)
   expect(plate.glass).toBe('overlay')
 })
