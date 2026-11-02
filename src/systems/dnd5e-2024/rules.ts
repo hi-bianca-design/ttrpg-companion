@@ -4,6 +4,7 @@ import type {
   CharacterRecord, DerivedValue, PickRecord, PoolValue, ResourceValue, SlotsValue,
 } from '../types'
 import { ABILITY_KEYS, ABILITY_LABELS, type AbilityKey } from './definition'
+import { featuresFor, grownFeatures, rechargedFeature } from './features'
 
 export function getAbilityModifier(score: number): number {
   return Math.floor((score - 10) / 2)
@@ -257,6 +258,11 @@ export function rest(c: CharacterRecord, kind: 'short' | 'long', picks: PickReco
   const next: Record<string, ResourceValue> = { ...c.resources }
   const set = (key: string, v: ResourceValue | undefined) => { if (v) next[key] = v }
 
+  for (const f of featuresFor(className(picks) ?? '')) {
+    const v = c.resources[f.key]
+    if (v && 'tiers' in v) next[f.key] = rechargedFeature(f, v, kind, c.level)
+  }
+
   if (kind === 'short') {
     if (className(picks)?.toLowerCase() === 'warlock') set('spell_slots', clearSlots(c.resources.spell_slots))
     return next
@@ -350,6 +356,7 @@ export function levelUp(
   const slots = c.resources.spell_slots as SlotsValue | undefined
   const cls = className(picks)
   if (slots && cls) resources.spell_slots = grownSlots(slots, cls, level)
+  if (cls) Object.assign(resources, grownFeatures(c.resources, cls, level, stats))
 
   return { level, resources, stats }
 }

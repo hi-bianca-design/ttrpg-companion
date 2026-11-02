@@ -34,6 +34,8 @@ export type ResourceDef =
       count?: PipCount
       /** Only shown while this pool resource is at 0 (e.g. death saves while hit points are 0). */
       showWhenEmpty?: string
+      /** A limited-use class feature, tracked on the Actions screen; a rest recharges it. */
+      group?: 'feature'
     }
 
 export type FieldDef = {
