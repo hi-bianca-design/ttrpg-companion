@@ -123,6 +123,7 @@ type ChipProps = {
   onPress: () => void
   accessibilityLabel?: string
   accessibilityHint?: string
+  size?: 'default' | 'sm' | 'square'
   className?: string
 }
 
