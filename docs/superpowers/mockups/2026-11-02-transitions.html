@@ -30,22 +30,18 @@
   .peel .flap > i { position:absolute; inset:0; display:block; }
   .peel .shade { position:absolute; inset:0; pointer-events:none; }
 
-  /* ---------- soft wipe: a feathered angled edge, no line ---------- */
-  @property --p { syntax:'<percentage>'; inherits:false; initial-value:-30%; }
-  .wipe .top { z-index:2; --p:-30%;
-    -webkit-mask-image: linear-gradient(105deg, #000 calc(var(--p) - 14%), transparent calc(var(--p) + 14%));
-            mask-image: linear-gradient(105deg, #000 calc(var(--p) - 14%), transparent calc(var(--p) + 14%)); }
-  .wipe .under { filter:brightness(.8); }
-  .wipe.go .top { animation: wipe 520ms cubic-bezier(.45,0,.2,1) forwards; }
-  .wipe.go .under { animation: lift 520ms ease-out forwards; }
-  @keyframes wipe { from { --p:-30%; } to { --p:140%; } }
-  @keyframes lift { from { filter:brightness(.8); } to { filter:none; } }
-  @media (prefers-reduced-motion: reduce) { .wipe.go .top, .wipe.go .under { animation-duration:1ms; } }
+  /* ---------- wipe: a hard-ish edge, driven from JS so the style and edge can be swapped ---------- */
+  .wipe .top { z-index:2; }
+  .wipe .under { filter:brightness(.85); }
+  .styles { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; max-width:280px; }
+  .styles button { background:none; color:#9fb3ab; border:1px solid rgba(166,216,204,.25); padding:6px 10px; font:500 11px Georgia, serif; letter-spacing:.12em; text-transform:uppercase; cursor:pointer; }
+  .styles button.on { color:var(--bg); background:var(--mint); border-color:var(--mint); }
+  label.edge { font-size:12px; color:#9fb3ab; display:flex; gap:8px; align-items:center; }
 </style>
 </head>
 <body>
 <h1>Choose a transition</h1>
-<p class="sub">Press the gold button or Replay. The page peels over along a diagonal, like a book app; the wipe is a soft feathered edge.</p>
+<p class="sub">Press the gold button or Replay. The page peels over along a diagonal, like a book app; the wipe has five film-style variants and an edge slider.</p>
 <div class="row">
   <div class="col">
     <h2>Page turn</h2>
@@ -56,11 +52,15 @@
     <button class="go" onclick="turnPage()">Replay</button>
   </div>
   <div class="col">
-    <h2>Soft wipe</h2>
+    <h2>Wipe</h2>
     <div class="phone wipe" id="wipe">
       <div class="screen under"><div class="eyebrow">Step 1 of 8 · Class</div><div class="title">Choose a class</div><div class="plate"><b>Druid</b>Wild shape and nature magic.</div><div class="plate"><b>Fighter</b>Weapons, armour and grit.</div><div class="btn" onclick="wipe()">Continue</div></div>
-      <div class="screen b top"><div class="eyebrow">Step 2 of 8 · Origin</div><div class="title">Determine origin</div><div class="plate"><b>Acolyte</b>Two skills, one tool, and a gift of faith.</div><div class="plate"><b>Criminal</b>Stealth, a thieves’ tool, and a contact.</div></div>
+      <div class="screen b top" id="wipe-top" style="visibility:hidden"><div class="eyebrow">Step 2 of 8 · Origin</div><div class="title">Determine origin</div><div class="plate"><b>Acolyte</b>Two skills, one tool, and a gift of faith.</div><div class="plate"><b>Criminal</b>Stealth, a thieves’ tool, and a contact.</div></div>
     </div>
+    <div class="styles" id="wipe-styles">
+      <button data-s="diagonal" class="on">Diagonal</button><button data-s="vertical">Vertical</button><button data-s="clock">Clock</button><button data-s="iris">Iris</button><button data-s="barn">Barn door</button>
+    </div>
+    <label class="edge">Edge <input id="edge" type="range" min="0" max="12" value="2"> <span id="edge-v">2</span></label>
     <button class="go" onclick="wipe()">Replay</button>
   </div>
   <div class="col">
@@ -77,9 +77,44 @@
   const W = 260, DURATION = 760;
   let busy = false;
 
-  function wipe() {
-    const el = document.getElementById('wipe');
-    el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
+  // Wipe styles borrowed from film: a straight edge sweeping across (here at an angle), a clock hand,
+  // an iris opening from the middle, and barn doors parting. Edge softness is the feather in percent.
+  let wipeStyle = 'diagonal', wipeBusy = false;
+  const WIPE_MS = 560;
+  document.getElementById('wipe-styles').addEventListener('click', (ev) => {
+    const b = ev.target.closest('button'); if (!b) return;
+    wipeStyle = b.dataset.s;
+    document.querySelectorAll('#wipe-styles button').forEach((x) => x.classList.toggle('on', x === b));
+    wipe();
+  });
+  document.getElementById('edge').addEventListener('input', (ev) => { document.getElementById('edge-v').textContent = ev.target.value; });
+  function wipeMask(style, p, f) {      // p: 0..1 progress, f: feather in percent
+    const P = p * (100 + 2 * f) - f;    // lets the soft edge fully clear the screen at both ends
+    switch (style) {
+      case 'vertical': return `linear-gradient(90deg, #000 ${P - f}%, transparent ${P + f}%)`;
+      case 'clock': { const deg = p * 360, fd = f * 3.6; return `conic-gradient(from 0deg at 50% 50%, #000 ${deg - fd}deg, transparent ${deg + fd}deg)`; }
+      case 'iris': { const r = p * 80 + f; return `radial-gradient(circle at 50% 50%, #000 ${r - f}%, transparent ${r + f}%)`; }
+      case 'barn': { const h = p * (50 + f); return `linear-gradient(90deg, transparent calc(50% - ${h}%), #000 calc(50% - ${h}% + ${f * 2}%), #000 calc(50% + ${h}% - ${f * 2}%), transparent calc(50% + ${h}%))`; }
+      default: return `linear-gradient(105deg, #000 ${P - f}%, transparent ${P + f}%)`;
+    }
+  }
+  function setWipe(p) {
+    const top = document.getElementById('wipe-top'), f = +document.getElementById('edge').value;
+    const m = wipeMask(wipeStyle, p, f);
+    top.style.webkitMaskImage = m; top.style.maskImage = m;
+  }
+  function wipe(freezeAt) {
+    if (wipeBusy) return; wipeBusy = true;
+    const top = document.getElementById('wipe-top'); top.style.visibility = 'visible';
+    const end = () => { top.style.visibility = 'hidden'; top.style.maskImage = top.style.webkitMaskImage = ''; wipeBusy = false; };
+    if (reduced) { setWipe(1); setTimeout(end, 900); return; }
+    if (typeof freezeAt === 'number') { setWipe(freezeAt); return; }
+    const t0 = performance.now();
+    (function frame(now) {
+      const t = Math.min(1, (now - t0) / WIPE_MS);
+      setWipe(t < .5 ? 2 * t * t : 1 - 2 * (1 - t) * (1 - t));   // light ease: mostly steady, like the film wipes
+      if (t < 1) requestAnimationFrame(frame); else setTimeout(end, 650);
+    })(t0);
   }
 
   const ease = (t) => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
