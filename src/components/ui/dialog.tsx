@@ -36,7 +36,7 @@ function DialogContent({
     <DialogPortal hostName={portalHost}>
       <DialogOverlay>
         <DialogPrimitive.Content className={cn('w-full max-w-md', plate)} {...props}>
-          <ShapedSurface glass="overlay" shape="chamfer" fill="rock" stroke="border" strokeWidth={1}>
+          <ShapedSurface glass="overlay" blur shape="chamfer" fill="rock" stroke="border" strokeWidth={1}>
             <View className={cn('gap-4 p-4', content)}>{children}</View>
           </ShapedSurface>
         </DialogPrimitive.Content>

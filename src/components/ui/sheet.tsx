@@ -25,7 +25,7 @@ function SheetContent({
             window itself; web has no on-screen keyboard to avoid. */}
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="w-full">
           <DialogPrimitive.Content className={cn('w-full', plate)} {...props}>
-            <ShapedSurface glass="overlay" shape="sheet" fill="rock" stroke="transparent" strokeWidth={0} shadowOffset={0}>
+            <ShapedSurface glass="overlay" blur shape="sheet" fill="rock" stroke="transparent" strokeWidth={0} shadowOffset={0}>
               <View testID="sheet-grabber" className="mt-2 h-1 w-10 self-center rounded-full bg-border" />
               <View className={cn('gap-4 p-4', content)}>{children}</View>
             </ShapedSurface>
