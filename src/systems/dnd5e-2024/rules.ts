@@ -162,7 +162,7 @@ function stringList(v: unknown): string[] {
 }
 
 /** "Animal Handling" / "animal-handling" → "animal-handling". */
-function skillKey(name: string): string {
+export function skillKey(name: string): string {
   return name.trim().toLowerCase().replace(/\s+/g, '-')
 }
 

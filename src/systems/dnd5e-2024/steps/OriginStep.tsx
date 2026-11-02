@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Text } from '@/components/ui/text'
 import type { BuilderStepProps } from '../../types'
 import { ABILITY_LABELS, type AbilityKey } from '../definition'
+import { skillKey } from '../rules'
 import { ChoiceCard, QueryState, StepIntro, useDndContent } from './shared'
 
 const titleCase = (s: string) => s.replace(/\b\w/g, (c) => c.toUpperCase())
@@ -34,7 +35,11 @@ export function OriginStep({ draft, update }: BuilderStepProps) {
               title={bg.name}
               selected={draft.background_id === bg.id}
               aside={bg.owned ? <Badge>Homebrew</Badge> : null}
-              onPress={() => update({ background_id: bg.id, bg_abilities: bg.data.ability_score_options.abilities ?? [] })}
+              onPress={() => update({
+                background_id: bg.id,
+                bg_abilities: bg.data.ability_score_options.abilities ?? [],
+                bg_skills: bg.data.skill_proficiencies.map(skillKey),
+              })}
             >
               {bg.description ? <Text variant="body-sm" tone="muted" numberOfLines={2}>{bg.description}</Text> : null}
               <Text variant="caption" tone="accent">

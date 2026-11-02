@@ -10,6 +10,7 @@ import { createCharacter } from '@/features/characters/characters.api'
 import { listContent } from '@/features/content/content.api'
 import { AbilityScoresStep } from '@/systems/dnd5e-2024/steps/AbilityScoresStep'
 import { OriginStep } from '@/systems/dnd5e-2024/steps/OriginStep'
+import { ClassSkillsStep } from '@/systems/dnd5e-2024/steps/ClassSkillsStep'
 import { ClassStep } from '@/systems/dnd5e-2024/steps/ClassStep'
 import { filterSpells, SpellsStep } from '@/systems/dnd5e-2024/steps/SpellsStep'
 import type { Draft } from '@/systems/types'
@@ -261,5 +262,31 @@ describe('wizard header Cancel', () => {
     expect(cancel.props.className).toContain('-mr-3')
     fireEvent.press(cancel)
     expect(mockRouter.dismissTo).toHaveBeenCalledWith('/(app)/characters')
+  })
+})
+
+describe('Class skills step', () => {
+  beforeEach(() => act(() => useBuilderStore.getState().update({
+    class_id: 'ftr', class_name: 'Fighter', class_skill_count: 2,
+    class_skill_options: ['acrobatics', 'athletics', 'history', 'perception'], bg_skills: ['athletics'],
+  })))
+
+  test('picks up to the class count, locks background skills and disables the rest once full', () => {
+    renderWithQuery(<Bound Step={ClassSkillsStep} />)
+    expect(screen.getByText('0/2 chosen')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Athletics' })).toBeDisabled()
+    fireEvent.press(screen.getByRole('button', { name: 'History' }))
+    fireEvent.press(screen.getByRole('button', { name: 'Perception' }))
+    expect(useBuilderStore.getState().draft.class_skills).toEqual(['history', 'perception'])
+    expect(screen.getByText('2/2 chosen')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Acrobatics' })).toBeDisabled()
+    fireEvent.press(screen.getByRole('button', { name: 'History' }))
+    expect(useBuilderStore.getState().draft.class_skills).toEqual(['perception'])
+  })
+
+  test('choosing a class caches its skill pick count and list on the draft', async () => {
+    renderWithQuery(<Bound Step={ClassStep} />)
+    fireEvent.press(await screen.findByRole('button', { name: /^Fighter/ }))
+    expect(useBuilderStore.getState().draft).toMatchObject({ class_skill_count: expect.any(Number), class_skill_options: expect.any(Array) })
   })
 })

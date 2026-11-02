@@ -8,6 +8,7 @@ import { Text } from '@/components/ui/text'
 import type { BuilderStepProps } from '../../types'
 import { ABILITY_LABELS, type AbilityKey } from '../definition'
 import { levelOf } from '../draft'
+import { skillKey } from '../rules'
 import { ChoiceCard, Chip, type ContentItem, QueryState, StepIntro, useDndContent, useThemeColors } from './shared'
 
 /** Role grouping and one-line taglines for the SRD classes (D&D-specific presentation). */
@@ -100,7 +101,11 @@ export function ClassStep({ draft, update }: BuilderStepProps) {
                   selected={selected}
                   aside={<Badge>{`d${cls.data.hit_die}`}</Badge>}
                   onPress={() => {
-                    if (!selected) update({ class_id: cls.id, class_name: cls.name, hit_die: cls.data.hit_die })
+                    if (!selected) update({
+                      class_id: cls.id, class_name: cls.name, hit_die: cls.data.hit_die,
+                      class_skill_count: cls.data.features.skill_choices?.count ?? 0,
+                      class_skill_options: (cls.data.features.skill_choices?.from ?? []).map(skillKey),
+                    })
                   }}
                 >
                   <Text variant="body-sm" tone="muted">{TAGLINES[cls.name] ?? cls.description ?? ''}</Text>
