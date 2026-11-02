@@ -27,6 +27,9 @@ const SVG_PAD = 8
 // including unpositioned ones such as icon <svg>s; native only uses zIndex to order siblings.
 const SVG_STYLE = { position: 'absolute', top: -SVG_PAD, left: -SVG_PAD, zIndex: -1, overflow: 'visible' } as const
 const ROOT_STYLE = { zIndex: 0 } as const
+// Until onLayout reports a size the plate is 0x0, so hide the whole surface for that one frame
+// (it keeps its layout space, so lists don't jump) rather than flash text without its plate.
+const UNMEASURED_STYLE = { zIndex: 0, opacity: 0 } as const
 
 type ShapedSurfaceProps = {
   shape?: Shape | 'auto'
@@ -67,16 +70,18 @@ export function ShapedSurface({
   testID,
 }: ShapedSurfaceProps) {
   const [size, setSize] = useState({ width: 0, height: 0 })
+  const [measured, setMeasured] = useState(false)
   const gradientId = `surface-light-${useId().replace(/[^A-Za-z0-9_-]/g, '')}`
   const onLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout
+    setMeasured(true)
     setSize((prev) => (prev.width === width && prev.height === height ? prev : { width, height }))
   }
   const resolved: Shape = shape === 'auto' ? (size.height <= HEX_MAX_HEIGHT ? 'hex' : 'chamfer') : shape
   const d = shapePath(resolved, size.width, size.height, { inset: strokeWidth / 2, point, rise })
 
   return (
-    <View testID={testID} onLayout={onLayout} style={ROOT_STYLE} className={cn('relative', className)}>
+    <View testID={testID} onLayout={onLayout} style={measured ? ROOT_STYLE : UNMEASURED_STYLE} className={cn('relative', className)}>
       <Svg width={size.width + 2 * SVG_PAD} height={size.height + 2 * SVG_PAD} pointerEvents="none" style={SVG_STYLE}>
         {light ? (
           <Defs>

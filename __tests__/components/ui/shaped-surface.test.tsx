@@ -111,3 +111,12 @@ test('the plate sits behind all content: SVG z-index -1 inside a root stacking c
   expect(StyleSheet.flatten(screen.UNSAFE_getByType(Svg).props.style).zIndex).toBe(-1)
   expect(StyleSheet.flatten(screen.getByTestId('s').props.style).zIndex).toBe(0)
 })
+
+test('content and plate stay hidden until the first layout so the text never shows without its plate', () => {
+  render(<ShapedSurface testID="s" fill="rock" stroke="primary"><Text>x</Text></ShapedSurface>)
+  expect(StyleSheet.flatten(screen.getByTestId('s').props.style).opacity).toBe(0)
+  layout('s', 200, 44)
+  expect(StyleSheet.flatten(screen.getByTestId('s').props.style).opacity).not.toBe(0)
+  layout('s', 200, 120)
+  expect(StyleSheet.flatten(screen.getByTestId('s').props.style).opacity).not.toBe(0)
+})
