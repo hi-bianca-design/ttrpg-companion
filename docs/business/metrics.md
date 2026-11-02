@@ -30,7 +30,7 @@ Keep the list small. Names are suggestions.
 | `subscription_started` / `_renewed` / `_cancelled` / `_lapsed` | | Retention |
 | `entitlement_lapse_edit_blocked` | A lapsed user hits a pack-gated error | Quality of the lapse experience |
 
-Privacy: events must not include character names, notes, or anything a player typed. Use ids. Decide the retention period and a way to opt out before launch. See [Payments, platforms and compliance](payments-and-platforms.md).
+Privacy: events must not include character names, notes, or anything a player typed. Use ids. Decide the retention period and a way to opt out before launch. See [Payments, platforms and compliance](../legal/payments-and-platforms.md).
 
 ## Metrics that matter
 

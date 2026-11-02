@@ -38,7 +38,7 @@ Locked pack items should be visible but flagged in places like the content picke
 
 ### 4. Art, in the app
 
-Portraits and tokens appear on the character sheet and campaign party cards. Art needs a proper place to live and be cached: see [Art storage and delivery](art-storage-and-delivery.md). A character choosing a portrait from an owned pack should be as easy as picking any other option.
+Portraits and tokens appear on the character sheet and campaign party cards. Art needs a proper place to live and be cached: see [Art storage and delivery](../engineering/art-storage-and-delivery.md). A character choosing a portrait from an owned pack should be as easy as picking any other option.
 
 ## Visual language
 

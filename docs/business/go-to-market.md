@@ -11,7 +11,7 @@
 ## Positioning
 
 - **What we are:** a fast, good-looking table companion where the DM and players are in the same live campaign. The "open session" layer (everyone sees that the table is playing, combat state and whose turn it is) is the thing a static sheet doesn't do.
-- **What we aren't:** a licensed library of official books. Larger incumbents bundle official content that we can't legally offer (see [Content licensing](content-licensing.md)). Our wedge is the live table, the craft of the design, and original content with commissioned art.
+- **What we aren't:** a licensed library of official books. Larger incumbents bundle official content that we can't legally offer (see [Content licensing](../legal/content-licensing.md)). Our wedge is the live table, the craft of the design, and original content with commissioned art.
 - **The promise:** free to play, your characters are always yours.
 
 *To validate:* talk to 5 to 10 DMs before building paid features. What do they pay for today? What do they hate? Would a table pay, or only the DM?
@@ -46,7 +46,7 @@ Don't pay for ads until the loop and the conversion rate are known.
 1. The product itself: invites, a shareable campaign link, an "invite your table" prompt after creating a campaign.
 2. Communities where DMs already talk (subreddits, Discords, forums). Be useful, disclose that it's ours, follow each community's rules.
 3. Content creators and actual-play groups who run campaigns: offer a free DM Pro in exchange for honest use.
-4. Artist collaborations: a commissioned pack is also a marketing event for the artist's audience (see [Artist commissioning](artist-commissioning.md)).
+4. Artist collaborations: a commissioned pack is also a marketing event for the artist's audience (see [Artist commissioning](../content/artist-commissioning.md)).
 5. A simple landing page and changelog.
 
 ## What not to do

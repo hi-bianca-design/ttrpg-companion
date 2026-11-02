@@ -75,7 +75,7 @@ The content listing needs no change: row level security already hides unowned pa
 
 ## Known gaps (deferred)
 
-- A lapsed user still sees pack content they own in pickers, and re-picking it fails with an unexplained error. See [Paywall and upgrade UX](paywall-and-upgrade-ux.md).
+- A lapsed user still sees pack content they own in pickers, and re-picking it fails with an unexplained error. See [Paywall and upgrade UX](../design/paywall-and-upgrade-ux.md).
 - A user who owns a pack that is later unpublished keeps access, but the pack disappears from the shop.
 - Content lists aren't invalidated when entitlements change; needed once purchases exist.
 - `own_sheet_content_ids` also keeps campaign-scoped content visible after leaving a campaign if a sheet still references it; either document this or limit it to pack rows.

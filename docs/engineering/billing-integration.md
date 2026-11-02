@@ -27,7 +27,7 @@ App ◄── reads own entitlements (RLS) ◄───────────�
 | **A merchant of record** (a service that sells on our behalf and handles tax) | Takes on sales tax and VAT filing, which a solo builder otherwise must handle | Higher fee; may not cover native store purchases. **Verify** |
 | **Stripe only** | One system, web first | Store rules generally require in-app purchase for digital goods on native. **Verify** |
 
-**Recommendation to evaluate:** RevenueCat with `app_user_id` set to the Supabase user id (so entitlements map to our `user_id`), Stripe for web, and the edge function as the single writer. Decide after the web-vs-native launch question (see [Risks and open questions](risks-and-open-questions.md)). Don't commit to a provider until current fees and terms have been checked.
+**Recommendation to evaluate:** RevenueCat with `app_user_id` set to the Supabase user id (so entitlements map to our `user_id`), Stripe for web, and the edge function as the single writer. Decide after the web-vs-native launch question (see [Risks and open questions](../strategy/risks-and-open-questions.md)). Don't commit to a provider until current fees and terms have been checked.
 
 ## Product mapping
 
@@ -83,4 +83,4 @@ Entitlements belong to a signed-in account, not to a device. Anonymous purchases
 - Provider choice and the web-vs-native launch order.
 - Trial and intro-offer rules per store.
 - How to handle family sharing or multiple devices on one account (the account model makes this simpler than device-based licences).
-- Refund policy, as a product decision: see [Payments, platforms and compliance](payments-and-platforms.md).
+- Refund policy, as a product decision: see [Payments, platforms and compliance](../legal/payments-and-platforms.md).

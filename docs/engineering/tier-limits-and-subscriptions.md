@@ -1,6 +1,6 @@
 # Tier limits and subscriptions
 
-**Status:** Proposed (D11). Not built. This is the "DM Pro" tier and the free-tier caps from the [revenue model](revenue-model.md).
+**Status:** Proposed (D11). Not built. This is the "DM Pro" tier and the free-tier caps from the [revenue model](../business/revenue-model.md).
 
 ## Two separate things
 
@@ -41,11 +41,11 @@ Enforce in the database, not in the screens. A screen can *warn*; only the datab
 
 ## Typed errors
 
-Add error codes to `src/features/errors.ts` (for example `limit_characters`, `limit_campaigns`, `limit_party_size`) with plain copy, so the UI can show the right upgrade prompt rather than a generic failure. See [Paywall and upgrade UX](paywall-and-upgrade-ux.md).
+Add error codes to `src/features/errors.ts` (for example `limit_characters`, `limit_campaigns`, `limit_party_size`) with plain copy, so the UI can show the right upgrade prompt rather than a generic failure. See [Paywall and upgrade UX](../design/paywall-and-upgrade-ux.md).
 
 ## Caps are hypotheses
 
-The numbers (for example 3 characters, 1 campaign) are in the [revenue model](revenue-model.md) as hypotheses. Keep the limits in **one place** (a database function or config table), so changing a number is a one-line migration, not a hunt through the code. Don't hardcode them into the client.
+The numbers (for example 3 characters, 1 campaign) are in the [revenue model](../business/revenue-model.md) as hypotheses. Keep the limits in **one place** (a database function or config table), so changing a number is a one-line migration, not a hunt through the code. Don't hardcode them into the client.
 
 ## Grandfathering
 
@@ -59,6 +59,6 @@ Anyone who already has more than the new cap when it ships keeps everything. Rol
 
 ## Open questions
 
-- The exact caps and what DM Pro includes: decide with real usage data (see [Metrics](metrics.md)).
+- The exact caps and what DM Pro includes: decide with real usage data (see [Metrics](../business/metrics.md)).
 - Whether to count archived or deleted characters.
 - A grace period length after a failed payment.

@@ -5,7 +5,7 @@
 ## Principles
 
 1. **Ask at the moment of need, not before.** Show an upgrade prompt when someone hits a limit or taps a locked thing, never as a banner on every screen.
-2. **Never hold their work hostage.** A lapsed subscription or a full free tier blocks *new* creation. Characters, campaigns and notes they already have stay readable and editable. This is decision D6/D11 in the [decision log](decision-log.md).
+2. **Never hold their work hostage.** A lapsed subscription or a full free tier blocks *new* creation. Characters, campaigns and notes they already have stay readable and editable. This is decision D6/D11 in the [decision log](../strategy/decision-log.md).
 3. **Say plainly what happens.** "You've reached 3 characters on the free plan. Your existing characters stay yours. DM Pro lifts the limit." No countdown timers, no guilt copy, no fake scarcity.
 4. **One clear path out.** Every prompt has a primary action ("See DM Pro") and an equally easy "Not now". Dismissing never penalises.
 5. **At the table, stay out of the way.** During an open session, upgrade prompts must not interrupt play. Defer them to after the session or to the DM's own screens.

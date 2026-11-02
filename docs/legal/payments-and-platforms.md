@@ -28,16 +28,16 @@ The app runs on Expo web first (see the project memory). Web checkout avoids sto
 
 ## Money handling
 
-- **Refunds:** write a clear policy: what's refundable, within what time, how to ask. Store purchases are refunded through the store; web refunds are ours. Decide how a refund affects an entitlement (see [Billing integration](billing-integration.md)).
+- **Refunds:** write a clear policy: what's refundable, within what time, how to ask. Store purchases are refunded through the store; web refunds are ours. Decide how a refund affects an entitlement (see [Billing integration](../engineering/billing-integration.md)).
 - **Chargebacks:** a few are normal; track them. Revoke the entitlement with the same lapse rule as everything else.
-- **Artist payouts:** if revenue share applies, we owe a statement and payment. Work out net amounts per channel (store, web). See [Artist commissioning](artist-commissioning.md).
+- **Artist payouts:** if revenue share applies, we owe a statement and payment. Work out net amounts per channel (store, web). See [Artist commissioning](../content/artist-commissioning.md).
 - **Business setup:** a sole trader or a company, a business bank account, and keeping records for tax. Ask an accountant: this is a local question.
 
 ## Privacy and data
 
 - **What we hold:** email, username, characters and campaigns, purchase state. Characters may contain free-text notes.
 - **A privacy policy** is required by the stores and by law in most places. Say what we collect, why, who it's shared with (the billing provider, the analytics provider), how long we keep it, and how to delete it.
-- **Analytics:** collect only ids and events, never what people typed ([Metrics](metrics.md)). Get consent where required.
+- **Analytics:** collect only ids and events, never what people typed ([Metrics](../business/metrics.md)). Get consent where required.
 - **Data export and deletion:** let people export their characters and delete their account. This is also a feature of DM Pro (export and backup), but deletion rights shouldn't be paywalled.
 - **Children:** D&D has young players. Decide the minimum age (a typical choice is 13+, higher in some regions), say it in the terms, and check whether the product is "directed to children" under local law. If under-13s are in scope, the rules are far stricter. **Verify** with advice.
 
@@ -47,7 +47,7 @@ Needs drafting. At minimum: the licence we grant to the app, the licence **users
 
 ## Security and fraud
 
-- The webhook and service-role key only live server-side ([Billing integration](billing-integration.md)).
+- The webhook and service-role key only live server-side ([Billing integration](../engineering/billing-integration.md)).
 - Entitlements are server-written and RLS-enforced; clients can't grant themselves access (tested).
 - Watch for stolen cards on web checkout and abuse of free trials.
 - Keep dependency updates and a basic incident process.
