@@ -17,13 +17,13 @@ test('daggerheart satisfies GameSystem', () => {
   ])
   expect(Object.keys(s.contentKinds)).toEqual(['ancestry', 'community', 'class', 'subclass', 'domain_card'])
   expect(s.contentKinds.subclass.parentKind).toBe('class')
-  expect(s.builder.steps).toEqual([])
+  expect(s.builder.steps.length).toBeGreaterThan(0)
 })
 
-test('hidden from pickers but still resolvable', () => {
-  expect(daggerheart.hidden).toBe(true)
+test('offered by pickers and resolvable', () => {
+  expect(daggerheart.hidden).toBeFalsy()
   expect(SYSTEMS).toContain(daggerheart)
-  expect(visibleSystems().map((s) => s.id)).toEqual(['dnd5e-2024'])
+  expect(visibleSystems()).toContain(daggerheart)
 })
 
 // Type-checked against the DB Insert type: a Daggerheart character fits the generic characters

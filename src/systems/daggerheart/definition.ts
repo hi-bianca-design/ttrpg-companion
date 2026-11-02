@@ -1,5 +1,4 @@
-// Daggerheart stub: static definition only. Proves a differently shaped game fits the
-// generic GameSystem types. Content-kind schemas live in schemas.ts and are joined to this
+// Daggerheart: static definition (traits, resources, content-kind metadata). Content-kind schemas live in schemas.ts and are joined to this
 // metadata in index.ts (same cycle-avoidance as dnd5e-2024).
 import type { ContentKindDef, ResourceDef, StatDef } from '../types'
 

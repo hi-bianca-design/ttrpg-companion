@@ -46,14 +46,7 @@ export function useDndContent<K extends Kind>(kind: K) {
   return { items, isLoading: query.isLoading, isError: query.isError, refetch: query.refetch }
 }
 
-export function StepIntro({ title, description }: { title: string; description: string }) {
-  return (
-    <View className="gap-1">
-      <Text variant="title">{title}</Text>
-      <Text variant="narrative" tone="muted">{description}</Text>
-    </View>
-  )
-}
+export { StepIntro } from '@/features/characters/builder/StepIntro'
 
 /** Skeleton cards while loading, a message plus "Try again" on error; null once loaded. */
 export function QueryState({ isLoading, isError, onRetry }: { isLoading: boolean; isError: boolean; onRetry: () => void }) {
