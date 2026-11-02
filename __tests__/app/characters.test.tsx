@@ -43,6 +43,14 @@ test('long press → confirm Delete calls the delete mutation with the id', () =
   expect(mockMutate).toHaveBeenCalledWith('ch1', expect.anything())
 })
 
+test('the card has a visible delete button that opens the same confirmation', () => {
+  renderList()
+  fireEvent.press(screen.getAllByRole('button', { name: 'Delete Mira' }).at(-1)!)
+  expect(screen.getByText('Delete Mira?')).toBeTruthy()
+  fireEvent.press(screen.getAllByRole('button', { name: 'Delete' }).at(-1)!)
+  expect(mockMutate).toHaveBeenCalledWith('ch1', expect.anything())
+})
+
 test('long press → Cancel does not delete', () => {
   renderList()
   fireEvent(screen.getByRole('button', { name: 'Mira, Level 1 Wizard' }), 'longPress')

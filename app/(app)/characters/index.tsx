@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { useRouter } from 'expo-router'
-import { Plus, Sword } from 'phosphor-react-native'
+import { Plus, Sword, Trash } from 'phosphor-react-native'
 import { EmptyState, ScreenBackground } from '@/components/game'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -29,9 +29,14 @@ function CharacterCard({ character, onPress, onLongPress }: CardProps) {
       onLongPress={onLongPress}
     >
       <Card className="gap-3">
-        <View className="gap-1">
-          <Text variant="subhead" numberOfLines={1}>{character.name}</Text>
-          <Text variant="body-sm" tone="muted">{subtitle}</Text>
+        <View className="flex-row items-start gap-3">
+          <View className="flex-1 gap-1">
+            <Text variant="subhead" numberOfLines={1}>{character.name}</Text>
+            <Text variant="body-sm" tone="muted">{subtitle}</Text>
+          </View>
+          <Button variant="ghost" size="icon" accessibilityLabel={`Delete ${character.name}`} onPress={onLongPress}>
+            <Trash size={16} color={THEME_COLORS.mutedForeground} />
+          </Button>
         </View>
         {hp ? (
           <View className="gap-1">
