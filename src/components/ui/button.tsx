@@ -74,7 +74,7 @@ function Button({ className, variant, size, disabled, hitSlop, lit, stroke, onPr
           setPressed(false)
           onPressOut?.(e)
         }}
-        style={[typeof style === 'function' ? undefined : style, sunk && { transform: [{ translateX: SINK }, { translateY: SINK }] }]}
+        style={[typeof style === 'function' ? style({ pressed }) : style, sunk && { transform: [{ translateX: SINK }, { translateY: SINK }] }]}
         {...props}
       >
         {plate ? (

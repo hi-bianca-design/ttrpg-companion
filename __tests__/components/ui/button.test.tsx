@@ -140,3 +140,12 @@ test('the plate grows with a wrapped label: min height, not a fixed one', () => 
   expect(plates[0]).toContain('min-h-11')
   expect(plates[0]).not.toContain('flex-1')
 })
+
+test('a function-valued style is resolved with the pressed state', () => {
+  const style = jest.fn(({ pressed }: { pressed: boolean }) => ({ backgroundColor: pressed ? 'red' : 'blue' }))
+  render(<Button accessibilityLabel="Go" style={style}><Text>Go</Text></Button>)
+  const flat = () => StyleSheet.flatten(screen.getByRole('button').props.style)
+  expect(flat().backgroundColor).toBe('blue')
+  fireEvent(screen.getByRole('button'), 'pressIn')
+  expect(flat().backgroundColor).toBe('red')
+})
