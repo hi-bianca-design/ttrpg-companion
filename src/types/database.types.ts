@@ -557,6 +557,10 @@ export type Database = {
         }
       }
       gen_invite_code: { Args: never; Returns: string }
+      has_sheet_content: {
+        Args: { p_character_id: string; p_content_id: string }
+        Returns: boolean
+      }
       is_campaign_gm: { Args: { p_campaign_id: string }; Returns: boolean }
       is_campaign_member: { Args: { p_campaign_id: string }; Returns: boolean }
       join_campaign: {
