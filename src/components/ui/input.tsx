@@ -29,7 +29,7 @@ function Input({ className, editable = true, multiline, value, defaultValue, onC
     >
       <TextInput
         className={cn(
-          'bg-transparent px-6 text-body',
+          'relative bg-transparent px-6 text-body',
           multiline ? 'py-3' : 'h-11',
           filled ? 'font-narrative-semibold text-typed' : 'font-narrative-italic text-foreground',
           // The browser's own blue focus outline is replaced by the torch edge.

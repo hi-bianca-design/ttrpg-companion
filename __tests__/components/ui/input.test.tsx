@@ -84,3 +84,8 @@ test('still calls the caller onChangeText, onFocus and onBlur', () => {
   expect(onChangeText).toHaveBeenCalledWith('a')
   expect(onBlur).toHaveBeenCalledTimes(1)
 })
+
+test('the field is positioned so it paints above the plate SVG on web (an unpositioned input hides under it)', () => {
+  render(<Input placeholder="Name thy character" />)
+  expect(field().props.className).toContain('relative')
+})
