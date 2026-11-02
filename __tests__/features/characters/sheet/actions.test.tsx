@@ -8,6 +8,7 @@ import type { SlotsValue } from '@/systems/types'
 import { showToast } from '@/components/ui/toast'
 import { variantOf } from '../../../helpers/button'
 
+jest.mock('@/features/sessions/SessionBadge', () => ({ SessionBadge: () => null }))
 jest.mock('@/features/characters/characters.queries', () => ({
   useCharacter: jest.fn(),
   useResourceMutation: jest.fn(),
