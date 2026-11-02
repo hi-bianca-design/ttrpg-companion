@@ -6,6 +6,7 @@ import CampaignDetailScreen from '../../../app/(app)/campaigns/[id]'
 import { getCampaign } from '@/features/campaigns/campaigns.api'
 import { ERROR_COPY } from '@/features/errors'
 import { systemName } from '@/systems/registry'
+import { variantOf } from '../../helpers/button'
 
 jest.mock('@/lib/supabase', () => ({ supabase: { from: jest.fn(), rpc: jest.fn(), auth: { getSession: jest.fn() } } }))
 const mockRouter = { back: jest.fn(), push: jest.fn(), navigate: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) }
@@ -58,8 +59,8 @@ describe('back affordance', () => {
     renderDetail()
     await screen.findByText('Odd Game')
     const back = screen.getByRole('button', { name: 'Back' })
-    expect(back.props.className).toContain('bg-transparent')
-    expect(back.props.className).not.toContain('border-primary')
+    expect(variantOf(back)).toBe('ghost')
+    expect(variantOf(back)).not.toBe('outline')
     expect(screen.queryByText('Back')).toBeNull()
     const json = JSON.stringify(screen.toJSON())
     expect(json.indexOf('"Back"')).toBeLessThan(json.indexOf('Odd Game'))

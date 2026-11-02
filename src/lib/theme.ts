@@ -19,8 +19,6 @@ export const THEME_COLORS: Record<string, string> = {
   accentForeground: '#9BD3C4',
   secondary: '#9BD3C4',
   secondaryForeground: '#06211F',
-  highlight: '#9BD3C4',
-  highlightForeground: '#06211F',
   highlightText: '#E3B130',
   destructive: '#E8806A',
   destructiveForeground: '#F0B9A8',

@@ -13,6 +13,7 @@ import { OriginStep } from '@/systems/dnd5e-2024/steps/OriginStep'
 import { ClassStep } from '@/systems/dnd5e-2024/steps/ClassStep'
 import { filterSpells, SpellsStep } from '@/systems/dnd5e-2024/steps/SpellsStep'
 import type { Draft } from '@/systems/types'
+import { variantOf } from '../../helpers/button'
 
 jest.mock('@/features/content/content.api', () => ({ listContent: jest.fn() }))
 jest.mock('@/features/session', () => ({ currentUserId: jest.fn(async () => 'me') }))
@@ -256,7 +257,7 @@ describe('wizard header Cancel', () => {
     mockParams.step = 'origin'
     renderWithQuery(<BuilderStepScreen />)
     const cancel = screen.getByRole('button', { name: 'Cancel' })
-    expect(cancel.props.className).toContain('bg-transparent')
+    expect(variantOf(cancel)).toBe('ghost')
     expect(cancel.props.className).toContain('-mr-3')
     fireEvent.press(cancel)
     expect(mockRouter.dismissTo).toHaveBeenCalledWith('/(app)/characters')

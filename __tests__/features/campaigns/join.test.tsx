@@ -9,6 +9,7 @@ import { joinCampaign } from '@/features/campaigns/campaigns.api'
 import { listCharacters } from '@/features/characters/characters.api'
 import { AppError, ERROR_COPY, type AppErrorCode } from '@/features/errors'
 import { showToast } from '@/components/ui/toast'
+import { variantOf } from '../../helpers/button'
 
 jest.mock('@/lib/supabase', () => ({ supabase: { from: jest.fn(), rpc: jest.fn(), auth: { getSession: jest.fn() } } }))
 const mockRouter = { replace: jest.fn(), back: jest.fn(), push: jest.fn(), navigate: jest.fn() }
@@ -104,8 +105,8 @@ test('Cancel is a ghost text button at the leading edge, above the title', async
   renderJoin()
   await screen.findByRole('button', { name: 'Character Thorin' })
   const cancel = screen.getByRole('button', { name: 'Cancel' })
-  expect(cancel.props.className).toContain('bg-transparent')
-  expect(cancel.props.className).not.toContain('border-primary')
+  expect(variantOf(cancel)).toBe('ghost')
+  expect(variantOf(cancel)).not.toBe('outline')
   const json = JSON.stringify(screen.toJSON())
   expect(json.indexOf('Cancel')).toBeLessThan(json.indexOf('Join a campaign'))
 })

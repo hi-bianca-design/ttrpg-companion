@@ -73,7 +73,7 @@ module.exports = {
         well: token('well'),
         placeholder: token('placeholder'),
         typed: token('typed'),
-        highlight: { DEFAULT: token('highlight'), foreground: token('highlight-foreground'), text: token('highlight-text') },
+        highlight: { text: token('highlight-text') },
         destructive: { DEFAULT: token('destructive'), foreground: token('destructive-foreground') },
         'resource-sky': { DEFAULT: token('resource-sky'), glow: token('resource-sky-glow') },
         'resource-plum': { DEFAULT: token('resource-plum'), glow: token('resource-plum-glow') },

@@ -61,3 +61,9 @@ test('font families: Cinzel display, Cormorant narrative, Inter and Plex kept, n
   expect(f.plex).toEqual(['IBMPlexMono_500Medium'])
   expect(JSON.stringify(f)).not.toContain('Fraunces')
 })
+test('the highlight fill token is gone; highlight-text stays for stat numbers', () => {
+  const h = config.theme.extend.colors.highlight
+  expect(h.DEFAULT).toBeUndefined()
+  expect(h.foreground).toBeUndefined()
+  expect(h.text).toBe('var(--highlight-text)')
+})

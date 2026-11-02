@@ -121,7 +121,7 @@ export default function LevelUpScreen() {
       </Card>
 
       {saveError ? <Text variant="caption" tone="destructive">{saveError}</Text> : null}
-      <Button variant="highlight" disabled={!ready || levelUp.isPending} onPress={submit}>
+      <Button variant="secondary" disabled={!ready || levelUp.isPending} onPress={submit}>
         <Text>{levelUp.isPending ? 'Leveling up…' : 'Level up'}</Text>
       </Button>
     </ScreenBackground>

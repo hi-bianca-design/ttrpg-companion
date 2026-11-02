@@ -23,9 +23,7 @@
     --accent-foreground: #9BD3C4;
     --secondary: #9BD3C4;
     --secondary-foreground: #06211F;
-    /* highlight fill is replaced by secondary in the Button task; highlight-text stays gold for stat numbers */
-    --highlight: #9BD3C4;
-    --highlight-foreground: #06211F;
+    /* highlight-text: gold for stat numbers and ochre text */
     --highlight-text: #E3B130;
     /* destructive: text/border tone. blood + blood-fill are the destructive button's edge and fill. */
     --destructive: #E8806A;

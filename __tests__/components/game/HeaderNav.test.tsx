@@ -1,14 +1,15 @@
 import '@testing-library/jest-native/extend-expect'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import { BackButton, CancelButton, NavRow } from '@/components/game/HeaderNav'
+import { variantOf } from '../../helpers/button'
 
 test('BackButton is a ghost caret icon button labelled Back with a 44pt hit area', () => {
   const onPress = jest.fn()
   render(<BackButton onPress={onPress} />)
   const back = screen.getByRole('button', { name: 'Back' })
-  expect(back.props.className).toContain('bg-transparent')
+  expect(variantOf(back)).toBe('ghost')
   expect(back.props.className).toContain('h-8 w-8')
-  expect(back.props.className).not.toContain('border-primary')
+  expect(variantOf(back)).not.toBe('outline')
   expect(back.props.hitSlop).toEqual({ top: 6, bottom: 6, left: 6, right: 6 })
   expect(screen.queryByText('Back')).toBeNull()
   fireEvent.press(back)
@@ -19,8 +20,8 @@ test('CancelButton is a ghost text button, not an outline pill', () => {
   const onPress = jest.fn()
   render(<CancelButton onPress={onPress} />)
   const cancel = screen.getByRole('button', { name: 'Cancel' })
-  expect(cancel.props.className).toContain('bg-transparent')
-  expect(cancel.props.className).not.toContain('border-primary')
+  expect(variantOf(cancel)).toBe('ghost')
+  expect(variantOf(cancel)).not.toBe('outline')
   expect(screen.getByText('Cancel')).toBeTruthy()
   fireEvent.press(cancel)
   expect(onPress).toHaveBeenCalledTimes(1)

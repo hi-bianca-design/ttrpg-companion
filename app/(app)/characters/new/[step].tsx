@@ -118,7 +118,7 @@ export default function BuilderStepScreen() {
           {error ? <Text variant="caption" tone="destructive">{error}</Text> : null}
           {isLast ? (
             <Button
-              variant="highlight"
+              variant="secondary"
               accessibilityLabel="Create character"
               disabled={!allComplete || create.isPending}
               onPress={handleCreate}
