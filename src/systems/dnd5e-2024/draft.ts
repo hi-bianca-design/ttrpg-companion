@@ -59,6 +59,11 @@ export function equipmentComplete(draft: Draft): boolean {
   return strList(draft.class_equipment_options).length === 0 || typeof draft.equipment_option === 'number'
 }
 
+/** Skills the character is proficient in: valid class skill picks plus the background's granted skills (kebab-case). */
+export function proficientSkills(draft: Draft): string[] {
+  return [...new Set([...validClassSkills(draft), ...strList(draft.bg_skills)])]
+}
+
 /** The class choices typed or picked so far (choice key → values), non-string entries dropped. */
 export function classChoices(draft: Draft): Record<string, string[]> {
   const raw = draft.class_choices && typeof draft.class_choices === 'object' ? (draft.class_choices as Record<string, unknown>) : {}
@@ -225,7 +230,9 @@ export function toCharacter(draft: Draft): NewCharacter {
   const level = levelOf(draft)
   const stats = Object.fromEntries(ABILITY_KEYS.map((k) => [k, Math.min(20, num(draft[k], 10) + bonusFor(draft, k))]))
   const hpMax = Math.max(1, getMaxHP(level, num(draft.hit_die, 8), getAbilityModifier(stats.constitution)))
-  const choices = Object.fromEntries(Object.entries(classChoices(draft)).filter(([, v]) => v.length > 0))
+  const choices = Object.fromEntries(Object.entries(classChoices(draft))
+    .map(([k, v]) => [k, v.map((s) => s.trim()).filter((s) => s.length > 0)] as const)
+    .filter(([, v]) => v.length > 0))
   const pick = (kind: string, id: unknown, acquired_at_level: number) =>
     typeof id === 'string' && id ? [{ content_id: id, kind, state: {}, acquired_at_level }] : []
 

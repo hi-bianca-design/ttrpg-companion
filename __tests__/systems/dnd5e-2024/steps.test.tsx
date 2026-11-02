@@ -4,13 +4,16 @@ import { makeTestQueryClient } from '../../helpers/queryClient'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import type { ReactElement } from 'react'
 import BuilderStepScreen from '../../../app/(app)/characters/new/[step]'
-import { useBuilderStore } from '@/features/characters/builder/builder.store'
+import { useBuilderStore, visibleSteps } from '@/features/characters/builder/builder.store'
+import { OpenChoiceField } from '@/features/characters/builder/OpenChoiceField'
+import { dnd5eBuilder } from '@/systems/dnd5e-2024/builder'
 import { WizardProgress } from '@/features/characters/builder/WizardProgress'
 import { createCharacter } from '@/features/characters/characters.api'
 import { listContent } from '@/features/content/content.api'
 import { abilitiesFilled } from '@/systems/dnd5e-2024/draft'
 import { AbilityScoresStep } from '@/systems/dnd5e-2024/steps/AbilityScoresStep'
 import { OriginStep } from '@/systems/dnd5e-2024/steps/OriginStep'
+import { ClassFeaturesStep } from '@/systems/dnd5e-2024/steps/ClassFeaturesStep'
 import { ClassSkillsStep } from '@/systems/dnd5e-2024/steps/ClassSkillsStep'
 import { ClassStep } from '@/systems/dnd5e-2024/steps/ClassStep'
 import { filterSpells, SpellsStep } from '@/systems/dnd5e-2024/steps/SpellsStep'
@@ -68,6 +71,16 @@ const CONTENT: Record<string, unknown[]> = {
     spell('thaumaturgy', 'Thaumaturgy', 0, ['cleric']),
     spell('spare-the-dying', 'Spare the Dying', 0, ['cleric']),
     spell('fireball', 'Fireball', 3, ['wizard']),
+  ],
+  feat: [
+    row('feat', 'defense', 'Defense', { prerequisites: { feature: 'Fighting Style' }, benefits: '+1 AC in armor.' }),
+    row('feat', 'archery', 'Archery', { prerequisites: { feature: 'Fighting Style' }, benefits: '+2 to ranged attack rolls.' }),
+    row('feat', 'alert', 'Alert', { prerequisites: {}, benefits: 'Initiative proficiency.' }),
+  ],
+  item: [
+    row('item', 'longsword', 'Longsword', { category: 'Martial Melee Weapon', properties: { mastery: 'Sap', weapon_properties: ['Versatile'] } }),
+    row('item', 'shortbow', 'Shortbow', { category: 'Simple Ranged Weapon', properties: { mastery: 'Vex', weapon_properties: ['Ammunition'] } }),
+    row('item', 'rope', 'Rope', { category: 'Adventuring Gear', properties: {} }),
   ],
 }
 
@@ -364,5 +377,132 @@ describe('Class skills step', () => {
     renderWithQuery(<Bound Step={ClassStep} />)
     fireEvent.press(await screen.findByRole('button', { name: /^Fighter/ }))
     expect(useBuilderStore.getState().draft).toMatchObject({ class_skill_count: expect.any(Number), class_skill_options: expect.any(Array) })
+  })
+})
+
+describe('OpenChoiceField', () => {
+  const setup = (values: string[], count = 2) => {
+    const onChange = jest.fn()
+    render(<OpenChoiceField label="Weapon Mastery" help="Pick weapons." count={count} values={values} suggestions={['Longsword', 'Shortbow']} onChange={onChange} />)
+    return onChange
+  }
+
+  test('renders count inputs prefilled from values', () => {
+    setup(['Pike'], 2)
+    expect(screen.getByLabelText('Weapon Mastery 1').props.value).toBe('Pike')
+    expect(screen.getByLabelText('Weapon Mastery 2').props.value).toBe('')
+    expect(screen.getByText('Pick weapons.')).toBeTruthy()
+  })
+
+  test('a suggestion fills the first empty input', () => {
+    const onChange = setup(['', 'Pike'])
+    fireEvent.press(screen.getByRole('button', { name: 'Longsword' }))
+    expect(onChange).toHaveBeenCalledWith(['Longsword', 'Pike'])
+  })
+
+  test('a chip matching a value (any case) is selected; tapping it clears that value', () => {
+    const onChange = setup(['Pike', 'longsword '])
+    const chip = screen.getByRole('button', { name: 'Longsword' })
+    expect(chip.props.accessibilityState).toMatchObject({ selected: true })
+    fireEvent.press(chip)
+    expect(onChange).toHaveBeenCalledWith(['Pike'])
+  })
+
+  test('with every input full, a suggestion replaces the last value', () => {
+    const onChange = setup(['Pike'], 1)
+    fireEvent.press(screen.getByRole('button', { name: 'Shortbow' }))
+    expect(onChange).toHaveBeenCalledWith(['Shortbow'])
+  })
+})
+
+describe('Class features step', () => {
+  const fighter: Draft = {
+    class_id: 'ftr', class_name: 'Fighter', hit_die: 10,
+    class_features: ['Fighting Style', 'Second Wind', 'Weapon Mastery'],
+  }
+  beforeEach(() => act(() => useBuilderStore.getState().update(fighter)))
+
+  test('a Fighter sees Fighting Style (1 input) and Weapon Mastery (3 inputs)', async () => {
+    renderWithQuery(<Bound Step={ClassFeaturesStep} />)
+    expect(screen.getByText('Fighting Style')).toBeTruthy()
+    expect(screen.getByText('Weapon Mastery')).toBeTruthy()
+    expect(screen.getByLabelText('Fighting Style')).toBeTruthy()
+    for (const i of [1, 2, 3]) expect(screen.getByLabelText(`Weapon Mastery ${i}`)).toBeTruthy()
+    expect(screen.queryByLabelText('Weapon Mastery 4')).toBeNull()
+    await act(async () => {})
+  })
+
+  test('suggestions: Fighting Style feats only, masterable weapons only', async () => {
+    renderWithQuery(<Bound Step={ClassFeaturesStep} />)
+    expect(await screen.findByRole('button', { name: 'Defense' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Archery' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Alert' })).toBeNull()
+    expect(await screen.findByRole('button', { name: 'Longsword' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Rope' })).toBeNull()
+  })
+
+  test('tapping "Defense" stores it next to the existing choices; tapping it again clears it', async () => {
+    act(() => useBuilderStore.getState().update({ class_choices: { weapon_mastery: ['Longsword'] } }))
+    const update = jest.fn((patch: Partial<Draft>) => useBuilderStore.getState().update(patch))
+    function Spy() {
+      const draft = useBuilderStore((s) => s.draft)
+      return <ClassFeaturesStep draft={draft} update={update} />
+    }
+    renderWithQuery(<Spy />)
+    fireEvent.press(await screen.findByRole('button', { name: 'Defense' }))
+    expect(update).toHaveBeenLastCalledWith({ class_choices: { weapon_mastery: ['Longsword'], fighting_style: ['Defense'] } })
+    fireEvent.press(screen.getByRole('button', { name: 'Defense' }))
+    expect(useBuilderStore.getState().draft.class_choices).toEqual({ weapon_mastery: ['Longsword'], fighting_style: [] })
+  })
+
+  test('a typed value is stored as is', async () => {
+    renderWithQuery(<Bound Step={ClassFeaturesStep} />)
+    fireEvent.changeText(screen.getByLabelText('Fighting Style'), 'Pike and Shield')
+    expect(useBuilderStore.getState().draft.class_choices).toMatchObject({ fighting_style: ['Pike and Shield'] })
+    await act(async () => {})
+  })
+
+  test('the step is shown for a Fighter, hidden for a Wizard', () => {
+    const ids = (d: Draft) => visibleSteps(dnd5eBuilder.steps, { ...dnd5eBuilder.initialDraft(), ...d }).map((s) => s.id)
+    expect(ids(fighter)).toContain('class-features')
+    expect(ids({ class_id: 'wiz', class_name: 'Wizard', class_features: ['Spellcasting', 'Ritual Adept', 'Arcane Recovery'] })).not.toContain('class-features')
+  })
+
+  test('isComplete once every choice has its count of non-empty values', () => {
+    const step = dnd5eBuilder.steps.find((s) => s.id === 'class-features')!
+    expect(step.isComplete({ ...fighter, class_choices: { fighting_style: ['Defense'], weapon_mastery: ['A', 'B'] } })).toBe(false)
+    expect(step.isComplete({ ...fighter, class_choices: { fighting_style: ['Defense'], weapon_mastery: ['A', ' ', 'C'] } })).toBe(false)
+    expect(step.isComplete({ ...fighter, class_choices: { fighting_style: ['Defense'], weapon_mastery: ['A', 'B', 'C'] } })).toBe(true)
+  })
+
+  test('Continue is enabled with every field empty', async () => {
+    mockParams.step = 'class-features'
+    renderWithQuery(<BuilderStepScreen />)
+    const next = await screen.findByRole('button', { name: 'Continue' })
+    expect(next.props.accessibilityState?.disabled).toBeFalsy()
+    mockParams.step = 'review'
+    await act(async () => {})
+  })
+
+  test('a Rogue gets Expertise suggestions from its proficient skills, a Cleric its order options with descriptions', async () => {
+    act(() => useBuilderStore.getState().update({
+      class_id: 'rog', class_name: 'Rogue', class_features: ['Expertise', 'Sneak Attack', 'Weapon Mastery'],
+    }))
+    act(() => useBuilderStore.getState().update({
+      class_skill_options: ['stealth', 'sleight-of-hand', 'acrobatics'], class_skill_count: 2, class_skills: ['stealth', 'sleight-of-hand'], bg_skills: ['insight'],
+    }))
+    const { unmount } = renderWithQuery(<Bound Step={ClassFeaturesStep} />)
+    for (const name of ['Stealth', 'Sleight of Hand', 'Insight']) expect(screen.getByRole('button', { name })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Acrobatics' })).toBeNull()
+    await act(async () => {})
+    unmount()
+
+    act(() => useBuilderStore.getState().update({ class_id: 'clr', class_name: 'Cleric', class_features: ['Spellcasting', 'Divine Order'] }))
+    renderWithQuery(<Bound Step={ClassFeaturesStep} />)
+    expect(screen.getByLabelText('Divine Order')).toBeTruthy()
+    fireEvent.press(screen.getByRole('button', { name: 'Thaumaturge' }))
+    expect(useBuilderStore.getState().draft.class_choices).toEqual({ order: ['Thaumaturge'] })
+    expect(screen.getByText(/Trained in martial weapons and heavy armor/)).toBeTruthy()
+    await act(async () => {})
   })
 })
