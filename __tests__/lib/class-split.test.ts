@@ -15,3 +15,9 @@ test('flex direction, wrapping, alignment, gap, padding and text stay on the con
 test('variant-prefixed placement classes still go to the plate', () => {
   expect(splitClassName('web:mt-2').plate).toBe('web:mt-2')
 })
+
+test('opacity goes to the plate so the plate and its content dim together exactly once', () => {
+  const { plate, content } = splitClassName('opacity-50 gap-2')
+  expect(plate).toBe('opacity-50')
+  expect(content).toBe('gap-2')
+})

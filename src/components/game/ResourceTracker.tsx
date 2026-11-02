@@ -5,6 +5,7 @@ import Svg, { Defs, FeGaussianBlur, Filter, Polygon } from 'react-native-svg'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
+import type { ThemeColorKey } from '@/components/ui/shaped-surface'
 import { Text } from '@/components/ui/text'
 import { THEME_COLORS } from '@/lib/theme'
 
@@ -34,12 +35,27 @@ type ResourceTrackerProps =
 const PIP_SIZE = 12
 const DIAMOND = `${PIP_SIZE / 2},0 ${PIP_SIZE},${PIP_SIZE / 2} ${PIP_SIZE / 2},${PIP_SIZE} 0,${PIP_SIZE / 2}`
 
+const TINT_KEYS = {
+  sky: 'resourceSky',
+  plum: 'resourcePlum',
+  sage: 'resourceSage',
+  ochre: 'resourceOchre',
+  terracotta: 'resourceTerracotta',
+} as const satisfies Record<ResourceTint, ThemeColorKey>
+
+const TINT_GLOW_KEYS = {
+  sky: 'resourceSkyGlow',
+  plum: 'resourcePlumGlow',
+  sage: 'resourceSageGlow',
+  ochre: 'resourceOchreGlow',
+  terracotta: 'resourceTerracottaGlow',
+} as const satisfies Record<ResourceTint, ThemeColorKey>
+
 function useTintColors(tint: ResourceTint) {
   const colors = THEME_COLORS
-  const key = `resource${tint[0].toUpperCase()}${tint.slice(1)}`
   return useMemo(() => {
-    const fill = colors[key]
-    const glow = colors[`${key}Glow`] ?? fill
+    const fill = colors[TINT_KEYS[tint]]
+    const glow = colors[TINT_GLOW_KEYS[tint]]
     const glowStyle: ViewStyle = {
       shadowColor: glow,
       shadowOpacity: 0.7,
@@ -47,7 +63,7 @@ function useTintColors(tint: ResourceTint) {
       shadowOffset: { width: 0, height: 0 },
     }
     return { fill, glow, glowStyle }
-  }, [colors, key])
+  }, [colors, tint])
 }
 
 // Native draws the glow as an iOS shadow (spec §4.5). React Native Web turns that shadow into a
@@ -83,7 +99,7 @@ function Pip({ available, tint }: { available: boolean; tint: ResourceTint }) {
 }
 
 function tintOf(tint: ResourceTint) {
-  const key = `resource${tint[0].toUpperCase()}${tint.slice(1)}` as 'resourceSky'
+  const key = TINT_KEYS[tint]
   return { color: THEME_COLORS[key], stroke: key }
 }
 

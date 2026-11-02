@@ -28,7 +28,7 @@ function SheetContent({
             window itself; web has no on-screen keyboard to avoid. */}
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="w-full">
           <DialogPrimitive.Content className={cn('w-full', plate)} {...props}>
-            <ShapedSurface shape="arch" rise={ARCH_RISE} fill="rock" stroke="rule" strokeWidth={1} shadowOffset={0}>
+            <ShapedSurface glass="overlay" shape="arch" rise={ARCH_RISE} fill="rock" stroke="rule" strokeWidth={1} shadowOffset={0}>
               <View className={cn('gap-4 p-4', content)} style={{ paddingTop: ARCH_RISE + 16 }}>
                 {children}
               </View>

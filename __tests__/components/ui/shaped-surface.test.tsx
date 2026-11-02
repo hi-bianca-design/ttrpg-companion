@@ -1,15 +1,14 @@
 import { fireEvent, render, screen } from '@testing-library/react-native'
-import { Text } from 'react-native'
-import { StyleSheet } from 'react-native'
-import Svg, { G, Path, RadialGradient } from 'react-native-svg'
-import { ShapedSurface } from '@/components/ui/shaped-surface'
+import { Platform, StyleSheet, Text } from 'react-native'
+import Svg, { G, Mask, Path, RadialGradient } from 'react-native-svg'
+import { GLASS_FILL_OPACITY, ShapedSurface, type ThemeColorKey } from '@/components/ui/shaped-surface'
 import { shapePath } from '@/lib/shape-path'
 import { THEME_COLORS } from '@/lib/theme'
 
 const layout = (id: string, width: number, height: number) =>
   fireEvent(screen.getByTestId(id), 'layout', { nativeEvent: { layout: { width, height, x: 0, y: 0 } } })
 
-const fillPath = (fillKey: string) => screen.UNSAFE_getAllByType(Path).find((p) => p.props.fill === THEME_COLORS[fillKey])
+const fillPath = (fillKey: ThemeColorKey) => screen.UNSAFE_getAllByType(Path).find((p) => p.props.fill === THEME_COLORS[fillKey])
 
 test('before any layout no path contains NaN', () => {
   render(<ShapedSurface testID="s" fill="rock" stroke="primary"><Text>x</Text></ShapedSurface>)
@@ -110,4 +109,57 @@ test('the plate sits behind all content: SVG z-index -1 inside a root stacking c
   render(<ShapedSurface testID="s" fill="rock" stroke="primary"><Text>x</Text></ShapedSurface>)
   expect(StyleSheet.flatten(screen.UNSAFE_getByType(Svg).props.style).zIndex).toBe(-1)
   expect(StyleSheet.flatten(screen.getByTestId('s').props.style).zIndex).toBe(0)
+})
+
+test('content and plate stay hidden until the first layout so the text never shows without its plate', () => {
+  render(<ShapedSurface testID="s" fill="rock" stroke="primary"><Text>x</Text></ShapedSurface>)
+  expect(StyleSheet.flatten(screen.getByTestId('s').props.style).opacity).toBe(0)
+  layout('s', 200, 44)
+  expect(StyleSheet.flatten(screen.getByTestId('s').props.style).opacity).not.toBe(0)
+  layout('s', 200, 120)
+  expect(StyleSheet.flatten(screen.getByTestId('s').props.style).opacity).not.toBe(0)
+})
+
+describe('glass', () => {
+  afterEach(() => jest.restoreAllMocks())
+  const glassFill = () => screen.UNSAFE_getAllByType(Path).find((p) => p.props.fill === THEME_COLORS.rock)
+
+  test('a glass plate has a translucent fill, more opaque on native where nothing blurs behind it', () => {
+    render(<ShapedSurface testID="s" glass fill="rock" stroke="primary"><Text>x</Text></ShapedSurface>)
+    layout('s', 200, 44)
+    expect(glassFill()?.props.fillOpacity).toBe(GLASS_FILL_OPACITY.surface.native)
+    expect(screen.queryByTestId('s-backdrop')).toBeNull()
+  })
+
+  test('the edge stroke stays fully opaque so the outline is crisp', () => {
+    render(<ShapedSurface testID="s" glass fill="rock" stroke="primary"><Text>x</Text></ShapedSurface>)
+    layout('s', 200, 44)
+    expect(glassFill()?.props.fillOpacity).toBeLessThan(1)
+    expect(glassFill()?.props.strokeOpacity).toBeUndefined()
+  })
+
+  test('on web a shape-clipped backdrop blur sits behind the plate', () => {
+    jest.replaceProperty(Platform, 'OS', 'web')
+    render(<ShapedSurface testID="s" glass fill="rock" stroke="primary"><Text>x</Text></ShapedSurface>)
+    layout('s', 200, 44)
+    expect(glassFill()?.props.fillOpacity).toBe(GLASS_FILL_OPACITY.surface.web)
+    const style = StyleSheet.flatten(screen.getByTestId('s-backdrop').props.style)
+    expect(style.backdropFilter).toMatch(/^blur\(\d+px\)$/)
+    expect(style.clipPath).toBe(`path('${shapePath('hex', 200, 44, { inset: 1 })}')`)
+  })
+
+  test('the hard shadow is masked out under a glass plate so it does not show through the fill', () => {
+    render(<ShapedSurface testID="s" glass fill="rock" stroke="primary"><Text>x</Text></ShapedSurface>)
+    layout('s', 200, 44)
+    expect(screen.UNSAFE_queryAllByType(Mask)).toHaveLength(1)
+  })
+
+  test('opaque plates are unchanged: no mask, no backdrop, full fill opacity', () => {
+    jest.replaceProperty(Platform, 'OS', 'web')
+    render(<ShapedSurface testID="s" fill="rock" stroke="primary"><Text>x</Text></ShapedSurface>)
+    layout('s', 200, 44)
+    expect(screen.UNSAFE_queryAllByType(Mask)).toHaveLength(0)
+    expect(screen.queryByTestId('s-backdrop')).toBeNull()
+    expect(glassFill()?.props.fillOpacity).toBeUndefined()
+  })
 })

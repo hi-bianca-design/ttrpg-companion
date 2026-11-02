@@ -89,3 +89,8 @@ test('the field is positioned so it paints above the plate SVG on web (an unposi
   render(<Input placeholder="Name thy character" />)
   expect(field().props.className).toContain('relative')
 })
+
+test('the field is frosted glass', () => {
+  render(<Input accessibilityLabel="x" />)
+  expect(surface().glass).toBe('field')
+})

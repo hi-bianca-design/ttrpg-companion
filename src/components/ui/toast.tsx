@@ -74,7 +74,7 @@ export function Toaster() {
           accessibilityLiveRegion="polite"
           className="self-center"
         >
-          <ShapedSurface fill="ink" stroke="rule" strokeWidth={1} shadowOffset={0} className="px-6 py-3">
+          <ShapedSurface glass="overlay" fill="ink" stroke="rule" strokeWidth={1} shadowOffset={0} className="px-6 py-3">
             <Text variant="body-sm" numberOfLines={2} className="text-center text-foreground">{message}</Text>
           </ShapedSurface>
         </View>
