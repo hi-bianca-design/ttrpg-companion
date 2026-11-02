@@ -58,6 +58,14 @@ export function equipmentComplete(draft: Draft): boolean {
   return strList(draft.class_equipment_options).length === 0 || typeof draft.equipment_option === 'number'
 }
 
+/** The class grants a Fighting Style at level 1 (cached from the class's level-1 features). */
+export const hasFightingStyle = (draft: Draft): boolean => draft.class_fighting_style === true
+
+/** A Fighting Style feat is chosen once picked (trivially true for classes without one). */
+export function fightingStyleComplete(draft: Draft): boolean {
+  return !hasFightingStyle(draft) || str(draft.fighting_style_id).length > 0
+}
+
 const spellLevel = (draft: Draft, id: string): number | undefined => {
   const v = ((draft.spell_levels ?? {}) as Record<string, unknown>)[id]
   return typeof v === 'number' ? v : undefined
@@ -117,6 +125,8 @@ export function abilitiesAssigned(draft: Draft): boolean {
  *   class_skills (the picks)
  * - class_equipment_options (the class's option strings, cached on the class pick), equipment_option (index
  *   picked), equipment_items / equipment_other / equipment_gold (the picked option, resolved when chosen)
+ * - class_fighting_style (the class has a level-1 Fighting Style, cached on the class pick) and
+ *   fighting_style_id (the chosen feat)
  * - the six ability keys (null until assigned from the standard array),
  *   bg_bonus_two / bg_bonus_one (ability keys receiving +2 / +1)
  * - spell_ids, spell_classes (spell id → lowercase class list) and spell_levels (spell id →
@@ -142,6 +152,8 @@ export function initialDraft(): Draft {
     equipment_items: [],
     equipment_other: [],
     equipment_gold: 0,
+    class_fighting_style: false,
+    fighting_style_id: null,
     ...Object.fromEntries(ABILITY_KEYS.map((k) => [k, null])),
     bg_bonus_two: null,
     bg_bonus_one: null,
@@ -190,6 +202,8 @@ export function pruneDraft(draft: Draft, changed: Partial<Draft>): Draft {
     next.equipment_items = []
     next.equipment_other = []
     next.equipment_gold = 0
+    if (!('class_fighting_style' in changed)) next.class_fighting_style = false
+    next.fighting_style_id = null
   }
   else next.class_skills = validClassSkills(next)
   if (classChanged || levelChanged) next.spell_ids = fitSpells(next)
@@ -231,6 +245,7 @@ export function toCharacter(draft: Draft): NewCharacter {
       ...(typeof draft.class_id === 'string' && draft.class_id
         ? [{ content_id: draft.class_id, kind: 'class', state: { skills: validClassSkills(draft) }, acquired_at_level: 1 }]
         : []),
+      ...(hasFightingStyle(draft) ? pick('feat', draft.fighting_style_id, 1) : []),
       ...pick('subclass', draft.subclass_id, level),
       ...pick('species', draft.species_id, 1),
       ...pick('background', draft.background_id, 1),

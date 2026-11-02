@@ -197,10 +197,11 @@ function xpValues(level: number, xp: number): DerivedValue[] {
 
 // ── Derived values ───────────────────────────────────────────
 
-/** Armor Class: 10 + DEX unarmored, or equipped armor (parsed from SRD "13 + Dex modifier (max 2)"), plus shield. */
+/** Armor Class: 10 + DEX unarmored, or equipped armor (parsed from SRD "13 + Dex modifier (max 2)"), plus shield and the Defense fighting style while armored. */
 function armorClass(dexMod: number, picks: PickRecord[]): number {
   let base = 10 + dexMod
   let shield = 0
+  let armored = false
   for (const p of picks) {
     if ((p.kind !== 'item' && p.kind !== 'magic_item') || p.state.equipped !== true) continue
     const props = asRecord(asRecord(p.content.data).properties)
@@ -211,9 +212,11 @@ function armorClass(dexMod: number, picks: PickRecord[]): number {
       const cap = props.armor_class.match(/max\s*(\d+)/i)
       const dex = /dex/i.test(props.armor_class) ? (cap ? Math.min(dexMod, Number(cap[1])) : dexMod) : 0
       base = Number(flat[1]) + dex
+      armored = true
     }
   }
-  return base + shield
+  const defense = armored && picks.some((p) => p.kind === 'feat' && p.content.name === 'Defense')
+  return base + shield + (defense ? 1 : 0)
 }
 
 export function derived(c: CharacterRecord, picks: PickRecord[]): DerivedValue[] {

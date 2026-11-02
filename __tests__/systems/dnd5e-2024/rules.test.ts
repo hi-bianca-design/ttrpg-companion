@@ -243,6 +243,13 @@ test('AC: heavy armor ignores DEX; unequipped armor is ignored', () => {
   expect(value(makeCharacter(), [unequipped], 'ac')?.value).toBe(9)
 })
 
+test('AC: Defense adds 1 only while wearing armor', () => {
+  const defense = pick('feat', 'Defense', {})
+  const chain = pick('item', 'Chain Mail', { category: 'Heavy Armor', properties: { armor_class: '16' } }, { equipped: true })
+  expect(value(makeCharacter(), [chain, defense], 'ac')?.value).toBe(17)
+  expect(value(makeCharacter(), [defense], 'ac')?.value).toBe(9)
+})
+
 // ── Registry & definition ──
 
 test('registry returns the D&D module and throws on unknown ids', () => {
@@ -267,7 +274,7 @@ test('definition values', () => {
 // ── Builder ──
 
 test('builder step ids', () => {
-  expect(dnd5eBuilder.steps.map((s) => s.id)).toEqual(['class', 'origin', 'skills', 'equipment', 'ability-scores', 'spells', 'details', 'personality', 'review'])
+  expect(dnd5eBuilder.steps.map((s) => s.id)).toEqual(['class', 'origin', 'skills', 'equipment', 'fighting-style', 'ability-scores', 'spells', 'details', 'personality', 'review'])
 })
 
 test('spells step is skipped when the class has no slots at the starting level', () => {
@@ -452,5 +459,25 @@ describe('class skill picks', () => {
     const draft = { ...fighter, class_skills: ['history', 'perception'] }
     const c = dnd5eBuilder.toCharacter(draft)
     expect(c.picks.find((p) => p.kind === 'class')?.state).toEqual({ skills: ['history', 'perception'] })
+  })
+})
+
+describe('fighting style pick', () => {
+  const fighter = { ...dnd5eBuilder.initialDraft(), class_id: 'ftr', class_name: 'Fighter', class_fighting_style: true }
+  const step = dnd5eBuilder.steps.find((s) => s.id === 'fighting-style')!
+
+  test('step is skipped for classes without one and needs a pick otherwise', () => {
+    const ids = dnd5eBuilder.steps.map((s) => s.id)
+    expect(ids.indexOf('fighting-style')).toBe(ids.indexOf('equipment') + 1)
+    expect(step.skip?.({ ...fighter, class_fighting_style: false })).toBe(true)
+    expect(step.skip?.(fighter)).toBe(false)
+    expect(step.isComplete(fighter)).toBe(false)
+    expect(step.isComplete({ ...fighter, fighting_style_id: 'defense' })).toBe(true)
+  })
+
+  test('changing class clears the pick; the pick becomes a level-1 feat pick', () => {
+    const picked = { ...fighter, fighting_style_id: 'defense' }
+    expect(dnd5eBuilder.pruneDraft(picked, { class_id: 'wiz', class_name: 'Wizard' })).toMatchObject({ fighting_style_id: null, class_fighting_style: false })
+    expect(dnd5eBuilder.toCharacter(picked).picks).toContainEqual({ content_id: 'defense', kind: 'feat', state: {}, acquired_at_level: 1 })
   })
 })

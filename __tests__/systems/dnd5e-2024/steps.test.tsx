@@ -10,6 +10,7 @@ import { createCharacter } from '@/features/characters/characters.api'
 import { listContent } from '@/features/content/content.api'
 import { AbilityScoresStep } from '@/systems/dnd5e-2024/steps/AbilityScoresStep'
 import { OriginStep } from '@/systems/dnd5e-2024/steps/OriginStep'
+import { FightingStyleStep } from '@/systems/dnd5e-2024/steps/FightingStyleStep'
 import { ClassSkillsStep } from '@/systems/dnd5e-2024/steps/ClassSkillsStep'
 import { ClassStep } from '@/systems/dnd5e-2024/steps/ClassStep'
 import { filterSpells, SpellsStep } from '@/systems/dnd5e-2024/steps/SpellsStep'
@@ -48,6 +49,11 @@ const CONTENT: Record<string, unknown[]> = {
   class: [
     row('class', 'wiz', 'Wizard', { hit_die: 6, primary_abilities: ['intelligence'], saving_throw_proficiencies: ['intelligence', 'wisdom'] }),
     row('class', 'ftr', 'Fighter', { hit_die: 10, primary_abilities: ['strength'], saving_throw_proficiencies: ['strength', 'constitution'] }),
+  ],
+  feat: [
+    row('feat', 'defense', 'Defense', { prerequisites: { feature: 'Fighting Style' }, benefits: 'While wearing armor, +1 AC.' }),
+    row('feat', 'archery', 'Archery', { prerequisites: { feature: 'Fighting Style' }, benefits: '+2 to ranged attacks.' }),
+    row('feat', 'alert', 'Alert', { prerequisites: {}, benefits: 'Add proficiency to initiative.' }),
   ],
   subclass: [],
   species: [],
@@ -288,5 +294,17 @@ describe('Class skills step', () => {
     renderWithQuery(<Bound Step={ClassStep} />)
     fireEvent.press(await screen.findByRole('button', { name: /^Fighter/ }))
     expect(useBuilderStore.getState().draft).toMatchObject({ class_skill_count: expect.any(Number), class_skill_options: expect.any(Array) })
+  })
+})
+
+describe('Fighting style step', () => {
+  beforeEach(() => act(() => useBuilderStore.getState().update({ class_id: 'ftr', class_name: 'Fighter', class_fighting_style: true })))
+
+  test('lists only Fighting Style feats and stores the chosen one', async () => {
+    renderWithQuery(<Bound Step={FightingStyleStep} />)
+    fireEvent.press(await screen.findByRole('button', { name: /^Defense/ }))
+    expect(screen.getByRole('button', { name: /^Archery/ })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: /^Alert/ })).toBeNull()
+    expect(useBuilderStore.getState().draft.fighting_style_id).toBe('defense')
   })
 })
