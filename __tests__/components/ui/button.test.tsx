@@ -117,3 +117,10 @@ test('stroke recolours the plate edge (tinted +/- controls)', () => {
   render(<Button variant="outline" stroke="resourceSage"><Text>+</Text></Button>)
   expect(surface().stroke).toBe('resourceSage')
 })
+
+test('a ghost text button reads as a link: mint and underlined', () => {
+  render(<Button variant="ghost"><Text>No account yet? Create one</Text></Button>)
+  const cls = screen.getByText('No account yet? Create one').props.className
+  expect(cls).toContain('underline')
+  expect(cls).toContain('text-accent-foreground')
+})
