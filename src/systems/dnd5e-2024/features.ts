@@ -30,6 +30,10 @@ export const CLASS_FEATURES: FeatureUse[] = [
     key: 'bardic_inspiration', label: 'Bardic Inspiration', className: 'Bard',
     uses: (level, stats) => Math.max(1, modOf(stats, 'charisma')), short: (level) => (level >= 5 ? 'all' : 'none'),
   },
+  {
+    key: 'innate_sorcery', label: 'Innate Sorcery', className: 'Sorcerer',
+    uses: () => 2, short: () => 'none',
+  },
 ]
 
 export const FEATURE_KEYS = CLASS_FEATURES.map((f) => f.key)
