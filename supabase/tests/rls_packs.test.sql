@@ -2,7 +2,7 @@
 begin;
 set local client_min_messages to warning;
 create extension if not exists pgtap with schema extensions;
-select plan(16);
+select plan(23);
 
 -- Fixtures (as the superuser; RLS bypassed)
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -29,6 +29,8 @@ insert into public.pack_entitlements (user_id, pack_id, source, expires_at) valu
 insert into public.characters (id, owner_id, system_id, name) values
   ('a4000000-0000-0000-0000-000000000001', 'a2000000-0000-0000-0000-00000000000a', 'dnd5e-2024', 'Owner Hero'),
   ('b4000000-0000-0000-0000-000000000001', 'b2000000-0000-0000-0000-00000000000b', 'dnd5e-2024', 'Lapsed Hero');
+insert into public.character_picks (character_id, content_id, kind) values
+  ('b4000000-0000-0000-0000-000000000001', 'a3000000-0000-0000-0000-000000000002', 'item');
 insert into public.character_items (character_id, content_id, quantity) values
   ('a4000000-0000-0000-0000-000000000001', 'a3000000-0000-0000-0000-000000000002', 1),
   ('b4000000-0000-0000-0000-000000000001', 'a3000000-0000-0000-0000-000000000002', 1);
@@ -83,6 +85,15 @@ select lives_ok(
     values ('a4000000-0000-0000-0000-000000000001', 'a3000000-0000-0000-0000-000000000003', 1)$$,
   'entitled user can put pack content on their sheet');
 
+-- Client writes on rows the owner can see: no write policies exist, so nothing changes.
+select throws_ok(
+  $$insert into public.packs (slug, name, kind, published) values ('pgtap-client-pack', 'Client Pack', 'content', true)$$,
+  '42501', null, 'a client cannot create a pack');
+update public.pack_entitlements set expires_at = now() - interval '1 day' where user_id = 'a2000000-0000-0000-0000-00000000000a';
+delete from public.pack_entitlements where user_id = 'a2000000-0000-0000-0000-00000000000a';
+update public.packs set name = 'Hacked' where id = 'f2000000-0000-0000-0000-00000000000a';
+delete from public.packs where id = 'f2000000-0000-0000-0000-00000000000a';
+
 -- As lapsed (expired entitlement)
 set local request.jwt.claims to '{"sub":"b2000000-0000-0000-0000-00000000000b","role":"authenticated"}';
 
@@ -95,6 +106,23 @@ select throws_ok(
     values ('b4000000-0000-0000-0000-000000000001', 'a3000000-0000-0000-0000-000000000003', 1)$$,
   '42501', null, 'an expired entitlement cannot add new pack content to a sheet');
 
+select lives_ok(
+  $$update public.character_items set equipped = true
+    where character_id = 'b4000000-0000-0000-0000-000000000001' and content_id = 'a3000000-0000-0000-0000-000000000002'$$,
+  'an expired entitlement can still edit a pack item already on the sheet (equip)');
+select throws_ok(
+  $$update public.character_items set content_id = 'a3000000-0000-0000-0000-000000000003'
+    where character_id = 'b4000000-0000-0000-0000-000000000001'$$,
+  '42501', null, 'an expired entitlement cannot repoint an item at other pack content');
+select lives_ok(
+  $$update public.character_picks set state = '{"note":"kept"}'::jsonb
+    where character_id = 'b4000000-0000-0000-0000-000000000001' and content_id = 'a3000000-0000-0000-0000-000000000002'$$,
+  'an expired entitlement can still edit a pack pick already on the sheet');
+select throws_ok(
+  $$update public.character_picks set content_id = 'a3000000-0000-0000-0000-000000000003'
+    where character_id = 'b4000000-0000-0000-0000-000000000001'$$,
+  '42501', null, 'an expired entitlement cannot repoint a pick at other pack content');
+
 -- As member (campaign player, no entitlement)
 set local request.jwt.claims to '{"sub":"e2000000-0000-0000-0000-00000000000e","role":"authenticated"}';
 
@@ -105,6 +133,12 @@ select is((select count(*)::int from public.content where id = 'a3000000-0000-00
 reset role;
 select is((select count(*)::int from public.pack_entitlements), 2,
   'client update and delete attempts left both entitlements in place');
+
+select is((select name from public.packs where id = 'f2000000-0000-0000-0000-00000000000a'), 'Pack A',
+  'client update and delete attempts left the pack in place');
+select is((select count(*)::int from public.pack_entitlements
+            where user_id = 'a2000000-0000-0000-0000-00000000000a' and expires_at is null), 1,
+  'client update and delete attempts left the owner''s entitlement unchanged');
 
 select * from finish();
 rollback;

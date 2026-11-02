@@ -72,6 +72,25 @@ as $$
    where i.character_id in (select ch.id from public.characters ch where ch.owner_id = auth.uid());
 $$;
 
+-- True when this exact content is already on this character's picks or items. Lets an update that
+-- leaves content_id unchanged pass the update policies after a lapse (equip, quantity, notes),
+-- while repointing a row at other pack content still has to pass can_reference_content.
+create or replace function public.has_sheet_content(p_character_id uuid, p_content_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.character_picks p
+     where p.character_id = p_character_id and p.content_id = p_content_id
+  ) or exists (
+    select 1 from public.character_items i
+     where i.character_id = p_character_id and i.content_id = p_content_id
+  );
+$$;
+
 -- Adds the pack rule to the official branch: official rows that belong to a pack need an
 -- entitlement. Everything else about "may put this on a sheet" is unchanged.
 create or replace function public.can_reference_content(p_content_id uuid)
@@ -93,8 +112,10 @@ as $$
 $$;
 
 revoke execute on function public.owns_pack(uuid) from public, anon;
+revoke execute on function public.has_sheet_content(uuid, uuid) from public, anon;
 revoke execute on function public.own_sheet_content_ids() from public, anon;
 grant execute on function public.owns_pack(uuid) to authenticated, service_role;
+grant execute on function public.has_sheet_content(uuid, uuid) to authenticated, service_role;
 grant execute on function public.own_sheet_content_ids() to authenticated, service_role;
 
 drop policy content_select on public.content;
@@ -113,3 +134,24 @@ create policy packs_select on public.packs
   for select to authenticated using (published);
 create policy pack_entitlements_select on public.pack_entitlements
   for select to authenticated using (user_id = (select auth.uid()));
+
+-- Updates may keep content already on the sheet even if its pack has lapsed (otherwise a lapse
+-- would block equipping, quantity and notes edits). Inserts are unchanged: new content still has
+-- to pass can_reference_content.
+drop policy character_picks_update on public.character_picks;
+create policy character_picks_update on public.character_picks
+  for update to authenticated
+  using (public.owns_character(character_id))
+  with check (
+    public.owns_character(character_id)
+    and (public.can_reference_content(content_id) or public.has_sheet_content(character_id, content_id))
+  );
+
+drop policy character_items_update on public.character_items;
+create policy character_items_update on public.character_items
+  for update to authenticated
+  using (public.owns_character(character_id))
+  with check (
+    public.owns_character(character_id)
+    and (public.can_reference_content(content_id) or public.has_sheet_content(character_id, content_id))
+  );
