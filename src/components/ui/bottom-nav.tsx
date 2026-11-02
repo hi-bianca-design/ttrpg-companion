@@ -58,7 +58,7 @@ export function BottomNav({ state, descriptors, navigation, insets, extra }: Bot
   return (
     <View
       testID="bottom-nav"
-      className="flex-row items-center border-t border-rule px-2 pt-2"
+      className="flex-row items-center border-t border-border px-2 pt-2"
       style={{ backgroundColor: THEME_COLORS.rockDeep, paddingBottom: Math.max(insets.bottom, 8) }}
     >
       {items.map(({ route, index, options }) => {
