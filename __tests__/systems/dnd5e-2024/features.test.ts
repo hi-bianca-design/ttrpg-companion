@@ -65,4 +65,12 @@ describe('limited-use class features', () => {
     expect(rest(character(spent, 5), 'short', [bard]).bardic_inspiration).toEqual({ tiers: { '1': { max: 3, used: 0 } } })
     expect(rest(character(spent, 4), 'long', [bard]).bardic_inspiration).toEqual({ tiers: { '1': { max: 3, used: 0 } } })
   })
+
+  test('Innate Sorcery: 2 uses, regained on a long rest only', () => {
+    expect(featureResources('Sorcerer', 1, stats).innate_sorcery.tiers['1'].max).toBe(2)
+    const sorc = { ...fighter, content: { name: 'Sorcerer', data: { hit_die: 6 } } } as PickRecord
+    const spent = { innate_sorcery: { tiers: { '1': { max: 2, used: 2 } } } }
+    expect(rest(character(spent), 'short', [sorc]).innate_sorcery).toEqual({ tiers: { '1': { max: 2, used: 2 } } })
+    expect(rest(character(spent), 'long', [sorc]).innate_sorcery).toEqual({ tiers: { '1': { max: 2, used: 0 } } })
+  })
 })
