@@ -251,7 +251,7 @@ export function rest(c: CharacterRecord, kind: 'short' | 'long', picks: PickReco
 
   for (const f of featuresFor(className(picks) ?? '')) {
     const v = c.resources[f.key]
-    if (v && 'tiers' in v) next[f.key] = rechargedFeature(f, v, kind, c.level)
+    if (v) next[f.key] = rechargedFeature(f, v, kind, c.level)
   }
 
   if (kind === 'short') {
