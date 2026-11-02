@@ -67,3 +67,8 @@ test('opacity classes dim the plate, not just the inner content', () => {
   expect(surface().className).toContain('opacity-50')
   expect(screen.getByTestId('c').props.className).not.toContain('opacity-50')
 })
+
+test('cards are frosted glass', () => {
+  render(<Card><Text>x</Text></Card>)
+  expect(surface().glass).toBe(true)
+})

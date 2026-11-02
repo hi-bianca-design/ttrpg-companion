@@ -23,6 +23,7 @@ function Card({ className, compact, variant = 'flat', tone = 'default', style, .
   return (
     <ShapedSurface
       shape={hero ? 'arch' : 'chamfer'}
+      glass
       fill="card"
       stroke={tone === 'destructive' ? 'destructive' : tone === 'selected' || hero ? 'primary' : 'border'}
       strokeWidth={hero || tone !== 'default' ? 2 : 1}

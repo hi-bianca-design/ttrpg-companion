@@ -21,6 +21,7 @@ function Input({ className, editable = true, multiline, value, defaultValue, onC
   return (
     <ShapedSurface
       shape={multiline ? 'chamfer' : 'auto'}
+      glass
       fill="well"
       stroke={focused ? 'torch' : 'border'}
       strokeWidth={focused ? 3 : 2}

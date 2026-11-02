@@ -64,3 +64,8 @@ test('every trigger keeps a plate so switching tabs only restyles it; the inacti
   )
   expect(triggerPlates().map((p) => [p.fill, p.stroke])).toEqual([['transparent', 'transparent'], ['rock', 'secondary']])
 })
+
+test('the track is frosted glass', () => {
+  renderTabs()
+  expect(screen.UNSAFE_getAllByType(ShapedSurface)[0].props.glass).toBe(true)
+})

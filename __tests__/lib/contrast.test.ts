@@ -1,5 +1,6 @@
 // Spec §6: body and typed text 7:1, large text / placeholder / button labels 4.5:1.
 import { THEME_COLORS as C } from '@/lib/theme'
+import { GLASS_FILL_OPACITY } from '@/components/ui/shaped-surface'
 import { colorDistance, contrastRatio } from '../helpers/contrast'
 
 type Key = keyof typeof C
@@ -43,4 +44,24 @@ test.each(['sky1', 'sky2', 'sky3', 'sky4', 'sky5', 'sky6'] as const)('muted, lab
   for (const fg of ['mutedForeground', 'labelForeground', 'accentForeground', 'highlightText', 'destructive'] as const) {
     expect([fg, ratio(fg, band) >= 4.5]).toEqual([fg, true])
   }
+})
+
+// Glass plates are translucent, so text must hold its ratio against the worst case behind them: the
+// lightest thing a plate sits over, which is the top sky band.
+const rgba = (hex: string, a: number) => `rgba(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')}, ${a})`
+describe.each(Object.entries(GLASS_FILL_OPACITY))('glass plates (%s)', (_platform, alpha) => {
+  test.each([
+    ['foreground', 'card', 7],
+    ['foreground', 'rock', 7],
+    ['mutedForeground', 'card', 7],
+    ['mutedForeground', 'rockDeep', 7],
+    ['typed', 'well', 7],
+    ['placeholder', 'well', 4.5],
+    ['labelForeground', 'rock', 4.5],
+    ['accentForeground', 'rock', 4.5],
+    ['highlightText', 'rock', 4.5],
+    ['foreground', 'ink', 7],
+  ] as const)('%s on %s holds %s:1 over the lightest sky band', (fg, bg, min) => {
+    expect(contrastRatio(C[fg], rgba(C[bg], alpha), C.sky1)).toBeGreaterThanOrEqual(min)
+  })
 })

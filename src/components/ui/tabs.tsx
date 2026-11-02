@@ -12,7 +12,7 @@ function TabsList({
 }: TabsPrimitive.ListProps & React.RefAttributes<TabsPrimitive.ListRef>) {
   return (
     <TabsPrimitive.List className={cn('min-h-11', className)} {...props}>
-      <ShapedSurface shape="chamfer" fill="rockDeep" stroke="border" strokeWidth={1} shadowOffset={0} className="min-h-11 flex-row items-center p-1">
+      <ShapedSurface glass shape="chamfer" fill="rockDeep" stroke="border" strokeWidth={1} shadowOffset={0} className="min-h-11 flex-row items-center p-1">
         {children}
       </ShapedSurface>
     </TabsPrimitive.List>
