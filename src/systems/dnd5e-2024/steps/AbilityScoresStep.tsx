@@ -106,7 +106,8 @@ export function AbilityScoresStep({ draft, update }: BuilderStepProps) {
                           accessibilityLabel={`${v} for ${ABILITY_LABELS[key]}`}
                           accessibilityHint={holder ? `Swaps with ${ABILITY_LABELS[holder]}` : undefined}
                           selected={mine}
-                          className={cn('w-11 px-0', holder && 'border-dashed')}
+                          size="square"
+                          className={cn(holder && 'border-dashed')}
                           onPress={() => assign(key, v)}
                         />
                       )

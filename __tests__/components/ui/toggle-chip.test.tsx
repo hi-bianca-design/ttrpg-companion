@@ -69,3 +69,11 @@ test('outline tone: selected is a moss outline with accent text, not a filled pi
   expect(on.props.accessibilityState).toMatchObject({ selected: true })
   expect(offPlate.stroke).toBe('border')
 })
+
+test('square size is 44x44 with no side padding so short labels have room', () => {
+  render(<ToggleChip label="15" size="square" onPress={() => {}} testID="sq" />)
+  expect(screen.getByTestId('sq').props.className).toContain('h-11 w-11')
+  const [plate] = surfaces()
+  expect(plate.className).toContain('px-0')
+  expect(plate.className).not.toContain('px-6')
+})
