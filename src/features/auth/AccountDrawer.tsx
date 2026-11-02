@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { View } from 'react-native'
 import { X } from 'phosphor-react-native'
+import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
-import { ShapedSurface } from '@/components/ui/shaped-surface'
 import { Text } from '@/components/ui/text'
 import { signOut } from '@/features/auth/auth.api'
 import { useAuth } from '@/features/auth/useAuth'
@@ -52,9 +52,7 @@ export function AccountDrawer({ open, onOpenChange }: AccountDrawerProps) {
             </Button>
           </View>
           <View className="flex-row items-center gap-4">
-            <ShapedSurface glass shape="chamfer" fill="rockDeep" stroke="primary" strokeWidth={1.5} shadowOffset={0} className="h-11 w-11 items-center justify-center">
-              <Text variant="subhead" className="text-highlight-text">{initial}</Text>
-            </ShapedSurface>
+            <Avatar initial={initial} />
             <View className="flex-1 gap-1">
               {username ? <Text variant="subhead" numberOfLines={1}>{username}</Text> : null}
               {user?.email ? <Text variant="body-sm" tone="muted" numberOfLines={1}>{user.email}</Text> : null}

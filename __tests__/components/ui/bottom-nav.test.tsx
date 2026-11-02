@@ -2,7 +2,6 @@ import { fireEvent, render, screen } from '@testing-library/react-native'
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs'
 import { Text } from 'react-native'
 import { BottomNav } from '@/components/ui/bottom-nav'
-import { ShapedSurface } from '@/components/ui/shaped-surface'
 
 function props(index = 0) {
   const navigation = { emit: jest.fn(() => ({ defaultPrevented: false })), navigate: jest.fn() }
@@ -25,20 +24,17 @@ test('hidden (href null) screens get no tab', () => {
   expect(screen.getAllByRole('tab')).toHaveLength(2)
 })
 
-test('the active tab is selected and is the only lit pill', () => {
+test('the active tab is selected and only its icon gets the pill', () => {
   render(<BottomNav {...props(1).p} />)
   expect(screen.getByRole('tab', { name: 'Characters' }).props.accessibilityState).toEqual({ selected: true })
   expect(screen.getByRole('tab', { name: 'Campaigns' }).props.accessibilityState).toEqual({ selected: false })
-  const pills = screen.UNSAFE_getAllByType(ShapedSurface).filter((s) => s.props.glow)
-  expect(pills).toHaveLength(1)
+  expect(screen.getAllByTestId('nav-pill')).toHaveLength(1)
 })
 
-test('the bar is one frosted glass plate', () => {
+test('labels are plain caption text on a simple bordered bar, so they never truncate inside a plate', () => {
   render(<BottomNav {...props(1).p} />)
-  const bar = screen.UNSAFE_getAllByType(ShapedSurface)[0].props
-  expect(bar.glass).toBeTruthy()
-  expect(bar.shape).toBe('chamfer')
-  expect(bar.shadowOffset).toBe(0)
+  expect(screen.getByTestId('bottom-nav').props.className).toContain('border-t')
+  expect(screen.getByText('Characters').props.className).not.toContain('uppercase')
 })
 
 test('pressing another tab emits tabPress then navigates; pressing the active tab does not', () => {
@@ -57,5 +53,5 @@ test('an extra item is a button that runs its action and never takes the active 
   render(<BottomNav {...p} extra={{ label: 'Account', icon: () => <Text>user</Text>, onPress }} />)
   fireEvent.press(screen.getByRole('button', { name: 'Account' }))
   expect(onPress).toHaveBeenCalledTimes(1)
-  expect(screen.UNSAFE_getAllByType(ShapedSurface).filter((s) => s.props.glow)).toHaveLength(1)
+  expect(screen.getAllByTestId('nav-pill')).toHaveLength(1)
 })

@@ -11,6 +11,8 @@ export type PathOpts = {
   inset?: number
 }
 
+const SHEET_RADIUS = 20
+
 const n = (v: number) => Math.round(v * 100) / 100
 
 /**
@@ -36,9 +38,9 @@ export function shapePath(shape: Shape, width: number, height: number, opts: Pat
     return pts([[c, 0], [w - c, 0], [w, c], [w, h - c], [w - c, h], [c, h], [0, h - c], [0, c]])
   }
   if (shape === 'sheet') {
-    // A drawer: the top corners are cut, the bottom runs square off the screen edge.
-    const c = Math.min(chamfer, w / 2, h)
-    return pts([[c, 0], [w - c, 0], [w, c], [w, h], [0, h], [0, c]])
+    // An iOS-style drawer: rounded top corners, square bottom that runs off the screen edge.
+    const r = Math.min(SHEET_RADIUS, w / 2, h)
+    return `M${x(0)} ${y(h)} L${x(0)} ${y(r)} A${r} ${r} 0 0 1 ${x(r)} ${y(0)} L${x(w - r)} ${y(0)} A${r} ${r} 0 0 1 ${x(w)} ${y(r)} L${x(w)} ${y(h)} Z`
   }
   const r = Math.min(rise, h)
   return pts([[0, r], [w / 2, 0], [w, r], [w, h], [0, h]])

@@ -1,7 +1,6 @@
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs'
 import type { ComponentType } from 'react'
 import { Pressable, View } from 'react-native'
-import { ShapedSurface } from '@/components/ui/shaped-surface'
 import { Text } from '@/components/ui/text'
 import { THEME_COLORS } from '@/lib/theme'
 import { cn } from '@/lib/utils'
@@ -33,29 +32,21 @@ function NavItem({ label, active, role, onPress, onLongPress, testID, icon }: Na
       onLongPress={onLongPress}
       className="flex-1 basis-0"
     >
-      {/* The active tab is a lit glass pill; inactive ones keep an invisible plate so nothing shifts. */}
-      <ShapedSurface
-        glass={active ? 'surface' : undefined}
-        shape="hex"
-        point={10}
-        fill={active ? 'rock' : 'transparent'}
-        stroke={active ? 'secondary' : 'transparent'}
-        strokeWidth={1}
-        shadowOffset={0}
-        glow={active ? 'secondary' : undefined}
-        className="h-12 items-center justify-center gap-1"
-      >
-        {icon(color)}
-        <Text className={cn('font-display-medium text-caption uppercase tracking-wide', active ? 'text-accent-foreground' : 'text-muted-foreground')} numberOfLines={1}>
+      {/* Only the icon sits in a soft pill when active, so labels never have to fit inside it. */}
+      <View className="items-center gap-1 py-1">
+        <View testID={active ? 'nav-pill' : undefined} className={cn('items-center rounded-full px-4 py-1', active && 'bg-muted')}>
+          {icon(color)}
+        </View>
+        <Text className={cn('text-caption', active ? 'text-accent-foreground' : 'text-muted-foreground')} numberOfLines={1}>
           {label}
         </Text>
-      </ShapedSurface>
+      </View>
     </Pressable>
   )
 }
 
 /**
- * Bottom navigation: one frosted-glass plate holding every tab, the active one raised as a lit pill.
+ * Bottom navigation: a plain bar of icon-over-label tabs; the active icon rests in a soft pill.
  * Used by the app's root tabs and the character sheet's tabs, so both read as the same bar.
  */
 export function BottomNav({ state, descriptors, navigation, insets, extra }: BottomTabBarProps & { extra?: ExtraNavItem }) {
@@ -65,37 +56,39 @@ export function BottomNav({ state, descriptors, navigation, insets, extra }: Bot
     .filter(({ options }) => (options.tabBarItemStyle as { display?: string } | undefined)?.display !== 'none')
 
   return (
-    <View className="px-3 pt-2" style={{ backgroundColor: THEME_COLORS.sky6, paddingBottom: Math.max(insets.bottom, 8) }}>
-      <ShapedSurface glass="surface" shape="chamfer" fill="rockDeep" stroke="border" strokeWidth={1} shadowOffset={0} className="flex-row items-center gap-1 p-1">
-        {items.map(({ route, index, options }) => {
-          const active = state.index === index
-          const label = typeof options.tabBarLabel === 'string' ? options.tabBarLabel : (options.title ?? route.name)
-          const press = () => {
-            const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true })
-            if (!active && !event.defaultPrevented) navigation.navigate(route.name, route.params)
-          }
-          return (
-            <NavItem
-              key={route.key}
-              role="tab"
-              label={label}
-              active={active}
-              onPress={press}
-              onLongPress={() => navigation.emit({ type: 'tabLongPress', target: route.key })}
-              icon={(color) => options.tabBarIcon?.({ focused: active, color, size: 22 })}
-            />
-          )
-        })}
-        {extra ? (
+    <View
+      testID="bottom-nav"
+      className="flex-row items-center border-t border-rule px-2 pt-2"
+      style={{ backgroundColor: THEME_COLORS.rockDeep, paddingBottom: Math.max(insets.bottom, 8) }}
+    >
+      {items.map(({ route, index, options }) => {
+        const active = state.index === index
+        const label = typeof options.tabBarLabel === 'string' ? options.tabBarLabel : (options.title ?? route.name)
+        const press = () => {
+          const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true })
+          if (!active && !event.defaultPrevented) navigation.navigate(route.name, route.params)
+        }
+        return (
           <NavItem
-            role="button"
-            label={extra.label}
-            active={false}
-            onPress={extra.onPress}
-            icon={(color) => <extra.icon size={22} color={color} weight="duotone" />}
+            key={route.key}
+            role="tab"
+            label={label}
+            active={active}
+            onPress={press}
+            onLongPress={() => navigation.emit({ type: 'tabLongPress', target: route.key })}
+            icon={(color) => options.tabBarIcon?.({ focused: active, color, size: 24 })}
           />
-        ) : null}
-      </ShapedSurface>
+        )
+      })}
+      {extra ? (
+        <NavItem
+          role="button"
+          label={extra.label}
+          active={false}
+          onPress={extra.onPress}
+          icon={(color) => <extra.icon size={24} color={color} weight="duotone" />}
+        />
+      ) : null}
     </View>
   )
 }
