@@ -26,6 +26,7 @@ export default function AppLayout() {
       }}
     >
       <Tabs.Screen name="index" options={{ href: null }} />
+      <Tabs.Screen name="shop" options={{ href: null }} />
       <Tabs.Screen
         name="characters"
         options={{

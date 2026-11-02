@@ -7,6 +7,8 @@ import { ERROR_COPY } from '@/features/errors'
 import { variantOf } from '../../helpers/button'
 
 jest.mock('@/features/auth/auth.api', () => ({ signOut: jest.fn() }))
+const mockPush = jest.fn()
+jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }))
 jest.mock('@/features/auth/useAuth', () => ({
   useAuth: () => ({ user: { id: 'u1', email: 'mira@example.com', user_metadata: { username: 'mira' } } }),
 }))
@@ -87,4 +89,11 @@ test('the menu is one layout box (its sheet and dialog roots must not become ext
   const { toJSON } = render(<AccountMenu />)
   const tree = toJSON()
   expect(Array.isArray(tree)).toBe(false)
+})
+
+test('the account sheet links to the packs shop', () => {
+  renderMenu()
+  fireEvent.press(screen.getByRole('button', { name: 'Account' }))
+  fireEvent.press(screen.getByRole('button', { name: 'Packs' }))
+  expect(mockPush).toHaveBeenCalledWith('/(app)/shop')
 })
