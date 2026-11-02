@@ -34,6 +34,10 @@ export const CLASS_FEATURES: FeatureUse[] = [
     key: 'innate_sorcery', label: 'Innate Sorcery', className: 'Sorcerer',
     uses: () => 2, short: () => 'none',
   },
+  {
+    key: 'favored_enemy', label: 'Favored Enemy', className: 'Ranger',
+    uses: byLevel([[1, 2], [5, 3], [9, 4], [13, 5], [17, 6]]), short: () => 'none',
+  },
 ]
 
 export const FEATURE_KEYS = CLASS_FEATURES.map((f) => f.key)

@@ -73,4 +73,13 @@ describe('limited-use class features', () => {
     expect(rest(character(spent), 'short', [sorc]).innate_sorcery).toEqual({ tiers: { '1': { max: 2, used: 2 } } })
     expect(rest(character(spent), 'long', [sorc]).innate_sorcery).toEqual({ tiers: { '1': { max: 2, used: 0 } } })
   })
+
+  test('Favored Enemy: free Hunter\'s Mark casts, 2 at level 1 rising to 6, regained on a long rest', () => {
+    const casts = (level: number) => featureResources('Ranger', level, stats).favored_enemy.tiers['1'].max
+    expect([1, 5, 9, 13, 17].map(casts)).toEqual([2, 3, 4, 5, 6])
+    const ranger = { ...fighter, content: { name: 'Ranger', data: { hit_die: 10 } } } as PickRecord
+    const spent = { favored_enemy: { tiers: { '1': { max: 2, used: 2 } } } }
+    expect(rest(character(spent), 'short', [ranger]).favored_enemy).toEqual({ tiers: { '1': { max: 2, used: 2 } } })
+    expect(rest(character(spent), 'long', [ranger]).favored_enemy).toEqual({ tiers: { '1': { max: 2, used: 0 } } })
+  })
 })
