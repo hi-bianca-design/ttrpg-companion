@@ -11,7 +11,8 @@ export function SessionBadge() {
   return (
     <Badge accessibilityLabel="Session: Active">
       <View className="flex-row items-center gap-2">
-        <View className="h-2 w-2 rounded-full bg-resource-sage" />
+        {/* a diamond, like the resource pips: the design system has no round marks */}
+        <View className="h-2 w-2 rotate-45 bg-resource-sage" />
         <Text variant="label">Session: Active</Text>
       </View>
     </Badge>
