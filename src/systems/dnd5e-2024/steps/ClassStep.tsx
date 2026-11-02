@@ -104,6 +104,7 @@ export function ClassStep({ draft, update }: BuilderStepProps) {
                     if (!selected) update({
                       class_id: cls.id, class_name: cls.name, hit_die: cls.data.hit_die,
                       class_skill_count: cls.data.features.skill_choices?.count ?? 0,
+                      class_equipment_options: cls.data.features.starting_equipment_options ?? [],
                       class_skill_options: (cls.data.features.skill_choices?.from ?? []).map(skillKey),
                     })
                   }}

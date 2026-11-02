@@ -53,6 +53,11 @@ export function classSkillsComplete(draft: Draft): boolean {
   return validClassSkills(draft).length === classSkillCount(draft) && strList(draft.class_skills).length === classSkillCount(draft)
 }
 
+/** The class's starting equipment is chosen once an option is picked (trivially true with no options). */
+export function equipmentComplete(draft: Draft): boolean {
+  return strList(draft.class_equipment_options).length === 0 || typeof draft.equipment_option === 'number'
+}
+
 const spellLevel = (draft: Draft, id: string): number | undefined => {
   const v = ((draft.spell_levels ?? {}) as Record<string, unknown>)[id]
   return typeof v === 'number' ? v : undefined
@@ -110,6 +115,8 @@ export function abilitiesAssigned(draft: Draft): boolean {
  *   bg_skills (its granted skills, kebab-case, cached on pick)
  * - class_skill_count, class_skill_options (the class's skill picks, cached on the class pick) and
  *   class_skills (the picks)
+ * - class_equipment_options (the class's option strings, cached on the class pick), equipment_option (index
+ *   picked), equipment_items / equipment_other / equipment_gold (the picked option, resolved when chosen)
  * - the six ability keys (null until assigned from the standard array),
  *   bg_bonus_two / bg_bonus_one (ability keys receiving +2 / +1)
  * - spell_ids, spell_classes (spell id → lowercase class list) and spell_levels (spell id →
@@ -130,6 +137,11 @@ export function initialDraft(): Draft {
     class_skill_count: 0,
     class_skill_options: [],
     class_skills: [],
+    class_equipment_options: [],
+    equipment_option: null,
+    equipment_items: [],
+    equipment_other: [],
+    equipment_gold: 0,
     ...Object.fromEntries(ABILITY_KEYS.map((k) => [k, null])),
     bg_bonus_two: null,
     bg_bonus_one: null,
@@ -172,7 +184,13 @@ export function pruneDraft(draft: Draft, changed: Partial<Draft>): Draft {
     if (!('class_skill_options' in changed)) next.class_skills = []
     next.spell_ids = strList(next.spell_ids).filter((id) => strList(lists[id]).map((c) => c.toLowerCase()).includes(cls))
   }
-  if (classChanged) next.class_skills = []
+  if (classChanged) {
+    next.class_skills = []
+    next.equipment_option = null
+    next.equipment_items = []
+    next.equipment_other = []
+    next.equipment_gold = 0
+  }
   else next.class_skills = validClassSkills(next)
   if (classChanged || levelChanged) next.spell_ids = fitSpells(next)
   return next
@@ -199,6 +217,7 @@ export function toCharacter(draft: Draft): NewCharacter {
     },
     conditions: [],
     details: {
+      ...(typeof draft.equipment_option === 'number' ? { gold: num(draft.equipment_gold, 0), other_gear: strList(draft.equipment_other) } : {}),
       alignment: str(draft.alignment),
       personality_trait: str(draft.personality_trait),
       ideal: str(draft.ideal),
@@ -207,6 +226,7 @@ export function toCharacter(draft: Draft): NewCharacter {
       appearance: str(draft.appearance),
       backstory: str(draft.backstory),
     },
+    items: Array.isArray(draft.equipment_items) ? (draft.equipment_items as NewCharacter['items']) : [],
     picks: [
       ...(typeof draft.class_id === 'string' && draft.class_id
         ? [{ content_id: draft.class_id, kind: 'class', state: { skills: validClassSkills(draft) }, acquired_at_level: 1 }]
