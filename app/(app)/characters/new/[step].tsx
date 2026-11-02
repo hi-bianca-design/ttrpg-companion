@@ -97,21 +97,19 @@ export default function BuilderStepScreen() {
   return (
     <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScreenBackground>
-        <View className="flex-row items-center gap-3">
-          {/* On the first step this leaves the wizard; DiscardDraftGuard asks first when the draft has choices. */}
-          <BackButton onPress={() => router.back()} />
-          {/* From step 2 Back only steps back; the X leaves the whole wizard (DiscardDraftGuard asks once). */}
-          <WizardProgress
-            title={current.title}
-            index={index}
-            total={steps.length}
-            trailing={index > 0 ? (
-              <Button variant="ghost" size="icon" accessibilityLabel="Cancel" onPress={() => router.dismissTo('/(app)/characters')}>
-                <X size={20} color={THEME_COLORS.foreground} />
-              </Button>
-            ) : null}
-          />
-        </View>
+        {/* On the first step Back leaves the wizard (DiscardDraftGuard asks first when the draft has choices).
+            From step 2 Back only steps back; the X leaves the whole wizard (the guard asks once). */}
+        <WizardProgress
+          title={current.title}
+          index={index}
+          total={steps.length}
+          leading={<BackButton onPress={() => router.back()} />}
+          trailing={index > 0 ? (
+            <Button variant="ghost" size="icon" accessibilityLabel="Cancel" onPress={() => router.dismissTo('/(app)/characters')}>
+              <X size={20} color={THEME_COLORS.foreground} />
+            </Button>
+          ) : null}
+        />
 
         <ScrollView
           className="flex-1"

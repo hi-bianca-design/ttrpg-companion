@@ -23,6 +23,6 @@ test('moving to the next step starts the pill on the previous step, so it can sl
 
 test('keeps the title, Step X of N and the progressbar semantics', () => {
   render(<WizardProgress title="Spells" index={3} total={7} />)
-  expect(screen.getByText('Step 4 of 7')).toBeTruthy()
+  expect(screen.getByText('Step 4 of 7 · Spells')).toBeTruthy()
   expect(screen.getByLabelText('Spells, step 4 of 7').props.accessibilityValue).toEqual({ min: 1, max: 7, now: 4 })
 })

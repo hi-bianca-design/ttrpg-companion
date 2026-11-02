@@ -4,14 +4,14 @@ import { BackButton, CancelButton, NavRow } from '@/components/game/HeaderNav'
 import { ShapedSurface } from '@/components/ui/shaped-surface'
 import { variantOf } from '../../helpers/button'
 
-test('BackButton is a 44pt gold-edged plate with a heraldic arrow, not a plain caret', () => {
+test('BackButton is a 44pt faint-edged plate with a heraldic arrow, not a plain caret', () => {
   const onPress = jest.fn()
   render(<BackButton onPress={onPress} />)
   const back = screen.getByRole('button', { name: 'Back' })
   expect(back.props.className).toContain('h-11 w-11')
   expect(screen.getByTestId('back-glyph')).toBeTruthy()
   const plate = screen.UNSAFE_getByType(ShapedSurface).props
-  expect(plate.stroke).toBe('primary')
+  expect(plate.stroke).toBe('border')
   expect(plate.glass).toBeTruthy()
   expect(screen.queryByText('Back')).toBeNull()
   fireEvent.press(back)

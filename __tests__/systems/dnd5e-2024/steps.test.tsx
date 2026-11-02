@@ -94,8 +94,7 @@ beforeEach(() => {
 describe('WizardProgress', () => {
   test('shows the step title and "Step X of N"', () => {
     render(<WizardProgress title="Spells" index={3} total={7} />)
-    expect(screen.getByText('Spells')).toBeTruthy()
-    expect(screen.getByText('Step 4 of 7')).toBeTruthy()
+    expect(screen.getByText('Step 4 of 7 · Spells')).toBeTruthy()
   })
 })
 

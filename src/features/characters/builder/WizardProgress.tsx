@@ -3,25 +3,33 @@ import { View } from 'react-native'
 import { StepDots } from '@/components/ui/step-dots'
 import { Text } from '@/components/ui/text'
 
-type WizardProgressProps = { title: string; index: number; total: number; /** Sits at the end of the dots row (e.g. the wizard's X). */ trailing?: ReactNode }
+type WizardProgressProps = {
+  title: string
+  index: number
+  total: number
+  /** Leading and trailing controls (Back, X) share the dots' row so all three sit on one centre line. */
+  leading?: ReactNode
+  trailing?: ReactNode
+}
 
-/** Step title, "Step X of N" and a row of dots where the current step is a longer pill that slides along. */
-export function WizardProgress({ title, index, total, trailing }: WizardProgressProps) {
+/**
+ * Wizard header: one nav row (Back, centred dots, X) and a quiet "Step X of N · Title" eyebrow under it,
+ * so controls < progress < step title in weight.
+ */
+export function WizardProgress({ title, index, total, leading, trailing }: WizardProgressProps) {
   return (
     <View
-      className="flex-1 gap-3"
+      className="gap-3"
       role="progressbar"
       accessibilityLabel={`${title}, step ${index + 1} of ${total}`}
       accessibilityValue={{ min: 1, max: total, now: index + 1 }}
     >
-      <View className="flex-row items-center justify-between">
-        <Text variant="label" tone="accent">{title}</Text>
-        <Text variant="label">{`Step ${index + 1} of ${total}`}</Text>
-      </View>
-      <View className="min-h-8 flex-row items-center justify-between">
+      <View className="min-h-11 flex-row items-center justify-between">
+        <View className="w-11">{leading}</View>
         <StepDots index={index} total={total} />
-        {trailing}
+        <View className="w-11 items-end">{trailing}</View>
       </View>
+      <Text variant="eyebrow">{`Step ${index + 1} of ${total} · ${title}`}</Text>
     </View>
   )
 }
