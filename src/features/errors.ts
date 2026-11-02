@@ -7,6 +7,12 @@ export type AppErrorCode =
   | 'duplicate'
   | 'in_use'
   | 'username_taken'
+  | 'not_member'
+  | 'no_active_session'
+  | 'not_allowed'
+  | 'not_in_combat'
+  | 'invalid_turn_target'
+  | 'not_your_turn'
   | 'network'
   | 'load_failed'
   | 'save_failed'
@@ -20,6 +26,12 @@ export const ERROR_COPY: Record<AppErrorCode, string> = {
   duplicate: 'You already have one with this name.',
   in_use: 'This is used by a character. Remove it from them first.',
   username_taken: 'That username is taken.',
+  not_member: "You're not part of this campaign yet.",
+  no_active_session: 'This session has already ended.',
+  not_allowed: "You can't do that in this session.",
+  not_in_combat: "Combat hasn't started yet.",
+  invalid_turn_target: "That player can't take a turn right now.",
+  not_your_turn: "It isn't your turn.",
   network: "Can't reach the server. Check your connection and try again.",
   load_failed: 'Couldn’t load this. Check your connection and try again.',
   save_failed: 'Couldn’t save. Try again.',
@@ -35,7 +47,10 @@ export class AppError extends Error {
   }
 }
 
-const RPC_CODES: ReadonlySet<string> = new Set(['invalid_code', 'already_member', 'system_mismatch', 'not_your_character'])
+const RPC_CODES: ReadonlySet<string> = new Set([
+  'invalid_code', 'already_member', 'system_mismatch', 'not_your_character',
+  'not_member', 'no_active_session', 'not_allowed', 'not_in_combat', 'invalid_turn_target', 'not_your_turn',
+])
 const NETWORK_PATTERN = /network request failed|failed to fetch|network error|networkerror|load failed/i
 
 export function toAppError(e: unknown): AppError {

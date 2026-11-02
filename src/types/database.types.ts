@@ -426,6 +426,77 @@ export type Database = {
         }
         Relationships: []
       }
+      sessions: {
+        Row: {
+          campaign_id: string
+          combat_started_by: string | null
+          created_at: string
+          current_turn_user_id: string | null
+          ended_at: string | null
+          id: string
+          in_combat: boolean
+          opened_by: string
+          started_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          combat_started_by?: string | null
+          created_at?: string
+          current_turn_user_id?: string | null
+          ended_at?: string | null
+          id?: string
+          in_combat?: boolean
+          opened_by: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          combat_started_by?: string | null
+          created_at?: string
+          current_turn_user_id?: string | null
+          ended_at?: string | null
+          id?: string
+          in_combat?: boolean
+          opened_by?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_combat_started_by_fkey"
+            columns: ["combat_started_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_current_turn_user_id_fkey"
+            columns: ["current_turn_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_opened_by_fkey"
+            columns: ["opened_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -457,14 +528,150 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      end_session: {
+        Args: { p_session_id: string }
+        Returns: {
+          campaign_id: string
+          combat_started_by: string | null
+          created_at: string
+          current_turn_user_id: string | null
+          ended_at: string | null
+          id: string
+          in_combat: boolean
+          opened_by: string
+          started_at: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "sessions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      end_turn: {
+        Args: { p_session_id: string }
+        Returns: {
+          campaign_id: string
+          combat_started_by: string | null
+          created_at: string
+          current_turn_user_id: string | null
+          ended_at: string | null
+          id: string
+          in_combat: boolean
+          opened_by: string
+          started_at: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "sessions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       gen_invite_code: { Args: never; Returns: string }
       is_campaign_gm: { Args: { p_campaign_id: string }; Returns: boolean }
       is_campaign_member: { Args: { p_campaign_id: string }; Returns: boolean }
+      is_active_campaign_member: {
+        Args: { p_campaign_id: string }
+        Returns: boolean
+      }
       join_campaign: {
         Args: { p_character_id: string; p_code: string }
         Returns: string
       }
+      lock_active_session: {
+        Args: { p_session_id: string }
+        Returns: {
+          campaign_id: string
+          combat_started_by: string | null
+          created_at: string
+          current_turn_user_id: string | null
+          ended_at: string | null
+          id: string
+          in_combat: boolean
+          opened_by: string
+          started_at: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "sessions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      open_session: {
+        Args: { p_campaign_id: string }
+        Returns: {
+          campaign_id: string
+          combat_started_by: string | null
+          created_at: string
+          current_turn_user_id: string | null
+          ended_at: string | null
+          id: string
+          in_combat: boolean
+          opened_by: string
+          started_at: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "sessions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       owns_character: { Args: { p_character_id: string }; Returns: boolean }
+      set_combat: {
+        Args: { p_in_combat: boolean; p_session_id: string }
+        Returns: {
+          campaign_id: string
+          combat_started_by: string | null
+          created_at: string
+          current_turn_user_id: string | null
+          ended_at: string | null
+          id: string
+          in_combat: boolean
+          opened_by: string
+          started_at: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "sessions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      set_turn: {
+        Args: { p_session_id: string; p_user_id: string }
+        Returns: {
+          campaign_id: string
+          combat_started_by: string | null
+          created_at: string
+          current_turn_user_id: string | null
+          ended_at: string | null
+          id: string
+          in_combat: boolean
+          opened_by: string
+          started_at: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "sessions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       username_available: { Args: { p_username: string }; Returns: boolean }
     }
     Enums: {
