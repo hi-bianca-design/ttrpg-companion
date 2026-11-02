@@ -2,7 +2,7 @@ import type { Theme } from '@react-navigation/native'
 
 // The only place JS needs literal colours: React Navigation, SVG gradient stops,
 // shadow colours. Mirrors the CSS variables in global.css — keep the two in sync.
-export const THEME_COLORS: Record<string, string> = {
+export const THEME_COLORS = {
   background: '#0B1D20',
   foreground: '#E6D9B6',
   card: '#12212C',
@@ -52,10 +52,10 @@ export const THEME_COLORS: Record<string, string> = {
   tintedForeground: '#D79AAE',
   tintedBorder: 'rgba(215, 154, 174, 0.35)',
   overlay: 'rgba(0, 0, 0, 0.6)',
-}
+} as const satisfies Record<string, string>
 
 /** Posterized sky bands, top to bottom (screen background). */
-export const SKY_BANDS: string[] = ['sky1', 'sky2', 'sky3', 'sky4', 'sky5', 'sky6'].map((k) => THEME_COLORS[k])
+export const SKY_BANDS: string[] = (['sky1', 'sky2', 'sky3', 'sky4', 'sky5', 'sky6'] as const).map((k) => THEME_COLORS[k])
 
 // Tab bar labels get the caption role's 12/16 metrics. React Navigation's default bar is 49pt plus
 // the bottom inset; on web (no inset) the 24pt icon and 16pt label don't fit inside its padding and

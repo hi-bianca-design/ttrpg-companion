@@ -2,7 +2,8 @@
 import { THEME_COLORS as C } from '@/lib/theme'
 import { colorDistance, contrastRatio } from '../helpers/contrast'
 
-const ratio = (fg: string, bg: string) => contrastRatio(C[fg], C[bg], C.background)
+type Key = keyof typeof C
+const ratio = (fg: Key, bg: Key) => contrastRatio(C[fg], C[bg], C.background)
 
 test.each([
   ['foreground', 'background', 7],
@@ -21,11 +22,11 @@ test.each([
   expect(ratio(fg, bg)).toBeGreaterThanOrEqual(min)
 })
 
-test.each(['sky1', 'sky2', 'sky3', 'sky4', 'sky5', 'sky6'])('foreground text on %s holds 4.5:1', (band) => {
+test.each(['sky1', 'sky2', 'sky3', 'sky4', 'sky5', 'sky6'] as const)('foreground text on %s holds 4.5:1', (band) => {
   expect(ratio('foreground', band)).toBeGreaterThanOrEqual(4.5)
 })
 
-const TINTS = ['resourceSky', 'resourcePlum', 'resourceSage', 'resourceOchre', 'resourceTerracotta']
+const TINTS = ['resourceSky', 'resourcePlum', 'resourceSage', 'resourceOchre', 'resourceTerracotta'] as const
 
 test.each(TINTS)('%s reads at 3:1 on the background', (tint) => {
   expect(ratio(tint, 'background')).toBeGreaterThanOrEqual(3)
@@ -38,8 +39,8 @@ test('the five resource tints are mutually distinguishable', () => {
 })
 
 // Review fix I3: subtitles, labels, gold numbers and inline errors also sit over the top bands.
-test.each(['sky1', 'sky2', 'sky3', 'sky4', 'sky5', 'sky6'])('muted, label, accent, gold and error text hold 4.5:1 on %s', (band) => {
-  for (const fg of ['mutedForeground', 'labelForeground', 'accentForeground', 'highlightText', 'destructive']) {
+test.each(['sky1', 'sky2', 'sky3', 'sky4', 'sky5', 'sky6'] as const)('muted, label, accent, gold and error text hold 4.5:1 on %s', (band) => {
+  for (const fg of ['mutedForeground', 'labelForeground', 'accentForeground', 'highlightText', 'destructive'] as const) {
     expect([fg, ratio(fg, band) >= 4.5]).toEqual([fg, true])
   }
 })

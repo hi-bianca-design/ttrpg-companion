@@ -32,5 +32,5 @@ test('every CSS colour variable has a THEME_COLORS entry', () => {
 })
 
 test('SKY_BANDS lists sky1..sky6 top to bottom', () => {
-  expect(SKY_BANDS).toEqual(['sky1', 'sky2', 'sky3', 'sky4', 'sky5', 'sky6'].map((k) => THEME_COLORS[k]))
+  expect(SKY_BANDS).toEqual((['sky1', 'sky2', 'sky3', 'sky4', 'sky5', 'sky6'] as const).map((k) => THEME_COLORS[k]))
 })

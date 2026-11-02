@@ -2,14 +2,14 @@ import { fireEvent, render, screen } from '@testing-library/react-native'
 import { Text } from 'react-native'
 import { StyleSheet } from 'react-native'
 import Svg, { G, Path, RadialGradient } from 'react-native-svg'
-import { ShapedSurface } from '@/components/ui/shaped-surface'
+import { ShapedSurface, type ThemeColorKey } from '@/components/ui/shaped-surface'
 import { shapePath } from '@/lib/shape-path'
 import { THEME_COLORS } from '@/lib/theme'
 
 const layout = (id: string, width: number, height: number) =>
   fireEvent(screen.getByTestId(id), 'layout', { nativeEvent: { layout: { width, height, x: 0, y: 0 } } })
 
-const fillPath = (fillKey: string) => screen.UNSAFE_getAllByType(Path).find((p) => p.props.fill === THEME_COLORS[fillKey])
+const fillPath = (fillKey: ThemeColorKey) => screen.UNSAFE_getAllByType(Path).find((p) => p.props.fill === THEME_COLORS[fillKey])
 
 test('before any layout no path contains NaN', () => {
   render(<ShapedSurface testID="s" fill="rock" stroke="primary"><Text>x</Text></ShapedSurface>)
