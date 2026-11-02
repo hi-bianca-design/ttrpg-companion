@@ -24,7 +24,7 @@ export const GLASS_FILL_OPACITY = {
   field: { web: 0.8, native: 0.85 },
 } as const
 export type GlassLevel = keyof typeof GLASS_FILL_OPACITY
-const GLASS_BLUR_PX = 10
+const GLASS_BLUR_PX = 16
 
 /** Surfaces up to this tall get pointed `hex` ends; taller ones fall back to `chamfer` (spec §4.3). */
 export const HEX_MAX_HEIGHT = 56

@@ -10,7 +10,7 @@ export const THEME_COLORS = {
   muted: 'rgba(166, 216, 204, 0.08)',
   mutedForeground: '#C2D6CE',
   labelForeground: '#B0E0D2',
-  border: 'rgba(166, 216, 204, 0.28)',
+  border: 'rgba(166, 216, 204, 0.2)',
   rule: 'rgba(227, 177, 48, 0.45)',
   input: '#08141A',
   ring: '#F0902F',

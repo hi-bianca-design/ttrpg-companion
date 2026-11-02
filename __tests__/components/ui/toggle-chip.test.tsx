@@ -48,9 +48,9 @@ test('compact size is h-7 with an 8px hitSlop (44pt target)', () => {
   expect(chip.props.hitSlop).toEqual({ top: 8, bottom: 8, left: 8, right: 8 })
 })
 
-test('chips are pointed plates with a 2px stroke, like the buttons', () => {
+test('chips are pointed plates with a 1.5px stroke, like the buttons', () => {
   render(<ToggleChip label="A" onPress={() => {}} testID="c" />)
-  expect(surfaces()[0].strokeWidth).toBe(2)
+  expect(surfaces()[0].strokeWidth).toBe(1.5)
   expect(screen.getByTestId('c').props.className).not.toContain('rounded-full')
 })
 

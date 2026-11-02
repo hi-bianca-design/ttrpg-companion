@@ -54,7 +54,7 @@ function ToggleChip({
         fill={filled ? 'primary' : outlined ? 'rockDeep' : 'card'}
         stroke={filled ? 'ink' : outlined ? 'secondary' : 'border'}
         glow={filled && !disabled ? 'torch' : undefined}
-        strokeWidth={size === 'sm' ? 1.5 : 2}
+        strokeWidth={1.5}
         shadowOffset={size === 'sm' ? 1 : 2}
         className={cn('flex-1 flex-row items-center justify-center gap-1', size === 'sm' ? 'px-3' : size === 'square' ? 'px-0' : 'px-6')}
       >

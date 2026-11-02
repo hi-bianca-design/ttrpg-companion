@@ -12,7 +12,7 @@ type ScreenBackgroundProps = { children: ReactNode; scroll?: boolean }
 const BAND_STEPS = [0, 4.2, 8.4, 12.6, 16.8, 21]
 const BAND_ENDS = [4.2, 8.4, 12.6, 16.8, 21, 30]
 const VIGNETTE_EDGE_OPACITY = 0.82
-const GRAIN_OPACITY = 0.3
+const GRAIN_OPACITY = 0.14
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const GRAIN = require('../../../assets/grain.png')
 // Overriding the asset's scale makes the repeat tile 1 image pixel per physical pixel, so specks stay
@@ -31,7 +31,7 @@ const grainSource = (): ImageSourcePropType => {
 export function ScreenBackground({ children, scroll = false }: ScreenBackgroundProps) {
   const vignetteId = `screen-vignette-${useId().replace(/[^A-Za-z0-9_-]/g, '')}`
   // Fixed screens fill the height so a child can flex (e.g. a scroll area between header and footer).
-  const content = <View className={cn('gap-6 px-4 pb-8 pt-6', !scroll && 'flex-1')}>{children}</View>
+  const content = <View className={cn('gap-8 px-4 pb-8 pt-6', !scroll && 'flex-1')}>{children}</View>
 
   return (
     <View className="flex-1 bg-background">

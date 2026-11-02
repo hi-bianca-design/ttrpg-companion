@@ -24,7 +24,7 @@ function Input({ className, editable = true, multiline, value, defaultValue, onC
       glass="field"
       fill="well"
       stroke={focused ? 'torch' : 'border'}
-      strokeWidth={focused ? 3 : 2}
+      strokeWidth={focused ? 2 : 1.5}
       glow={focused ? 'torch' : undefined}
       className={cn(!editable && 'opacity-50', plate)}
     >
