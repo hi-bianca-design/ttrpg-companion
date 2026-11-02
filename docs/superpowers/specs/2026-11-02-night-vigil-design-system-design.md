@@ -79,7 +79,7 @@ There is exactly one palette. `.dark:root` selector disappears; the variables mo
 - **Grain:** a full-screen noise overlay at roughly 30-40% strength, on every screen. (The CSS mockup used `mix-blend-mode: overlay`; RN has no blend modes, so a pre-baked semi-transparent tiled noise image is the expected route.)
 - **Vignette:** radial darkening toward the screen edges, framing a lit centre (like the rock walls in reference image 2).
 - **Shadows:** hard, offset, ink-coloured (about 3px right and down, zero blur) on buttons, inputs and cards. No soft ambient shadows. Glow (torch-orange, soft) appears only on active or focused elements.
-- **Dividers:** a thin gold line with a small centred spire/triangle marker replaces plain rules in screen headers (`SectionHeader`, `Separator`). Plain hairline remains for dense lists.
+- **Section headers:** the title, then a faint gold hairline running to the trailing edge on the same row (chevron or action at the end). There is no separate divider under the header, so a header and its content read as one section (owner feedback: a full-width divider with a spire read as a section break). Plain hairlines remain for dense lists.
 
 ### 4.3 Shapes and components
 
