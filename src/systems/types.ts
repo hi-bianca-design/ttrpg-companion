@@ -22,6 +22,8 @@ export type ResourceDef =
       tint?: ResourceTint
       /** Why damage is unavailable once this pool is at 0 (e.g. D&D: mark a death-save failure instead). */
       emptyHint?: string
+      /** A limited-use class feature drawn from a pool (e.g. Lay On Hands), tracked on the Actions screen. */
+      group?: 'feature'
     }
   | {
       key: string
