@@ -8,6 +8,7 @@ import { useBuilderStore } from '@/features/characters/builder/builder.store'
 import { WizardProgress } from '@/features/characters/builder/WizardProgress'
 import { createCharacter } from '@/features/characters/characters.api'
 import { listContent } from '@/features/content/content.api'
+import { abilitiesFilled } from '@/systems/dnd5e-2024/draft'
 import { AbilityScoresStep } from '@/systems/dnd5e-2024/steps/AbilityScoresStep'
 import { OriginStep } from '@/systems/dnd5e-2024/steps/OriginStep'
 import { ClassSkillsStep } from '@/systems/dnd5e-2024/steps/ClassSkillsStep'
@@ -226,13 +227,45 @@ describe('Origin step', () => {
   })
 })
 
+describe('abilitiesFilled', () => {
+  test('false with one null, true with six numbers outside the standard array', () => {
+    const six = { strength: 16, dexterity: 8, constitution: 14, intelligence: 10, wisdom: 12, charisma: 18 }
+    expect(abilitiesFilled({ ...six, charisma: null })).toBe(false)
+    expect(abilitiesFilled(six)).toBe(true)
+  })
+})
+
 describe('Ability scores step', () => {
-  test('assigning a value used by another ability swaps the two', async () => {
-    act(() => useBuilderStore.getState().update({ intelligence: 15, strength: 14 }))
+  test('typing a score updates that ability', async () => {
     renderWithQuery(<Bound Step={AbilityScoresStep} />)
-    fireEvent.press(screen.getByRole('button', { name: 'Strength, 14' }))
-    fireEvent.press(screen.getByRole('button', { name: '15 for Strength' }))
-    expect(useBuilderStore.getState().draft).toMatchObject({ strength: 15, intelligence: 14 })
+    fireEvent.changeText(screen.getByLabelText('Strength score'), '16')
+    expect(useBuilderStore.getState().draft.strength).toBe(16)
+    await act(async () => {})
+  })
+
+  test('scores clamp to 1 through 20', async () => {
+    renderWithQuery(<Bound Step={AbilityScoresStep} />)
+    fireEvent.changeText(screen.getByLabelText('Strength score'), '25')
+    expect(useBuilderStore.getState().draft.strength).toBe(20)
+    fireEvent.changeText(screen.getByLabelText('Strength score'), '0')
+    expect(useBuilderStore.getState().draft.strength).toBe(1)
+    await act(async () => {})
+  })
+
+  test('clearing the field sets the score to null', async () => {
+    act(() => useBuilderStore.getState().update({ strength: 12 }))
+    renderWithQuery(<Bound Step={AbilityScoresStep} />)
+    fireEvent.changeText(screen.getByLabelText('Strength score'), '')
+    expect(useBuilderStore.getState().draft.strength).toBeNull()
+    await act(async () => {})
+  })
+
+  test('"Use standard array" fills the six abilities in order', async () => {
+    renderWithQuery(<Bound Step={AbilityScoresStep} />)
+    fireEvent.press(screen.getByRole('button', { name: 'Use standard array' }))
+    expect(useBuilderStore.getState().draft).toMatchObject({
+      strength: 15, dexterity: 14, constitution: 13, intelligence: 12, wisdom: 10, charisma: 8,
+    })
     await act(async () => {})
   })
 

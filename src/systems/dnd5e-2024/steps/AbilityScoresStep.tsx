@@ -1,11 +1,10 @@
-import { useState } from 'react'
-import { Pressable, View } from 'react-native'
+import { View } from 'react-native'
 import { SectionHeader } from '@/components/game'
+import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Hairline } from '@/components/ui/hairline'
-import { ShapedSurface } from '@/components/ui/shaped-surface'
+import { Input } from '@/components/ui/input'
 import { Text } from '@/components/ui/text'
-import { cn } from '@/lib/utils'
 import type { BuilderStepProps } from '../../types'
 import { ABILITY_KEYS, ABILITY_LABELS, type AbilityKey, STANDARD_ARRAY } from '../definition'
 import { bonusAbilities, bonusFor } from '../draft'
@@ -19,103 +18,65 @@ function scoreOf(draft: BuilderStepProps['draft'], key: AbilityKey): number | nu
   return typeof v === 'number' ? v : null
 }
 
+/** Digits only, clamped 1 to 20; empty (or no digits) clears the score. */
+function parseScore(text: string): number | null {
+  const digits = text.replace(/\D/g, '')
+  if (digits === '') return null
+  return Math.min(20, Math.max(1, parseInt(digits, 10)))
+}
+
 export function AbilityScoresStep({ draft, update }: BuilderStepProps) {
-  const [active, setActive] = useState<AbilityKey | null>(null)
   const backgrounds = useDndContent('background')
   const background = backgrounds.items.find((b) => b.id === draft.background_id)
   const eligible = bonusAbilities(draft) as AbilityKey[]
 
-  const used = ABILITY_KEYS.map((k) => scoreOf(draft, k)).filter((v): v is number => v !== null)
-  const assignedCount = used.length
-
-  /** Tapping your own value clears it; a value held by another ability swaps the two. */
-  function assign(key: AbilityKey, value: number) {
-    const current = scoreOf(draft, key)
-    if (current === value) update({ [key]: null })
-    else {
-      const holder = ABILITY_KEYS.find((k) => k !== key && scoreOf(draft, k) === value)
-      update(holder ? { [key]: value, [holder]: current } : { [key]: value })
-    }
-    setActive(null)
+  function useStandardArray() {
+    update(Object.fromEntries(ABILITY_KEYS.map((k, i) => [k, STANDARD_ARRAY[i]])))
   }
 
   return (
     <View className="gap-6">
       <StepIntro
         title="Ability scores"
-        description="Tap an ability, then pick a value from the standard array. Each value is used once; picking a taken value swaps the two."
+        description="Type each score, or use the standard array to start."
       />
 
-      <SectionHeader id="builder-standard-array" title="Standard array" action={<Text variant="label" tone="accent">{`${assignedCount}/6 assigned`}</Text>}>
-        <View className="flex-row flex-wrap gap-2">
-          {STANDARD_ARRAY.map((v) => (
-            <ShapedSurface
-              key={v}
-              shape="chamfer"
-              fill="card"
-              stroke={used.includes(v) ? 'border' : 'primary'}
-              shadowOffset={0}
-              className={cn('h-11 w-11 items-center justify-center', used.includes(v) && 'opacity-50')}
-            >
-              <Text variant="subhead">{v}</Text>
-            </ShapedSurface>
-          ))}
-        </View>
-      </SectionHeader>
+      <Button variant="outline" onPress={useStandardArray} accessibilityLabel="Use standard array">
+        <Text>Use standard array</Text>
+      </Button>
 
-      <SectionHeader id="builder-abilities" title="Assign values">
+      <SectionHeader id="builder-abilities" title="Scores">
         <Card className="gap-0 p-0">
           {ABILITY_KEYS.map((key, i) => {
             const base = scoreOf(draft, key)
             const bonus = bonusFor(draft, key)
             const total = base === null ? null : base + bonus
-            const isActive = active === key
             return (
               <View key={key} className="relative">
                 {i < ABILITY_KEYS.length - 1 ? <Hairline className="absolute bottom-0 left-0 right-0" /> : null}
-                <Pressable
-                  role="button"
-                  accessibilityLabel={`${ABILITY_LABELS[key]}${total === null ? ', unassigned' : `, ${total}`}`}
-                  accessibilityState={{ expanded: isActive }}
-                  onPress={() => setActive(isActive ? null : key)}
-                  className="min-h-11 flex-row items-center gap-3 px-4 py-3"
-                >
+                <View className="min-h-11 flex-row items-center gap-3 px-4 py-3">
                   <View className="flex-1 gap-1">
                     <Text variant="subhead">{ABILITY_LABELS[key]}</Text>
                     <Text variant="label">{short(key)}</Text>
                   </View>
-                  {total === null ? (
-                    <Text variant="body-sm" tone="muted">Tap to assign</Text>
-                  ) : (
-                    <View className="flex-row items-center gap-3">
-                      {bonus > 0 ? <Text variant="caption" tone="accent">{`+${bonus} background`}</Text> : null}
-                      <View className="items-end">
+                  {total !== null && bonus > 0 ? <Text variant="caption" tone="accent">{`+${bonus} background`}</Text> : null}
+                  <Input
+                    className="flex-1 px-2 text-center"
+                    keyboardType="number-pad"
+                    maxLength={2}
+                    value={base === null ? '' : String(base)}
+                    onChangeText={(t) => update({ [key]: parseScore(t) })}
+                    accessibilityLabel={`${ABILITY_LABELS[key]} score`}
+                  />
+                  <View className="w-11 items-end">
+                    {total === null ? null : (
+                      <>
                         <Text variant="stat">{total}</Text>
                         <Text variant="label" tone="accent">{formatModifier(getAbilityModifier(total))}</Text>
-                      </View>
-                    </View>
-                  )}
-                </Pressable>
-                {isActive ? (
-                  <View className="flex-row flex-wrap gap-2 px-4 pb-3">
-                    {STANDARD_ARRAY.map((v) => {
-                      const mine = base === v
-                      const holder = ABILITY_KEYS.find((k) => k !== key && scoreOf(draft, k) === v)
-                      return (
-                        <Chip
-                          key={v}
-                          label={String(v)}
-                          accessibilityLabel={`${v} for ${ABILITY_LABELS[key]}`}
-                          accessibilityHint={holder ? `Swaps with ${ABILITY_LABELS[holder]}` : undefined}
-                          selected={mine}
-                          size="square"
-                          className={cn(holder && 'border-dashed')}
-                          onPress={() => assign(key, v)}
-                        />
-                      )
-                    })}
+                      </>
+                    )}
                   </View>
-                ) : null}
+                </View>
               </View>
             )
           })}

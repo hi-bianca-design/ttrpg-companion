@@ -302,27 +302,13 @@ test('pruneDraft clears the background ability bonuses when the background chang
   expect(dnd5eBuilder.pruneDraft(draft, { background_id: 'acolyte' })).toMatchObject({ bg_bonus_two: 'wisdom', bg_bonus_one: 'charisma' })
 })
 
-test('ability-scores step needs the standard array assigned plus two distinct background bonuses', () => {
+test('ability-scores step is filled once all six scores hold numbers, whatever their values', () => {
   const step = dnd5eBuilder.steps.find((s) => s.id === 'ability-scores')!
-  const scores = { strength: 8, dexterity: 14, constitution: 13, intelligence: 15, wisdom: 12, charisma: 10 }
-  const bonuses = { bg_bonus_two: 'intelligence', bg_bonus_one: 'constitution' }
-  const sage = { ...dnd5eBuilder.initialDraft(), bg_abilities: ['constitution', 'intelligence', 'wisdom'] }
-  expect(step.isComplete(sage)).toBe(false)
-  expect(step.isComplete({ ...sage, ...bonuses })).toBe(false)
-  expect(step.isComplete({ ...sage, ...scores })).toBe(false)
-  expect(step.isComplete({ ...sage, ...scores, ...bonuses })).toBe(true)
-  expect(step.isComplete({ ...sage, ...scores, strength: 15, ...bonuses })).toBe(false)
-})
-
-test('ability-scores step only needs background bonuses when the background offers at least two abilities', () => {
-  const step = dnd5eBuilder.steps.find((s) => s.id === 'ability-scores')!
-  const scores = { strength: 8, dexterity: 14, constitution: 13, intelligence: 15, wisdom: 12, charisma: 10 }
-  const base = { ...dnd5eBuilder.initialDraft(), ...scores, background_id: 'hb' }
-  expect(step.isComplete({ ...base, bg_abilities: [] })).toBe(true)
-  expect(step.isComplete({ ...base, bg_abilities: ['wisdom'] })).toBe(true)
-  expect(step.isComplete({ ...base, bg_abilities: ['wisdom', 'charisma', 'intelligence'] })).toBe(false)
-  expect(step.isComplete({ ...base, bg_abilities: ['wisdom', 'charisma'], bg_bonus_two: 'wisdom', bg_bonus_one: 'charisma' })).toBe(true)
-  expect(step.isComplete({ ...base, bg_abilities: ['wisdom', 'charisma'], bg_bonus_two: 'strength', bg_bonus_one: 'charisma' })).toBe(false)
+  const scores = { strength: 16, dexterity: 8, constitution: 14, intelligence: 10, wisdom: 12, charisma: 18 }
+  const base = { ...dnd5eBuilder.initialDraft(), bg_abilities: ['wisdom', 'charisma', 'intelligence'] }
+  expect(step.isComplete(base)).toBe(false)
+  expect(step.isComplete({ ...base, ...scores, charisma: null })).toBe(false)
+  expect(step.isComplete({ ...base, ...scores })).toBe(true)
 })
 
 describe('pruneDraft keeps chosen spells within the level and limits', () => {

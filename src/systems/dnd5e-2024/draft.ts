@@ -2,7 +2,7 @@
 // the draft → NewCharacter conversion. Kept apart from builder.ts so step components can
 // import it without a builder ↔ steps require cycle.
 import type { Draft, NewCharacter } from '../types'
-import { ABILITY_KEYS, STANDARD_ARRAY } from './definition'
+import { ABILITY_KEYS } from './definition'
 import { featureResources } from './features'
 import { getAbilityModifier, getMaxHP, getMaxSpellLevel, getSpellLimits, slotsFor } from './rules'
 
@@ -102,11 +102,9 @@ function fitSpells(draft: Draft): string[] {
   })
 }
 
-/** True when the six abilities hold exactly the standard array (each value used once). */
-export function abilitiesAssigned(draft: Draft): boolean {
-  const values = ABILITY_KEYS.map((k) => draft[k])
-  if (!values.every((v) => typeof v === 'number')) return false
-  return [...(values as number[])].sort((a, b) => b - a).join() === [...STANDARD_ARRAY].sort((a, b) => b - a).join()
+/** True when all six abilities hold a finite number (any value, not just the standard array). */
+export function abilitiesFilled(draft: Draft): boolean {
+  return ABILITY_KEYS.every((k) => typeof draft[k] === 'number' && Number.isFinite(draft[k]))
 }
 
 /**
