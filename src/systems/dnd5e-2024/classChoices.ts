@@ -30,3 +30,19 @@ export function classChoicesFor(className: string, level1Features: string[]): Cl
   }
   return out
 }
+
+const CHOICE_KEYS: { key: ChoiceKey; label: string }[] = [
+  { key: 'fighting_style', label: 'Fighting Style' },
+  { key: 'weapon_mastery', label: 'Weapon Mastery' },
+  { key: 'expertise', label: 'Expertise' },
+  { key: 'order', label: 'Order' },
+]
+
+/** Non-empty class choices with display labels, for read-only summaries (sheet, Review). No class content needed. */
+export function choiceSummary(className: string, valuesFor: (key: ChoiceKey) => string[]): { key: ChoiceKey; label: string; value: string }[] {
+  return CHOICE_KEYS.flatMap(({ key, label }) => {
+    const values = valuesFor(key).map((v) => v.trim()).filter(Boolean)
+    if (values.length === 0) return []
+    return [{ key, label: key === 'order' ? (orderFeature(className) ?? label) : label, value: values.join(', ') }]
+  })
+}

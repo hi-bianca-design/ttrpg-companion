@@ -136,6 +136,33 @@ describe('Review step', () => {
     await act(async () => {})
   })
 
+  test('lists class choices and typed own-items before Create', async () => {
+    act(() => useBuilderStore.getState().update({ ...completeWizard, class_id: 'ftr', class_name: 'Fighter', hit_die: 10 }))
+    // a class change clears its choices, so they are set after the class
+    act(() => useBuilderStore.getState().update({
+      class_choices: { fighting_style: ['Pike and Shield'], weapon_mastery: ['Longsword', 'Handaxe'], expertise: [] },
+      equipment_custom: ['Lucky coin', 'Map of Neverwinter'],
+    }))
+    renderWithQuery(<BuilderStepScreen />)
+    expect(await screen.findByText('Class features')).toBeTruthy()
+    expect(screen.getByText('Fighting Style')).toBeTruthy()
+    expect(screen.getByText('Pike and Shield')).toBeTruthy()
+    expect(screen.getByText('Longsword, Handaxe')).toBeTruthy()
+    expect(screen.queryByText('Expertise')).toBeNull()
+    expect(screen.getByText('Extra gear')).toBeTruthy()
+    expect(screen.getByText('Lucky coin, Map of Neverwinter')).toBeTruthy()
+    await act(async () => {})
+  })
+
+  test('omits Class features and Extra gear when empty', async () => {
+    act(() => useBuilderStore.getState().update({ ...completeWizard }))
+    renderWithQuery(<BuilderStepScreen />)
+    await screen.findByText('Ability scores')
+    expect(screen.queryByText('Class features')).toBeNull()
+    expect(screen.queryByText('Extra gear')).toBeNull()
+    await act(async () => {})
+  })
+
   test('lists steps that are not filled in as skipped in the checklist', async () => {
     act(() => useBuilderStore.getState().update({ ...completeWizard, name: '' }))
     renderWithQuery(<BuilderStepScreen />)

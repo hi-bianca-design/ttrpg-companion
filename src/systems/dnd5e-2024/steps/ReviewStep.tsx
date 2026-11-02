@@ -5,7 +5,8 @@ import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
 import type { BuilderStepProps } from '../../types'
 import { ABILITY_KEYS } from '../definition'
-import { bonusFor, levelOf, str, strList, toCharacter } from '../draft'
+import { choiceSummary } from '../classChoices'
+import { bonusFor, classChoices, levelOf, str, strList, toCharacter } from '../draft'
 import { formatModifier, getAbilityModifier, getProficiencyBonus } from '../rules'
 import { useDndContent } from './shared'
 
@@ -27,6 +28,10 @@ export function ReviewStep({ draft }: BuilderStepProps) {
   const personality = [
     ['Trait', str(draft.personality_trait)], ['Ideal', str(draft.ideal)], ['Bond', str(draft.bond)], ['Flaw', str(draft.flaw)],
   ].filter(([, v]) => v.trim())
+
+  const choices = classChoices(draft)
+  const features = choiceSummary(str(draft.class_name), (key) => choices[key] ?? [])
+  const extraGear = strList(draft.equipment_custom).map((g) => g.trim()).filter(Boolean)
 
   return (
     <View className="gap-6">
@@ -79,6 +84,27 @@ export function ReviewStep({ draft }: BuilderStepProps) {
           ))}
         </View>
       </SectionHeader>
+
+      {features.length > 0 ? (
+        <SectionHeader id="review-class-features" title="Class features">
+          <Card className="gap-2">
+            {features.map((f) => (
+              <View key={f.key} className="gap-1">
+                <Text variant="label">{f.label}</Text>
+                <Text variant="body-sm">{f.value}</Text>
+              </View>
+            ))}
+          </Card>
+        </SectionHeader>
+      ) : null}
+
+      {extraGear.length > 0 ? (
+        <SectionHeader id="review-extra-gear" title="Extra gear">
+          <Card>
+            <Text variant="body-sm">{extraGear.join(', ')}</Text>
+          </Card>
+        </SectionHeader>
+      ) : null}
 
       {personality.length > 0 ? (
         <SectionHeader id="review-personality" title="Personality">
