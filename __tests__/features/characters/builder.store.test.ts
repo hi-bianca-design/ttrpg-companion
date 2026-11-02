@@ -47,7 +47,7 @@ describe('visibleSteps', () => {
   test('skip hides Spells for a Fighter', () => {
     const ids = visibleSteps(builder.steps, { ...builder.initialDraft(), class_name: 'Fighter' }).map((s) => s.id)
     expect(ids).not.toContain('spells')
-    expect(ids).toEqual(['class', 'origin', 'ability-scores', 'details', 'personality', 'review'])
+    expect(ids).toEqual(['class', 'origin', 'equipment', 'ability-scores', 'details', 'personality', 'review'])
   })
 
   test('a level-1 Wizard and Paladin see Spells', () => {
