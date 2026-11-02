@@ -19,4 +19,6 @@ export const qk = {
   characters: ['characters'] as const,
   campaigns: ['campaigns'] as const,
   campaign: (id: string) => ['campaign', id] as const,
+  packs: ['packs'] as const,
+  entitlements: ['entitlements'] as const,
 }
