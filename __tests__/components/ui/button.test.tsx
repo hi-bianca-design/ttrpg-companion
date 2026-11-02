@@ -149,3 +149,10 @@ test('a function-valued style is resolved with the pressed state', () => {
   fireEvent(screen.getByRole('button'), 'pressIn')
   expect(flat().backgroundColor).toBe('red')
 })
+
+test('ghost text links centre their label in a full-width button', () => {
+  render(<Button variant="ghost" className="w-full"><Text>No account yet? Create one</Text></Button>)
+  const cls = screen.getByRole('button').props.className
+  expect(cls).toContain('items-center')
+  expect(cls).toContain('justify-center')
+})

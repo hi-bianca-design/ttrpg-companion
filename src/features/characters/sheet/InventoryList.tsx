@@ -68,7 +68,7 @@ export function InventoryList({ items, allItems, maxAttuned, pendingIds = [], on
         const blocked = attunable && !item.attuned && atLimit
         const footer = (
           <View className="gap-2">
-            <View className="flex-row flex-wrap items-center gap-2">
+            <View className="flex-row flex-wrap items-center gap-x-6 gap-y-2">
               <View className="flex-row items-center gap-3">
                 <Button
                   size="icon"

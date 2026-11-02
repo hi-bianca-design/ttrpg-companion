@@ -163,3 +163,14 @@ describe('glass', () => {
     expect(glassFill()?.props.fillOpacity).toBeUndefined()
   })
 })
+
+test('native blur: only with the blur prop, behind the plate, and the fill stays frosted-light', () => {
+  expect(Platform.OS).toBe('ios')
+  const { rerender } = render(<ShapedSurface testID="s" glass="overlay" fill="rock" stroke="border"><Text>x</Text></ShapedSurface>)
+  layout('s', 200, 100)
+  expect(screen.queryByTestId('s-blur')).toBeNull()
+  rerender(<ShapedSurface testID="s" glass="overlay" blur fill="rock" stroke="border"><Text>x</Text></ShapedSurface>)
+  layout('s', 200, 100)
+  expect(screen.getByTestId('s-blur')).toBeTruthy()
+  expect(fillPath('rock')?.props.fillOpacity).toBe(GLASS_FILL_OPACITY.overlay.web)
+})

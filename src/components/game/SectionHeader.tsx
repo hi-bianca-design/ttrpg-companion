@@ -1,8 +1,8 @@
-import { CaretDown, CaretRight } from 'phosphor-react-native'
 import type { ReactNode } from 'react'
 import { Pressable, View } from 'react-native'
+import { Hairline } from '@/components/ui/hairline'
+import { Disclosure, RuleOrnament } from '@/components/ui/ornament'
 import { Text } from '@/components/ui/text'
-import { THEME_COLORS } from '@/lib/theme'
 import { useSectionStore } from './section-store'
 
 type SectionHeaderProps = {
@@ -17,13 +17,16 @@ export function SectionHeader({ id, title, collapsible = false, action, children
   const collapsed = useSectionStore((s) => collapsible && (s.collapsed[id] ?? false))
   const toggle = useSectionStore((s) => s.toggle)
 
-  const iconColor = THEME_COLORS.labelForeground
-  const Chevron = collapsed ? CaretRight : CaretDown
-
   const label = <Text variant="label">{title}</Text>
-  // A faint gold rule runs from the title to the trailing edge on the same row, so the header and its
-  // content read as one section (a separate divider under the header read as a section break).
-  const rule = <View testID="section-rule" className="h-px flex-1 bg-rule opacity-60" />
+  // A faint gold rule runs from the title to a diamond ornament on the same row, so the header and its
+  // content read as one section (a separate divider under the header read as a section break). A collapsible
+  // section ends in a triangle (down while open, up once collapsed) instead of the diamond ornament.
+  const rule = (
+    <>
+      <Hairline testID="section-rule" fade="end" className="flex-1" />
+      {collapsible ? <Disclosure testID="section-ornament" open={!collapsed} /> : <RuleOrnament testID="section-ornament" />}
+    </>
+  )
 
   return (
     <View>
@@ -39,7 +42,6 @@ export function SectionHeader({ id, title, collapsible = false, action, children
           >
             {label}
             {rule}
-            <Chevron testID="icon-chevron" size={16} color={iconColor} />
           </Pressable>
         ) : (
           <>

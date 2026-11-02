@@ -4,9 +4,6 @@ import { ShapedSurface } from '@/components/ui/shaped-surface'
 import { splitClassName } from '@/lib/class-split'
 import { cn } from '@/lib/utils'
 
-// The sheet's top edge is a shallow arch; content starts below its point.
-const ARCH_RISE = 24
-
 // Bottom sheet built on the Dialog primitive (portal + overlay + focus handling).
 const Sheet = DialogPrimitive.Root
 const SheetTrigger = DialogPrimitive.Trigger
@@ -28,10 +25,9 @@ function SheetContent({
             window itself; web has no on-screen keyboard to avoid. */}
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="w-full">
           <DialogPrimitive.Content className={cn('w-full', plate)} {...props}>
-            <ShapedSurface glass="overlay" shape="arch" rise={ARCH_RISE} fill="rock" stroke="rule" strokeWidth={1} shadowOffset={0}>
-              <View className={cn('gap-4 p-4', content)} style={{ paddingTop: ARCH_RISE + 16 }}>
-                {children}
-              </View>
+            <ShapedSurface glass="overlay" blur shape="sheet" fill="rock" stroke="transparent" strokeWidth={0} shadowOffset={0}>
+              <View testID="sheet-grabber" className="mt-2 h-1 w-10 self-center rounded-full bg-border" />
+              <View className={cn('gap-4 p-4', content)}>{children}</View>
             </ShapedSurface>
           </DialogPrimitive.Content>
         </KeyboardAvoidingView>

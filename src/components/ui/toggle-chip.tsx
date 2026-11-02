@@ -17,7 +17,7 @@ type ToggleChipProps = Omit<React.ComponentProps<typeof Pressable>, 'children'> 
   className?: string
 }
 
-// Same padding the sm Button uses to reach a 44pt touch target.
+// 32pt chip + 6px each side reaches a 44pt touch target.
 const SMALL_HIT_SLOP = { top: 6, bottom: 6, left: 6, right: 6 }
 
 /**
@@ -53,9 +53,10 @@ function ToggleChip({
       <ShapedSurface
         fill={filled ? 'primary' : outlined ? 'rockDeep' : 'card'}
         stroke={filled ? 'ink' : outlined ? 'secondary' : 'border'}
-        glow={selected && !disabled ? 'torch' : undefined}
-        strokeWidth={2}
-        shadowOffset={2}
+        glow={filled && !disabled ? 'torch' : undefined}
+        strokeWidth={1.5}
+        point={size === 'sm' ? 10 : undefined}
+        shadowOffset={size === 'sm' ? 1 : 2}
         className={cn('flex-1 flex-row items-center justify-center gap-1', size === 'sm' ? 'px-4' : size === 'square' ? 'px-0' : 'px-6')}
       >
         {outlined ? <Check testID="toggle-chip-check" size={14} weight="bold" color={checkColor} /> : null}

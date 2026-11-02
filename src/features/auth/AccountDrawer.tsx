@@ -1,30 +1,32 @@
 import { useState } from 'react'
 import { View } from 'react-native'
-import { UserCircle } from 'phosphor-react-native'
-import { AdjustSheet } from '@/components/game/AdjustSheet'
+import { X } from 'phosphor-react-native'
+import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { Text } from '@/components/ui/text'
 import { signOut } from '@/features/auth/auth.api'
 import { useAuth } from '@/features/auth/useAuth'
 import { toAppError } from '@/features/errors'
 import { THEME_COLORS } from '@/lib/theme'
 
+type AccountDrawerProps = { open: boolean; onOpenChange: (open: boolean) => void }
+
 /**
- * Characters header account button → sheet with who is signed in → confirmed sign-out.
+ * Bottom drawer opened from the Account tab: who is signed in, then a confirmed sign-out.
  * On success AuthProvider sees SIGNED_OUT, clears the query cache, and the root redirect sends the
  * app to login, so nothing here navigates.
  */
-export function AccountMenu() {
+export function AccountDrawer({ open, onOpenChange }: AccountDrawerProps) {
   const { user } = useAuth()
-  const colors = THEME_COLORS
-  const [sheetOpen, setSheetOpen] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const username = typeof user?.user_metadata?.username === 'string' ? user.user_metadata.username : null
+  const initial = (username ?? user?.email ?? '?').trim().charAt(0).toUpperCase()
 
   const confirmSignOut = async () => {
     setError(null)
@@ -37,43 +39,41 @@ export function AccountMenu() {
     }
   }
 
-  // One View: on web the Sheet and Dialog roots render as elements, and as bare row children they would
-  // each take the header row's gap, pushing the icon off the right gutter.
+  // One View: on web the Sheet and Dialog roots render as elements, and as bare siblings they would
+  // each take a gap from whatever row hosts the drawer.
   return (
     <View>
-      <Button
-        variant="ghost"
-        size="icon"
-        accessibilityLabel="Account"
-        accessibilityHint="Shows who is signed in and lets you sign out"
-        onPress={() => setSheetOpen(true)}
-      >
-        <UserCircle size={24} color={colors.foreground} />
-      </Button>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent>
+          <View className="flex-row items-center justify-between">
+            <SheetTitle>Account</SheetTitle>
+            <Button variant="ghost" size="icon" accessibilityLabel="Close" onPress={() => onOpenChange(false)}>
+              <X size={20} color={THEME_COLORS.foreground} />
+            </Button>
+          </View>
+          <View className="flex-row items-center gap-4">
+            <Avatar initial={initial} />
+            <View className="flex-1 gap-1">
+              {username ? <Text variant="subhead" numberOfLines={1}>{username}</Text> : null}
+              {user?.email ? <Text variant="body-sm" tone="muted" numberOfLines={1}>{user.email}</Text> : null}
+            </View>
+          </View>
+          <Button
+            variant="outline"
+            accessibilityLabel="Sign out"
+            onPress={() => {
+              // One overlay at a time: the drawer closes before the confirmation opens.
+              onOpenChange(false)
+              setError(null)
+              setConfirming(true)
+            }}
+          >
+            <Text>Sign out</Text>
+          </Button>
+        </SheetContent>
+      </Sheet>
 
-      <AdjustSheet
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        title="Account"
-        primaryLabel="Sign out"
-        primaryVariant="outline"
-        secondaryLabel="Close"
-        secondaryVariant="ghost"
-        onSecondary={() => setSheetOpen(false)}
-        onPrimary={() => {
-          // One overlay at a time: the sheet closes before the confirmation opens.
-          setSheetOpen(false)
-          setError(null)
-          setConfirming(true)
-        }}
-      >
-        <View className="gap-1">
-          {username ? <Text variant="subhead">{username}</Text> : null}
-          {user?.email ? <Text variant="body-sm" tone="muted">{user.email}</Text> : null}
-        </View>
-      </AdjustSheet>
-
-      <Dialog open={confirming} onOpenChange={(open) => { if (!open && !pending) setConfirming(false) }}>
+      <Dialog open={confirming} onOpenChange={(o) => { if (!o && !pending) setConfirming(false) }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Sign out of D&D Companion?</DialogTitle>

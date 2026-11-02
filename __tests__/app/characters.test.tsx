@@ -59,15 +59,7 @@ test('long press → Cancel does not delete', () => {
   expect(screen.queryByText('Delete Mira?')).toBeNull()
 })
 
-test('the header has the account button (sign-out lives behind it)', () => {
+test('the header no longer carries an account button (Account is a bottom-nav tab)', () => {
   renderList()
-  fireEvent.press(screen.getByRole('button', { name: 'Account' }))
-  expect(screen.getByText('mira@example.com')).toBeTruthy()
-  expect(screen.getByRole('button', { name: 'Sign out' })).toBeTruthy()
-})
-
-test('the account button shows even before the first character exists', () => {
-  ;(useCharacters as jest.Mock).mockReturnValue({ data: [], isLoading: true, isError: false, refetch: jest.fn() })
-  renderList()
-  expect(screen.getByRole('button', { name: 'Account' })).toBeTruthy()
+  expect(screen.queryByRole('button', { name: 'Account' })).toBeNull()
 })

@@ -11,9 +11,9 @@ const ARCH_RISE = 54
 
 type CardProps = ViewProps & {
   compact?: boolean
-  /** flat: chamfered rock plate (lists, tiles). hero: gold-edged lancet arch lit from below (scenes, content detail). */
+  /** flat: chamfered rock plate (lists, tiles). hero: lancet arch lit from below (scenes, content detail). */
   variant?: 'flat' | 'hero'
-  /** destructive redraws the edge (e.g. HP at 0). selected: gold edge with torch glow (chosen option). */
+  /** destructive redraws the edge (e.g. HP at 0). selected: mint edge with a soft glow (chosen option). */
   tone?: 'default' | 'destructive' | 'selected'
 }
 
@@ -25,9 +25,9 @@ function Card({ className, compact, variant = 'flat', tone = 'default', style, .
       shape={hero ? 'arch' : 'chamfer'}
       glass
       fill="card"
-      stroke={tone === 'destructive' ? 'destructive' : tone === 'selected' || hero ? 'primary' : 'border'}
-      strokeWidth={hero || tone !== 'default' ? 2 : 1}
-      glow={tone === 'selected' ? 'torch' : undefined}
+      stroke={tone === 'destructive' ? 'destructive' : tone === 'selected' ? 'secondary' : 'border'}
+      strokeWidth={tone === 'selected' || tone === 'destructive' ? 1.5 : 1}
+      glow={tone === 'selected' ? 'secondary' : undefined}
       light={hero ? 'torch' : undefined}
       className={plate}
     >

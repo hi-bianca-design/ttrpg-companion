@@ -14,11 +14,11 @@ test('flat card is a chamfered rock plate with a hairline edge and no light', ()
   expect(surface().light).toBeUndefined()
 })
 
-test('hero card is a gold-edged arch with torch light rising inside', () => {
+test('hero card is a soft-edged arch with torch light rising inside', () => {
   render(<Card variant="hero"><Text>x</Text></Card>)
   expect(surface().shape).toBe('arch')
-  expect(surface().stroke).toBe('primary')
-  expect(surface().strokeWidth).toBe(2)
+  expect(surface().stroke).toBe('border')
+  expect(surface().strokeWidth).toBe(1)
   expect(surface().light).toBe('torch')
 })
 
@@ -55,11 +55,11 @@ test('flex-row is content layout, not plate placement', () => {
 })
 
 // Review fix I1: a selected choice card needs its gold edge back (border-* classes no longer reach a plate).
-test('selected tone draws a gold edge with torch glow', () => {
+test('selected tone draws a mint edge with a soft glow', () => {
   render(<Card tone="selected"><Text>x</Text></Card>)
-  expect(surface().stroke).toBe('primary')
-  expect(surface().strokeWidth).toBe(2)
-  expect(surface().glow).toBe('torch')
+  expect(surface().stroke).toBe('secondary')
+  expect(surface().strokeWidth).toBe(1.5)
+  expect(surface().glow).toBe('secondary')
 })
 
 test('opacity classes dim the plate, not just the inner content', () => {

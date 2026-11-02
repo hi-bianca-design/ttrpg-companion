@@ -40,7 +40,7 @@ test('disabled chip does not fire onPress', () => {
   expect(screen.getByRole('button').props.accessibilityState).toMatchObject({ disabled: true })
 })
 
-test('compact size is h-8 with a 6px hitSlop (44pt target), like sm buttons', () => {
+test('compact size is h-8 with a 6px hitSlop (44pt target)', () => {
   render(<ToggleChip label="Prone" size="sm" onPress={() => {}} testID="c" />)
   const chip = screen.getByTestId('c')
   expect(chip.props.className).toContain('h-8')
@@ -48,9 +48,9 @@ test('compact size is h-8 with a 6px hitSlop (44pt target), like sm buttons', ()
   expect(chip.props.hitSlop).toEqual({ top: 6, bottom: 6, left: 6, right: 6 })
 })
 
-test('chips are pointed plates with a 2px stroke, like the buttons', () => {
+test('chips are pointed plates with a 1.5px stroke, like the buttons', () => {
   render(<ToggleChip label="A" onPress={() => {}} testID="c" />)
-  expect(surfaces()[0].strokeWidth).toBe(2)
+  expect(surfaces()[0].strokeWidth).toBe(1.5)
   expect(screen.getByTestId('c').props.className).not.toContain('rounded-full')
 })
 
