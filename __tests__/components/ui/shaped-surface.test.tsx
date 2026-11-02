@@ -127,7 +127,7 @@ describe('glass', () => {
   test('a glass plate has a translucent fill, more opaque on native where nothing blurs behind it', () => {
     render(<ShapedSurface testID="s" glass fill="rock" stroke="primary"><Text>x</Text></ShapedSurface>)
     layout('s', 200, 44)
-    expect(glassFill()?.props.fillOpacity).toBe(GLASS_FILL_OPACITY.native)
+    expect(glassFill()?.props.fillOpacity).toBe(GLASS_FILL_OPACITY.surface.native)
     expect(screen.queryByTestId('s-backdrop')).toBeNull()
   })
 
@@ -142,7 +142,7 @@ describe('glass', () => {
     jest.replaceProperty(Platform, 'OS', 'web')
     render(<ShapedSurface testID="s" glass fill="rock" stroke="primary"><Text>x</Text></ShapedSurface>)
     layout('s', 200, 44)
-    expect(glassFill()?.props.fillOpacity).toBe(GLASS_FILL_OPACITY.web)
+    expect(glassFill()?.props.fillOpacity).toBe(GLASS_FILL_OPACITY.surface.web)
     const style = StyleSheet.flatten(screen.getByTestId('s-backdrop').props.style)
     expect(style.backdropFilter).toMatch(/^blur\(\d+px\)$/)
     expect(style.clipPath).toBe(`path('${shapePath('hex', 200, 44, { inset: 1 })}')`)

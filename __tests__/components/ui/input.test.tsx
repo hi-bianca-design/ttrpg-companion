@@ -92,5 +92,5 @@ test('the field is positioned so it paints above the plate SVG on web (an unposi
 
 test('the field is frosted glass', () => {
   render(<Input accessibilityLabel="x" />)
-  expect(surface().glass).toBe(true)
+  expect(surface().glass).toBe('field')
 })

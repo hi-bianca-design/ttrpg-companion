@@ -17,6 +17,6 @@ test('the dialog is a chamfered rock plate with a gold hairline and a hard shado
   expect(plate.shape).toBe('chamfer')
   expect(plate.fill).toBe('rock')
   expect(plate.stroke).toBe('rule')
-  expect(plate.glass).toBe(true)
+  expect(plate.glass).toBe('overlay')
   expect(screen.getByText('Hello')).toBeTruthy()
 })

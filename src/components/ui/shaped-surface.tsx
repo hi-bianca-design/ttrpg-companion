@@ -15,7 +15,15 @@ const plateColor = (c: PlateColor) => (c === 'transparent' ? 'transparent' : THE
  * Fill opacity of a glass plate. Web also blurs the page behind it, so it can be fainter; native has no
  * clippable blur (expo-blur cannot be masked to the hex/chamfer/arch shape), so it stays more opaque.
  */
-export const GLASS_FILL_OPACITY = { web: 0.8, native: 0.92 } as const
+export const GLASS_FILL_OPACITY = {
+  // Cards and the tabs track sit on the page background.
+  surface: { web: 0.55, native: 0.7 },
+  // Dialogs, sheets and the toast float over arbitrary content, so they stay denser.
+  overlay: { web: 0.75, native: 0.92 },
+  // The placeholder is the dimmest text (4.5:1 needs >= 0.74 over the lightest sky band).
+  field: { web: 0.8, native: 0.85 },
+} as const
+export type GlassLevel = keyof typeof GLASS_FILL_OPACITY
 const GLASS_BLUR_PX = 10
 
 /** Surfaces up to this tall get pointed `hex` ends; taller ones fall back to `chamfer` (spec §4.3). */
@@ -54,7 +62,7 @@ type ShapedSurfaceProps = {
   /** Light rising from the bottom edge (hero arch cards). */
   light?: ThemeColorKey
   /** Frosted glass: translucent fill, blurred backdrop on web, hard shadow kept out of the fill. */
-  glass?: boolean
+  glass?: boolean | GlassLevel
   children?: ReactNode
   className?: string
   testID?: string
@@ -88,7 +96,7 @@ export function ShapedSurface({
     setSize((prev) => (prev.width === width && prev.height === height ? prev : { width, height }))
   }
   const web = Platform.OS === 'web'
-  const fillOpacity = glass ? GLASS_FILL_OPACITY[web ? 'web' : 'native'] : undefined
+  const fillOpacity = glass ? GLASS_FILL_OPACITY[glass === true ? 'surface' : glass][web ? 'web' : 'native'] : undefined
   const maskId = `${gradientId}-shadow`
   const resolved: Shape = shape === 'auto' ? (size.height <= HEX_MAX_HEIGHT ? 'hex' : 'chamfer') : shape
   const d = shapePath(resolved, size.width, size.height, { inset: strokeWidth / 2, point, rise })

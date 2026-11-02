@@ -49,19 +49,15 @@ test.each(['sky1', 'sky2', 'sky3', 'sky4', 'sky5', 'sky6'] as const)('muted, lab
 // Glass plates are translucent, so text must hold its ratio against the worst case behind them: the
 // lightest thing a plate sits over, which is the top sky band.
 const rgba = (hex: string, a: number) => `rgba(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')}, ${a})`
-describe.each(Object.entries(GLASS_FILL_OPACITY))('glass plates (%s)', (_platform, alpha) => {
-  test.each([
-    ['foreground', 'card', 7],
-    ['foreground', 'rock', 7],
-    ['mutedForeground', 'card', 7],
-    ['mutedForeground', 'rockDeep', 7],
-    ['typed', 'well', 7],
-    ['placeholder', 'well', 4.5],
-    ['labelForeground', 'rock', 4.5],
-    ['accentForeground', 'rock', 4.5],
-    ['highlightText', 'rock', 4.5],
-    ['foreground', 'ink', 7],
-  ] as const)('%s on %s holds %s:1 over the lightest sky band', (fg, bg, min) => {
+const LEVELS = Object.entries(GLASS_FILL_OPACITY).flatMap(([level, a]) => [[level, 'web', a.web], [level, 'native', a.native]] as const)
+// Which plate colours each glass level is used with.
+const USES = {
+  surface: [['foreground', 'card', 7], ['mutedForeground', 'card', 7], ['mutedForeground', 'rockDeep', 7], ['labelForeground', 'card', 4.5], ['accentForeground', 'card', 4.5], ['highlightText', 'card', 4.5]],
+  overlay: [['foreground', 'rock', 7], ['mutedForeground', 'rock', 7], ['foreground', 'ink', 7], ['labelForeground', 'rock', 4.5], ['accentForeground', 'rock', 4.5], ['highlightText', 'rock', 4.5]],
+  field: [['typed', 'well', 7], ['placeholder', 'well', 4.5], ['foreground', 'well', 7]],
+} as const
+describe.each(LEVELS)('glass %s plates (%s)', (level, _platform, alpha) => {
+  test.each(USES[level as keyof typeof USES] as readonly (readonly [keyof typeof C, keyof typeof C, number])[])('%s on %s holds %s:1 over the lightest sky band', (fg, bg, min) => {
     expect(contrastRatio(C[fg], rgba(C[bg], alpha), C.sky1)).toBeGreaterThanOrEqual(min)
   })
 })

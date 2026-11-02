@@ -40,7 +40,7 @@ test('the toast is an ink plate with light text (readable over any screen)', () 
   renderToaster()
   act(() => showToast('Saved'))
   expect(screen.UNSAFE_getByType(ShapedSurface).props.fill).toBe('ink')
-  expect(screen.UNSAFE_getByType(ShapedSurface).props.glass).toBe(true)
+  expect(screen.UNSAFE_getByType(ShapedSurface).props.glass).toBe('overlay')
   expect(screen.getByText('Saved').props.className).toContain('text-foreground')
 })
 
