@@ -266,7 +266,7 @@ test('definition values', () => {
   const sys = getSystem('dnd5e-2024')
   expect(sys.stats.map((s) => s.key)).toEqual(['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'])
   sys.stats.forEach((s) => expect(s).toMatchObject({ min: 1, max: 30, default: 10 }))
-  expect(sys.resources.map((r) => r.key)).toEqual(['hp', 'spell_slots', 'hit_dice', 'death_saves_success', 'death_saves_failure', 'second_wind'])
+  expect(sys.resources.map((r) => r.key)).toEqual(['hp', 'spell_slots', 'hit_dice', 'death_saves_success', 'death_saves_failure', 'second_wind', 'rage'])
   const slots = sys.resources.find((r) => r.key === 'spell_slots')
   expect(slots).toMatchObject({ kind: 'slots', display: 'pips', tint: 'sky' })
   expect(slots?.kind === 'slots' && slots.tierLabel?.('3')).toBe('Level 3')

@@ -47,4 +47,12 @@ describe('limited-use class features', () => {
     expect(parsed).toHaveProperty('second_wind')
     expect(DND_RESOURCES.some((d) => d.key === 'second_wind' && d.kind === 'slots' && d.group === 'feature')).toBe(true)
   })
+
+  test('Rage: 2 uses, rising to 6 at level 17; a short rest regains one', () => {
+    const rage = (level: number) => featureResources('Barbarian', level, stats).rage.tiers['1'].max
+    expect([1, 3, 6, 12, 17].map(rage)).toEqual([2, 3, 4, 5, 6])
+    const barb = { ...fighter, content: { name: 'Barbarian', data: { hit_die: 12 } } } as PickRecord
+    const c = character({ rage: { tiers: { '1': { max: 2, used: 2 } } } })
+    expect(rest(c, 'short', [barb]).rage).toEqual({ tiers: { '1': { max: 2, used: 1 } } })
+  })
 })
