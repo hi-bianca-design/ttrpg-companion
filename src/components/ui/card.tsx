@@ -1,15 +1,40 @@
 import { View } from 'react-native'
+import { ShapedSurface } from '@/components/ui/shaped-surface'
 import { Text } from '@/components/ui/text'
+import { splitClassName } from '@/lib/class-split'
 import { cn } from '@/lib/utils'
 
 type ViewProps = React.ComponentProps<typeof View> & { className?: string }
 
-function Card({ className, compact, ...props }: ViewProps & { compact?: boolean }) {
+/** Height of the hero card's pointed top; content starts below it. */
+const ARCH_RISE = 54
+
+type CardProps = ViewProps & {
+  compact?: boolean
+  /** flat: chamfered rock plate (lists, tiles). hero: gold-edged lancet arch lit from below (scenes, content detail). */
+  variant?: 'flat' | 'hero'
+  /** destructive redraws the edge (e.g. HP at 0). */
+  tone?: 'default' | 'destructive'
+}
+
+function Card({ className, compact, variant = 'flat', tone = 'default', style, ...props }: CardProps) {
+  const hero = variant === 'hero'
+  const { plate, content } = splitClassName(className)
   return (
-    <View
-      className={cn('rounded-card border border-border bg-card', compact ? 'p-3' : 'p-4', className)}
-      {...props}
-    />
+    <ShapedSurface
+      shape={hero ? 'arch' : 'chamfer'}
+      fill="card"
+      stroke={tone === 'destructive' ? 'destructive' : hero ? 'primary' : 'border'}
+      strokeWidth={hero || tone === 'destructive' ? 2 : 1}
+      light={hero ? 'torch' : undefined}
+      className={plate}
+    >
+      <View
+        className={cn(compact ? 'p-3' : 'p-4', content)}
+        style={[hero && { paddingTop: ARCH_RISE + (compact ? 12 : 16) }, style]}
+        {...props}
+      />
+    </ShapedSurface>
   )
 }
 

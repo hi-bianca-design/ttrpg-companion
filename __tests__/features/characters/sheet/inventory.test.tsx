@@ -10,6 +10,7 @@ import { listContent } from '@/features/content/content.api'
 import { getCharacterCampaign } from '@/features/campaigns/campaigns.api'
 import { showToast } from '@/components/ui/toast'
 import { variantOf } from '../../../helpers/button'
+import { ShapedSurface } from '@/components/ui/shaped-surface'
 
 jest.mock('@/features/characters/characters.api', () => ({
   getCharacter: jest.fn(),
@@ -222,7 +223,7 @@ test('controls live inside the item card; equip/attune are outline toggles; no d
   expect(screen.queryByText('EQUIPPED')).toBeNull()
   // the Remove control shares the card container with the title
   let box = screen.getByRole('button', { name: 'Remove Ring A' }).parent
-  while (box && !String(box.props.className ?? '').includes('rounded-card')) box = box.parent
+  while (box && box.type !== ShapedSurface) box = box.parent
   expect(box).toBeTruthy()
   expect(within(box!).getByText('Ring A')).toBeTruthy()
 })

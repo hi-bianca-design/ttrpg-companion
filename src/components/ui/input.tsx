@@ -1,19 +1,11 @@
 import { useState } from 'react'
 import { TextInput } from 'react-native'
 import { ShapedSurface } from '@/components/ui/shaped-surface'
+import { splitClassName } from '@/lib/class-split'
 import { THEME_COLORS } from '@/lib/theme'
 import { cn } from '@/lib/utils'
 
 type InputProps = React.ComponentProps<typeof TextInput> & { className?: string }
-
-// Placement classes belong to the plate; everything else (text, padding, height) styles the field itself.
-const LAYOUT = /^(?:[a-z0-9-]+:)*-?(?:m[trblxyse]?|flex|grow|shrink|basis|w|min-w|max-w|self)(?:-|$)/
-function splitClassName(className?: string) {
-  const plate: string[] = []
-  const field: string[] = []
-  for (const token of (className ?? '').split(/\s+/).filter(Boolean)) (LAYOUT.test(token) ? plate : field).push(token)
-  return { plate: plate.join(' '), field: field.join(' ') }
-}
 
 /**
  * Recessed pointed plate with the value in Cormorant. A placeholder cannot be styled apart from the
@@ -24,7 +16,7 @@ function Input({ className, editable = true, multiline, value, defaultValue, onC
   const [focused, setFocused] = useState(false)
   const [typed, setTyped] = useState(Boolean(value ?? defaultValue))
   const filled = value !== undefined ? value.length > 0 : typed
-  const { plate, field } = splitClassName(className)
+  const { plate, content: field } = splitClassName(className)
 
   return (
     <ShapedSurface

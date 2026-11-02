@@ -37,3 +37,9 @@ test('collapsible header meets the 44pt touch target and shows a chevron icon', 
   expect(screen.getByTestId('icon-chevron')).toBeTruthy()
   expect(screen.queryByText('˅')).toBeNull()
 })
+
+test('the title is underlined by a spire divider, not a plain border', () => {
+  render(<SectionHeader id="spire" title="Spire" />)
+  expect(screen.getByTestId('spire-divider')).toBeTruthy()
+  expect(JSON.stringify(screen.toJSON())).not.toContain('border-b')
+})
