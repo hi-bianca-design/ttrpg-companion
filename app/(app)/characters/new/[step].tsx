@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native'
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router'
 import { CaretRight, CheckCircle, CircleIcon } from 'phosphor-react-native'
-import { useColorScheme } from 'nativewind'
 import { BackButton, CancelButton, ScreenBackground, SectionHeader } from '@/components/game'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -19,8 +18,7 @@ const stepHref = (id: string) => `/(app)/characters/new/${id}` as const
 
 /** "Ready to create" checklist; each incomplete step is a button that jumps back to it. */
 function Checklist({ steps, draft, onJump }: { steps: BuilderStepDef[]; draft: Draft; onJump: (id: string) => void }) {
-  const { colorScheme } = useColorScheme()
-  const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
+  const colors = THEME_COLORS
   return (
     <SectionHeader id="builder-checklist" title="Ready to create">
       <Card className="p-0">

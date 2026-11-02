@@ -1,6 +1,5 @@
 // Building blocks shared by the D&D builder steps: content loading, intro text,
 // selectable cards and chips, loading/error states.
-import { useColorScheme } from 'nativewind'
 import { CheckCircle } from 'phosphor-react-native'
 import type { ReactNode } from 'react'
 import { useMemo } from 'react'
@@ -16,8 +15,7 @@ import { cn } from '@/lib/utils'
 import { dnd5eContentSchemas } from '../schemas'
 
 export function useThemeColors() {
-  const { colorScheme } = useColorScheme()
-  return THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
+  return THEME_COLORS
 }
 
 type Kind = keyof typeof dnd5eContentSchemas

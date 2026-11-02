@@ -1,4 +1,3 @@
-import { useColorScheme } from 'nativewind'
 import { useId, useMemo } from 'react'
 import { Minus, Plus } from 'phosphor-react-native'
 import { Platform, Pressable, View, type ViewStyle } from 'react-native'
@@ -37,8 +36,7 @@ const PIP_SIZE = 12
 const DIAMOND = `${PIP_SIZE / 2},0 ${PIP_SIZE},${PIP_SIZE / 2} ${PIP_SIZE / 2},${PIP_SIZE} 0,${PIP_SIZE / 2}`
 
 function useTintColors(tint: ResourceTint) {
-  const { colorScheme } = useColorScheme()
-  const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
+  const colors = THEME_COLORS
   const key = `resource${tint[0].toUpperCase()}${tint.slice(1)}`
   return useMemo(() => {
     const fill = colors[key]
@@ -109,8 +107,7 @@ function CircleButton({
   disabled: boolean
   onPress: () => void
 }) {
-  const { colorScheme } = useColorScheme()
-  const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
+  const colors = THEME_COLORS
   const { color, border } =
     tone.kind === 'destructive' ? { color: colors.destructive, border: 'border-destructive' }
     : tone.kind === 'neutral' ? { color: colors.mutedForeground, border: 'border-border' }

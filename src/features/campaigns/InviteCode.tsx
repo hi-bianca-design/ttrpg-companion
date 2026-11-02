@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { View } from 'react-native'
 import * as Clipboard from 'expo-clipboard'
-import { useColorScheme } from 'nativewind'
 import { Check, Copy } from 'phosphor-react-native'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -12,8 +11,7 @@ export function InviteCode({ code }: { code: string }) {
   const [copied, setCopied] = useState(false)
   const [failed, setFailed] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const { colorScheme } = useColorScheme()
-  const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
+  const colors = THEME_COLORS
   useEffect(() => () => clearTimeout(timer.current), [])
 
   const copy = async () => {

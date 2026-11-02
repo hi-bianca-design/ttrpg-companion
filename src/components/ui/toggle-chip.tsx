@@ -1,5 +1,4 @@
 import { Check } from 'phosphor-react-native'
-import { useColorScheme } from 'nativewind'
 import { Pressable } from 'react-native'
 import { Text } from '@/components/ui/text'
 import { THEME_COLORS } from '@/lib/theme'
@@ -36,8 +35,7 @@ function ToggleChip({
   hitSlop,
   ...props
 }: ToggleChipProps) {
-  const { colorScheme } = useColorScheme()
-  const checkColor = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light'].accentForeground
+  const checkColor = THEME_COLORS.accentForeground
   const filled = selected && tone === 'fill'
   const outlined = selected && tone === 'outline'
   return (

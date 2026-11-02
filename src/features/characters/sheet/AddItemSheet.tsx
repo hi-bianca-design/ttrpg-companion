@@ -1,5 +1,4 @@
 import { Minus, Plus } from 'phosphor-react-native'
-import { useColorScheme } from 'nativewind'
 import { useEffect, useState } from 'react'
 import { View } from 'react-native'
 import { ContentCard } from '@/components/game/ContentCard'
@@ -34,8 +33,7 @@ function asRecord(v: unknown): Record<string, unknown> {
 
 /** Search the system's items (SRD, own homebrew, campaign) and add one with a quantity. */
 export function AddItemSheet({ open, onOpenChange, characterId, systemId }: AddItemSheetProps) {
-  const { colorScheme } = useColorScheme()
-  const iconColor = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light'].accentForeground
+  const iconColor = THEME_COLORS.accentForeground
   const { data: campaign } = useCharacterCampaign(characterId)
   const [search, setSearch] = useState('')
   const [source, setSource] = useState<SourceKey>('srd')

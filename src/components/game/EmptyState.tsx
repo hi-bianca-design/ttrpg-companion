@@ -1,4 +1,3 @@
-import { useColorScheme } from 'nativewind'
 import type { Icon } from 'phosphor-react-native'
 import { View } from 'react-native'
 import { Button } from '@/components/ui/button'
@@ -18,8 +17,7 @@ type EmptyStateProps = {
 
 /** The one empty-state layout: centred duotone icon, display title, muted body, one full-width button. */
 export function EmptyState({ icon: IconComponent, title, body, actionLabel, onAction, actionVariant = 'primary' }: EmptyStateProps) {
-  const { colorScheme } = useColorScheme()
-  const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
+  const colors = THEME_COLORS
   return (
     <View className="items-center gap-4 pt-8">
       <IconComponent size={48} color={colors.accentForeground} weight="duotone" />

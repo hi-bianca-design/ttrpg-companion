@@ -39,3 +39,14 @@ test('tinted badge tokens exist (conditions)', () => {
   expect(c.foreground).toBe('var(--tinted-foreground)')
   expect(c.border).toBe('var(--tinted-border)')
 })
+test.each(['ink', 'rock', 'torch', 'well', 'placeholder', 'typed', 'blood', 'blood-fill'])('Night Vigil colour %s maps to its CSS variable', (name) => {
+  expect(config.theme.extend.colors[name]).toBe(`var(--${name})`)
+})
+test('secondary has a foreground', () => {
+  const c = config.theme.extend.colors.secondary
+  expect(c.DEFAULT).toBe('var(--secondary)')
+  expect(c.foreground).toBe('var(--secondary-foreground)')
+})
+test('the old glow tokens are gone', () => {
+  expect(config.theme.extend.colors.glow).toBeUndefined()
+})

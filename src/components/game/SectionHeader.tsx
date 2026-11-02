@@ -1,4 +1,3 @@
-import { useColorScheme } from 'nativewind'
 import { CaretDown, CaretRight } from 'phosphor-react-native'
 import type { ReactNode } from 'react'
 import { Pressable, View } from 'react-native'
@@ -18,8 +17,7 @@ export function SectionHeader({ id, title, collapsible = false, action, children
   const collapsed = useSectionStore((s) => collapsible && (s.collapsed[id] ?? false))
   const toggle = useSectionStore((s) => s.toggle)
 
-  const { colorScheme } = useColorScheme()
-  const iconColor = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light'].labelForeground
+  const iconColor = THEME_COLORS.labelForeground
   const Chevron = collapsed ? CaretRight : CaretDown
 
   const label = <Text variant="label">{title}</Text>

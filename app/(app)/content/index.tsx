@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { View } from 'react-native'
 import { useRouter } from 'expo-router'
-import { useColorScheme } from 'nativewind'
 import { BookOpen, Plus } from 'phosphor-react-native'
 import { ContentCard, EmptyState, ScreenBackground } from '@/components/game'
 import { Button } from '@/components/ui/button'
@@ -19,8 +18,7 @@ export default function ContentScreen() {
   const systems = visibleSystems()
   const [systemId, setSystemId] = useState<SystemId>(systems[0].id)
   const [kind, setKind] = useState<string | null>(null)
-  const { colorScheme } = useColorScheme()
-  const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
+  const colors = THEME_COLORS
 
   const kinds = homebrewKinds(systemId)
   const mine = useContentSearch(systemId, kinds.map((k) => k.kind), 'mine', '')

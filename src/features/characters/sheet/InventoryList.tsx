@@ -1,5 +1,4 @@
 import { Minus, Plus } from 'phosphor-react-native'
-import { useColorScheme } from 'nativewind'
 import { View } from 'react-native'
 import { ContentCard } from '@/components/game/ContentCard'
 import { Button } from '@/components/ui/button'
@@ -54,8 +53,7 @@ type InventoryListProps = {
 
 /** One card per item; its quantity stepper, equip / attune toggles, remove and any helper caption sit inside the card. */
 export function InventoryList({ items, allItems, maxAttuned, pendingIds = [], onChange, onRemove }: InventoryListProps) {
-  const { colorScheme } = useColorScheme()
-  const iconColor = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light'].accentForeground
+  const iconColor = THEME_COLORS.accentForeground
   const attunedCount = allItems.filter((i) => i.attuned).length
   const atLimit = maxAttuned !== undefined && attunedCount >= maxAttuned
 

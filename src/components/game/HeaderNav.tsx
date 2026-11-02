@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 import { View } from 'react-native'
-import { useColorScheme } from 'nativewind'
 import { CaretLeft } from 'phosphor-react-native'
 import { Button } from '@/components/ui/button'
 import { Text } from '@/components/ui/text'
@@ -24,8 +23,7 @@ export function NavRow({ children, testID }: { children: ReactNode; testID?: str
 }
 
 export function BackButton({ onPress }: { onPress: () => void }) {
-  const { colorScheme } = useColorScheme()
-  const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
+  const colors = THEME_COLORS
   return (
     <Button variant="ghost" size="icon" accessibilityLabel="Back" onPress={onPress}>
       <CaretLeft size={20} color={colors.foreground} />

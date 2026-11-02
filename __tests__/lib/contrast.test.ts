@@ -1,0 +1,26 @@
+// Spec §6: body and typed text 7:1, large text / placeholder / button labels 4.5:1.
+import { THEME_COLORS as C } from '@/lib/theme'
+import { contrastRatio } from '../helpers/contrast'
+
+const ratio = (fg: string, bg: string) => contrastRatio(C[fg], C[bg], C.background)
+
+test.each([
+  ['foreground', 'background', 7],
+  ['foreground', 'card', 7],
+  ['foreground', 'rock', 7],
+  ['mutedForeground', 'card', 7],
+  ['typed', 'well', 7],
+  ['placeholder', 'well', 4.5],
+  ['primaryForeground', 'primary', 4.5],
+  ['secondaryForeground', 'secondary', 4.5],
+  ['destructiveForeground', 'bloodFill', 4.5],
+  ['accentForeground', 'rock', 4.5],
+  ['labelForeground', 'rock', 4.5],
+  ['highlightText', 'rock', 4.5],
+] as const)('%s on %s is at least %s:1', (fg, bg, min) => {
+  expect(ratio(fg, bg)).toBeGreaterThanOrEqual(min)
+})
+
+test.each(['sky1', 'sky2', 'sky3', 'sky4', 'sky5', 'sky6'])('foreground text on %s holds 4.5:1', (band) => {
+  expect(ratio('foreground', band)).toBeGreaterThanOrEqual(4.5)
+})

@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Switch, View } from 'react-native'
-import { useColorScheme } from 'nativewind'
 import { Button } from '@/components/ui/button'
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -89,8 +88,7 @@ export function ContentForm({ systemId, kind, initial, onSaved, onDeleted }: Con
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const save = useSaveHomebrew()
   const remove = useDeleteHomebrew()
-  const { colorScheme } = useColorScheme()
-  const colors = THEME_COLORS[colorScheme === 'dark' ? 'dark' : 'light']
+  const colors = THEME_COLORS
 
   const parentDef = def.parentKind ? getSystem(systemId).contentKinds[def.parentKind] : undefined
   const parents = useContentList(systemId, def.parentKind ?? '', 'pickable', !!def.parentKind)
@@ -198,8 +196,7 @@ export function ContentForm({ systemId, kind, initial, onSaved, onDeleted }: Con
               // Off track uses the rule token: muted is near-invisible on the dark teal background.
               trackColor={{ true: colors.primary, false: colors.rule }}
               ios_backgroundColor={colors.rule}
-              // Cream thumb in both modes: primary-foreground is cream in light but near-black in dark.
-              thumbColor={colorScheme === 'dark' ? colors.foreground : colors.primaryForeground}
+              thumbColor={colors.foreground}
             />
           </View>
         )
