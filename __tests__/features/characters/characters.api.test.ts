@@ -7,7 +7,14 @@ jest.mock('@/lib/supabase', () => ({
   supabase: { from: jest.fn(), rpc: jest.fn(), auth: { getSession: jest.fn() } },
 }))
 
+jest.mock('@/features/content/content.api', () => ({
+  ...jest.requireActual('@/features/content/content.api'),
+  saveHomebrew: jest.fn(),
+  deleteHomebrew: jest.fn(),
+}))
+
 import { supabase } from '@/lib/supabase'
+import { saveHomebrew, deleteHomebrew, slugify } from '@/features/content/content.api'
 
 function builder(result: unknown) {
   const b: Record<string, unknown> = {}
@@ -216,5 +223,91 @@ describe('levelUpCharacter', () => {
     ;(supabase.from as jest.Mock).mockImplementation((t: string) => (t === 'characters' ? chars : picks))
     await expect(levelUpCharacter('ch1', patch, { subclassId: 'sub1' })).rejects.toBeTruthy()
     expect(chars.update).not.toHaveBeenCalled()
+  })
+})
+
+describe('createCharacter custom content', () => {
+  const entry = (over: Record<string, unknown> = {}) => ({
+    kind: 'class', name: 'Dread Knight', description: 'd', data: { one_off: true }, library: false,
+    pick: { state: { skills: ['arcana'] }, acquired_at_level: 1 }, ...over,
+  })
+  const setup = (picksResult: unknown = { error: null }) => {
+    const chars = builder({ data: { id: 'ch1' }, error: null })
+    const rows = builder(picksResult)
+    ;(supabase.from as jest.Mock).mockImplementation((t: string) => (t === 'characters' ? chars : rows))
+    let n = 0
+    ;(saveHomebrew as jest.Mock).mockImplementation(async (i: { kind: string }) => ({ id: `new${++n}`, kind: i.kind }))
+    return { chars, rows }
+  }
+
+  it('saves the content row after the character and before the picks, then picks it', async () => {
+    const { chars, rows } = setup()
+    const order: string[] = []
+    chars.insert.mockImplementation(() => { order.push('character'); return chars })
+    ;(saveHomebrew as jest.Mock).mockImplementation(async () => { order.push('content'); return { id: 'new1' } })
+    rows.insert.mockImplementation(() => { order.push('picks'); return rows })
+    await createCharacter({ ...newChar, custom: [entry()] } as NewCharacter)
+    expect(order).toEqual(['character', 'content', 'picks'])
+    const arg = (saveHomebrew as jest.Mock).mock.calls[0][0]
+    expect(arg).toMatchObject({ systemId: 'dnd5e-2024', kind: 'class', name: 'Dread Knight', description: 'd', data: { one_off: true } })
+    expect(arg.slug).toMatch(new RegExp(`^${slugify('Dread Knight')}-[a-z0-9]{6}$`))
+    expect(chars.insert.mock.calls[0][0]).not.toHaveProperty('custom')
+    expect(rows.insert).toHaveBeenCalledWith([
+      { character_id: 'ch1', content_id: 'cls', kind: 'class', state: {}, acquired_at_level: 1 },
+      { character_id: 'ch1', content_id: 'new1', kind: 'class', state: { skills: ['arcana'] }, acquired_at_level: 1 },
+    ])
+  })
+
+  it('passes a library entry data through without one_off', async () => {
+    setup()
+    await createCharacter({ ...newChar, custom: [entry({ library: true, data: {} })] } as NewCharacter)
+    expect((saveHomebrew as jest.Mock).mock.calls[0][0].data).not.toHaveProperty('one_off')
+  })
+
+  it('gives two entries with the same name different slugs', async () => {
+    setup()
+    await createCharacter({ ...newChar, custom: [entry(), entry({ kind: 'species' })] } as NewCharacter)
+    const [a, b] = (saveHomebrew as jest.Mock).mock.calls.map((c) => c[0].slug)
+    expect(a).not.toBe(b)
+  })
+
+  it('removes the character, then the created rows, when the picks insert fails', async () => {
+    const { chars } = setup({ error: { message: 'fk' } })
+    const order: string[] = []
+    chars.delete.mockImplementation(() => { order.push('character'); return chars })
+    ;(deleteHomebrew as jest.Mock).mockImplementation(async () => { order.push('content') })
+    await expect(createCharacter({ ...newChar, custom: [entry(), entry({ kind: 'species' })] } as NewCharacter)).rejects.toMatchObject({ code: 'unknown' })
+    expect(order).toEqual(['character', 'content', 'content'])
+    expect(deleteHomebrew).toHaveBeenCalledWith('new1')
+    expect(deleteHomebrew).toHaveBeenCalledWith('new2')
+  })
+
+  it('cleans up the earlier rows and the character when a later content insert fails, surfacing the error', async () => {
+    const { chars } = setup()
+    const boom = new Error('duplicate')
+    ;(saveHomebrew as jest.Mock).mockReset()
+    ;(saveHomebrew as jest.Mock).mockResolvedValueOnce({ id: 'new1' }).mockRejectedValueOnce(boom)
+    await expect(createCharacter({ ...newChar, custom: [entry(), entry({ kind: 'species' })] } as NewCharacter)).rejects.toBe(boom)
+    expect(chars.delete).toHaveBeenCalled()
+    expect(deleteHomebrew).toHaveBeenCalledTimes(1)
+    expect(deleteHomebrew).toHaveBeenCalledWith('new1')
+  })
+
+  it('cleans up the created rows when the items insert fails', async () => {
+    const chars = builder({ data: { id: 'ch1' }, error: null })
+    const ok = builder({ error: null })
+    const bad = builder({ error: { message: 'fk' } })
+    ;(supabase.from as jest.Mock).mockImplementation((t: string) => (t === 'characters' ? chars : t === 'character_items' ? bad : ok))
+    ;(saveHomebrew as jest.Mock).mockResolvedValue({ id: 'new1' })
+    await expect(createCharacter({ ...newChar, custom: [entry()], items: [{ content_id: 'cm', quantity: 1, equipped: true }] } as NewCharacter)).rejects.toMatchObject({ code: 'unknown' })
+    expect(chars.delete).toHaveBeenCalled()
+    expect(deleteHomebrew).toHaveBeenCalledWith('new1')
+  })
+
+  it('makes no content calls for official-only input', async () => {
+    setup()
+    await createCharacter(newChar)
+    expect(saveHomebrew).not.toHaveBeenCalled()
+    expect(deleteHomebrew).not.toHaveBeenCalled()
   })
 })

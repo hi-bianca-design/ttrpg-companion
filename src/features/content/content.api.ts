@@ -68,6 +68,14 @@ export function slugify(name: string): string {
   return slug || 'homebrew'
 }
 
+/** A slug unique per owner: the name's slug plus 6 random lowercase alphanumerics. */
+export function uniqueSlug(name: string): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
+  let suffix = ''
+  for (let i = 0; i < 6; i++) suffix += chars[Math.floor(Math.random() * chars.length)]
+  return `${slugify(name)}-${suffix}`
+}
+
 export async function saveHomebrew(input: SaveHomebrewInput): Promise<ContentRow> {
   const def = getSystem(input.systemId).contentKinds[input.kind]
   if (!def) throw new Error(`Unknown content kind "${input.kind}" for ${input.systemId}`)
