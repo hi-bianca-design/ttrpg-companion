@@ -8,7 +8,12 @@ import { PortalHost } from '@rn-primitives/portal'
 import { Toaster } from '@/components/ui/toast'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { useFonts } from 'expo-font'
-import { Fraunces_600SemiBold } from '@expo-google-fonts/fraunces'
+import { Cinzel_500Medium, Cinzel_700Bold } from '@expo-google-fonts/cinzel'
+import {
+  CormorantGaramond_400Regular_Italic,
+  CormorantGaramond_500Medium,
+  CormorantGaramond_600SemiBold,
+} from '@expo-google-fonts/cormorant-garamond'
 import { Inter_400Regular, Inter_600SemiBold } from '@expo-google-fonts/inter'
 import { IBMPlexMono_500Medium } from '@expo-google-fonts/ibm-plex-mono'
 import { NAV_THEME } from '@/lib/theme'
@@ -43,7 +48,11 @@ function RootRedirect() {
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    Fraunces_600SemiBold,
+    Cinzel_500Medium,
+    Cinzel_700Bold,
+    CormorantGaramond_400Regular_Italic,
+    CormorantGaramond_500Medium,
+    CormorantGaramond_600SemiBold,
     Inter_400Regular,
     Inter_600SemiBold,
     IBMPlexMono_500Medium,

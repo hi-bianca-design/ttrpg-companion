@@ -40,7 +40,11 @@ module.exports = {
       full: '999px',
     },
     fontFamily: {
-      display: ['Fraunces_600SemiBold'],
+      display: ['Cinzel_700Bold'],
+      'display-medium': ['Cinzel_500Medium'],
+      narrative: ['CormorantGaramond_500Medium'],
+      'narrative-semibold': ['CormorantGaramond_600SemiBold'],
+      'narrative-italic': ['CormorantGaramond_400Regular_Italic'],
       // NativeWind special-cases the default font-sans/font-mono keys and drops custom families on native, so these have their own names.
       inter: ['Inter_400Regular'],
       'sans-semibold': ['Inter_600SemiBold'],

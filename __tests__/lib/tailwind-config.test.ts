@@ -50,3 +50,14 @@ test('secondary has a foreground', () => {
 test('the old glow tokens are gone', () => {
   expect(config.theme.extend.colors.glow).toBeUndefined()
 })
+test('font families: Cinzel display, Cormorant narrative, Inter and Plex kept, no Fraunces', () => {
+  const f = config.theme.fontFamily
+  expect(f.display).toEqual(['Cinzel_700Bold'])
+  expect(f['display-medium']).toEqual(['Cinzel_500Medium'])
+  expect(f.narrative).toEqual(['CormorantGaramond_500Medium'])
+  expect(f['narrative-semibold']).toEqual(['CormorantGaramond_600SemiBold'])
+  expect(f['narrative-italic']).toEqual(['CormorantGaramond_400Regular_Italic'])
+  expect(f.inter).toEqual(['Inter_400Regular'])
+  expect(f.plex).toEqual(['IBMPlexMono_500Medium'])
+  expect(JSON.stringify(f)).not.toContain('Fraunces')
+})

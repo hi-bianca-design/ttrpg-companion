@@ -62,7 +62,7 @@ export const SKY_BANDS: string[] = ['sky1', 'sky2', 'sky3', 'sky4', 'sky5', 'sky
 // Tab bar labels get the caption role's 12/16 metrics. React Navigation's default bar is 49pt plus
 // the bottom inset; on web (no inset) the 24pt icon and 16pt label don't fit inside its padding and
 // the label is squeezed and clipped, so the bar's content height is 56pt.
-export const TAB_LABEL_STYLE = { fontFamily: 'Inter_400Regular', fontSize: 12, lineHeight: 16 } as const
+export const TAB_LABEL_STYLE = { fontFamily: 'Cinzel_500Medium', fontSize: 12, lineHeight: 16 } as const
 export const TAB_BAR_CONTENT_HEIGHT = 56
 
 export function tabBarStyle(bottomInset: number) {

@@ -13,9 +13,11 @@ const textVariants = cva('', {
       subhead: 'font-sans-semibold text-subhead',
       body: 'font-inter text-body',
       'body-sm': 'font-inter text-body-sm',
-      stat: 'font-display text-stat',
+      stat: 'font-plex text-stat',
       label: 'font-plex text-label uppercase',
       caption: 'font-inter text-caption',
+      narrative: 'font-narrative text-body',
+      eyebrow: 'font-display-medium text-label uppercase text-highlight-text',
     },
     tone: {
       default: 'text-foreground',
@@ -39,8 +41,8 @@ type TextProps = React.ComponentProps<typeof RNText> &
 function Text({ className, variant, tone, asChild = false, ...props }: TextProps) {
   const inherited = React.useContext(TextClassContext)
   const Component = asChild ? Slot.Text : RNText
-  // Label defaults to its own colour token (text-label is the size role, so the colour is label-foreground).
-  const resolvedTone: TextTone | undefined = tone ?? (variant === 'label' ? undefined : 'default')
+  // Label and eyebrow default to their own colour (text-label is the size role, so label's colour is label-foreground).
+  const resolvedTone: TextTone | undefined = tone ?? (variant === 'label' || variant === 'eyebrow' ? undefined : 'default')
   return (
     <Component
       className={cn(
