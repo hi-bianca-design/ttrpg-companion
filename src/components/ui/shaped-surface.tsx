@@ -17,7 +17,7 @@ const plateColor = (c: PlateColor) => (c === 'transparent' ? 'transparent' : THE
  */
 export const GLASS_FILL_OPACITY = {
   // Cards and the tabs track sit on the page background.
-  surface: { web: 0.55, native: 0.7 },
+  surface: { web: 0.42, native: 0.58 },
   // Dialogs, sheets and the toast float over arbitrary content, so they stay denser.
   overlay: { web: 0.75, native: 0.92 },
   // The placeholder is the dimmest text (4.5:1 needs >= 0.74 over the lightest sky band).
