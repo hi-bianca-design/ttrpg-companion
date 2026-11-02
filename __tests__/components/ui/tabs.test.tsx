@@ -14,15 +14,23 @@ function renderTabs() {
   )
 }
 
-test('the list is a chamfered track and only the active tab is a gold plate', () => {
+test('the list is a chamfered track and the active tab is a subdued raised segment, never the gold CTA colour', () => {
   renderTabs()
   const plates = screen.UNSAFE_getAllByType(ShapedSurface).map((n) => n.props)
   expect(plates[0].shape).toBe('chamfer')
   expect(plates[0].fill).toBe('rockDeep')
-  expect(plates.filter((p) => p.fill === 'primary')).toHaveLength(1)
+  expect(plates.filter((p) => p.fill === 'rock' && p.stroke === 'secondary')).toHaveLength(1)
+  expect(plates.some((p) => p.fill === 'primary' || p.stroke === 'primary')).toBe(false)
 })
 
-test('active label is dark on gold, inactive is muted', () => {
+test('segments are equal width, one line, with no wide tracking', () => {
+  renderTabs()
+  const cls = screen.getByText('A').props.className ?? ''
+  expect(cls).not.toContain('tracking-widest')
+  expect(screen.UNSAFE_getAllByType(ShapedSurface).slice(1).every((p) => /basis-0/.test(p.props.className))).toBe(true)
+})
+
+test('active label is bone, inactive is muted', () => {
   renderTabs()
   expect(screen.getByText('A').props.className ?? '').not.toContain('text-muted-foreground')
 })
@@ -43,9 +51,9 @@ test('triggers still switch tabs', () => {
 
 test('every trigger keeps a plate so switching tabs only restyles it; the inactive plate is invisible', () => {
   const { rerender } = renderTabs()
-  const triggerPlates = () => screen.UNSAFE_getAllByType(ShapedSurface).map((n) => n.props).filter((p) => p.shape === 'hex')
+  const triggerPlates = () => screen.UNSAFE_getAllByType(ShapedSurface).map((n) => n.props).slice(1)
   expect(triggerPlates()).toHaveLength(2)
-  expect(triggerPlates().map((p) => [p.fill, p.stroke])).toEqual([['primary', 'ink'], ['transparent', 'transparent']])
+  expect(triggerPlates().map((p) => [p.fill, p.stroke])).toEqual([['rock', 'secondary'], ['transparent', 'transparent']])
   rerender(
     <Tabs value="b" onValueChange={() => {}}>
       <TabsList>
@@ -54,5 +62,5 @@ test('every trigger keeps a plate so switching tabs only restyles it; the inacti
       </TabsList>
     </Tabs>,
   )
-  expect(triggerPlates().map((p) => [p.fill, p.stroke])).toEqual([['transparent', 'transparent'], ['primary', 'ink']])
+  expect(triggerPlates().map((p) => [p.fill, p.stroke])).toEqual([['transparent', 'transparent'], ['rock', 'secondary']])
 })

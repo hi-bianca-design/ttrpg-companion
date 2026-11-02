@@ -11,8 +11,8 @@ function TabsList({
   ...props
 }: TabsPrimitive.ListProps & React.RefAttributes<TabsPrimitive.ListRef>) {
   return (
-    <TabsPrimitive.List className={cn('h-11', className)} {...props}>
-      <ShapedSurface shape="chamfer" fill="rockDeep" stroke="border" strokeWidth={1} shadowOffset={0} className="h-full flex-row items-center p-1">
+    <TabsPrimitive.List className={cn('min-h-11', className)} {...props}>
+      <ShapedSurface shape="chamfer" fill="rockDeep" stroke="border" strokeWidth={1} shadowOffset={0} className="min-h-11 flex-row items-center p-1">
         {children}
       </ShapedSurface>
     </TabsPrimitive.List>
@@ -26,16 +26,18 @@ function TabsTrigger({
 }: TabsPrimitive.TriggerProps & React.RefAttributes<TabsPrimitive.TriggerRef>) {
   const { value } = TabsPrimitive.useRootContext()
   const active = value === props.value
-  const inner = 'h-full flex-1 flex-row items-center justify-center px-3'
+  // basis-0 + flex-1 gives every segment the same width whatever its label; px-1 leaves REACTIONS room.
+  const inner = 'min-h-9 flex-1 basis-0 flex-row items-center justify-center px-1'
   return (
     <TextClassContext.Provider
-      value={cn('font-display-medium text-body-sm uppercase tracking-widest', active ? 'text-primary-foreground' : 'text-muted-foreground')}
+      value={cn('font-display-medium text-caption uppercase tracking-wide', active ? 'text-foreground' : 'text-muted-foreground')}
     >
-      <TabsPrimitive.Trigger className={cn('h-full flex-1', props.disabled && 'opacity-50', className)} {...props}>
+      <TabsPrimitive.Trigger className={cn('flex-1 basis-0 self-stretch', props.disabled && 'opacity-50', className)} {...props}>
         <ShapedSurface
-          shape="hex"
-          fill={active ? 'primary' : 'transparent'}
-          stroke={active ? 'ink' : 'transparent'}
+          shape="chamfer"
+          fill={active ? 'rock' : 'transparent'}
+          stroke={active ? 'secondary' : 'transparent'}
+          strokeWidth={1}
           shadowOffset={0}
           className={inner}
         >
