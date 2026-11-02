@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Text } from '@/components/ui/text'
 import { useAuth } from '@/features/auth/useAuth'
+import { AppError } from '@/features/errors'
 import type { CampaignFull } from '@/features/campaigns/campaigns.api'
 import { useActiveSession, useEndSession, useOpenSession } from './sessions.queries'
 
@@ -23,12 +24,15 @@ export function SessionControls({ campaign }: { campaign: CampaignFull }) {
   if (!isGm && mine?.status !== 'active') return null
 
   const canEnd = !!session && (isGm || session.opened_by === user?.id)
-  const error = (session ? end.error : open.error) as Error | null
+  // End's refetch lands before its error state does, so when someone else already ended the
+  // session the screen is already back to "no session": keep that explanation visible anyway.
+  const alreadyEnded = end.error instanceof AppError && end.error.code === 'no_active_session'
+  const error = (session || alreadyEnded ? end.error : open.error) as Error | null
 
   return (
     <View className="items-start gap-2">
       {!session ? (
-        <Button accessibilityLabel="Open session" disabled={open.isPending} onPress={() => open.mutate()}>
+        <Button accessibilityLabel="Open session" disabled={open.isPending} onPress={() => { end.reset(); open.mutate() }}>
           <Text>Open session</Text>
         </Button>
       ) : canEnd ? (

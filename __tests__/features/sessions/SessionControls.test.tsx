@@ -26,7 +26,7 @@ function setup(user: string, active: object | null = null, endError: unknown = n
   mockUserId = user
   ;(useActiveSession as jest.Mock).mockReturnValue({ data: active })
   ;(useOpenSession as jest.Mock).mockReturnValue({ mutate: openMutate, error: null, isPending: false })
-  ;(useEndSession as jest.Mock).mockReturnValue({ mutate: endMutate, error: endError, isPending: false })
+  ;(useEndSession as jest.Mock).mockReturnValue({ mutate: endMutate, reset: jest.fn(), error: endError, isPending: false })
   return render(<><SessionControls campaign={campaign as never} /><PortalHost /></>)
 }
 
