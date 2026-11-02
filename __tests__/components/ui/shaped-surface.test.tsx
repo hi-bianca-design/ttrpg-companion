@@ -74,3 +74,15 @@ test('renders its children', () => {
   render(<ShapedSurface fill="rock" stroke="primary"><Text>Inside</Text></ShapedSurface>)
   expect(screen.getByText('Inside')).toBeTruthy()
 })
+
+test('point and rise tune the shape depth for small surfaces and sheets', () => {
+  render(<ShapedSurface testID="s" point={6} fill="rock" stroke="primary"><Text>x</Text></ShapedSurface>)
+  layout('s', 100, 20)
+  expect(fillPath('rock')?.props.d).toBe(shapePath('hex', 100, 20, { inset: 1, point: 6 }))
+})
+
+test('rise sets the arch height', () => {
+  render(<ShapedSurface testID="s" shape="arch" rise={24} fill="rock" stroke="primary"><Text>x</Text></ShapedSurface>)
+  layout('s', 300, 200)
+  expect(fillPath('rock')?.props.d).toBe(shapePath('arch', 300, 200, { inset: 1, rise: 24 }))
+})

@@ -1,5 +1,6 @@
 import { Check } from 'phosphor-react-native'
 import { Pressable } from 'react-native'
+import { ShapedSurface } from '@/components/ui/shaped-surface'
 import { Text } from '@/components/ui/text'
 import { THEME_COLORS } from '@/lib/theme'
 import { cn } from '@/lib/utils'
@@ -9,7 +10,7 @@ type ToggleChipProps = Omit<React.ComponentProps<typeof Pressable>, 'children'> 
   selected?: boolean
   /** default: 44pt. sm: 32pt with a 6px hitSlop (44pt target), for dense groups. */
   size?: 'default' | 'sm'
-  /** fill (default): selected is filled moss. outline: selected is a moss outline + check, for
+  /** fill (default): selected is filled gold. outline: selected is a mint outline + check, for
    *  per-row state toggles that must not compete with the screen's primary button. */
   tone?: 'fill' | 'outline'
   className?: string
@@ -20,7 +21,7 @@ const SMALL_HIT_SLOP = { top: 6, bottom: 6, left: 6, right: 6 }
 
 /**
  * The one selectable pill: single- or multi-choice options (kinds, conditions, sources, characters)
- * and on/off state toggles. Same 1.5px stroke as the outline button. View filters that swap
+ * and on/off state toggles. Pointed plate with the same 2px stroke as the buttons. View filters that swap
  * content use Tabs instead.
  */
 function ToggleChip({
@@ -45,28 +46,29 @@ function ToggleChip({
       accessibilityState={{ ...accessibilityState, selected, disabled: !!disabled }}
       disabled={disabled}
       hitSlop={hitSlop ?? (size === 'sm' ? SMALL_HIT_SLOP : undefined)}
-      className={cn(
-        'flex-row items-center justify-center gap-1 rounded-full border-1.5',
-        size === 'sm' ? 'h-8 px-3' : 'h-11 px-4',
-        filled && 'border-primary bg-primary active:opacity-90',
-        outlined && 'border-primary bg-transparent active:bg-muted',
-        !selected && 'border-border bg-card active:bg-muted',
-        disabled && 'opacity-50',
-        className,
-      )}
+      className={cn(size === 'sm' ? 'h-8' : 'h-11', disabled && 'opacity-50', className)}
       {...props}
     >
-      {outlined ? <Check testID="toggle-chip-check" size={14} weight="bold" color={checkColor} /> : null}
-      <Text
-        variant="body-sm"
-        className={cn(
-          'font-sans-semibold',
-          filled ? 'text-primary-foreground' : outlined ? 'text-accent-foreground' : 'text-foreground',
-        )}
-        numberOfLines={1}
+      <ShapedSurface
+        fill={filled ? 'primary' : outlined ? 'rockDeep' : 'card'}
+        stroke={filled ? 'ink' : outlined ? 'secondary' : 'border'}
+        glow={selected && !disabled ? 'torch' : undefined}
+        strokeWidth={2}
+        shadowOffset={2}
+        className={cn('flex-1 flex-row items-center justify-center gap-1', size === 'sm' ? 'px-4' : 'px-6')}
       >
-        {label}
-      </Text>
+        {outlined ? <Check testID="toggle-chip-check" size={14} weight="bold" color={checkColor} /> : null}
+        <Text
+          variant="body-sm"
+          className={cn(
+            'font-sans-semibold',
+            filled ? 'text-primary-foreground' : outlined ? 'text-accent-foreground' : 'text-foreground',
+          )}
+          numberOfLines={1}
+        >
+          {label}
+        </Text>
+      </ShapedSurface>
     </Pressable>
   )
 }

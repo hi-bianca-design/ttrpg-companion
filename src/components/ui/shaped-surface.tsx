@@ -23,6 +23,10 @@ type ShapedSurfaceProps = {
   fill: ThemeColorKey
   stroke: ThemeColorKey
   strokeWidth?: number
+  /** Depth of the pointed ends on `hex` (default 14); small surfaces like badges use less. */
+  point?: number
+  /** Height of the arch top (default 54); sheets use a shallower one. */
+  rise?: number
   /** Hard shadow, in px right and down. 0 turns it off. */
   shadowOffset?: number
   /** Soft glow colour; only for active/lit states. */
@@ -43,6 +47,8 @@ export function ShapedSurface({
   fill,
   stroke,
   strokeWidth = 2,
+  point,
+  rise,
   shadowOffset = 3,
   glow,
   light,
@@ -57,7 +63,7 @@ export function ShapedSurface({
     setSize((prev) => (prev.width === width && prev.height === height ? prev : { width, height }))
   }
   const resolved: Shape = shape === 'auto' ? (size.height <= HEX_MAX_HEIGHT ? 'hex' : 'chamfer') : shape
-  const d = shapePath(resolved, size.width, size.height, { inset: strokeWidth / 2 })
+  const d = shapePath(resolved, size.width, size.height, { inset: strokeWidth / 2, point, rise })
 
   return (
     <View testID={testID} onLayout={onLayout} className={cn('relative', className)}>

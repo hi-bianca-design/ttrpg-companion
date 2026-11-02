@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { AccessibilityInfo, Animated, Platform, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { create } from 'zustand'
+import { ShapedSurface } from '@/components/ui/shaped-surface'
 import { Text } from '@/components/ui/text'
 import { TAB_BAR_CONTENT_HEIGHT } from '@/lib/theme'
 
@@ -11,7 +12,7 @@ const FADE_MS = 250
 // The Toaster sits at the app root, outside any tab navigator (useBottomTabBarHeight would throw
 // there), so it uses the tab bar's own height from the theme: bar + safe-area inset + an 8pt gap.
 const GAP_ABOVE_TAB_BAR = 8
-/** Tallest toast pill: py-3 (12 + 12) around at most two body-sm lines (2 × 20). */
+/** Tallest toast plate: py-3 (12 + 12) around at most two body-sm lines (2 × 20). */
 const TOAST_PILL_HEIGHT = 64
 /** Space the toast takes above the tab bar: the 8pt gap plus the pill. */
 export const TOAST_BAND = GAP_ABOVE_TAB_BAR + TOAST_PILL_HEIGHT
@@ -39,7 +40,7 @@ export function showToast(message: string) {
   useToastStore.getState().show(message)
 }
 
-/** Mounted once at the app root. Inverse ink surface, bottom of the screen above the tab bar, no touch handling. */
+/** Mounted once at the app root. Ink plate, bottom of the screen above the tab bar, no touch handling. */
 export function Toaster() {
   const message = useToastStore((s) => s.message)
   const seq = useToastStore((s) => s.seq)
@@ -71,9 +72,11 @@ export function Toaster() {
           accessible
           accessibilityLabel={message}
           accessibilityLiveRegion="polite"
-          className="self-center rounded-card bg-foreground px-4 py-3"
+          className="self-center"
         >
-          <Text variant="body-sm" numberOfLines={2} className="text-center text-background">{message}</Text>
+          <ShapedSurface fill="ink" stroke="rule" strokeWidth={1} shadowOffset={0} className="px-6 py-3">
+            <Text variant="body-sm" numberOfLines={2} className="text-center text-foreground">{message}</Text>
+          </ShapedSurface>
         </View>
       </Animated.View>
     </View>

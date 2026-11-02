@@ -110,10 +110,10 @@ test('marked mode: + takes the tracker tint, − is a neutral outline', () => {
   expect(clear).not.toContain('border-destructive')
 })
 
-test('bar at 0: destructive value and fill; the track is visible on cards (bg-rule)', () => {
+test('bar at 0: destructive value and fill; the track is visible on cards (bg-well)', () => {
   render(<ResourceTracker display="bar" label="HP" current={0} max={10} onAdjust={jest.fn()} />)
   expect(screen.getByText('0/10').props.className).toContain('text-destructive')
   const json = JSON.stringify(screen.toJSON())
-  expect(json).toContain('bg-rule')
+  expect(json).toContain('bg-well')
   expect(json).toContain('bg-destructive')
 })

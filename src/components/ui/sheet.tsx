@@ -1,6 +1,11 @@
 import * as DialogPrimitive from '@rn-primitives/dialog'
 import { KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions, View } from 'react-native'
+import { ShapedSurface } from '@/components/ui/shaped-surface'
+import { splitClassName } from '@/lib/class-split'
 import { cn } from '@/lib/utils'
+
+// The sheet's top edge is a shallow arch; content starts below its point.
+const ARCH_RISE = 24
 
 // Bottom sheet built on the Dialog primitive (portal + overlay + focus handling).
 const Sheet = DialogPrimitive.Root
@@ -14,6 +19,7 @@ function SheetContent({
   ...props
 }: DialogPrimitive.ContentProps &
   React.RefAttributes<DialogPrimitive.ContentRef> & { portalHost?: string }) {
+  const { plate, content } = splitClassName(className)
   return (
     <DialogPrimitive.Portal hostName={portalHost}>
       <DialogPrimitive.Overlay className="absolute inset-0 justify-end bg-overlay">
@@ -21,12 +27,12 @@ function SheetContent({
             the buttons under it, e.g. HpSheet's Damage/Heal) clear of the keyboard. Android resizes the
             window itself; web has no on-screen keyboard to avoid. */}
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="w-full">
-          <DialogPrimitive.Content
-            className={cn('w-full gap-4 rounded-t-sheet border border-border bg-background p-4', className)}
-            {...props}
-          >
-            <View className="mb-1 h-1 w-8 self-center rounded-full bg-rule" />
-            {children}
+          <DialogPrimitive.Content className={cn('w-full', plate)} {...props}>
+            <ShapedSurface shape="arch" rise={ARCH_RISE} fill="rock" stroke="rule" strokeWidth={1} shadowOffset={0}>
+              <View className={cn('gap-4 p-4', content)} style={{ paddingTop: ARCH_RISE + 16 }}>
+                {children}
+              </View>
+            </ShapedSurface>
           </DialogPrimitive.Content>
         </KeyboardAvoidingView>
       </DialogPrimitive.Overlay>
