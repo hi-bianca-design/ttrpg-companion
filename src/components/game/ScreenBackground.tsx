@@ -1,5 +1,5 @@
 import { useId, type ReactNode } from 'react'
-import { Image, PixelRatio, ScrollView, View } from 'react-native'
+import { Image, PixelRatio, ScrollView, View, type ImageSourcePropType } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg'
 import { SKY_BANDS, THEME_COLORS } from '@/lib/theme'
@@ -17,7 +17,11 @@ const GRAIN_OPACITY = 0.3
 const GRAIN = require('../../../assets/grain.png')
 // Overriding the asset's scale makes the repeat tile 1 image pixel per physical pixel, so specks stay
 // fine-grained on 2x and 3x screens instead of growing to 2x2 or 3x3 physical pixels.
-const GRAIN_SOURCE = Image.resolveAssetSource(GRAIN)
+// react-native-web has no resolveAssetSource and draws the tile at CSS pixels, so it keeps the plain asset.
+const grainSource = (): ImageSourcePropType => {
+  const resolved = Image.resolveAssetSource?.(GRAIN)
+  return resolved ? { ...resolved, scale: PixelRatio.get() } : GRAIN
+}
 
 /**
  * Screen root: flat night background, posterized sky bands, a vignette that frames a lit centre, the
@@ -46,7 +50,7 @@ export function ScreenBackground({ children, scroll = false }: ScreenBackgroundP
         </Svg>
       </View>
       <View testID="screen-grain" className="absolute inset-0" pointerEvents="none" style={{ opacity: GRAIN_OPACITY }}>
-        <Image source={{ ...GRAIN_SOURCE, scale: PixelRatio.get() }} resizeMode="repeat" style={{ width: '100%', height: '100%' }} />
+        <Image source={grainSource()} resizeMode="repeat" style={{ width: '100%', height: '100%' }} />
       </View>
       <SafeAreaView edges={['top']} className="flex-1">
         {scroll ? <ScrollView>{content}</ScrollView> : content}

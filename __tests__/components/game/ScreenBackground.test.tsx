@@ -56,3 +56,16 @@ test('the grain tile is drawn at one image pixel per physical pixel on any scree
   expect(screen.UNSAFE_getByType(Image).props.source.scale).toBe(3)
   jest.restoreAllMocks()
 })
+
+test('platforms without Image.resolveAssetSource (web) still render the grain at its natural size', () => {
+  const original = Image.resolveAssetSource
+  // @ts-expect-error simulate react-native-web, which does not define it
+  Image.resolveAssetSource = undefined
+  try {
+    render(<ScreenBackground><Text>One</Text></ScreenBackground>)
+    expect(screen.getByTestId('screen-grain')).toBeTruthy()
+    expect(screen.UNSAFE_getByType(Image).props.source.scale).toBeUndefined()
+  } finally {
+    Image.resolveAssetSource = original
+  }
+})
