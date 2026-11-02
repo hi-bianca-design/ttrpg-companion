@@ -308,6 +308,7 @@ export type Database = {
           kind: string
           name: string
           owner_id: string | null
+          pack_id: string | null
           parent_id: string | null
           slug: string
           summary: string | null
@@ -323,6 +324,7 @@ export type Database = {
           kind: string
           name: string
           owner_id?: string | null
+          pack_id?: string | null
           parent_id?: string | null
           slug: string
           summary?: string | null
@@ -338,6 +340,7 @@ export type Database = {
           kind?: string
           name?: string
           owner_id?: string | null
+          pack_id?: string | null
           parent_id?: string | null
           slug?: string
           summary?: string | null
@@ -357,6 +360,13 @@ export type Database = {
             columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_pack_id_fkey"
+            columns: ["pack_id"]
+            isOneToOne: false
+            referencedRelation: "packs"
             referencedColumns: ["id"]
           },
           {
@@ -398,6 +408,95 @@ export type Database = {
           version?: string | null
         }
         Relationships: []
+      }
+      pack_entitlements: {
+        Row: {
+          expires_at: string | null
+          granted_at: string
+          pack_id: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          expires_at?: string | null
+          granted_at?: string
+          pack_id: string
+          source: string
+          user_id: string
+        }
+        Update: {
+          expires_at?: string | null
+          granted_at?: string
+          pack_id?: string
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pack_entitlements_pack_id_fkey"
+            columns: ["pack_id"]
+            isOneToOne: false
+            referencedRelation: "packs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pack_entitlements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      packs: {
+        Row: {
+          artist_credit: string | null
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          kind: string
+          name: string
+          published: boolean
+          slug: string
+          store_product_id: string | null
+          system_id: string | null
+        }
+        Insert: {
+          artist_credit?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          kind: string
+          name: string
+          published?: boolean
+          slug: string
+          store_product_id?: string | null
+          system_id?: string | null
+        }
+        Update: {
+          artist_credit?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          kind?: string
+          name?: string
+          published?: boolean
+          slug?: string
+          store_product_id?: string | null
+          system_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "packs_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "game_systems"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -573,6 +672,10 @@ export type Database = {
         }
       }
       gen_invite_code: { Args: never; Returns: string }
+      has_sheet_content: {
+        Args: { p_character_id: string; p_content_id: string }
+        Returns: boolean
+      }
       is_campaign_gm: { Args: { p_campaign_id: string }; Returns: boolean }
       is_campaign_member: { Args: { p_campaign_id: string }; Returns: boolean }
       is_active_campaign_member: {
@@ -627,7 +730,9 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      own_sheet_content_ids: { Args: never; Returns: string[] }
       owns_character: { Args: { p_character_id: string }; Returns: boolean }
+      owns_pack: { Args: { p_pack_id: string }; Returns: boolean }
       set_combat: {
         Args: { p_in_combat: boolean; p_session_id: string }
         Returns: {

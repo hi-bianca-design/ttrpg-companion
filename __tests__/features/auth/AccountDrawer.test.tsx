@@ -8,6 +8,8 @@ import { ERROR_COPY } from '@/features/errors'
 import { variantOf } from '../../helpers/button'
 
 jest.mock('@/features/auth/auth.api', () => ({ signOut: jest.fn() }))
+const mockPush = jest.fn()
+jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }))
 jest.mock('@/features/auth/useAuth', () => ({
   useAuth: () => ({ user: { id: 'u1', email: 'mira@example.com', user_metadata: { username: 'mira' } } }),
 }))
@@ -85,4 +87,11 @@ test('the drawer is one layout box (its sheet and dialog roots must not become e
   const { toJSON } = render(<Host initiallyOpen={false} />)
   const tree = toJSON()
   expect(Array.isArray(tree)).toBe(false)
+})
+
+test('the drawer links to the packs shop and closes', () => {
+  renderMenu()
+  fireEvent.press(screen.getByRole('button', { name: 'Packs' }))
+  expect(mockPush).toHaveBeenCalledWith('/(app)/shop')
+  expect(screen.queryByRole('button', { name: 'Packs' })).toBeNull()
 })

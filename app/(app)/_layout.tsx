@@ -28,6 +28,7 @@ export default function AppLayout() {
       screenOptions={{ headerShown: false }}
     >
       <Tabs.Screen name="index" options={{ href: null }} />
+      <Tabs.Screen name="shop" options={{ href: null }} />
       <Tabs.Screen
         name="characters"
         options={{
