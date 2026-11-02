@@ -5,7 +5,7 @@
 
 -- Internal: the caller's view of an active session, locked for update. Order of checks:
 -- authenticated -> session exists and is active -> caller is an active campaign member.
--- Not granted to API roles; the RPCs below call it as the function owner.
+-- The RPCs below call it as the function owner.
 create or replace function public.lock_active_session(p_session_id uuid)
 returns public.sessions
 language plpgsql
@@ -146,6 +146,7 @@ begin
     select 1 from public.campaign_members m
      where m.campaign_id = v_s.campaign_id and m.user_id = p_user_id
        and m.status = 'active' and m.character_id is not null
+     for share  -- waits out a concurrent leave/detach so the turn can't go to someone mid-exit
   ) then
     raise exception 'invalid_turn_target' using errcode = 'P0001';
   end if;
@@ -178,7 +179,11 @@ begin
 end;
 $$;
 
-revoke execute on function public.lock_active_session(uuid) from public, anon, authenticated;
+-- Granted to authenticated on purpose (not revoked): it re-checks auth and membership itself,
+-- and a function revoked from the API role is a permission-denied path that crashed the local
+-- Postgres image when called through that role.
+revoke execute on function public.lock_active_session(uuid) from public, anon;
+grant execute on function public.lock_active_session(uuid) to authenticated, service_role;
 revoke execute on function public.open_session(uuid) from public, anon;
 revoke execute on function public.end_session(uuid) from public, anon;
 revoke execute on function public.set_combat(uuid, boolean) from public, anon;

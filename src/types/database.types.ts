@@ -435,7 +435,7 @@ export type Database = {
           ended_at: string | null
           id: string
           in_combat: boolean
-          opened_by: string
+          opened_by: string | null
           started_at: string
           status: string
           updated_at: string
@@ -448,7 +448,7 @@ export type Database = {
           ended_at?: string | null
           id?: string
           in_combat?: boolean
-          opened_by: string
+          opened_by?: string | null
           started_at?: string
           status?: string
           updated_at?: string
@@ -461,7 +461,7 @@ export type Database = {
           ended_at?: string | null
           id?: string
           in_combat?: boolean
-          opened_by?: string
+          opened_by?: string | null
           started_at?: string
           status?: string
           updated_at?: string
@@ -538,7 +538,7 @@ export type Database = {
           ended_at: string | null
           id: string
           in_combat: boolean
-          opened_by: string
+          opened_by: string | null
           started_at: string
           status: string
           updated_at: string
@@ -560,7 +560,7 @@ export type Database = {
           ended_at: string | null
           id: string
           in_combat: boolean
-          opened_by: string
+          opened_by: string | null
           started_at: string
           status: string
           updated_at: string
@@ -593,7 +593,7 @@ export type Database = {
           ended_at: string | null
           id: string
           in_combat: boolean
-          opened_by: string
+          opened_by: string | null
           started_at: string
           status: string
           updated_at: string
@@ -615,7 +615,7 @@ export type Database = {
           ended_at: string | null
           id: string
           in_combat: boolean
-          opened_by: string
+          opened_by: string | null
           started_at: string
           status: string
           updated_at: string
@@ -638,7 +638,7 @@ export type Database = {
           ended_at: string | null
           id: string
           in_combat: boolean
-          opened_by: string
+          opened_by: string | null
           started_at: string
           status: string
           updated_at: string
@@ -660,7 +660,7 @@ export type Database = {
           ended_at: string | null
           id: string
           in_combat: boolean
-          opened_by: string
+          opened_by: string | null
           started_at: string
           status: string
           updated_at: string

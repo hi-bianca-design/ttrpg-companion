@@ -2,7 +2,7 @@
 begin;
 set local client_min_messages to warning;
 create extension if not exists pgtap with schema extensions;
-select plan(34);
+select plan(35);
 
 -- Fixtures (as the superuser; RLS bypassed). GM has no character; p1/p2 do; inv is invited.
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -109,6 +109,11 @@ select ok(not (
   or has_function_privilege('anon', 'public.set_combat(uuid, boolean)', 'execute')
   or has_function_privilege('anon', 'public.set_turn(uuid, uuid)', 'execute')
   or has_function_privilege('anon', 'public.end_turn(uuid)', 'execute')), 'anon cannot execute any session RPC');
+
+-- authenticated keeps execute on the internal helper: a revoked-from-authenticated function is
+-- a permission-denied path that crashed the local Postgres image when called through the API role.
+select ok(has_function_privilege('authenticated', 'public.lock_active_session(uuid)', 'execute'),
+  'authenticated can execute lock_active_session (it still checks auth and membership itself)');
 
 select * from finish();
 rollback;

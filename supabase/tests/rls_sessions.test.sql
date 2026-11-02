@@ -2,7 +2,7 @@
 begin;
 set local client_min_messages to warning;
 create extension if not exists pgtap with schema extensions;
-select plan(18);
+select plan(19);
 
 -- Fixtures (as the superuser; RLS bypassed)
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -83,6 +83,10 @@ update public.campaign_members set status = 'active' where user_id = 'b4000000-0
 update public.sessions set current_turn_user_id = 'b4000000-0000-0000-0000-00000000000b';
 delete from public.campaign_members where user_id = 'b4000000-0000-0000-0000-00000000000b';
 select is((select current_turn_user_id from public.sessions), null, 'leaving the campaign clears the turn');
+
+delete from auth.users where id = 'b4000000-0000-0000-0000-00000000000b';
+select is((select count(*)::int from public.sessions where id = '51000000-0000-0000-0000-000000000001'), 1,
+  'deleting the opener''s account keeps the session');
 
 select ok(exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'sessions'),
   'sessions is published to realtime');

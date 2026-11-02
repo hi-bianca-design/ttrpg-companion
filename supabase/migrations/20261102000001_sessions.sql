@@ -27,7 +27,8 @@ grant execute on function public.is_active_campaign_member(uuid) to authenticate
 create table public.sessions (
   id uuid primary key default gen_random_uuid(),
   campaign_id uuid not null references public.campaigns (id) on delete cascade,
-  opened_by uuid not null references public.profiles (id) on delete cascade,
+  -- set null, not cascade: the opener deleting their account must not end everyone's session.
+  opened_by uuid references public.profiles (id) on delete set null,
   status text not null default 'active' check (status in ('active', 'ended')),
   in_combat boolean not null default false,
   combat_started_by uuid references public.profiles (id) on delete set null,
