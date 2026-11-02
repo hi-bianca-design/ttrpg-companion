@@ -57,16 +57,9 @@ export const THEME_COLORS = {
 /** Posterized sky bands, top to bottom (screen background). */
 export const SKY_BANDS: string[] = (['sky1', 'sky2', 'sky3', 'sky4', 'sky5', 'sky6'] as const).map((k) => THEME_COLORS[k])
 
-// Tab bar labels get the caption role's 12/16 metrics. React Navigation's default bar is 49pt plus
-// the bottom inset; on web (no inset) the 24pt icon and 16pt label don't fit inside its padding and
-// the label is squeezed and clipped, so the bar's content height is 56pt.
-export const TAB_LABEL_STYLE = { fontFamily: 'Cinzel_500Medium', fontSize: 12, lineHeight: 16 } as const
-export const TAB_BAR_CONTENT_HEIGHT = 56
-
-export function tabBarStyle(bottomInset: number) {
-  const c = THEME_COLORS
-  return { backgroundColor: c.background, borderTopColor: c.rule, height: TAB_BAR_CONTENT_HEIGHT + bottomInset }
-}
+// Content height of the bottom nav above the safe-area inset: a 56pt plate with 8pt above it. The toast
+// floats above this.
+export const TAB_BAR_CONTENT_HEIGHT = 64
 
 const fonts: Theme['fonts'] = {
   regular: { fontFamily: 'Inter_400Regular', fontWeight: '400' },

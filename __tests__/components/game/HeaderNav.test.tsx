@@ -1,16 +1,18 @@
 import '@testing-library/jest-native/extend-expect'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import { BackButton, CancelButton, NavRow } from '@/components/game/HeaderNav'
+import { ShapedSurface } from '@/components/ui/shaped-surface'
 import { variantOf } from '../../helpers/button'
 
-test('BackButton is a ghost caret icon button labelled Back with a 44pt hit area', () => {
+test('BackButton is a 44pt gold-edged plate with a heraldic arrow, not a plain caret', () => {
   const onPress = jest.fn()
   render(<BackButton onPress={onPress} />)
   const back = screen.getByRole('button', { name: 'Back' })
-  expect(variantOf(back)).toBe('ghost')
-  expect(back.props.className).toContain('h-8 w-8')
-  expect(variantOf(back)).not.toBe('outline')
-  expect(back.props.hitSlop).toEqual({ top: 6, bottom: 6, left: 6, right: 6 })
+  expect(back.props.className).toContain('h-11 w-11')
+  expect(screen.getByTestId('back-glyph')).toBeTruthy()
+  const plate = screen.UNSAFE_getByType(ShapedSurface).props
+  expect(plate.stroke).toBe('primary')
+  expect(plate.glass).toBeTruthy()
   expect(screen.queryByText('Back')).toBeNull()
   fireEvent.press(back)
   expect(onPress).toHaveBeenCalledTimes(1)

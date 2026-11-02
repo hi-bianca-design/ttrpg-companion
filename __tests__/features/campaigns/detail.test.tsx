@@ -55,12 +55,11 @@ describe('back affordance', () => {
     ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
   })
 
-  test('a ghost caret Back sits at the top-left, above the title (no "Back" pill)', async () => {
+  test('an ornate arrow Back sits at the top-left, above the title (no "Back" pill)', async () => {
     renderDetail()
     await screen.findByText('Odd Game')
     const back = screen.getByRole('button', { name: 'Back' })
-    expect(variantOf(back)).toBe('ghost')
-    expect(variantOf(back)).not.toBe('outline')
+    expect(screen.getByTestId('back-glyph')).toBeTruthy()
     expect(screen.queryByText('Back')).toBeNull()
     const json = JSON.stringify(screen.toJSON())
     expect(json.indexOf('"Back"')).toBeLessThan(json.indexOf('Odd Game'))

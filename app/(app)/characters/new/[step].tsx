@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native'
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router'
-import { CaretRight, CheckCircle, CircleIcon } from 'phosphor-react-native'
-import { BackButton, CancelButton, ScreenBackground, SectionHeader } from '@/components/game'
+import { CaretRight, CheckCircle, CircleIcon, X } from 'phosphor-react-native'
+import { BackButton, ScreenBackground, SectionHeader } from '@/components/game'
+import { StickyFooter } from '@/components/ui/sticky-footer'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
@@ -99,9 +100,17 @@ export default function BuilderStepScreen() {
         <View className="flex-row items-center gap-3">
           {/* On the first step this leaves the wizard; DiscardDraftGuard asks first when the draft has choices. */}
           <BackButton onPress={() => router.back()} />
-          <WizardProgress title={current.title} index={index} total={steps.length} />
-          {/* From step 2 Back only steps back; Cancel leaves the whole wizard (DiscardDraftGuard asks once). */}
-          {index > 0 ? <CancelButton edge="trailing" onPress={() => router.dismissTo('/(app)/characters')} /> : null}
+          {/* From step 2 Back only steps back; the X leaves the whole wizard (DiscardDraftGuard asks once). */}
+          <WizardProgress
+            title={current.title}
+            index={index}
+            total={steps.length}
+            trailing={index > 0 ? (
+              <Button variant="ghost" size="icon" accessibilityLabel="Cancel" onPress={() => router.dismissTo('/(app)/characters')}>
+                <X size={20} color={THEME_COLORS.foreground} />
+              </Button>
+            ) : null}
+          />
         </View>
 
         <ScrollView
@@ -114,7 +123,7 @@ export default function BuilderStepScreen() {
           {isLast ? <Checklist steps={before} draft={draft} onJump={(id) => router.dismissTo(stepHref(id))} /> : null}
         </ScrollView>
 
-        <View className="gap-2">
+        <StickyFooter className="-mx-4 -mb-8 -mt-6 gap-2">
           {error ? <Text variant="caption" tone="destructive">{error}</Text> : null}
           {isLast ? (
             <Button
@@ -134,7 +143,7 @@ export default function BuilderStepScreen() {
               <Text>Continue</Text>
             </Button>
           )}
-        </View>
+        </StickyFooter>
       </ScreenBackground>
     </KeyboardAvoidingView>
   )

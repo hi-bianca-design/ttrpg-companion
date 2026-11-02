@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import { Text } from 'react-native'
+import { Path } from 'react-native-svg'
 import { SectionHeader } from '@/components/game/SectionHeader'
 
 test('collapsible hides children and remembers by id', () => {
@@ -26,7 +27,7 @@ test('non-collapsible always shows children', () => {
   expect(screen.getByText('child')).toBeTruthy()
 })
 
-test('collapsible header meets the 44pt touch target and shows a chevron icon', () => {
+test('collapsible header meets the 44pt touch target and ends in a diamond ornament, not a caret', () => {
   render(
     <SectionHeader id="touch" title="Touch" collapsible>
       <Text>child</Text>
@@ -34,8 +35,8 @@ test('collapsible header meets the 44pt touch target and shows a chevron icon', 
   )
   const cls = screen.getByLabelText('Touch').props.className
   expect(cls).toContain('min-h-11')
-  expect(screen.getByTestId('icon-chevron')).toBeTruthy()
-  expect(screen.queryByText('˅')).toBeNull()
+  expect(screen.getByTestId('section-ornament', { includeHiddenElements: true })).toBeTruthy()
+  expect(screen.queryByTestId('icon-chevron')).toBeNull()
 })
 
 test('the header is one row — title, a faint rule to the trailing edge — with no divider under it', () => {
@@ -49,7 +50,7 @@ test('the header is one row — title, a faint rule to the trailing edge — wit
   expect(JSON.stringify(screen.toJSON())).not.toContain('border-b')
 })
 
-test('a collapsible header keeps its chevron at the end of the row, after the rule', () => {
+test('the ornament sits at the end of the row, after the rule, and the press target holds both', () => {
   render(
     <SectionHeader id="rule2" title="Rule two" collapsible>
       <Text>child</Text>
@@ -57,7 +58,19 @@ test('a collapsible header keeps its chevron at the end of the row, after the ru
   )
   const row = JSON.stringify(screen.toJSON())
   expect(row.indexOf('section-rule')).toBeGreaterThan(-1)
-  expect(row.indexOf('section-rule')).toBeLessThan(row.indexOf('icon-chevron'))
+  expect(row.indexOf('section-rule')).toBeLessThan(row.indexOf('section-ornament'))
+})
+
+test('the ornament is hollow while a collapsible section is closed', () => {
+  render(
+    <SectionHeader id="rule4" title="Closed" collapsible>
+      <Text>child</Text>
+    </SectionHeader>,
+  )
+  const centre = () => screen.UNSAFE_getAllByType(Path)[1].props.fill
+  expect(centre()).not.toBe('none')
+  fireEvent.press(screen.getByLabelText('Closed'))
+  expect(centre()).toBe('none')
 })
 
 test('the action sits at the trailing edge of the same row', () => {

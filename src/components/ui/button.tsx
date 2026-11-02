@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 // Size and touch target live on the Pressable; the pointed plate is drawn behind the label.
 const buttonVariants = cva('', {
   variants: {
-    variant: { primary: '', secondary: '', outline: '', ghost: 'rounded-sm active:bg-muted', destructive: '' },
+    variant: { primary: '', secondary: '', outline: '', ghost: 'items-center justify-center rounded-sm active:bg-muted', destructive: '' },
     size: { default: 'min-h-11', sm: 'min-h-8', icon: 'h-8 w-8' },
   },
   defaultVariants: { variant: 'primary', size: 'default' },

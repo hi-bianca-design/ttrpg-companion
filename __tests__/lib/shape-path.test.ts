@@ -50,3 +50,14 @@ test('inset moves the whole outline inward', () => {
   expect(Math.min(...ys)).toBe(2)
   expect(Math.max(...ys)).toBe(42)
 })
+
+test('sheet cuts the top corners 8px and runs square along the bottom', () => {
+  const d = shapePath('sheet', 300, 200)
+  expect(d.startsWith('M8 0')).toBe(true)
+  expect(d).toContain('L292 0')
+  expect(d).toContain('L300 8')
+  expect(d).toContain('L300 200')
+  expect(d).toContain('L0 200')
+  expect(d).toContain('L0 8')
+  expect(shapePath('sheet', -1, -1)).toBe('')
+})

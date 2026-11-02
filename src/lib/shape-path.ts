@@ -1,4 +1,4 @@
-export type Shape = 'hex' | 'chamfer' | 'arch'
+export type Shape = 'hex' | 'chamfer' | 'arch' | 'sheet'
 
 export type PathOpts = {
   /** Horizontal depth of the pointed ends on `hex`. */
@@ -34,6 +34,11 @@ export function shapePath(shape: Shape, width: number, height: number, opts: Pat
   if (shape === 'chamfer') {
     const c = Math.min(chamfer, w / 2, h / 2)
     return pts([[c, 0], [w - c, 0], [w, c], [w, h - c], [w - c, h], [c, h], [0, h - c], [0, c]])
+  }
+  if (shape === 'sheet') {
+    // A drawer: the top corners are cut, the bottom runs square off the screen edge.
+    const c = Math.min(chamfer, w / 2, h)
+    return pts([[c, 0], [w - c, 0], [w, c], [w, h], [0, h], [0, c]])
   }
   const r = Math.min(rise, h)
   return pts([[0, r], [w / 2, 0], [w, r], [w, h], [0, h]])
