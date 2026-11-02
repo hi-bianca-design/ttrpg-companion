@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Text } from '@/components/ui/text'
 import type { BuilderStepProps } from '../../types'
-import { levelOf, str, strList } from '../draft'
+import { extraCantrips, levelOf, str, strList } from '../draft'
 import { getMaxSpellLevel, getSpellLimits } from '../rules'
 import { ChoiceCard, QueryState, StepIntro, useDndContent } from './shared'
 
@@ -21,7 +21,10 @@ export function SpellsStep({ draft, update }: BuilderStepProps) {
   const className = str(draft.class_name)
   const level = levelOf(draft)
   const maxSpellLevel = getMaxSpellLevel(className, level)
-  const { maxCantrips, maxSpells } = getSpellLimits(className, level)
+  const limits = getSpellLimits(className, level)
+  // An order that grants a cantrip (Thaumaturge, Magician) raises the cap; every display and check below uses it.
+  const maxCantrips = limits.maxCantrips + extraCantrips(draft)
+  const maxSpells = limits.maxSpells
   const selected = strList(draft.spell_ids)
 
   const available = useMemo(() => {

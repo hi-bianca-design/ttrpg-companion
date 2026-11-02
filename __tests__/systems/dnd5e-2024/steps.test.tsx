@@ -63,6 +63,10 @@ const CONTENT: Record<string, unknown[]> = {
     spell('ray-of-frost', 'Ray of Frost', 0, ['wizard']),
     spell('detect-magic', 'Detect Magic', 1, ['wizard'], { is_ritual: true, requires_concentration: true }),
     spell('cure-wounds', 'Cure Wounds', 1, ['cleric']),
+    spell('guidance', 'Guidance', 0, ['cleric']),
+    spell('sacred-flame', 'Sacred Flame', 0, ['cleric']),
+    spell('thaumaturgy', 'Thaumaturgy', 0, ['cleric']),
+    spell('spare-the-dying', 'Spare the Dying', 0, ['cleric']),
     spell('fireball', 'Fireball', 3, ['wizard']),
   ],
 }
@@ -287,6 +291,34 @@ describe('Spells step at the limit', () => {
     expect(screen.getByRole('button', { name: /^Ray of Frost/ })).toBeDisabled()
     expect(screen.getByRole('button', { name: /^Fire Bolt/ })).toBeEnabled()
     expect(screen.getByRole('button', { name: /^Detect Magic/ })).toBeEnabled()
+  })
+})
+
+describe('Spells step with a cantrip-granting order', () => {
+  const CLERIC_CANTRIPS = ['Light', 'Guidance', 'Sacred Flame', 'Thaumaturgy', 'Spare the Dying']
+  const pickAll = () => { for (const name of CLERIC_CANTRIPS) fireEvent.press(screen.getByRole('button', { name: new RegExp(`^${name}`) })) }
+
+  test('without an order a level-1 Cleric is capped at 3 cantrips', async () => {
+    act(() => useBuilderStore.getState().update({ class_id: 'clr', class_name: 'Cleric', level: 1 }))
+    renderWithQuery(<Bound Step={SpellsStep} />)
+    await screen.findByText('Guidance')
+    expect(screen.getByText('Cantrips 0/3')).toBeTruthy()
+    pickAll()
+    expect(useBuilderStore.getState().draft.spell_ids).toHaveLength(3)
+    expect(screen.getByText('Cantrips 3/3')).toBeTruthy()
+  })
+
+  test('Thaumaturge raises the cap by one, shown and enforced', async () => {
+    act(() => useBuilderStore.getState().update({ class_id: 'clr', class_name: 'Cleric', level: 1 }))
+    act(() => useBuilderStore.getState().update({ class_choices: { order: ['Thaumaturge'] } }))
+    renderWithQuery(<Bound Step={SpellsStep} />)
+    await screen.findByText('Guidance')
+    expect(screen.getByText('Cantrips 0/4')).toBeTruthy()
+    pickAll()
+    expect(useBuilderStore.getState().draft.spell_ids).toEqual(['light', 'guidance', 'sacred-flame', 'thaumaturgy'])
+    expect(screen.getByText('Cantrips 4/4')).toBeTruthy()
+    expect(screen.getByRole('button', { name: /^Spare the Dying/ })).toBeDisabled()
+    expect(screen.getByText('Cantrip limit reached. Deselect one to swap.')).toBeTruthy()
   })
 })
 
