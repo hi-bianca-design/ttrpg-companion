@@ -55,4 +55,14 @@ describe('limited-use class features', () => {
     const c = character({ rage: { tiers: { '1': { max: 2, used: 2 } } } })
     expect(rest(c, 'short', [barb]).rage).toEqual({ tiers: { '1': { max: 2, used: 1 } } })
   })
+
+  test('Bardic Inspiration: Charisma modifier (minimum 1) uses; short rests only help from level 5', () => {
+    const uses = (cha: number) => featureResources('Bard', 1, { ...stats, charisma: cha }).bardic_inspiration.tiers['1'].max
+    expect([8, 10, 16, 20].map(uses)).toEqual([1, 1, 3, 5])
+    const bard = { ...fighter, content: { name: 'Bard', data: { hit_die: 8 } } } as PickRecord
+    const spent = { bardic_inspiration: { tiers: { '1': { max: 3, used: 3 } } } }
+    expect(rest(character(spent, 4), 'short', [bard]).bardic_inspiration).toEqual({ tiers: { '1': { max: 3, used: 3 } } })
+    expect(rest(character(spent, 5), 'short', [bard]).bardic_inspiration).toEqual({ tiers: { '1': { max: 3, used: 0 } } })
+    expect(rest(character(spent, 4), 'long', [bard]).bardic_inspiration).toEqual({ tiers: { '1': { max: 3, used: 0 } } })
+  })
 })

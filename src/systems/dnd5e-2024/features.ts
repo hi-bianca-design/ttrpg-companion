@@ -26,6 +26,10 @@ export const CLASS_FEATURES: FeatureUse[] = [
     key: 'rage', label: 'Rage', className: 'Barbarian',
     uses: byLevel([[1, 2], [3, 3], [6, 4], [12, 5], [17, 6]]), short: () => 'one',
   },
+  {
+    key: 'bardic_inspiration', label: 'Bardic Inspiration', className: 'Bard',
+    uses: (level, stats) => Math.max(1, modOf(stats, 'charisma')), short: (level) => (level >= 5 ? 'all' : 'none'),
+  },
 ]
 
 export const FEATURE_KEYS = CLASS_FEATURES.map((f) => f.key)
