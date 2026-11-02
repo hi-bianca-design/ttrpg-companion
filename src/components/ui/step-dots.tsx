@@ -24,7 +24,8 @@ function Dot({ i, index }: { i: number; index: number }) {
 
   // Done and current steps are gold; upcoming ones are a faint rule colour.
   const backgroundColor = lit.interpolate({ inputRange: [0, 1], outputRange: [THEME_COLORS.rule, THEME_COLORS.primary] })
-  return <Animated.View testID={i === index ? 'progress-pill' : 'progress-dot'} className="h-2 rounded-full" style={{ width, backgroundColor }} />
+  // Plain style, not className: Animated.View does not run NativeWind, so h-2/rounded-full gave it no height.
+  return <Animated.View testID={i === index ? 'progress-pill' : 'progress-dot'} style={{ width, height: DOT, borderRadius: DOT / 2, backgroundColor }} />
 }
 
 

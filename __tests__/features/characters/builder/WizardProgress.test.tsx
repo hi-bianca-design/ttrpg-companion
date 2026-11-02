@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react-native'
 import { StyleSheet } from 'react-native'
 import { WizardProgress } from '@/features/characters/builder/WizardProgress'
 
+const heightOf = (node: { props: { style?: unknown } }) => (StyleSheet.flatten(node.props.style as never) as { height: number }).height
 const widthOf = (node: { props: { style?: unknown } }) => (StyleSheet.flatten(node.props.style as never) as { width: number }).width
 
 test('the current step is one long pill and every other step is a dot', () => {
@@ -9,6 +10,14 @@ test('the current step is one long pill and every other step is a dot', () => {
   expect(screen.getAllByTestId('progress-pill')).toHaveLength(1)
   expect(screen.getAllByTestId('progress-dot')).toHaveLength(5)
   expect(widthOf(screen.getByTestId('progress-pill'))).toBeGreaterThan(widthOf(screen.getAllByTestId('progress-dot')[0]))
+})
+
+test('every dot and the pill have a visible height and are round', () => {
+  render(<WizardProgress title="Class" index={0} total={4} />)
+  for (const node of [...screen.getAllByTestId('progress-dot'), screen.getByTestId('progress-pill')]) {
+    expect(heightOf(node)).toBe(8)
+    expect((StyleSheet.flatten(node.props.style as never) as { borderRadius: number }).borderRadius).toBe(4)
+  }
 })
 
 test('moving to the next step starts the pill on the previous step, so it can slide', () => {
