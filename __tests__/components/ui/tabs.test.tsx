@@ -40,3 +40,19 @@ test('triggers still switch tabs', () => {
   fireEvent.press(screen.getByText('B'))
   expect(onValueChange).toHaveBeenCalledWith('b')
 })
+
+test('every trigger keeps a plate so switching tabs only restyles it; the inactive plate is invisible', () => {
+  const { rerender } = renderTabs()
+  const triggerPlates = () => screen.UNSAFE_getAllByType(ShapedSurface).map((n) => n.props).filter((p) => p.shape === 'hex')
+  expect(triggerPlates()).toHaveLength(2)
+  expect(triggerPlates().map((p) => [p.fill, p.stroke])).toEqual([['primary', 'ink'], ['transparent', 'transparent']])
+  rerender(
+    <Tabs value="b" onValueChange={() => {}}>
+      <TabsList>
+        <TabsTrigger value="a" accessibilityLabel="A"><Text>A</Text></TabsTrigger>
+        <TabsTrigger value="b" accessibilityLabel="B"><Text>B</Text></TabsTrigger>
+      </TabsList>
+    </Tabs>,
+  )
+  expect(triggerPlates().map((p) => [p.fill, p.stroke])).toEqual([['transparent', 'transparent'], ['primary', 'ink']])
+})

@@ -6,6 +6,10 @@ import { THEME_COLORS } from '@/lib/theme'
 import { cn } from '@/lib/utils'
 
 export type ThemeColorKey = keyof typeof THEME_COLORS
+/** A plate can also be invisible (inactive tabs) without unmounting its content. */
+export type PlateColor = ThemeColorKey | 'transparent'
+
+const plateColor = (c: PlateColor) => (c === 'transparent' ? 'transparent' : THEME_COLORS[c])
 
 /** Surfaces up to this tall get pointed `hex` ends; taller ones fall back to `chamfer` (spec §4.3). */
 export const HEX_MAX_HEIGHT = 56
@@ -26,8 +30,8 @@ const ROOT_STYLE = { zIndex: 0 } as const
 
 type ShapedSurfaceProps = {
   shape?: Shape | 'auto'
-  fill: ThemeColorKey
-  stroke: ThemeColorKey
+  fill: PlateColor
+  stroke: PlateColor
   strokeWidth?: number
   /** Depth of the pointed ends on `hex` (default 14); small surfaces like badges use less. */
   point?: number
@@ -102,7 +106,7 @@ export function ShapedSurface({
               ))}
             </G>
           ) : null}
-          <Path d={d} fill={THEME_COLORS[fill]} stroke={THEME_COLORS[stroke]} strokeWidth={strokeWidth} strokeLinejoin="miter" />
+          <Path d={d} fill={plateColor(fill)} stroke={plateColor(stroke)} strokeWidth={strokeWidth} strokeLinejoin="miter" />
           {light ? <Path d={d} fill={`url(#${gradientId})`} /> : null}
         </G>
       </Svg>

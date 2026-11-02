@@ -1,5 +1,4 @@
 import * as TabsPrimitive from '@rn-primitives/tabs'
-import { View } from 'react-native'
 import { ShapedSurface } from '@/components/ui/shaped-surface'
 import { TextClassContext } from '@/components/ui/text'
 import { cn } from '@/lib/utils'
@@ -33,13 +32,15 @@ function TabsTrigger({
       value={cn('font-display-medium text-body-sm uppercase tracking-widest', active ? 'text-primary-foreground' : 'text-muted-foreground')}
     >
       <TabsPrimitive.Trigger className={cn('h-full flex-1', props.disabled && 'opacity-50', className)} {...props}>
-        {active ? (
-          <ShapedSurface shape="hex" fill="primary" stroke="ink" shadowOffset={0} className={inner}>
-            {children as React.ReactNode}
-          </ShapedSurface>
-        ) : (
-          <View className={inner}>{children as React.ReactNode}</View>
-        )}
+        <ShapedSurface
+          shape="hex"
+          fill={active ? 'primary' : 'transparent'}
+          stroke={active ? 'ink' : 'transparent'}
+          shadowOffset={0}
+          className={inner}
+        >
+          {children as React.ReactNode}
+        </ShapedSurface>
       </TabsPrimitive.Trigger>
     </TextClassContext.Provider>
   )
