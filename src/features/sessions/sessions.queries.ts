@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '@/lib/query-client'
-import { endSession, getActiveSession, openSession } from './sessions.api'
+import { endSession, getActiveSession, openSession, setCombat } from './sessions.api'
 
 /** Interim: other members see changes by polling until Realtime lands (PRD step 4). */
 export const SESSION_POLL_MS = 10_000
@@ -28,6 +28,16 @@ export function useEndSession(campaignId: string) {
     mutationFn: (sessionId: string) => endSession(sessionId),
     onSuccess: () => qc.setQueryData(qk.session(campaignId), null),
     // e.g. someone else already ended it: refetch so the screen shows the true state.
+    onError: () => qc.invalidateQueries({ queryKey: qk.session(campaignId) }),
+  })
+}
+
+export function useSetCombat(campaignId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ sessionId, inCombat }: { sessionId: string; inCombat: boolean }) => setCombat(sessionId, inCombat),
+    onSuccess: (session) => qc.setQueryData(qk.session(campaignId), session),
+    // e.g. the session ended meanwhile: refetch so the badge shows the true state.
     onError: () => qc.invalidateQueries({ queryKey: qk.session(campaignId) }),
   })
 }
