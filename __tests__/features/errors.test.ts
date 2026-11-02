@@ -2,7 +2,7 @@ import { AppError, ERROR_COPY, toAppError } from '@/features/errors'
 import { qk } from '@/lib/query-client'
 
 describe('toAppError', () => {
-  it.each(['invalid_code', 'already_member', 'system_mismatch', 'not_your_character'] as const)(
+  it.each(['invalid_code', 'already_member', 'system_mismatch', 'not_your_character', 'not_member', 'no_active_session', 'not_allowed', 'not_in_combat', 'invalid_turn_target', 'not_your_turn'] as const)(
     'maps a P0001 %s error to its code',
     (message) => {
       const err = toAppError({ code: 'P0001', message })
@@ -41,6 +41,12 @@ describe('toAppError', () => {
       load_failed: 'Couldn’t load this. Check your connection and try again.',
       save_failed: 'Couldn’t save. Try again.',
       unknown: 'Something went wrong. Please try again.',
+      not_member: "You're not part of this campaign yet.",
+      no_active_session: 'This session has already ended.',
+      not_allowed: "You can't do that in this session.",
+      not_in_combat: "Combat hasn't started yet.",
+      invalid_turn_target: "That player can't take a turn right now.",
+      not_your_turn: "It isn't your turn.",
     })
   })
 })
