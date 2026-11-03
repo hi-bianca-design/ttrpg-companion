@@ -24,7 +24,7 @@ Likelihood and impact are the author's rough judgement: **to be revisited**, not
 | R14 | **Conversion is near 2%**, so revenue stays too small to matter | High | Medium | Keep fixed costs tiny; plan at 2%; test DM-pays early | Bianca |
 | R15 | **Shared homebrew** brings moderation duties and store rejection (guideline 1.2) | Medium | Medium | Keep homebrew private at launch (D16); build report, block and filter before sharing | Bianca |
 | R16 | **A bigger rival ships live mobile sync** after its 2026 platform rebuild | Medium | High | Be first and best at the free phone-first table experience; own the "never gated" promise | Bianca |
-| R17 | **"Session Zero" fails a trademark search** or is already in use for tabletop software | Low to medium | Medium | Search the trademark register and domains before launch (D13); keep the shortlist (Long Rest, Hearthroll) | Bianca |
+| R17 | **"Session Zero" fails a trademark search** or is already in use for tabletop software | Low to medium | Medium | First pass found a pending or registered "THE SESSION ZERO SYSTEM" (class 28, a card deck) and a free web GM toolkit called Session Zero Labs; see [Content licensing](../legal/content-licensing.md). Run the official USPTO search and check domains before launch (D13); keep the shortlist (Long Rest, Hearthroll) | Bianca |
 
 ## Open questions
 
