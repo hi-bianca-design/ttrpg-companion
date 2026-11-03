@@ -1,7 +1,7 @@
 import { useId, useState, type ReactNode } from 'react'
 import { Image, PixelRatio, ScrollView, View, type ImageSourcePropType, type LayoutChangeEvent } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg'
+import Svg, { Defs, LinearGradient, RadialGradient, Rect, Stop } from 'react-native-svg'
 import { useNavInset } from '@/components/ui/nav-inset'
 import { SKY_BANDS, THEME_COLORS } from '@/lib/theme'
 import { cn } from '@/lib/utils'
@@ -12,6 +12,8 @@ type ScreenBackgroundProps = { children: ReactNode; scroll?: boolean }
 // gradient): five of 4.2% and a last of 9%.
 const BAND_STEPS = [0, 4.2, 8.4, 12.6, 16.8, 21]
 const BAND_ENDS = [4.2, 8.4, 12.6, 16.8, 21, 30]
+// Below the last band the sky eases into the night over this share of the screen height, so there is no hard step.
+const SKY_FADE_END = 46
 const VIGNETTE_EDGE_OPACITY = 0.82
 const GRAIN_OPACITY = 0.14
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -38,6 +40,7 @@ export function ScreenBackground({ children, scroll = false }: ScreenBackgroundP
     setSize((prev) => (prev && prev.width === width && prev.height === height ? prev : { width, height }))
   }
   const vignetteId = `screen-vignette-${useId().replace(/[^A-Za-z0-9_-]/g, '')}`
+  const skyFadeId = `${vignetteId}-sky-fade`
   // Fixed screens fill the height so a child can flex (e.g. a scroll area between header and footer).
   // Under the floating bar the content gets extra bottom space so the last item clears it.
   const navInset = useNavInset()
@@ -61,6 +64,10 @@ export function ScreenBackground({ children, scroll = false }: ScreenBackgroundP
                 <Stop offset="0.5" stopColor={THEME_COLORS.ink} stopOpacity={0} />
                 <Stop offset="1" stopColor={THEME_COLORS.ink} stopOpacity={VIGNETTE_EDGE_OPACITY} />
               </RadialGradient>
+              <LinearGradient id={skyFadeId} x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor={SKY_BANDS[SKY_BANDS.length - 1]} stopOpacity={1} />
+                <Stop offset="1" stopColor={THEME_COLORS.background} stopOpacity={1} />
+              </LinearGradient>
             </Defs>
             {SKY_BANDS.map((fill, i) => (
               <Rect
@@ -72,6 +79,13 @@ export function ScreenBackground({ children, scroll = false }: ScreenBackgroundP
                 fill={fill}
               />
             ))}
+            <Rect
+              x={0}
+              y={(BAND_ENDS[BAND_ENDS.length - 1] / 100) * size.height}
+              width={size.width}
+              height={((SKY_FADE_END - BAND_ENDS[BAND_ENDS.length - 1]) / 100) * size.height}
+              fill={`url(#${skyFadeId})`}
+            />
             <Rect x={0} y={0} width={size.width} height={size.height} fill={`url(#${vignetteId})`} />
           </Svg>
         ) : null}
