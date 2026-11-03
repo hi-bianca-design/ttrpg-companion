@@ -1,0 +1,126 @@
+import { supabase } from '@/lib/supabase'
+import type { Database } from '@/types/database.types'
+import { unwrap } from '@/features/errors'
+
+export type Combat = Database['public']['Tables']['combats']['Row']
+/** What a player may see of the order: names and positions only, never hit points or hidden rows. */
+export type OrderRow = Database['public']['Tables']['combat_order']['Row']
+/** The GM's truth (enemy hit points, armor class, notes, hidden). Readable by the GM only. */
+export type CombatEntry = Database['public']['Tables']['combat_entries']['Row']
+
+export type NewEnemy = {
+  name: string
+  count: number
+  maxHp: number
+  initiative: number | null
+  ac: number | null
+  notes: string | null
+  hidden: boolean
+}
+
+export type EnemyPatch = Partial<{
+  name: string
+  max_hp: number
+  hp: number
+  ac: number | null
+  notes: string | null
+  hidden: boolean
+}>
+
+export type HpMode = 'damage' | 'heal' | 'temp'
+
+/** The campaign's combat that has not ended (rolling or active), or null. */
+export async function getActiveCombat(campaignId: string): Promise<Combat | null> {
+  const res = await supabase
+    .from('combats')
+    .select('*')
+    .eq('campaign_id', campaignId)
+    .neq('status', 'ended')
+    .maybeSingle()
+  return unwrap(res) ?? null
+}
+
+/** The player-safe order, by position. Empty while the combat is rolling. */
+export async function getCombatOrder(combatId: string): Promise<OrderRow[]> {
+  const res = await supabase.from('combat_order').select('*').eq('combat_id', combatId).order('position')
+  return unwrap(res)
+}
+
+/** Every entry including enemies and hidden ones, by position. The GM only (row-level security). */
+export async function getCombatEntries(combatId: string): Promise<CombatEntry[]> {
+  const res = await supabase.from('combat_entries').select('*').eq('combat_id', combatId).order('position')
+  return unwrap(res)
+}
+
+/** GM only: locks the roll call in. */
+export async function startCombat(combatId: string): Promise<Combat> {
+  return unwrap(await supabase.rpc('start_combat', { p_combat_id: combatId }))
+}
+
+/** GM only. `null` clears the number. */
+export async function setInitiative(entryId: string, initiative: number | null): Promise<Combat> {
+  // Generated Args can't express a nullable parameter; the function accepts null to clear.
+  return unwrap(await supabase.rpc('set_initiative', { p_entry_id: entryId, p_initiative: initiative as number }))
+}
+
+/** GM only: moves a row to a 1-based position. */
+export async function moveEntry(entryId: string, toPosition: number): Promise<Combat> {
+  return unwrap(await supabase.rpc('move_entry', { p_entry_id: entryId, p_to_position: toPosition }))
+}
+
+/** GM only. A stale tap (expected entry is no longer current) is a server no-op; refetch. */
+export async function nextTurn(combatId: string, expectedEntryId: string): Promise<Combat> {
+  return unwrap(await supabase.rpc('next_turn', { p_combat_id: combatId, p_expected_entry_id: expectedEntryId }))
+}
+
+/** The turn holder passes the turn to the next row. */
+export async function endMyTurn(combatId: string): Promise<Combat> {
+  return unwrap(await supabase.rpc('end_my_turn', { p_combat_id: combatId }))
+}
+
+/** GM only: makes any row current (skip, go back). */
+export async function setCurrentEntry(entryId: string): Promise<Combat> {
+  return unwrap(await supabase.rpc('set_current_entry', { p_entry_id: entryId }))
+}
+
+/** GM only: the current row swaps with the next one. A stale tap is a server no-op. */
+export async function delayTurn(combatId: string, expectedEntryId: string): Promise<Combat> {
+  return unwrap(await supabase.rpc('delay_turn', { p_combat_id: combatId, p_expected_entry_id: expectedEntryId }))
+}
+
+/** GM only. Returns the new entry ids (`Goblin 1..N` for a ×N group). */
+export async function addEnemies(combatId: string, input: NewEnemy): Promise<string[]> {
+  return unwrap(
+    await supabase.rpc('add_enemies', {
+      p_combat_id: combatId,
+      p_name: input.name,
+      p_count: input.count,
+      p_max_hp: input.maxHp,
+      // Generated Args can't express nullable parameters; the function accepts null for these.
+      p_initiative: input.initiative as number,
+      p_ac: input.ac as number,
+      p_notes: input.notes as string,
+      p_hidden: input.hidden,
+    }),
+  )
+}
+
+/** GM only. Only the keys of EnemyPatch are accepted; the server clamps hit points. */
+export async function updateEnemy(entryId: string, patch: EnemyPatch): Promise<Combat> {
+  return unwrap(await supabase.rpc('update_enemy', { p_entry_id: entryId, p_patch: patch }))
+}
+
+/** GM only, enemies only. Removing the current row passes the turn on first. */
+export async function removeEntry(entryId: string): Promise<Combat> {
+  return unwrap(await supabase.rpc('remove_entry', { p_entry_id: entryId }))
+}
+
+/** GM only: one amount applied to each listed enemy. Returns the batch id for undo. */
+export async function applyEnemyHp(combatId: string, entryIds: string[], mode: HpMode, amount: number): Promise<string> {
+  return unwrap(await supabase.rpc('apply_enemy_hp', { p_combat_id: combatId, p_entry_ids: entryIds, p_mode: mode, p_amount: amount }))
+}
+
+/** GM only. Returns how many rows were restored (0 when everything changed again since). */
+export async function undoEnemyHp(combatId: string, batch: string): Promise<number> {
+  return unwrap(await supabase.rpc('undo_enemy_hp', { p_combat_id: combatId, p_batch: batch }))
+}
