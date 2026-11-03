@@ -125,3 +125,30 @@ test('an emptied number is omitted', () => {
   fireEvent.press(save())
   expect(onSubmit.mock.calls[0][0].extras).toEqual({})
 })
+
+describe('option labels', () => {
+  const KEYED: FieldDef[] = [
+    { key: 'skills', label: 'Skills', type: 'multiselect', options: ['sleight-of-hand', 'animal_handling', 'Arcana'] },
+    { key: 'ability', label: 'Ability', type: 'select', options: ['strength', 'd8'] },
+  ]
+
+  test('by default kebab and snake keys read as title-cased words', () => {
+    setup({ fields: KEYED })
+    expect(screen.getByLabelText('Sleight of Hand')).toBeTruthy()
+    expect(screen.getByLabelText('Animal Handling')).toBeTruthy()
+    expect(screen.getByLabelText('Strength')).toBeTruthy()
+    expect(screen.getByLabelText('Arcana')).toBeTruthy()
+    expect(screen.getByLabelText('d8')).toBeTruthy()
+  })
+
+  test('a supplied formatter is used for the labels, and the key still goes into the extras', () => {
+    const optionLabel = jest.fn((fieldKey: string, option: string) => `${fieldKey}:${option}`)
+    const { onSubmit } = setup({ fields: KEYED, optionLabel })
+    expect(screen.getByLabelText('skills:sleight-of-hand')).toBeTruthy()
+    name('Ash')
+    fireEvent.press(screen.getByLabelText('skills:sleight-of-hand'))
+    fireEvent.press(screen.getByLabelText('ability:strength'))
+    fireEvent.press(save())
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ extras: { skills: ['sleight-of-hand'], ability: 'strength' } }))
+  })
+})

@@ -22,6 +22,8 @@ type CustomEntryFormProps = {
   fields: FieldDef[]
   initial?: CustomEntryValue
   officialNames: string[]
+  /** Display text for a select/multiselect option key. Defaults to `defaultOptionLabel`. */
+  optionLabel?: (fieldKey: string, option: string) => string
   onSubmit(entry: CustomEntryValue): void
   onCancel(): void
 }
@@ -33,6 +35,16 @@ const MAX_NAME = 80
 const collides = (name: string, officialNames: string[]) => {
   const n = name.trim().toLowerCase()
   return n !== '' && officialNames.some((o) => o.trim().toLowerCase() === n)
+}
+
+const SMALL_WORDS = new Set(['of', 'and', 'the', 'in', 'to', 'or'])
+
+/** "sleight-of-hand" → "Sleight of Hand", "strength" → "Strength". Words that aren't plain lower-case letters ("d8", "Arcana") pass through. */
+export function defaultOptionLabel(_fieldKey: string, option: string): string {
+  return option
+    .split(/[-_]/)
+    .map((w, i) => (/^[a-z]+$/.test(w) && (i === 0 || !SMALL_WORDS.has(w)) ? w.charAt(0).toUpperCase() + w.slice(1) : w))
+    .join(' ')
 }
 
 const asStrings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [])
@@ -68,7 +80,7 @@ function toExtras(fields: FieldDef[], state: Record<string, unknown>): Record<st
   return out
 }
 
-export function CustomEntryForm({ kindLabel, fields, initial, officialNames, onSubmit, onCancel }: CustomEntryFormProps) {
+export function CustomEntryForm({ kindLabel, fields, initial, officialNames, optionLabel = defaultOptionLabel, onSubmit, onCancel }: CustomEntryFormProps) {
   const kind = kindLabel.toLowerCase()
   const [name, setName] = useState(initial?.name ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
@@ -95,7 +107,7 @@ export function CustomEntryForm({ kindLabel, fields, initial, officialNames, onS
           {(f.options ?? []).map((opt) => (
             <ToggleChip
               key={opt}
-              label={opt}
+              label={optionLabel(f.key, opt)}
               selected={picked.includes(opt)}
               onPress={() => {
                 if (f.type === 'multiselect') set(f.key, picked.includes(opt) ? picked.filter((p) => p !== opt) : [...picked, opt])

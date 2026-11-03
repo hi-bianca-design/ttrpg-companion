@@ -10,11 +10,12 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
 import { ToggleChip } from '@/components/ui/toggle-chip'
-import { CustomEntryForm } from '@/features/characters/builder/CustomEntryForm'
+import { CustomEntryForm, defaultOptionLabel } from '@/features/characters/builder/CustomEntryForm'
 import { useContentList, useCurrentUserId } from '@/features/content/content.queries'
 import { THEME_COLORS } from '@/lib/theme'
 import { cn } from '@/lib/utils'
 import { customExtraFields, type CustomEntry, type CustomKind } from '../customEntries'
+import { ABILITY_KEYS, ABILITY_LABELS, SKILLS, type AbilityKey } from '../definition'
 import { dnd5eContentSchemas } from '../schemas'
 
 export function useThemeColors() {
@@ -130,6 +131,13 @@ export function Chip(props: ChipProps) {
   return <ToggleChip {...props} />
 }
 
+/** Option text for the custom entry form: hit dice as d6 to d12, abilities and skills by their proper names. */
+export function dndOptionLabel(fieldKey: string, option: string): string {
+  if (fieldKey === 'hit_die' && /^\d+$/.test(option)) return `d${option}`
+  if ((ABILITY_KEYS as readonly string[]).includes(option)) return ABILITY_LABELS[option as AbilityKey]
+  return SKILLS.find((k) => k.key === option)?.label ?? defaultOptionLabel(fieldKey, option)
+}
+
 type CustomChoiceProps = {
   kind: CustomKind
   kindLabel: string
@@ -175,6 +183,7 @@ export function CustomChoice({ kind, kindLabel, entry, officialNames, onSave, on
           fields={customExtraFields(kind)}
           initial={entry ?? undefined}
           officialNames={officialNames}
+          optionLabel={dndOptionLabel}
           onSubmit={(e) => {
             setOpen(false)
             // An unchanged save is a no-op: a new class_custom object would count as a class change and wipe picks.

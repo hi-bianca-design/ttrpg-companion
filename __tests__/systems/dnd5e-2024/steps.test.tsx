@@ -614,6 +614,16 @@ describe('Make your own', () => {
       expect(screen.getByRole('button', { name: 'Make your own class' })).toHaveTextContent(/Make your own/)
     })
 
+    test('the class form labels hit dice as d6 to d12 and abilities and skills by their proper names', async () => {
+      renderWithQuery(<Bound Step={ClassStep} />)
+      fireEvent.press(await screen.findByRole('button', { name: 'Make your own class' }))
+      for (const label of ['d6', 'd8', 'd10', 'd12', 'Strength', 'Animal Handling', 'Sleight of Hand']) {
+        expect(screen.getAllByLabelText(label).length).toBeGreaterThan(0)
+      }
+      expect(screen.queryByLabelText('8')).toBeNull()
+      expect(screen.queryByLabelText('sleight-of-hand')).toBeNull()
+    })
+
     test('saving a name-only class calls update once with the entry and the class cache', async () => {
       const update = spied(ClassStep)
       fireEvent.press(await screen.findByRole('button', { name: 'Make your own class' }))
@@ -636,7 +646,7 @@ describe('Make your own', () => {
       fireEvent.press(await screen.findByRole('button', { name: 'Make your own class' }))
       fireEvent.changeText(screen.getByLabelText('Class name'), 'Ashen Knight')
       fireEvent.changeText(screen.getByLabelText('Skills to choose'), '2')
-      for (const k of ['athletics', 'history', 'stealth']) fireEvent.press(screen.getByRole('button', { name: k }))
+      for (const k of ['Athletics', 'History', 'Stealth']) fireEvent.press(screen.getByRole('button', { name: k }))
       fireEvent.press(screen.getByRole('button', { name: 'Add to my homebrew library' }))
       fireEvent.press(screen.getByLabelText('Save class'))
       expect(update).toHaveBeenCalledTimes(1)
@@ -650,7 +660,7 @@ describe('Make your own', () => {
       fireEvent.press(await screen.findByRole('button', { name: 'Make your own class' }))
       fireEvent.changeText(screen.getByLabelText('Class name'), 'Ashen Knight')
       fireEvent.changeText(screen.getByLabelText('Skills to choose'), '1')
-      fireEvent.press(screen.getByRole('button', { name: 'athletics' }))
+      fireEvent.press(screen.getByRole('button', { name: 'Athletics' }))
       fireEvent.press(screen.getByLabelText('Save class'))
 
       fireEvent.press(screen.getByRole('button', { name: 'Edit custom class' }))
@@ -694,7 +704,7 @@ describe('Make your own', () => {
       fireEvent.press(await screen.findByRole('button', { name: 'Make your own class' }))
       fireEvent.changeText(screen.getByLabelText('Class name'), 'Ashen Knight')
       fireEvent.changeText(screen.getByLabelText('Skills to choose'), '1')
-      fireEvent.press(screen.getByRole('button', { name: 'athletics' }))
+      fireEvent.press(screen.getByRole('button', { name: 'Athletics' }))
       fireEvent.press(screen.getByLabelText('Save class'))
       expect(update).toHaveBeenCalledTimes(1)
       act(() => useBuilderStore.getState().update({ class_skills: ['athletics'] }))
@@ -818,7 +828,7 @@ describe('Make your own', () => {
       const update = spied(OriginStep)
       fireEvent.press(await screen.findByRole('button', { name: 'Make your own background' }))
       fireEvent.changeText(screen.getByLabelText('Background name'), 'Lighthouse Keeper')
-      for (const k of ['perception', 'survival']) fireEvent.press(screen.getByRole('button', { name: k }))
+      for (const k of ['Perception', 'Survival']) fireEvent.press(screen.getByRole('button', { name: k }))
       fireEvent.press(screen.getByLabelText('Save background'))
       expect(update).toHaveBeenCalledTimes(1)
       expect(update.mock.calls[0][0]).toMatchObject({
