@@ -5,7 +5,7 @@ const JOIN_PATH = '/campaigns/join'
 
 export function inviteOrigin(): string | null {
   if (Platform.OS === 'web') {
-    return typeof window !== 'undefined' ? window.location.origin : null
+    return (typeof window !== 'undefined' && window.location?.origin) || null
   }
   const url = process.env.EXPO_PUBLIC_WEB_URL?.trim().replace(/\/+$/, '')
   return url || null
