@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { View } from 'react-native'
-import { useLocalSearchParams, useRouter } from 'expo-router'
-import { BackButton, NavRow, ScreenBackground, SectionHeader } from '@/components/game'
+import { useLocalSearchParams } from 'expo-router'
+import { NavRow, ScreenBackground, SectionHeader } from '@/components/game'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { QrCode } from 'phosphor-react-native'
@@ -14,35 +14,19 @@ import { CampaignSessionStatus } from '@/features/sessions/CampaignSessionStatus
 import { SessionControls } from '@/features/sessions/SessionControls'
 import { TurnControls } from '@/features/sessions/TurnControls'
 import { useCampaign } from '@/features/campaigns/campaigns.queries'
-import { useReturnToSheet } from '@/features/campaigns/useReturnToSheet'
 import { THEME_COLORS } from '@/lib/theme'
 import { systemName } from '@/systems/registry'
 import { ERROR_COPY } from '@/features/errors'
 
 export default function CampaignDetailScreen() {
-  const { id, fromCharacter } = useLocalSearchParams<{ id: string; fromCharacter?: string }>()
-  const router = useRouter()
+  const { id } = useLocalSearchParams<{ id: string }>()
   const { user } = useAuth()
   const { data, isLoading, isError, refetch } = useCampaign(id)
-  const returnToSheet = useReturnToSheet()
   const [inviteOpen, setInviteOpen] = useState(false)
-  // Opened from a character sheet's Campaign tab, Back returns to that tab (see useReturnToSheet).
-  // Opened directly there is nothing to go back to.
-  const back = () => {
-    if (fromCharacter) returnToSheet(fromCharacter)
-    else if (router.canGoBack()) router.back()
-    else router.replace('/(app)/campaigns')
-  }
-  const nav = (
-    <NavRow>
-      <BackButton onPress={back} />
-    </NavRow>
-  )
 
   if (isLoading) {
     return (
       <ScreenBackground>
-        {nav}
         <View className="gap-2" accessibilityLabel="Loading campaign">
           {[0, 1].map((i) => (
             <Card key={i} className="gap-3">
@@ -58,7 +42,6 @@ export default function CampaignDetailScreen() {
   if (isError || !data) {
     return (
       <ScreenBackground>
-        {nav}
         <View className="items-start gap-2">
           <Text variant="caption" tone="destructive">{ERROR_COPY.load_failed}</Text>
           <Button variant="outline" size="sm" onPress={() => refetch()}>
@@ -74,15 +57,15 @@ export default function CampaignDetailScreen() {
     <ScreenBackground scroll>
       <View className="gap-4">
         <View className="gap-3">
-          <NavRow>
-            <BackButton onPress={back} />
-            {isGm ? (
+          {isGm ? (
+            <NavRow>
+              <View />
               <Button variant="outline" size="sm" accessibilityLabel="Invite players" onPress={() => setInviteOpen(true)}>
                 <QrCode size={16} color={THEME_COLORS.accentForeground} />
                 <Text>Invite</Text>
               </Button>
-            ) : null}
-          </NavRow>
+            </NavRow>
+          ) : null}
           <View className="gap-2">
             <Text variant="title" numberOfLines={2}>{data.name}</Text>
             <View className="flex-row flex-wrap items-center gap-2">

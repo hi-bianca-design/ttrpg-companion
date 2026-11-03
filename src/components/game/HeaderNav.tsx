@@ -7,8 +7,9 @@ import { Text } from '@/components/ui/text'
 import { THEME_COLORS } from '@/lib/theme'
 
 /**
- * Leave affordances on a 44pt nav row, one per kind of screen:
- * - pushed screens (sheet, campaign detail, level up, wizard steps): BackButton, a faint-edged glass
+ * Leave affordances on a 44pt nav row, one per kind of screen (the sheet and campaign detail have none: the
+ * floating bar's Home leaves them):
+ * - pushed screens without a bottom bar (level up, shop, wizard steps): BackButton, a faint-edged glass
  *   plate with a heraldic arrow (gold is kept for primary actions), at the leading edge;
  * - modal-like flows (join, new campaign, homebrew forms): CancelButton, ghost "Cancel" text at the
  *   leading edge;

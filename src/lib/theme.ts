@@ -57,9 +57,9 @@ export const THEME_COLORS = {
 /** Posterized sky bands, top to bottom (screen background). */
 export const SKY_BANDS: string[] = (['sky1', 'sky2', 'sky3', 'sky4', 'sky5', 'sky6'] as const).map((k) => THEME_COLORS[k])
 
-// Content height of the bottom nav above the safe-area inset: a 56pt plate with 8pt above it. The toast
-// floats above this.
-export const TAB_BAR_CONTENT_HEIGHT = 64
+// Content height of the bottom nav above the safe-area inset: the floating bar plus the gap under it
+// (NAV_BAR_HEIGHT + NAV_BAR_GAP in nav-inset.tsx). The toast floats above this.
+export const TAB_BAR_CONTENT_HEIGHT = 78
 
 const fonts: Theme['fonts'] = {
   regular: { fontFamily: 'Inter_400Regular', fontWeight: '400' },
