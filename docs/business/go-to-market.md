@@ -61,4 +61,4 @@ Don't pay for ads until the loop and the conversion rate are known.
 - **Who first.** In-person players aged roughly 18 to 34, and in-person DMs, who bring their whole table. Online-first players are the least attractive segment: big virtual tabletops already serve them.
 - **The pitch, in the market's own words.** Free to use, no paywalled basics, works on a phone at the table, real-time HP and initiative, homebrew that does not need exact internal terms.
 - **Search crowding.** "Companion", "5e", "character sheet" and "initiative" are crowded App Store terms. The name stands apart (Session Zero); put the keywords in the subtitle, for example "Characters, campaigns and live sessions".
-- **Reddit evidence.** A deeper, sourced pain-point report is in `docs/market/reddit-pain-points.md` when it finishes.
+- **Reddit evidence.** A deeper, sourced pain-point report: [Reddit pain points](../design/reddit-pain-points.md).

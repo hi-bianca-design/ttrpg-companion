@@ -7,6 +7,7 @@ How the app looks, feels and reads.
 - [Paywall and upgrade UX](paywall-and-upgrade-ux.md): when and how we ask for money
 - [Shop and pack presentation](shop-and-pack-presentation.md): the shop, pack detail, owned and locked states
 - [Themes and cosmetics](themes-and-cosmetics.md): why paid themes need their own spec
+- [Reddit pain points](reddit-pain-points.md): what players and DMs complain about in tabletop apps, 34 threads read, with product implications (research, 2026-11-03)
 
 ## The design system
 
