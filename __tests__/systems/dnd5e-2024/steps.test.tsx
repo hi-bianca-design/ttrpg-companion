@@ -883,3 +883,44 @@ describe('Make your own', () => {
     await act(async () => {})
   })
 })
+
+describe('Languages in the builder', () => {
+  test('Origin step shows Common as fixed and adds typed languages as removable chips', async () => {
+    renderWithQuery(<Bound Step={OriginStep} />)
+    await screen.findByRole('button', { name: 'Sage' })
+    expect(screen.getByText('Common')).toBeTruthy()
+    expect(screen.getByText('0 chosen')).toBeTruthy()
+    const input = screen.getByLabelText('Add a language')
+    fireEvent.changeText(input, ' Elvish ')
+    fireEvent.press(screen.getByRole('button', { name: 'Add language' }))
+    expect(useBuilderStore.getState().draft.languages_chosen).toEqual(['Elvish'])
+    expect(screen.getByText('1 chosen')).toBeTruthy()
+    fireEvent.changeText(screen.getByLabelText('Add a language'), 'elvish')
+    fireEvent.press(screen.getByRole('button', { name: 'Add language' }))
+    fireEvent.changeText(screen.getByLabelText('Add a language'), '   ')
+    fireEvent.press(screen.getByRole('button', { name: 'Add language' }))
+    fireEvent.changeText(screen.getByLabelText('Add a language'), 'common')
+    fireEvent.press(screen.getByRole('button', { name: 'Add language' }))
+    expect(useBuilderStore.getState().draft.languages_chosen).toEqual(['Elvish'])
+    fireEvent.press(screen.getByRole('button', { name: 'Remove Elvish' }))
+    expect(useBuilderStore.getState().draft.languages_chosen).toEqual([])
+  })
+
+  test('picking a species or background caches the languages its data grants', async () => {
+    mockList.mockImplementation(async ({ kind }: { kind: string }) => kind === 'species'
+      ? [row('species', 'sylph', 'Sylph', { speed: 30, size: 'Medium', creature_type: 'Humanoid', languages: ['Sylvan'] })]
+      : CONTENT[kind] ?? [])
+    renderWithQuery(<Bound Step={OriginStep} />)
+    fireEvent.press(await screen.findByRole('button', { name: /Sylph/ }))
+    expect(useBuilderStore.getState().draft).toMatchObject({ species_id: 'sylph', species_languages: ['Sylvan'] })
+    fireEvent.press(screen.getByRole('button', { name: 'Sage' }))
+    expect(useBuilderStore.getState().draft.bg_languages).toEqual([])
+  })
+
+  test('Review lists the languages the character will know', async () => {
+    act(() => useBuilderStore.getState().update({ ...completeWizard, languages_chosen: ['Elvish'] }))
+    renderWithQuery(<Bound Step={ReviewStep} />)
+    expect(await screen.findByText('Common, Elvish')).toBeTruthy()
+    await act(async () => {})
+  })
+})

@@ -8,6 +8,7 @@ jest.mock('@/features/party/PartyList', () => ({
   PartyList: () => { const { Text } = require('react-native'); return <Text>party list</Text> },
 }))
 jest.mock('@/features/sessions/SessionStatusRow', () => ({ SessionStatusRow: () => null }))
+jest.mock('@/features/sessions/TurnBanner', () => ({ TurnBanner: () => null }))
 jest.mock('@/features/sessions/SessionControls', () => ({
   SessionControls: () => { const { Text } = require('react-native'); return <Text>session controls</Text> },
 }))

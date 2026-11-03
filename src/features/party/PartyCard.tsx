@@ -1,21 +1,25 @@
 import { useState } from 'react'
+import { useRouter } from 'expo-router'
 import { Pressable, View } from 'react-native'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Text } from '@/components/ui/text'
 import type { CharacterFull } from '@/features/characters/characters.api'
+import { useCurrentUserId } from '@/features/content/content.queries'
 import { toRuleInput } from '@/features/characters/picks'
 import { getSystem } from '@/systems/registry'
 import type { PoolValue } from '@/systems/types'
 
 /**
  * One party member at a glance: name, class and level, hit points, conditions and the system's
- * glance chips (D&D: AC, Passive, Speed). Tap for the rest. Read-only: only a character's owner
+ * glance chips (D&D: AC, Passive, Speed). Tap a teammate's card for the rest; tap your own to open your sheet. Read-only: only a character's owner
  * edits it, on their own Character tab.
  */
 export function PartyCard({ character }: { character: CharacterFull }) {
   const [open, setOpen] = useState(false)
+  const router = useRouter()
+  const mine = character.owner_id === useCurrentUserId()
   const system = getSystem(character.system_id)
   const summary = system.rules.partySummary?.(character, toRuleInput(character.picks, character.items))
   // Only a pool has current/max to show; a system that tracks hit points as slots has its own display.
@@ -36,9 +40,9 @@ export function PartyCard({ character }: { character: CharacterFull }) {
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={spoken}
-      accessibilityHint={open ? 'Hides extra details' : 'Shows extra details'}
-      accessibilityState={{ expanded: open }}
-      onPress={() => setOpen((o) => !o)}
+      accessibilityHint={mine ? 'Opens your character sheet' : open ? 'Hides extra details' : 'Shows extra details'}
+      accessibilityState={mine ? undefined : { expanded: open }}
+      onPress={() => (mine ? router.push({ pathname: '/(app)/characters/[id]', params: { id: character.id } }) : setOpen((o) => !o))}
     >
       <Card compact className="gap-2">
         <View className="gap-1">

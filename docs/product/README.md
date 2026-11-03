@@ -8,7 +8,7 @@ Product requirements and design specs already exist under `docs/superpowers/spec
 
 | Feature | Document |
 |---|---|
-| The whole app (original design) | [dnd-app-design](../superpowers/specs/2026-04-29-dnd-app-design.md) |
+| The whole app (original design) | [app-design](../superpowers/specs/2026-04-29-dnd-app-design.md) |
 | Foundation rebuild | [foundation-rebuild-design](../superpowers/specs/2026-11-01-foundation-rebuild-design.md) |
 | Auth | [auth-prd](../superpowers/specs/2026-05-15-auth-prd.md) |
 | Character builder | [character-builder-prd](../superpowers/specs/2026-05-15-character-builder-prd.md) |

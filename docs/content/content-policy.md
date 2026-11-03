@@ -10,13 +10,13 @@
 | **Original content** written for us | Yes | Original names, fiction and mechanics. Our rules text, written in our own words |
 | **Licensed third-party content** | Yes, with a written licence | For example a publisher's content licensed to us, or content under an open licence such as the ORC licence. Check the exact terms before building on it |
 | **Content the user enters themselves** (homebrew) | Yes, it's theirs | This is what the Custom Content Manager is for; we don't sell it |
-| **Non-SRD Wizards of the Coast content** (most PHB subclasses, many spells, most iconic monsters) | **No** | Their copyright. Selling it risks removal from the stores |
+| **Anything from outside the SRD** (most subclasses, many spells, most iconic monsters) | **No** | The publisher's copyright. Selling it risks removal from the stores |
 | **Content from other publishers without a licence** | **No** | |
 | **Another game's content** | Only if its licence allows commercial use. **Verify** | Daggerheart content is under its own community licence; read its terms before selling anything built on it |
 
 ## Naming and trademark
 
-- Don't use Wizards of the Coast product names, logos or distinctive monster names that aren't in the SRD (for example the iconic ones that were left out of it).
+- Don't use another publisher's product names, logos or distinctive monster names that aren't in the SRD (for example the iconic ones that were left out of it).
 - Describe compatibility factually where the licence allows it; don't imply endorsement.
 - See the open question about the app's own name in [Legal: content licensing](../legal/content-licensing.md).
 
