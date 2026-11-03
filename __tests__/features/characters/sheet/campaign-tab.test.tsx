@@ -4,6 +4,9 @@ import CampaignTab from '../../../../app/(app)/characters/[id]/campaign'
 import { useCharacter } from '@/features/characters/characters.queries'
 import { useCampaign, useCharacterCampaign } from '@/features/campaigns/campaigns.queries'
 
+jest.mock('@/features/party/PartyList', () => ({
+  PartyList: () => { const { Text } = require('react-native'); return <Text>party list</Text> },
+}))
 jest.mock('@/features/sessions/SessionStatusRow', () => ({ SessionStatusRow: () => null }))
 jest.mock('@/features/sessions/SessionControls', () => ({
   SessionControls: () => { const { Text } = require('react-native'); return <Text>session controls</Text> },
@@ -70,4 +73,17 @@ test('the Campaign tab shows the session controls once the character is in a cam
 test('no session controls while the character is in no campaign', () => {
   render(<CampaignTab />)
   expect(screen.queryByText('session controls')).toBeNull()
+})
+
+test('the Campaign tab shows the party once the character is in a campaign', () => {
+  const camp = { id: 'camp1', gm_id: 'gm1', name: 'Odd Game', description: null, invite_code: 'ABC123', system_id: 'dnd5e-2024', members: [] }
+  ;(useCharacterCampaign as jest.Mock).mockReturnValue({ data: { id: 'camp1' }, isLoading: false, isError: false })
+  ;(useCampaign as jest.Mock).mockReturnValue({ data: camp, isLoading: false, isError: false })
+  render(<CampaignTab />)
+  expect(screen.getByText('party list')).toBeTruthy()
+})
+
+test('no party while the character is in no campaign', () => {
+  render(<CampaignTab />)
+  expect(screen.queryByText('party list')).toBeNull()
 })

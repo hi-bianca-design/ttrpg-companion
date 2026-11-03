@@ -19,6 +19,9 @@ jest.mock('expo-router', () => ({
 }))
 jest.mock('@/features/auth/useAuth', () => ({ useAuth: () => ({ user: { id: 'gm1' } }) }))
 jest.mock('@/features/campaigns/campaigns.api', () => ({ getCampaign: jest.fn() }))
+jest.mock('@/features/party/PartyList', () => ({
+  PartyList: () => { const { Text } = require('react-native'); return <Text>party list</Text> },
+}))
 jest.mock('@/features/sessions/sessions.api', () => ({ getActiveSession: jest.fn().mockResolvedValue(null), openSession: jest.fn(), endSession: jest.fn() }))
 
 function renderDetail() {
@@ -100,4 +103,10 @@ test('a GM sees the Open session control on the campaign screen', async () => {
   ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
   renderDetail()
   expect(await screen.findByRole('button', { name: 'Open session' })).toBeTruthy()
+})
+
+test('the campaign screen shows the party for the GM, who has no character sheet', async () => {
+  ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
+  renderDetail()
+  expect(await screen.findByText('party list')).toBeTruthy()
 })

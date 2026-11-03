@@ -7,8 +7,8 @@ import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
 import { useAuth } from '@/features/auth/useAuth'
 import { CampaignCard } from '@/features/campaigns/CampaignCard'
+import { PartyList } from '@/features/party/PartyList'
 import { SessionControls } from '@/features/sessions/SessionControls'
-import { MemberList } from '@/features/campaigns/MemberList'
 import { useCampaign, useCharacterCampaign } from '@/features/campaigns/campaigns.queries'
 import { useCharacter } from '@/features/characters/characters.queries'
 import { SheetHeader } from '@/features/characters/sheet/SheetHeader'
@@ -85,8 +85,8 @@ export default function CampaignTab() {
         onPress={() => router.push({ pathname: '/(app)/campaigns/[id]', params: { id: c.id, fromCharacter: id } })}
       />
       <SessionControls campaign={c} />
-      <SectionHeader id={`campaign:${c.id}:members`} title="Members">
-        <MemberList members={c.members} />
+      <SectionHeader id={`campaign:${c.id}:party`} title="Party">
+        <PartyList campaign={c} />
       </SectionHeader>
     </ScreenBackground>
   )
