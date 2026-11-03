@@ -7,7 +7,13 @@ import {
   getMaxSpellLevel,
   getSpellLimits,
   slotsFor,
+  canMaster,
+  classChoice,
+  findOrder,
+  orderSkillBonus,
+  skillProficiencyBonus,
   derived,
+  weaponMasteryCountFor,
   rest,
   proficiencies,
 } from '@/systems/dnd5e-2024/rules'
@@ -267,7 +273,7 @@ test('definition values', () => {
 // ── Builder ──
 
 test('builder step ids', () => {
-  expect(dnd5eBuilder.steps.map((s) => s.id)).toEqual(['class', 'origin', 'skills', 'equipment', 'ability-scores', 'spells', 'details', 'personality', 'review'])
+  expect(dnd5eBuilder.steps.map((s) => s.id)).toEqual(['class', 'origin', 'skills', 'equipment', 'ability-scores', 'class-features', 'spells', 'details', 'personality', 'review'])
 })
 
 test('spells step is skipped when the class has no slots at the starting level', () => {
@@ -302,27 +308,13 @@ test('pruneDraft clears the background ability bonuses when the background chang
   expect(dnd5eBuilder.pruneDraft(draft, { background_id: 'acolyte' })).toMatchObject({ bg_bonus_two: 'wisdom', bg_bonus_one: 'charisma' })
 })
 
-test('ability-scores step needs the standard array assigned plus two distinct background bonuses', () => {
+test('ability-scores step is filled once all six scores hold numbers, whatever their values', () => {
   const step = dnd5eBuilder.steps.find((s) => s.id === 'ability-scores')!
-  const scores = { strength: 8, dexterity: 14, constitution: 13, intelligence: 15, wisdom: 12, charisma: 10 }
-  const bonuses = { bg_bonus_two: 'intelligence', bg_bonus_one: 'constitution' }
-  const sage = { ...dnd5eBuilder.initialDraft(), bg_abilities: ['constitution', 'intelligence', 'wisdom'] }
-  expect(step.isComplete(sage)).toBe(false)
-  expect(step.isComplete({ ...sage, ...bonuses })).toBe(false)
-  expect(step.isComplete({ ...sage, ...scores })).toBe(false)
-  expect(step.isComplete({ ...sage, ...scores, ...bonuses })).toBe(true)
-  expect(step.isComplete({ ...sage, ...scores, strength: 15, ...bonuses })).toBe(false)
-})
-
-test('ability-scores step only needs background bonuses when the background offers at least two abilities', () => {
-  const step = dnd5eBuilder.steps.find((s) => s.id === 'ability-scores')!
-  const scores = { strength: 8, dexterity: 14, constitution: 13, intelligence: 15, wisdom: 12, charisma: 10 }
-  const base = { ...dnd5eBuilder.initialDraft(), ...scores, background_id: 'hb' }
-  expect(step.isComplete({ ...base, bg_abilities: [] })).toBe(true)
-  expect(step.isComplete({ ...base, bg_abilities: ['wisdom'] })).toBe(true)
-  expect(step.isComplete({ ...base, bg_abilities: ['wisdom', 'charisma', 'intelligence'] })).toBe(false)
-  expect(step.isComplete({ ...base, bg_abilities: ['wisdom', 'charisma'], bg_bonus_two: 'wisdom', bg_bonus_one: 'charisma' })).toBe(true)
-  expect(step.isComplete({ ...base, bg_abilities: ['wisdom', 'charisma'], bg_bonus_two: 'strength', bg_bonus_one: 'charisma' })).toBe(false)
+  const scores = { strength: 16, dexterity: 8, constitution: 14, intelligence: 10, wisdom: 12, charisma: 18 }
+  const base = { ...dnd5eBuilder.initialDraft(), bg_abilities: ['wisdom', 'charisma', 'intelligence'] }
+  expect(step.isComplete(base)).toBe(false)
+  expect(step.isComplete({ ...base, ...scores, charisma: null })).toBe(false)
+  expect(step.isComplete({ ...base, ...scores })).toBe(true)
 })
 
 describe('pruneDraft keeps chosen spells within the level and limits', () => {
@@ -358,6 +350,25 @@ describe('pruneDraft keeps chosen spells within the level and limits', () => {
     expect(spells.isComplete({ ...wizard5, level: 1 })).toBe(false)
     expect(spells.isComplete({ ...wizard5, level: 1, spell_ids: ['c1', 'c2', 'c3', 'l1'] })).toBe(true)
   })
+})
+
+describe('canCreate', () => {
+  const base = () => ({ ...dnd5eBuilder.initialDraft() })
+  test('needs a class and a non-blank name', () => {
+    expect(dnd5eBuilder.canCreate(base())).toBe(false)
+    expect(dnd5eBuilder.canCreate({ ...base(), class_id: 'x' })).toBe(false)
+    expect(dnd5eBuilder.canCreate({ ...base(), class_id: 'x', name: ' ' })).toBe(false)
+    expect(dnd5eBuilder.canCreate({ ...base(), class_id: 'x', name: 'Mira' })).toBe(true)
+  })
+})
+
+test('toCharacter works for a draft with only a class and a name', () => {
+  const c = dnd5eBuilder.toCharacter({ ...dnd5eBuilder.initialDraft(), class_id: 'ftr', class_name: 'Fighter', hit_die: 10, name: 'Mira' })
+  expect(c.stats).toEqual({ strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 })
+  expect(c.resources.hp).toEqual({ current: 10, max: 10 })
+  expect(Object.keys((c.resources.spell_slots as SlotsValue).tiers)).toEqual([])
+  expect(c.items).toEqual([])
+  expect(c.picks).toEqual([{ content_id: 'ftr', kind: 'class', state: { skills: [] }, acquired_at_level: 1 }])
 })
 
 test('toCharacter treats unassigned abilities as 10', () => {
@@ -397,7 +408,7 @@ test('proficiencies: class saves and background / state skills, normalised to ke
 })
 
 test('proficiencies are empty without picks', () => {
-  expect(proficiencies([])).toEqual({ saves: [], skills: [] })
+  expect(proficiencies([])).toEqual({ saves: [], skills: [], expertise: [] })
 })
 
 test('derived XP progress only when details.xp is set', () => {
@@ -452,5 +463,248 @@ describe('class skill picks', () => {
     const draft = { ...fighter, class_skills: ['history', 'perception'] }
     const c = dnd5eBuilder.toCharacter(draft)
     expect(c.picks.find((p) => p.kind === 'class')?.state).toEqual({ skills: ['history', 'perception'] })
+  })
+})
+
+// ── Class choices (free text on the class pick's state.choices) ──
+
+const classWith = (name: string, state: Record<string, unknown>, data: unknown = {}) => pick('class', name, data, state)
+
+describe('classChoice', () => {
+  test('reads the class pick state.choices list, dropping non-strings', () => {
+    const cls = classWith('Fighter', { choices: { weapon_mastery: ['Longsword', 3, null, 'Dagger'] } })
+    expect(classChoice([cls], 'weapon_mastery')).toEqual(['Longsword', 'Dagger'])
+    expect(classChoice([cls], 'expertise')).toEqual([])
+    expect(classChoice([classWith('Fighter', {})], 'fighting_style')).toEqual([])
+    expect(classChoice([], 'order')).toEqual([])
+  })
+})
+
+describe('Defense fighting style', () => {
+  const chain = pick('item', 'Chain Mail', { category: 'Heavy Armor', properties: { armor_class: '16' } }, { equipped: true })
+
+  test('adds 1 while armored when the typed style matches Defense', () => {
+    const defense = classWith('Fighter', { choices: { fighting_style: ['defense'] } })
+    expect(value(makeCharacter(), [chain, defense], 'ac')?.value).toBe(17)
+    expect(value(makeCharacter(), [defense], 'ac')?.value).toBe(9)
+  })
+
+  test('a style that is not an official match changes nothing', () => {
+    const typed = classWith('Fighter', { choices: { fighting_style: ['Pike and Shield'] } })
+    expect(value(makeCharacter(), [chain, typed], 'ac')?.value).toBe(16)
+  })
+})
+
+describe('expertise', () => {
+  test('skillProficiencyBonus: none, once when proficient, twice with expertise', () => {
+    const known = { skills: ['stealth', 'perception'], expertise: ['stealth'] }
+    expect(skillProficiencyBonus(2, 'stealth', known)).toBe(4)
+    expect(skillProficiencyBonus(2, 'perception', known)).toBe(2)
+    expect(skillProficiencyBonus(2, 'arcana', known)).toBe(0)
+  })
+
+  test('a typed skill the character is proficient in gains expertise', () => {
+    const rogue = classWith('Rogue', { skills: ['Stealth'], choices: { expertise: ['Stealth'] } })
+    expect(proficiencies([rogue]).expertise).toEqual(['stealth'])
+  })
+
+  test('unknown or non-proficient typed skills change nothing', () => {
+    const rogue = classWith('Rogue', { skills: ['Stealth'], choices: { expertise: ['Underwater Basket Weaving', 'Arcana'] } })
+    expect(proficiencies([rogue]).expertise).toEqual([])
+  })
+
+  test('expertise in Perception doubles it for passive Perception', () => {
+    const expert = classWith('Rogue', { skills: ['perception'], choices: { expertise: ['Perception'] } })
+    const plain = classWith('Rogue', { skills: ['perception'] })
+    const prof = value(makeCharacter(), [], 'proficiency')?.value as number
+    const pp = (picks: PickRecord[]) => value(makeCharacter(), picks, 'passive_perception')?.value as number
+    expect(pp([plain])).toBe(11 + prof)
+    expect(pp([expert])).toBe(11 + prof * 2)
+  })
+})
+
+describe('weapon mastery rules', () => {
+  test('class counts come from the Weapon Mastery feature', () => {
+    expect(weaponMasteryCountFor('Fighter', ['Weapon Mastery'])).toBe(3)
+    expect(weaponMasteryCountFor('Rogue', ['Weapon Mastery'])).toBe(2)
+    expect(weaponMasteryCountFor('Wizard', ['Spellcasting'])).toBe(0)
+  })
+
+  test('barbarians master melee weapons, rogues Finesse or Light ones', () => {
+    const longbow = { category: 'Martial Ranged Weapon', properties: { mastery: 'Slow', weapon_properties: ['Heavy'] } }
+    const dagger = { category: 'Simple Melee Weapon', properties: { mastery: 'Nick', weapon_properties: ['Finesse', 'Light'] } }
+    const greataxe = { category: 'Martial Melee Weapon', properties: { mastery: 'Cleave', weapon_properties: ['Heavy'] } }
+    expect([longbow, dagger, greataxe].map((w) => canMaster('Fighter', w))).toEqual([true, true, true])
+    expect([longbow, dagger, greataxe].map((w) => canMaster('Barbarian', w))).toEqual([false, true, true])
+    expect([longbow, dagger, greataxe].map((w) => canMaster('Rogue', w))).toEqual([false, true, false])
+    expect(canMaster('Fighter', { category: 'Light Armor', properties: {} })).toBe(false)
+  })
+})
+
+describe('divine and primal order', () => {
+  test('findOrder matches an option key or label, case-insensitively', () => {
+    expect(findOrder('Cleric', 'Thaumaturge')?.key).toBe('thaumaturge')
+    expect(findOrder('Cleric', 'thaumaturge')?.key).toBe('thaumaturge')
+    expect(findOrder('Druid', ' MAGICIAN ')?.key).toBe('magician')
+    expect(findOrder('Cleric', 'Warlord')).toBeUndefined()
+    expect(findOrder('Fighter', 'Protector')).toBeUndefined()
+  })
+
+  test('the order skill bonus is the Wisdom modifier, minimum +1, on the order skills only', () => {
+    const cls = classWith('Cleric', { choices: { order: ['Thaumaturge'] } })
+    expect(orderSkillBonus([cls], 3)).toEqual({ skills: ['arcana', 'religion'], bonus: 3 })
+    expect(orderSkillBonus([cls], -1).bonus).toBe(1)
+    expect(orderSkillBonus([classWith('Cleric', { choices: { order: ['protector'] } })], 3).skills).toEqual([])
+    expect(orderSkillBonus([classWith('Cleric', { choices: { order: ['Warlord'] } })], 3).skills).toEqual([])
+    expect(orderSkillBonus([classWith('Cleric', {})], 3).skills).toEqual([])
+  })
+})
+
+describe('class choices in the draft', () => {
+  const cleric = {
+    ...dnd5eBuilder.initialDraft(), class_id: 'clr', class_name: 'Cleric',
+    spell_ids: ['a', 'b', 'c', 'd'], spell_levels: { a: 0, b: 0, c: 0, d: 0 }, spell_classes: { a: ['cleric'], b: ['cleric'], c: ['cleric'], d: ['cleric'] },
+  }
+  const spells = () => dnd5eBuilder.steps.find((s) => s.id === 'spells')!
+
+  test('initial draft holds empty class features and choices', () => {
+    expect(dnd5eBuilder.initialDraft()).toMatchObject({ class_features: [], class_choices: {} })
+  })
+
+  test('a class change empties class_choices', () => {
+    const picked = { ...cleric, class_choices: { order: ['Thaumaturge'] } }
+    expect(dnd5eBuilder.pruneDraft(picked, { class_id: 'drd', class_name: 'Druid' }).class_choices).toEqual({})
+    expect(dnd5eBuilder.pruneDraft(picked, { name: 'X' }).class_choices).toEqual({ order: ['Thaumaturge'] })
+  })
+
+  test('an order with a cantrip raises the cantrip cap by one; dropping it trims spells', () => {
+    const thaum = { ...cleric, class_choices: { order: ['thaumaturge'] } }
+    expect(spells().isComplete(cleric)).toBe(false)
+    expect(spells().isComplete(thaum)).toBe(true)
+    expect(spells().isComplete({ ...cleric, class_choices: { order: ['Warlord'] } })).toBe(false)
+    expect(dnd5eBuilder.pruneDraft(thaum, { class_choices: { order: ['Protector'] } }).spell_ids).toEqual(['a', 'b', 'c'])
+    expect(dnd5eBuilder.pruneDraft(thaum, { class_choices: { order: ['Magician'] } }).spell_ids).toEqual(['a', 'b', 'c'])
+  })
+
+  test('toCharacter writes non-empty choices on the class pick, omitting them when none', () => {
+    const draft = { ...dnd5eBuilder.initialDraft(), class_id: 'ftr', class_name: 'Fighter', class_choices: { fighting_style: ['Defense'], weapon_mastery: [], expertise: ['x', 3] } }
+    expect(dnd5eBuilder.toCharacter(draft).picks.find((p) => p.kind === 'class')?.state).toEqual({ skills: [], choices: { fighting_style: ['Defense'], expertise: ['x'] } })
+    const none = { ...draft, class_choices: { weapon_mastery: [] } }
+    expect(dnd5eBuilder.toCharacter(none).picks.find((p) => p.kind === 'class')?.state).toEqual({ skills: [] })
+  })
+})
+
+// ── Custom class, species and background in the draft ──
+
+describe('custom class, species and background in the draft', () => {
+  const { dnd5eContentSchemas } = jest.requireActual('@/systems/dnd5e-2024/schemas')
+  const warden = { name: 'Warden', description: ' Guards the wood ', library: false, extras: { hit_die: 10, skill_count: 2, skill_from: ['stealth', 'arcana'] } }
+  const dryad = { name: '  Dryad   Kin ', description: '', library: true, extras: { speed: 35 } }
+  const wanderer = { name: 'Wanderer', description: '', library: false, extras: { skill_proficiencies: ['survival', 'nature'] } }
+  const base = () => dnd5eBuilder.initialDraft()
+  const fighter = () => ({
+    ...base(), class_id: 'ftr', class_name: 'Fighter', hit_die: 10, subclass_id: 'champ',
+    class_skill_count: 2, class_skill_options: ['history', 'perception'], class_skills: ['history'],
+    class_choices: { fighting_style: ['Defense'] }, equipment_option: 0, equipment_gold: 5,
+  })
+
+  test('initial draft has no custom entries', () => {
+    expect(base()).toMatchObject({ class_custom: null, species_custom: null, background_custom: null })
+  })
+
+  test('canCreate accepts a custom class with a non-blank name', () => {
+    expect(dnd5eBuilder.canCreate({ ...base(), class_custom: warden, name: 'Mira' })).toBe(true)
+    expect(dnd5eBuilder.canCreate({ ...base(), class_custom: { ...warden, name: '  ' }, name: 'Mira' })).toBe(false)
+    expect(dnd5eBuilder.canCreate({ ...base(), class_custom: warden, name: ' ' })).toBe(false)
+    expect(dnd5eBuilder.canCreate({ ...base(), class_custom: warden })).toBe(false)
+  })
+
+  test('switching an official class to a custom one clears class picks, choices, equipment and subclass', () => {
+    const next = dnd5eBuilder.pruneDraft(fighter(), { class_custom: warden })
+    expect(next).toMatchObject({
+      class_id: null, class_custom: warden, subclass_id: null, class_skills: [], class_choices: {},
+      equipment_option: null, equipment_gold: 0,
+    })
+  })
+
+  test('setting a custom class caches its fields, as ClassStep does for an official one', () => {
+    const next = dnd5eBuilder.pruneDraft(fighter(), { class_custom: warden })
+    expect(next).toMatchObject({ class_name: 'Warden', hit_die: 10, class_skill_count: 2, class_skill_options: ['stealth', 'arcana'] })
+  })
+
+  test('picking an official class clears the custom class', () => {
+    const custom = dnd5eBuilder.pruneDraft(base(), { class_custom: warden })
+    const next = dnd5eBuilder.pruneDraft({ ...custom, class_skills: ['stealth'] }, { class_id: 'ftr', class_name: 'Fighter' })
+    expect(next).toMatchObject({ class_id: 'ftr', class_custom: null, class_skills: [] })
+  })
+
+  test('editing or clearing the custom class counts as a class change', () => {
+    const custom = { ...dnd5eBuilder.pruneDraft(base(), { class_custom: warden }), class_skills: ['stealth'], class_choices: { x: ['y'] } }
+    expect(dnd5eBuilder.pruneDraft(custom, { class_custom: { ...warden, name: 'Warden II' } })).toMatchObject({ class_skills: [], class_choices: {}, class_name: 'Warden II' })
+    expect(dnd5eBuilder.pruneDraft(custom, { class_custom: null })).toMatchObject({ class_custom: null, class_skills: [], class_choices: {} })
+    expect(dnd5eBuilder.pruneDraft(custom, { name: 'X' })).toMatchObject({ class_skills: ['stealth'], class_choices: { x: ['y'] } })
+  })
+
+  test('a custom class never has a subclass', () => {
+    const custom = dnd5eBuilder.pruneDraft(base(), { class_custom: warden })
+    expect(dnd5eBuilder.pruneDraft(custom, { subclass_id: 'champ' }).subclass_id).toBeNull()
+  })
+
+  test('species: official and custom exclude each other', () => {
+    const custom = dnd5eBuilder.pruneDraft({ ...base(), species_id: 'elf' }, { species_custom: dryad })
+    expect(custom).toMatchObject({ species_id: null, species_custom: dryad })
+    expect(dnd5eBuilder.pruneDraft(custom, { species_id: 'elf' })).toMatchObject({ species_id: 'elf', species_custom: null })
+  })
+
+  test('background: a custom one has no ability options, takes its skills and resets bonuses', () => {
+    const sage = { ...base(), background_id: 'sage', bg_abilities: ['intelligence', 'wisdom'], bg_skills: ['history'], bg_bonus_two: 'intelligence', bg_bonus_one: 'wisdom' }
+    const fromExtras = dnd5eBuilder.pruneDraft(sage, { background_custom: wanderer })
+    expect(fromExtras).toMatchObject({ background_id: null, bg_abilities: [], bg_skills: ['survival', 'nature'], bg_bonus_two: null, bg_bonus_one: null })
+    expect(dnd5eBuilder.pruneDraft(sage, { background_custom: wanderer, bg_skills: ['nature'] }).bg_skills).toEqual(['nature'])
+    const cleared = dnd5eBuilder.pruneDraft(fromExtras, { background_custom: null })
+    expect(cleared).toMatchObject({ background_custom: null, bg_abilities: [], bg_skills: [] })
+    expect(dnd5eBuilder.pruneDraft(fromExtras, { background_id: 'sage', bg_abilities: ['wisdom'], bg_skills: ['history'] }))
+      .toMatchObject({ background_id: 'sage', background_custom: null, bg_abilities: ['wisdom'], bg_skills: ['history'] })
+  })
+
+  test('toCharacter turns custom class and species into custom entries, not picks', () => {
+    let draft = dnd5eBuilder.pruneDraft({ ...base(), name: 'Mira', constitution: 14 }, { class_custom: warden })
+    draft = dnd5eBuilder.pruneDraft(draft, { species_custom: dryad, background_id: 'sage', bg_skills: ['history'] })
+    draft = { ...draft, class_skills: ['stealth', 'arcana'], class_choices: { fighting_style: ['Defense'] } }
+    const c = dnd5eBuilder.toCharacter(draft)
+    expect(c.picks).toEqual([{ content_id: 'sage', kind: 'background', state: {}, acquired_at_level: 1 }])
+    expect(c.custom).toHaveLength(2)
+    const [cls, sp] = c.custom!
+    expect(cls).toMatchObject({
+      kind: 'class', name: 'Warden', description: 'Guards the wood', library: false,
+      pick: { state: { skills: ['stealth', 'arcana'], choices: { fighting_style: ['Defense'] } }, acquired_at_level: 1 },
+    })
+    expect(cls.data).toMatchObject({ one_off: true, hit_die: 10 })
+    expect(sp).toMatchObject({ kind: 'species', name: 'Dryad Kin', library: true, pick: { state: {}, acquired_at_level: 1 } })
+    expect((sp.data as Record<string, unknown>).one_off).toBeUndefined()
+    expect(dnd5eContentSchemas.class.safeParse(cls.data).success).toBe(true)
+    expect(dnd5eContentSchemas.species.safeParse(sp.data).success).toBe(true)
+    expect(c.resources.hp).toEqual({ current: 12, max: 12 })
+  })
+
+  test('toCharacter makes a custom background entry with empty pick state', () => {
+    const draft = dnd5eBuilder.pruneDraft({ ...base(), class_id: 'ftr', name: 'M' }, { background_custom: wanderer })
+    const c = dnd5eBuilder.toCharacter(draft)
+    expect(c.picks.map((p) => p.kind)).toEqual(['class'])
+    expect(c.custom).toEqual([expect.objectContaining({ kind: 'background', name: 'Wanderer', pick: { state: {}, acquired_at_level: 1 } })])
+    expect(dnd5eContentSchemas.background.safeParse(c.custom![0].data).success).toBe(true)
+  })
+
+  test('HP for a custom class without a cached hit die uses the entry (8 when empty)', () => {
+    const raw = { ...base(), name: 'M', class_custom: warden }
+    expect(dnd5eBuilder.toCharacter(raw).resources.hp).toEqual({ current: 10, max: 10 })
+    const plain = { ...base(), name: 'M', class_custom: { ...warden, extras: {} } }
+    expect(dnd5eBuilder.toCharacter(plain).resources.hp).toEqual({ current: 8, max: 8 })
+  })
+
+  test('official-only drafts have no custom entries', () => {
+    const c = dnd5eBuilder.toCharacter({ ...base(), class_id: 'ftr', class_name: 'Fighter', hit_die: 10, name: 'Mira', species_id: 'elf' })
+    expect(c.custom ?? []).toEqual([])
+    expect(c.picks.map((p) => p.kind)).toEqual(['class', 'species'])
   })
 })

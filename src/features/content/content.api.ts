@@ -10,11 +10,18 @@ export type ContentRow = Database['public']['Tables']['content']['Row']
 
 export type ListContentParams = { systemId: SystemId; kind: string; scope: ContentScope; search?: string }
 
+/**
+ * Hides one-off (custom, wizard-only) rows. Rows with no `one_off` key have a NULL json value, which a
+ * plain `neq` would drop, so NULL is matched explicitly. A second `.or()` is a separate `or=` query
+ * param, which PostgREST ANDs with the first.
+ */
+const NOT_ONE_OFF = 'data->>one_off.is.null,data->>one_off.neq.true'
+
 export async function listContent({ systemId, kind, scope, search }: ListContentParams): Promise<ContentRow[]> {
   let q = supabase.from('content').select('*').eq('system_id', systemId).eq('kind', kind)
   if (scope === 'official') q = q.is('owner_id', null)
-  else if (scope === 'mine') q = q.eq('owner_id', await currentUserId()).is('campaign_id', null)
-  else if (scope === 'pickable') q = q.or(await pickableFilter())
+  else if (scope === 'mine') q = q.eq('owner_id', await currentUserId()).is('campaign_id', null).or(NOT_ONE_OFF)
+  else if (scope === 'pickable') q = q.or(await pickableFilter()).or(NOT_ONE_OFF)
   else q = q.eq('campaign_id', scope.campaignId)
   const term = search?.trim()
   if (term) q = q.ilike('name', `%${term.replace(/[\\%_]/g, '\\$&')}%`)
@@ -48,6 +55,13 @@ export type SaveHomebrewInput = {
   description?: string
   data: unknown
   parentId?: string
+  /** Used verbatim instead of slugify(name), e.g. to keep one-off entries unique per owner. */
+  slug?: string
+  /**
+   * On update: the row's name before this edit. The slug is rewritten to slugify(name) only when the name
+   * changed (or `slug` is given); otherwise it is left alone, so a wizard-made unique slug survives edits.
+   */
+  previousName?: string
 }
 
 export function slugify(name: string): string {
@@ -59,13 +73,24 @@ export function slugify(name: string): string {
   return slug || 'homebrew'
 }
 
+/** A slug unique per owner: the name's slug plus 6 random lowercase alphanumerics. */
+export function uniqueSlug(name: string): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
+  let suffix = ''
+  for (let i = 0; i < 6; i++) suffix += chars[Math.floor(Math.random() * chars.length)]
+  return `${slugify(name)}-${suffix}`
+}
+
 export async function saveHomebrew(input: SaveHomebrewInput): Promise<ContentRow> {
   const def = getSystem(input.systemId).contentKinds[input.kind]
   if (!def) throw new Error(`Unknown content kind "${input.kind}" for ${input.systemId}`)
   const data = def.schema.parse(input.data) as Json // throws ZodError before any network call
+  const nameChanged = input.previousName !== undefined && input.previousName !== input.name
+  // Insert always gets a slug. Update touches it only when asked to or when the name changed.
+  const slug = input.slug ?? (!input.id || nameChanged ? slugify(input.name) : undefined)
   const fields = {
     name: input.name,
-    slug: slugify(input.name),
+    ...(slug !== undefined ? { slug } : {}),
     summary: input.summary ?? null,
     description: input.description ?? null,
     data,
@@ -78,7 +103,7 @@ export async function saveHomebrew(input: SaveHomebrewInput): Promise<ContentRow
     }
     const owner_id = await currentUserId()
     return unwrap(
-      await table.insert({ ...fields, owner_id, system_id: input.systemId, kind: input.kind }).select('*').single(),
+      await table.insert({ ...fields, slug: slug ?? slugify(input.name), owner_id, system_id: input.systemId, kind: input.kind }).select('*').single(),
     )
   } catch (e) {
     // content_owner_slug_key: this user already has homebrew of this kind with that name

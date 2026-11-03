@@ -1,9 +1,11 @@
 // D&D 5e (2024) character builder: step declarations. Draft lifecycle lives in draft.ts.
-import type { BuilderStepDef, GameSystem } from '../types'
+import type { BuilderStepDef, Draft, GameSystem } from '../types'
 import {
-  abilitiesAssigned, bonusesComplete, classSkillCount, classSkillsComplete, equipmentComplete, hasSlots, initialDraft, pruneDraft, spellsWithinLimits, str, strList, toCharacter,
+  abilitiesFilled, canCreate, classChoices, classSkillCount, classSkillsComplete, equipmentComplete, hasSlots, initialDraft, pruneDraft, spellsWithinLimits, str, strList, toCharacter,
 } from './draft'
+import { classChoicesFor } from './classChoices'
 import { AbilityScoresStep } from './steps/AbilityScoresStep'
+import { ClassFeaturesStep } from './steps/ClassFeaturesStep'
 import { EquipmentStep } from './steps/EquipmentStep'
 import { ClassSkillsStep } from './steps/ClassSkillsStep'
 import { ClassStep } from './steps/ClassStep'
@@ -15,6 +17,13 @@ import { SpellsStep } from './steps/SpellsStep'
 
 export { initialDraft, pruneDraft, toCharacter }
 
+/** Every class choice holds its count of non-empty values. */
+function classFeaturesComplete(d: Draft): boolean {
+  const chosen = classChoices(d)
+  return classChoicesFor(str(d.class_name), strList(d.class_features))
+    .every((c) => (chosen[c.key] ?? []).filter((v) => v.trim() !== '').length >= c.count)
+}
+
 const steps: BuilderStepDef[] = [
   { id: 'class', title: 'Class', component: ClassStep, isComplete: (d) => !!d.class_id },
   { id: 'origin', title: 'Origin', component: OriginStep, isComplete: (d) => !!d.species_id && !!d.background_id },
@@ -24,11 +33,15 @@ const steps: BuilderStepDef[] = [
   },
   {
     id: 'equipment', title: 'Equipment', component: EquipmentStep,
-    isComplete: equipmentComplete, skip: (d) => strList(d.class_equipment_options).length === 0,
+    isComplete: equipmentComplete,
   },
   {
     id: 'ability-scores', title: 'Ability Scores', component: AbilityScoresStep,
-    isComplete: (d) => abilitiesAssigned(d) && bonusesComplete(d),
+    isComplete: abilitiesFilled,
+  },
+  {
+    id: 'class-features', title: 'Class features', component: ClassFeaturesStep,
+    isComplete: classFeaturesComplete, skip: (d) => classChoicesFor(str(d.class_name), strList(d.class_features)).length === 0,
   },
   { id: 'spells', title: 'Spells', component: SpellsStep, isComplete: spellsWithinLimits, skip: (d) => !hasSlots(d) },
   { id: 'details', title: 'Details', component: DetailsStep, isComplete: (d) => str(d.name).trim().length > 0 },
@@ -36,4 +49,4 @@ const steps: BuilderStepDef[] = [
   { id: 'review', title: 'Review', component: ReviewStep, isComplete: () => true },
 ]
 
-export const dnd5eBuilder: GameSystem['builder'] = { steps, initialDraft, pruneDraft, toCharacter }
+export const dnd5eBuilder: GameSystem['builder'] = { steps, initialDraft, pruneDraft, toCharacter, canCreate }

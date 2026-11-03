@@ -27,6 +27,19 @@ describe('useBuilderStore', () => {
     })
   })
 
+  test('a custom class replaces the official one and caches its skill choice', () => {
+    store().start('dnd5e-2024')
+    store().update({ class_id: 'ftr', class_name: 'Fighter', class_skills: ['history'], class_choices: { fighting_style: ['Defense'] } })
+    const warden = { name: 'Warden', description: '', library: false, extras: { skill_count: 2, skill_from: ['stealth', 'arcana'] } }
+    store().update({ class_custom: warden, class_id: null })
+    expect(store().draft).toMatchObject({
+      class_id: null, class_custom: warden, class_name: 'Warden', class_skills: [], class_choices: {},
+      class_skill_count: 2, class_skill_options: ['stealth', 'arcana'],
+    })
+    store().update({ class_id: 'ftr', class_name: 'Fighter' })
+    expect(store().draft).toMatchObject({ class_id: 'ftr', class_custom: null })
+  })
+
   test('update without a started system is a no-op', () => {
     store().update({ name: 'Nobody' })
     expect(store().draft.name).toBeUndefined()
@@ -44,10 +57,20 @@ describe('useBuilderStore', () => {
 describe('visibleSteps', () => {
   const { builder } = getSystem('dnd5e-2024')
 
-  test('skip hides Spells for a Fighter', () => {
-    const ids = visibleSteps(builder.steps, { ...builder.initialDraft(), class_name: 'Fighter' }).map((s) => s.id)
+  test('a Fighter sees every step but Spells, in the final order', () => {
+    const draft = {
+      ...builder.initialDraft(), class_name: 'Fighter', class_skill_count: 2,
+      class_features: ['Fighting Style', 'Second Wind', 'Weapon Mastery'],
+    }
+    const ids = visibleSteps(builder.steps, draft).map((s) => s.id)
     expect(ids).not.toContain('spells')
-    expect(ids).toEqual(['class', 'origin', 'ability-scores', 'details', 'personality', 'review'])
+    expect(ids).toEqual(['class', 'origin', 'skills', 'equipment', 'ability-scores', 'class-features', 'details', 'personality', 'review'])
+  })
+
+  test('a Wizard has no Class features step and sees Spells', () => {
+    const ids = visibleSteps(builder.steps, { ...builder.initialDraft(), class_name: 'Wizard', class_skill_count: 2, class_features: ['Spellcasting'] }).map((s) => s.id)
+    expect(ids).not.toContain('class-features')
+    expect(ids).toEqual(['class', 'origin', 'skills', 'equipment', 'ability-scores', 'spells', 'details', 'personality', 'review'])
   })
 
   test('a level-1 Wizard and Paladin see Spells', () => {

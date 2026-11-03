@@ -10,7 +10,7 @@ import { Text } from '@/components/ui/text'
 import { cn } from '@/lib/utils'
 import type { CharacterRecord, PickRecord } from '../../types'
 import { ABILITY_KEYS, ABILITY_LABELS, type AbilityKey, SKILLS } from '../definition'
-import { formatModifier, getAbilityModifier, getProficiencyBonus, proficiencies } from '../rules'
+import { formatModifier, getAbilityModifier, getProficiencyBonus, orderSkillBonus, proficiencies, skillProficiencyBonus } from '../rules'
 
 type Row = { key: string; label: string; aside: string; value: number; proficient: boolean; a11y: string }
 
@@ -65,13 +65,15 @@ function SkillList({ rows }: { rows: Row[] }) {
 
 export function ProficienciesSection({ character, picks }: { character: CharacterRecord; picks: PickRecord[] }) {
   const prof = getProficiencyBonus(character.level)
-  const { saves, skills } = proficiencies(picks)
+  const known = proficiencies(picks)
+  const { saves, skills } = known
   const mod = (k: AbilityKey) => getAbilityModifier(character.stats[k] ?? 10)
+  const order = orderSkillBonus(picks, mod('wisdom'))
   const short = (k: AbilityKey) => k.slice(0, 3).toUpperCase()
 
   const skillRows: Row[] = SKILLS.map((s) => {
     const proficient = skills.includes(s.key)
-    return { key: s.key, label: s.label, aside: short(s.ability), value: mod(s.ability) + (proficient ? prof : 0), proficient, a11y: s.label }
+    return { key: s.key, label: s.label, aside: short(s.ability), value: mod(s.ability) + skillProficiencyBonus(prof, s.key, known) + (order.skills.includes(s.key) ? order.bonus : 0), proficient, a11y: known.expertise.includes(s.key) ? `${s.label}, expertise` : s.label }
   })
   const saveRows: Row[] = ABILITY_KEYS.map((k) => {
     const proficient = saves.includes(k)

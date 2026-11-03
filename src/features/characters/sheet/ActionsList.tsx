@@ -4,6 +4,7 @@ import { ContentCard } from '@/components/game/ContentCard'
 import { EmptyState } from '@/components/game/EmptyState'
 import { Button } from '@/components/ui/button'
 import { Text } from '@/components/ui/text'
+import { classChoice, sameName } from '@/systems/dnd5e-2024/rules'
 import type { PickRecord, SlotsValue } from '@/systems/types'
 
 export type Segment = 'actions' | 'bonus' | 'reactions'
@@ -32,6 +33,9 @@ function segmentFor(castingTime: string): Segment {
 /** Equipped weapons (always actions) and spells (by casting time) as card entries. */
 export function buildEntries(picks: PickRecord[]): Entry[] {
   const out: Entry[] = []
+  // Weapons named in the class's mastery choices show their property; without a list (older characters) every weapon does.
+  const mastered = classChoice(picks, 'weapon_mastery')
+  const showsMastery = (name: string) => mastered.length === 0 || mastered.some((m) => sameName(m, name))
   for (const p of picks) {
     const data = asRecord(p.content.data)
     if (p.kind === 'spell') {
@@ -52,7 +56,7 @@ export function buildEntries(picks: PickRecord[]): Entry[] {
         key: `weapon:${p.content_id}`,
         segment: 'actions',
         title: p.content.name,
-        meta: typeof props.mastery === 'string' ? `Mastery · ${props.mastery}` : undefined,
+        meta: typeof props.mastery === 'string' && showsMastery(p.content.name) ? `Mastery · ${props.mastery}` : undefined,
         tags: damage ? ['Weapon', damage] : ['Weapon'],
       })
     }

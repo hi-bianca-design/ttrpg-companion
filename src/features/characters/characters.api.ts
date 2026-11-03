@@ -2,10 +2,11 @@ import { supabase } from '@/lib/supabase'
 import type { Database, Json } from '@/types/database.types'
 import { getSystem } from '@/systems/registry'
 import type {
-  CharacterRecord, DerivedValue, LevelUpPatch, NewCharacter, ResourceValue, SystemId,
+  CharacterRecord, DerivedValue, LevelUpPatch, NewCharacter, NewCustomContent, ResourceValue, SystemId,
 } from '@/systems/types'
 import { AppError, check, unwrap } from '@/features/errors'
 import { currentUserId } from '@/features/session'
+import { deleteHomebrew, saveHomebrew, uniqueSlug } from '@/features/content/content.api'
 import { toRuleInput, type ItemWithContent, type PickWithContent } from './picks'
 
 export type { ItemWithContent, PickWithContent }
@@ -93,7 +94,8 @@ export async function getCharacter(id: string): Promise<CharacterFull> {
 }
 
 export async function createCharacter(input: NewCharacter): Promise<string> {
-  const { picks, items = [], ...fields } = input
+  // `custom` is not a characters column: it becomes content rows plus picks pointing at them.
+  const { picks, items = [], custom = [], ...fields } = input
   const owner_id = await currentUserId()
   const { id } = unwrap(
     await supabase
@@ -102,14 +104,38 @@ export async function createCharacter(input: NewCharacter): Promise<string> {
       .select('id')
       .single(),
   )
-  if (picks.length > 0) {
+  const created: { id: string; kind: string; pick: NewCustomContent['pick'] }[] = []
+  /** Deletes the character first (cascades its picks, which restrict content deletes), then the created rows. */
+  const rollback = async () => {
+    await supabase.from('characters').delete().eq('id', id) // best-effort; the original error is what matters
+    for (const row of created) {
+      try { await deleteHomebrew(row.id) } catch { /* best-effort */ }
+    }
+  }
+  try {
+    for (const entry of custom) {
+      const row = await saveHomebrew({
+        systemId: input.system_id, kind: entry.kind, name: entry.name, description: entry.description,
+        data: entry.data, slug: uniqueSlug(entry.name),
+      })
+      created.push({ id: row.id, kind: entry.kind, pick: entry.pick })
+    }
+  } catch (e) {
+    await rollback()
+    throw e
+  }
+  const allPicks = [
+    ...picks,
+    ...created.map((c) => ({ content_id: c.id, kind: c.kind, state: c.pick.state, acquired_at_level: c.pick.acquired_at_level })),
+  ]
+  if (allPicks.length > 0) {
     const res = await supabase.from('character_picks').insert(
-      picks.map((p) => ({
+      allPicks.map((p) => ({
         character_id: id, content_id: p.content_id, kind: p.kind, state: p.state as Json, acquired_at_level: p.acquired_at_level,
       })),
     )
     if (res.error) {
-      await supabase.from('characters').delete().eq('id', id) // best-effort rollback; the original error is what matters
+      await rollback()
       check(res)
     }
   }
@@ -118,7 +144,7 @@ export async function createCharacter(input: NewCharacter): Promise<string> {
       items.map((i) => ({ character_id: id, content_id: i.content_id, quantity: i.quantity, equipped: i.equipped })),
     )
     if (res.error) {
-      await supabase.from('characters').delete().eq('id', id) // picks and items cascade
+      await rollback() // picks and items cascade with the character
       check(res)
     }
   }

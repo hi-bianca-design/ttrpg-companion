@@ -48,7 +48,11 @@ export const CLASS_FEATURES: FeatureUse[] = [
 
 export const FEATURE_KEYS = CLASS_FEATURES.map((f) => f.key)
 
-export const featuresFor = (className: string): FeatureUse[] => CLASS_FEATURES.filter((f) => f.className === className)
+/** Features of an official class; the class name matches trimmed and case-insensitively (like slotsFor). */
+export const featuresFor = (className: string): FeatureUse[] => {
+  const name = className.trim().toLowerCase()
+  return CLASS_FEATURES.filter((f) => f.className.toLowerCase() === name)
+}
 
 const oneTier = (max: number, used = 0): SlotsValue => ({ tiers: { '1': { max, used } } })
 const poolOf = (max: number, spent = 0): PoolValue => ({ max, current: max - Math.min(spent, max) })

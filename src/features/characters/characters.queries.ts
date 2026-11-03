@@ -19,7 +19,12 @@ export function useCreateCharacter() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (input: NewCharacter) => createCharacter(input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: qk.characters }),
+    onSuccess: (_id, input) => {
+      const work = [qc.invalidateQueries({ queryKey: qk.characters })]
+      // A custom entry saved to the library is a new content row: refresh the Homebrew list and the pickers.
+      if (input.custom?.some((c) => c.library)) work.push(qc.invalidateQueries({ queryKey: ['content'] }))
+      return Promise.all(work)
+    },
   })
 }
 

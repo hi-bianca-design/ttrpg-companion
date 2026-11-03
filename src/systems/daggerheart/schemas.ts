@@ -1,4 +1,4 @@
-// Zod schemas for the JSON shapes the Daggerheart stub stores in the generic columns:
+// Zod schemas for the JSON shapes Daggerheart stores in the generic columns:
 // characters.stats/resources/details, content.data and character_picks.state.
 import { z } from 'zod'
 import { HOPE_MAX, TRAIT_KEYS } from './definition'
@@ -22,9 +22,16 @@ export const daggerheartResourcesSchema = z.object({
   hope: z.object({ current: nonNegInt, max: nonNegInt.max(HOPE_MAX) }),
 })
 
+// Heritage, class and domain cards are typed text until Daggerheart content is seeded.
 export const daggerheartDetailsSchema = z.object({
   evasion: int.optional(),
   experiences: z.array(z.string()).optional(),
+  ancestry: z.string().optional(),
+  community: z.string().optional(),
+  class_name: z.string().optional(),
+  subclass_name: z.string().optional(),
+  domain_cards: z.array(z.string()).optional(),
+  backstory: z.string().optional(),
 })
 
 export const daggerheartPickStateSchema = z.object({ location: z.enum(['loadout', 'vault']) })

@@ -86,14 +86,28 @@ export type BuilderStepDef = {
   id: string
   title: string
   component: React.ComponentType<BuilderStepProps>
+  /** "Filled in" status only (checklist ticks); it never blocks Continue or Create. */
   isComplete(draft: Draft): boolean
   skip?(draft: Draft): boolean
+}
+
+/** Content the player made in the wizard: created as a content row at Create time, then picked. */
+export type NewCustomContent = {
+  kind: string
+  name: string
+  description: string
+  data: unknown
+  /** False for a one-off (kept out of the player's library lists). */
+  library: boolean
+  pick: { state: Record<string, unknown>; acquired_at_level: number }
 }
 
 export type NewCharacter = Omit<CharacterRecord, 'id'> & {
   picks: Array<Pick<PickRecord, 'content_id' | 'kind' | 'state' | 'acquired_at_level'>>
   /** Starting inventory, written to character_items. */
   items?: Array<{ content_id: string; quantity: number; equipped: boolean }>
+  /** Custom content to create and pick alongside `picks`. */
+  custom?: NewCustomContent[]
 }
 
 /** Props every sheet section receives. `onChange` is only passed to the `levelUp` section: it reports the
@@ -123,6 +137,8 @@ export interface GameSystem {
     initialDraft(): Draft
     pruneDraft(draft: Draft, changed: Partial<Draft>): Draft
     toCharacter(draft: Draft): NewCharacter
+    /** The only gate on creating a character. */
+    canCreate(draft: Draft): boolean
   }
   rules: {
     derived(c: CharacterRecord, picks: PickRecord[]): DerivedValue[]

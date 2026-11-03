@@ -17,7 +17,7 @@ test('daggerheart satisfies GameSystem', () => {
   ])
   expect(Object.keys(s.contentKinds)).toEqual(['ancestry', 'community', 'class', 'subclass', 'domain_card'])
   expect(s.contentKinds.subclass.parentKind).toBe('class')
-  expect(s.builder.steps).toEqual([])
+  expect(s.builder.steps.map((x) => x.id)).toEqual(['heritage', 'class', 'traits', 'domain-cards', 'vitals', 'details', 'review'])
 })
 
 test('hidden from pickers but still resolvable', () => {

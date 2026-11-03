@@ -13,8 +13,8 @@ type CardProps = ViewProps & {
   compact?: boolean
   /** flat: chamfered rock plate (lists, tiles). hero: lancet arch lit from below (scenes, content detail). */
   variant?: 'flat' | 'hero'
-  /** destructive redraws the edge (e.g. HP at 0). selected: mint edge with a soft glow (chosen option). */
-  tone?: 'default' | 'destructive' | 'selected'
+  /** destructive redraws the edge (e.g. HP at 0). selected: mint edge with a soft glow (chosen option). accent: thin translucent gold edge, no glow (a summary card). */
+  tone?: 'default' | 'destructive' | 'selected' | 'accent'
 }
 
 function Card({ className, compact, variant = 'flat', tone = 'default', style, ...props }: CardProps) {
@@ -25,7 +25,7 @@ function Card({ className, compact, variant = 'flat', tone = 'default', style, .
       shape={hero ? 'arch' : 'chamfer'}
       glass
       fill="card"
-      stroke={tone === 'destructive' ? 'destructive' : tone === 'selected' ? 'secondary' : 'border'}
+      stroke={tone === 'destructive' ? 'destructive' : tone === 'selected' ? 'secondary' : tone === 'accent' ? 'rule' : 'border'}
       strokeWidth={tone === 'selected' || tone === 'destructive' ? 1.5 : 1}
       glow={tone === 'selected' ? 'secondary' : undefined}
       light={hero ? 'torch' : undefined}
