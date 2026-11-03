@@ -36,8 +36,8 @@ describe('useActiveSession', () => {
     await waitFor(() => expect(second.result.current.data).toBeNull())
   })
 
-  it('polls on a short interval until Realtime replaces it', () => {
-    expect(SESSION_POLL_MS).toBe(10_000)
+  it('polls only as a slow safety net now that Realtime invalidates it', () => {
+    expect(SESSION_POLL_MS).toBe(60_000)
   })
 })
 

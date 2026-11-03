@@ -21,7 +21,7 @@ The original design had a **Party** tab: party members seeing each other's stats
 
 ## Design principles
 
-1. **A scoreboard, not a referee.** The app records what is said aloud and never blocks the table. The GM can reorder, skip, delay and add enemies at any time. No rules automation (no damage maths, no saving throws).
+1. **A scoreboard with a calculator, not a referee.** The app does the arithmetic the table would otherwise do in their heads: subtract damage, add healing, sort the order, count rounds. It never decides a rule: no hit or miss, no saving throws, no resistance or vulnerability, no choosing targets. The GM can reorder, skip, delay and add enemies at any time.
 2. **Dice stay physical.** No in-app dice roller. The GM types the numbers players call out.
 3. **Players own their numbers; everyone sees them.** Only a character's owner edits their hit points and conditions. The GM and the rest of the party read them. The GM edits enemies, nothing else.
 4. **One page that transforms, not new screens.** The Party page becomes the battle order when combat starts and reverts when it ends. The "Your turn" banner and the session/combat badges stay where they are.
@@ -38,7 +38,7 @@ The original design had a **Party** tab: party members seeing each other's stats
 
 ## Non-goals
 
-- A dice roller, attack/damage automation, saving throws, or any rules engine.
+- A dice roller, attack automation, saving throws, resistances or any rules engine. (Applying a typed damage or healing amount is arithmetic, not automation, and is in scope.)
 - A battle map, grid, tokens or positioning.
 - Player-entered initiative (possible later as an opt-in time-saver; the default is the GM entering what is called out).
 - A monster library or stat blocks (a later phase, see Phase 4). Phase 2 enemies are typed in.
@@ -71,18 +71,19 @@ The original design had a **Party** tab: party members seeing each other's stats
 
 ### Phase 2: Battle order with enemies
 
-**The page transforms.** When combat starts, the Party page becomes the battle order: party members and enemies interleaved by initiative, the current turn highlighted, a round counter (the builder's call whether to include it). In combat the cards shrink to name, hit points and conditions; extra info is one tap away. When combat ends it reverts.
+**The page transforms.** When combat starts, the Party page becomes the battle order: party members and enemies interleaved by initiative, the current turn highlighted, a round counter, `Round n`, that increases each time the turn wraps. In combat the cards shrink to name, hit points and conditions; extra info is one tap away. When combat ends it reverts.
 
 **Requirements (P0)**
 - **Anyone can start combat (decided).** Any active member can tap `Enter combat`, as today. If that happens before the order is set, combat is in a **"rolling initiative"** state: players' Party page shows "Combat is starting" and nothing else changes; the GM's page prompts for the roll call. Once the GM presses `Start combat` on the roll-call screen the page becomes the battle order. Only the GM can set the order.
 - **Hidden enemies and the turn pointer (decided).** Players' battle order omits hidden enemies entirely. When a hidden enemy holds the turn, players see a generic **"GM's turn"** row with no name, no initiative and no hit points; the server must never send a player the identity or position data of a hidden enemy. Revealing an enemy makes it appear in the order at its place.
 - **Initiative roll call (GM).** One screen with a row per party member and per enemy, each with a number field; enter moves to the next row; the order re-sorts as numbers go in; `Start combat` locks it in. The GM can still add enemies afterwards.
 - **Enemies are typed in:** name, hit points, initiative; optional armor class and a notes line. A `×N` shortcut adds N copies named "Goblin 1, 2, 3"; by default they share one initiative roll, with a way to give them separate rolls.
-- **Enemy rows (GM):** editable hit points (minus/plus), notes, a `Hidden` toggle, remove. Enemy hit points are visible only to the GM.
+- **Enemy rows (GM):** hit points edited with `Damage`, `Heal` and `Temp HP` over one number field (number-pad entry that clears after use): temp HP absorbs damage first, healing never raises temp HP, hit points are clamped to 0..max with a `Down` state at 0, a typed exact correction is available, and the last change on a row can be undone. Also notes, a `Hidden` toggle and remove. Enemy hit points are visible only to the GM.
+- **Bulk damage (GM).** Select several enemy rows, or `Select group` for a ×N group, and apply one amount to each; the selection clears afterwards.
 - **Players see:** enemy names in the order, never their hit points; hidden enemies do not appear until the GM reveals them. Teammates' hit points and conditions are visible and read-only.
 - **Turn control.** `Next turn` (GM) moves the highlight down the list and loops with a new round. A player's `End Turn` passes the turn to the next row. The "Your turn" banner shows for the player whose row is current. When an enemy is current the GM narrates; no banner.
 - **Never blocks the GM.** Drag a row to reorder, skip a turn, delay a turn, add or remove an enemy mid-fight.
-- **A player can nudge their own hit points straight from their row** in combat (the builder's call; the Character tab remains the full editor).
+- **A player's own row in combat has the same Damage / Heal / Temp HP entry** (the Character tab remains the full editor).
 - **Replaces the manual turn picker.** The "Give turn to…" / "Clear turn" panel is retired once `Next turn` exists.
 
 ### Phase 3: Encounter prep
@@ -97,11 +98,13 @@ The original design had a **Party** tab: party members seeing each other's stats
 - **Saved enemies** ("save this goblin captain for next time").
 - Player-entered initiative as an opt-in; a "bloodied" marker; a Realtime-backed presence indicator.
 
+Considered and not planned for now: condition timers and reminders, monster-library prefill in Phase 2, stored initiative modifiers, an in-combat rules lookup, an offline save status.
+
 **Shaping rule:** an enemy is a plain record (name, hit points, AC, notes, hidden) that a library entry can pre-fill. Do not couple the record to library data.
 
 ## What changes in what is built
 
-- The "Give turn to…" panel and the manual turn picker are replaced by `Next turn` (Phase 2).
+- The "Give turn to…" panel and the manual turn picker are replaced by `Next turn` (Phase 2); the picker's database turn column is removed and turn state lives in the battle order.
 - `End Turn` changes from "clear the turn" to "pass to the next in the order".
 - The session and combat badges, the "Your turn" banner and the GM status line on the campaign screen remain. The GM's campaign screen gains the Party / battle-order page.
 - The 10-second polling on session data gives way to live updates (Phase 1 for party data; the same mechanism should serve session and combat state).
@@ -132,11 +135,11 @@ The original design had a **Party** tab: party members seeing each other's stats
 
 | Question | Owner | Blocking? |
 |---|---|---|
-| Initiative ties: who goes first, and is there a manual tiebreak or a dexterity rule? | Product | No (default: GM drags to break ties) |
-| Does a player who is absent or downed get skipped automatically, or only by the GM's choice? | Product | No (default: GM skips) |
+| ~~Initiative ties~~ Closed: the GM drags to break ties; a stored-modifier rule is not planned. | Product | Closed |
+| ~~Skip of absent or downed players~~ Closed: only by the GM's choice. | Product | Closed |
 | Should teammates' hit points show as numbers, or a bar only? (Draft shows both.) | Product | No |
 | Does a GM who also has a character get a row and a banner like a player? | Product | No |
 | What is the right live-update mechanism for characters, given row-level security? | Engineering | Yes for Phase 1 |
 | How are hidden enemies and enemy hit points kept off players' devices while still sharing order and names? | Engineering | Yes for Phase 2 |
-| Is a round counter wanted at all? | Product | No |
+| ~~Round counter~~ Closed: included (`Round n`). | Product | Closed |
 

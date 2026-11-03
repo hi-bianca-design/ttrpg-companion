@@ -47,6 +47,16 @@ describe('toAppError', () => {
       not_in_combat: "Combat hasn't started yet.",
       invalid_turn_target: "That player can't take a turn right now.",
       not_your_turn: "It isn't your turn.",
+      no_active_combat: 'That fight has already ended.',
+      not_rolling: 'Combat has already started.',
+      not_active: 'Combat has not started yet.',
+      invalid_target: "That row isn't in this fight any more.",
+      invalid_amount: 'Enter a whole number above zero.',
+      invalid_mode: 'Something went wrong. Please try again.',
+      invalid_initiative: 'Initiative must be a whole number from -20 to 99.',
+      invalid_position: "That spot isn't in the order.",
+      invalid_enemy: 'Check the enemy details: a name up to 60 characters, at least 1 hit point, armor class 0 to 40, up to 20 copies.',
+      invalid_patch: 'Something went wrong. Please try again.',
     })
   })
 })

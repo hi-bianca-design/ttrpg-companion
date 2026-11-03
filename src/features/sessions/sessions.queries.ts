@@ -2,8 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '@/lib/query-client'
 import { endSession, endTurn, getActiveSession, openSession, setCombat, setTurn } from './sessions.api'
 
-/** Interim: other members see changes by polling until Realtime lands (PRD step 4). */
-export const SESSION_POLL_MS = 10_000
+/** Safety net only: Realtime (useCombatRealtime) invalidates this query when the session changes. */
+export const SESSION_POLL_MS = 60_000
 
 export function useActiveSession(campaignId: string | undefined) {
   return useQuery({
