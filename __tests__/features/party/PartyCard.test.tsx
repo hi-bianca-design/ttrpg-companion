@@ -8,6 +8,11 @@ jest.mock('@/features/characters/characters.queries')
 jest.mock('@/lib/supabase', () => ({ supabase: { from: jest.fn(), auth: { getSession: jest.fn() } } }))
 import * as characterQueries from '@/features/characters/characters.queries'
 
+const mockPush = jest.fn()
+let mockUid: string | undefined = 'someone-else'
+jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }))
+jest.mock('@/features/content/content.queries', () => ({ useCurrentUserId: () => mockUid }))
+
 const resources = {
   hp: { current: 8, max: 12, temp: 4 },
   spell_slots: { tiers: {} },
@@ -34,7 +39,7 @@ function character(over: Record<string, unknown> = {}): CharacterFull {
   } as never)
 }
 
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => { jest.clearAllMocks(); mockUid = 'someone-else' })
 
 test('shows name, class and level, hit points, conditions and the glance chips', () => {
   render(<PartyCard character={character()} />)
@@ -93,4 +98,18 @@ test('the button’s spoken label carries hit points, conditions and chips, not 
   expect(label).toContain('4 temporary')
   expect(label).toContain('poisoned')
   expect(label).toMatch(/AC/)
+})
+
+test('tapping my own card opens my character sheet instead of expanding', () => {
+  mockUid = 'u1'
+  render(<PartyCard character={character({ details: { inspiration: true } })} />)
+  fireEvent.press(screen.getByRole('button', { name: /^Mira,/ }))
+  expect(mockPush).toHaveBeenCalledWith({ pathname: '/(app)/characters/[id]', params: { id: 'c1' } })
+  expect(screen.queryByText('Inspiration')).toBeNull()
+})
+
+test('tapping a teammate’s card expands it and does not navigate', () => {
+  render(<PartyCard character={character()} />)
+  fireEvent.press(screen.getByRole('button', { name: /^Mira,/ }))
+  expect(mockPush).not.toHaveBeenCalled()
 })
