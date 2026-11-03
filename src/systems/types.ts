@@ -78,6 +78,11 @@ export type PickRecord = {
   content: { name: string; data: unknown }
 }
 
+/** One labelled value on a party card. */
+export type SummaryItem = { key: string; label: string; value: string }
+/** What a party card shows: `glance` always, `more` once expanded. */
+export type PartySummary = { glance: SummaryItem[]; more: SummaryItem[] }
+
 export type DerivedValue = { key: string; label: string; value: number | string; format?: 'modifier' | 'plain' }
 
 export type Draft = Record<string, unknown>
@@ -144,6 +149,8 @@ export interface GameSystem {
   }
   rules: {
     derived(c: CharacterRecord, picks: PickRecord[]): DerivedValue[]
+    /** Optional: the system's party-card fields. Systems without it get the generic card (name, hit points, conditions). */
+    partySummary?(c: CharacterRecord, picks: PickRecord[]): PartySummary
     rest(c: CharacterRecord, kind: 'short' | 'long', picks: PickRecord[]): Record<string, ResourceValue>
     levelUp?(c: CharacterRecord, picks: PickRecord[], input: Record<string, unknown>): LevelUpPatch
     /** Most items a character may be attuned to at once; undefined = no limit. */
