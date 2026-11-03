@@ -261,6 +261,34 @@ export function derived(c: CharacterRecord, picks: PickRecord[]): DerivedValue[]
   ]
 }
 
+// ── Spell save DC ────────────────────────────────────────────
+
+/** The ability each SRD casting class casts with (lowercase class name). */
+export const SPELLCASTING_ABILITY: Record<string, AbilityKey> = {
+  bard: 'charisma', paladin: 'charisma', sorcerer: 'charisma', warlock: 'charisma',
+  cleric: 'wisdom', druid: 'wisdom', ranger: 'wisdom',
+  wizard: 'intelligence',
+}
+
+export type SpellSaveDC = { className: string; ability: AbilityKey; dc: number }
+
+/**
+ * Spell save DC (8 + proficiency bonus + ability modifier) for each casting class pick, in pick order.
+ * A homebrew class names its ability in `data.spellcasting_ability`, which wins over the SRD table.
+ * Classes that do not cast give no entry.
+ */
+export function spellSaveDCs(c: CharacterRecord, picks: PickRecord[]): SpellSaveDC[] {
+  const prof = getProficiencyBonus(c.level)
+  return picks.filter((p) => p.kind === 'class').flatMap((p) => {
+    const declared = asRecord(p.content.data).spellcasting_ability
+    const ability = typeof declared === 'string' && (ABILITY_KEYS as readonly string[]).includes(declared)
+      ? (declared as AbilityKey)
+      : SPELLCASTING_ABILITY[p.content.name.trim().toLowerCase()]
+    if (!ability) return []
+    return [{ className: p.content.name, ability, dc: 8 + prof + getAbilityModifier(c.stats[ability] ?? 10) }]
+  })
+}
+
 // ── Rests ────────────────────────────────────────────────────
 
 function clearSlots(v: ResourceValue | undefined): ResourceValue | undefined {
