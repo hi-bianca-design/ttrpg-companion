@@ -75,6 +75,7 @@ export default function CharacterTab() {
   const system = getSystem(character.system_id)
   const Proficiencies = system.sheet?.sections?.proficiencies
   const Profile = system.sheet?.sections?.profile
+  const Spellcasting = system.sheet?.sections?.spellcasting
   const Languages = system.sheet?.sections?.languages
   const hp = character.resources.hp as PoolValue | undefined
 
@@ -96,6 +97,7 @@ export default function CharacterTab() {
       />
       <ConditionsSection character={character} onEdit={() => setSheet('conditions')} />
       <StatsSection character={character} />
+      {Spellcasting ? <Spellcasting character={character} picks={picks} /> : null}
       {Proficiencies ? <Proficiencies character={character} picks={picks} /> : null}
       {Profile ? <Profile character={character} picks={picks} /> : null}
       {Languages ? (
