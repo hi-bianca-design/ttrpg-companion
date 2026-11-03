@@ -121,6 +121,8 @@ export type SheetSectionProps = {
   character: CharacterRecord
   picks: PickRecord[]
   onChange?: (input: Record<string, unknown>, ready: boolean) => void
+  /** Only passed on the owner's Character tab: merge-patches keys into the character's `details`. */
+  onSaveDetails?: (patch: Record<string, unknown>) => void
 }
 
 /** What a level up changes on the character row. */
