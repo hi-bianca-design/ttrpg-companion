@@ -10,6 +10,7 @@ import { AppError, ERROR_COPY } from '@/features/errors'
 import { qk } from '@/lib/query-client'
 
 // Real hooks over a mocked API: the sequences a unit test with a mocked mutation can't show.
+jest.mock('@/features/sessions/useSessionRealtime', () => ({ useSessionRealtime: jest.fn() }))
 jest.mock('@/features/sessions/sessions.api', () => ({ getActiveSession: jest.fn(), setCombat: jest.fn() }))
 jest.mock('@/features/campaigns/campaigns.queries', () => ({
   useCharacterCampaign: () => ({ data: { id: 'camp1' } }),

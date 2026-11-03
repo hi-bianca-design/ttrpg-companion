@@ -13,6 +13,7 @@ import { PartyList } from '@/features/party/PartyList'
 import { CampaignSessionStatus } from '@/features/sessions/CampaignSessionStatus'
 import { SessionControls } from '@/features/sessions/SessionControls'
 import { TurnControls } from '@/features/sessions/TurnControls'
+import { useSessionRealtime } from '@/features/sessions/useSessionRealtime'
 import { useCampaign } from '@/features/campaigns/campaigns.queries'
 import { useReturnToSheet } from '@/features/campaigns/useReturnToSheet'
 import { THEME_COLORS } from '@/lib/theme'
@@ -24,6 +25,7 @@ export default function CampaignDetailScreen() {
   const router = useRouter()
   const { user } = useAuth()
   const { data, isLoading, isError, refetch } = useCampaign(id)
+  useSessionRealtime(data?.id)
   const returnToSheet = useReturnToSheet()
   const [inviteOpen, setInviteOpen] = useState(false)
   // Opened from a character sheet's Campaign tab, Back returns to that tab (see useReturnToSheet).

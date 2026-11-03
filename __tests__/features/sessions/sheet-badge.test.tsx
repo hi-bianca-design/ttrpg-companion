@@ -6,6 +6,7 @@ import { useCampaign, useCharacterCampaign } from '@/features/campaigns/campaign
 import { useActiveSession, useSetCombat } from '@/features/sessions/sessions.queries'
 import { useCharacter } from '@/features/characters/characters.queries'
 
+jest.mock('@/features/sessions/useSessionRealtime', () => ({ useSessionRealtime: jest.fn() }))
 jest.mock('@/features/campaigns/campaigns.queries', () => ({ useCharacterCampaign: jest.fn(), useCampaign: jest.fn() }))
 jest.mock('@/features/sessions/sessions.queries', () => ({ useActiveSession: jest.fn(), useSetCombat: jest.fn(), useEndTurn: () => ({ mutateAsync: jest.fn() }) }))
 jest.mock('@/features/characters/characters.queries', () => ({ useCharacter: jest.fn() }))

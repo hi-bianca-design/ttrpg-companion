@@ -10,6 +10,7 @@ import { ERROR_COPY } from '@/features/errors'
 import { systemName } from '@/systems/registry'
 import { variantOf } from '../../helpers/button'
 
+jest.mock('@/features/sessions/useSessionRealtime', () => ({ useSessionRealtime: jest.fn() }))
 jest.mock('@/lib/supabase', () => ({ supabase: { from: jest.fn(), rpc: jest.fn(), auth: { getSession: jest.fn() } } }))
 const mockRouter = { back: jest.fn(), push: jest.fn(), navigate: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) }
 const mockParams: { id: string; fromCharacter?: string } = { id: 'camp1' }
