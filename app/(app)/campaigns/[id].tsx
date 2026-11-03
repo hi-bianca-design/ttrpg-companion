@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
 import { useAuth } from '@/features/auth/useAuth'
 import { InviteCode } from '@/features/campaigns/InviteCode'
+import { CampaignSessionStatus } from '@/features/sessions/CampaignSessionStatus'
 import { SessionControls } from '@/features/sessions/SessionControls'
 import { MemberList } from '@/features/campaigns/MemberList'
 import { useCampaign } from '@/features/campaigns/campaigns.queries'
@@ -76,6 +77,7 @@ export default function CampaignDetailScreen() {
       </View>
       {data.description ? <Text variant="narrative" tone="muted">{data.description}</Text> : null}
       {isGm ? <InviteCode code={data.invite_code} /> : null}
+      <CampaignSessionStatus campaignId={data.id} />
       <SessionControls campaign={data} />
       <SectionHeader id={`campaign:${data.id}:members`} title="Members">
         <MemberList members={data.members} />
