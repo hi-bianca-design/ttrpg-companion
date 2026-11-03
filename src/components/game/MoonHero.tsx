@@ -1,8 +1,8 @@
 import { useId, useState } from 'react'
 import { Animated, Image, PixelRatio, View, useWindowDimensions, type LayoutChangeEvent } from 'react-native'
-import Svg, { Circle, Defs, G, Image as SvgImage, LinearGradient, Mask, Pattern, Path, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg'
+import Svg, { Circle, Defs, G, Image as SvgImage, LinearGradient, Mask, Pattern, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg'
 import { THEME_COLORS } from '@/lib/theme'
-import { BACK_CREST, FRONT_CREST, GRID_H, GRID_W, LIT, ROCKS, type LitFace, type Pt } from './moonRidge'
+import { GRID_H, GRID_W, RANGES, SHADOWS, type Pt } from './moonRidge'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const LOGO = require('../../../assets/brand/session-zero-logo.png')
@@ -23,6 +23,17 @@ const RIDGE = 260
 const GRAIN_OPACITY = 0.14
 const GRAIN_TILE = 256
 
+
+// [crest, body] tone of each ridge, farthest first: the far ones sit close to the sky so the logo stays the focus.
+const RANGE_TONES: [string, string][] = [
+  [THEME_COLORS.sky4, THEME_COLORS.sky5],
+  [THEME_COLORS.sky5, THEME_COLORS.sky6],
+  [THEME_COLORS.sky6, THEME_COLORS.rockDeep],
+  [THEME_COLORS.rockDeep, THEME_COLORS.ink],
+]
+
+// Strength of the block shadows on each ridge, farthest first: faint in the haze, firmer up close.
+const SHADOW_OPACITY = [0.22, 0.3, 0.38, 0.45]
 
 const RESTING = new Animated.Value(1)
 
@@ -62,18 +73,6 @@ export function MoonHero({ rise = RESTING }: MoonHeroProps) {
 
   const px = ([x, y]: Pt): Pt => [(x * width) / GRID_W, (y * ridgeH) / GRID_H]
   const pts = (list: Pt[]) => list.map((p) => px(p).join(',')).join(' ')
-  // Smooth closed curve through the points (Catmull-Rom turned into cubic Beziers), for soft light shapes.
-  const blob = (list: Pt[], start = ''): string => {
-    const p = list.map(px)
-    const at = (i: number) => p[Math.min(p.length - 1, Math.max(0, i))]
-    let d = start || `M${p[0][0]},${p[0][1]}`
-    for (let i = 0; i < p.length - 1; i++) {
-      const [p0, p1, p2, p3] = [at(i - 1), at(i), at(i + 1), at(i + 2)]
-      d += ` C${p1[0] + (p2[0] - p0[0]) / 6},${p1[1] + (p2[1] - p0[1]) / 6} ${p2[0] - (p3[0] - p1[0]) / 6},${p2[1] - (p3[1] - p1[1]) / 6} ${p2[0]},${p2[1]}`
-    }
-    return `${d} Z`
-  }
-  const litPath = (face: LitFace) => blob(face.edge, `M${face.crest.map((c) => px(c).join(',')).join(' L')} L${px(face.edge[0]).join(',')}`)
   const crest = (list: Pt[]) => pts([[0, GRID_H], ...list, [GRID_W, GRID_H]])
 
   const tile = isWeb() ? GRAIN_TILE : GRAIN_TILE / PixelRatio.get()
@@ -103,19 +102,14 @@ export function MoonHero({ rise = RESTING }: MoonHeroProps) {
 
       <Svg width={width} height={ridgeH} style={{ position: 'absolute', top: slot + reach - ridgeH, left: 0 }}>
         <Defs>
-          {/* Each ridge is lit at its crest by the sky and deepens downward, then fades out so it melts into the night. */}
-          <LinearGradient id={`${id}-back`} x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={THEME_COLORS.ink} stopOpacity={1} />
-            <Stop offset="0.5" stopColor={THEME_COLORS.rockDeep} stopOpacity={1} />
-            <Stop offset="0.8" stopColor={THEME_COLORS.rockDeep} stopOpacity={0.5} />
-            <Stop offset="1" stopColor={THEME_COLORS.rockDeep} stopOpacity={0} />
-          </LinearGradient>
-          <LinearGradient id={`${id}-front`} x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={THEME_COLORS.rockDeep} stopOpacity={1} />
-            <Stop offset="0.4" stopColor={THEME_COLORS.ink} stopOpacity={1} />
-            <Stop offset="0.75" stopColor={THEME_COLORS.ink} stopOpacity={0.45} />
-            <Stop offset="1" stopColor={THEME_COLORS.ink} stopOpacity={0} />
-          </LinearGradient>
+          {/* Distant ridges: each is a touch lighter at the crest (haze) and settles into its own tone; the nearest fades out. */}
+          {RANGE_TONES.map(([top, bottom], i) => (
+            <LinearGradient key={i} id={`${id}-range-${i}`} x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor={top} stopOpacity={1} />
+              <Stop offset={i === RANGE_TONES.length - 1 ? 0.45 : 0.6} stopColor={bottom} stopOpacity={1} />
+              <Stop offset="1" stopColor={bottom} stopOpacity={0} />
+            </LinearGradient>
+          ))}
           <LinearGradient id={`${id}-fade`} x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0.5" stopColor="white" stopOpacity={1} />
             <Stop offset="1" stopColor="white" stopOpacity={0} />
@@ -128,20 +122,21 @@ export function MoonHero({ rise = RESTING }: MoonHeroProps) {
           </Pattern>
         </Defs>
 
-        <Polygon points={crest(BACK_CREST)} fill={`url(#${id}-back)`} />
-        <G mask={`url(#${id}-grain-mask)`}>
-          {LIT.map((face, i) => (
-            <Path key={`lit-${i}`} d={litPath(face)} fill={THEME_COLORS.secondary} fillOpacity={0.5} />
-          ))}
-          {ROCKS.map((rock, i) => (
-            <Path key={`rock-${i}`} d={blob([...rock, rock[0]])} fill={THEME_COLORS.ink} fillOpacity={0.75} />
-          ))}
-        </G>
-        <Polygon points={crest(FRONT_CREST)} fill={`url(#${id}-front)`} />
+        {RANGES.map((range, i) => (
+          <G key={i}>
+            <Polygon points={crest(range)} fill={`url(#${id}-range-${i})`} />
+            <G mask={`url(#${id}-grain-mask)`}>
+              {SHADOWS[i].map((plane, j) => (
+                <Polygon key={j} points={pts(plane)} fill={THEME_COLORS.ink} fillOpacity={SHADOW_OPACITY[i]} />
+              ))}
+            </G>
+          </G>
+        ))}
 
         <G mask={`url(#${id}-grain-mask)`} opacity={GRAIN_OPACITY}>
-          <Polygon points={crest(BACK_CREST)} fill={`url(#${id}-grain)`} />
-          <Polygon points={crest(FRONT_CREST)} fill={`url(#${id}-grain)`} />
+          {RANGES.map((range, i) => (
+            <Polygon key={i} points={crest(range)} fill={`url(#${id}-grain)`} />
+          ))}
         </G>
       </Svg>
     </View>
