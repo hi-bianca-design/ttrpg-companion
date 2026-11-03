@@ -1,5 +1,4 @@
 // D&D 5e (2024) rules: ability maths, spell slots, derived values and rests.
-// Ported from the pre-rebuild character utils (since removed).
 import type {
   CharacterRecord, DerivedValue, PartySummary, PickRecord, PoolValue, ResourceValue, SlotsValue, SummaryItem,
 } from '../types'
@@ -61,36 +60,9 @@ export const XP_THRESHOLDS = [
   85000, 100000, 120000, 140000, 165000, 195000, 225000, 265000, 305000, 355000,
 ]
 
-export function getLevelFromXP(xp: number): number {
-  let level = 1
-  for (let i = 1; i < XP_THRESHOLDS.length; i++) {
-    if (xp >= XP_THRESHOLDS[i]) level = i + 1
-    else break
-  }
-  return level
-}
-
 export function getXPForNextLevel(level: number): number | null {
   if (level >= 20) return null
   return XP_THRESHOLDS[level] ?? null
-}
-
-export function getMaxHPMulticlass(
-  startingLevel: number,
-  primaryHitDie: number,
-  secondHitDie: number | null,
-  secondClassLevel: number | null,
-  conMod: number
-): number {
-  const primaryLevel = startingLevel - (secondClassLevel ?? 0)
-  const primaryHP =
-    (primaryHitDie + conMod) +
-    Math.max(0, primaryLevel - 1) * (Math.floor(primaryHitDie / 2) + 1 + conMod)
-  const secondaryHP =
-    secondClassLevel && secondHitDie
-      ? secondClassLevel * (Math.floor(secondHitDie / 2) + 1 + conMod)
-      : 0
-  return primaryHP + secondaryHP
 }
 
 /**
