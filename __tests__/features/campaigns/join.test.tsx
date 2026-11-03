@@ -5,7 +5,7 @@ import { makeTestQueryClient } from '../../helpers/queryClient'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import { useLocalSearchParams } from 'expo-router'
 import JoinCampaignScreen from '../../../app/(app)/campaigns/join'
-import { joinCampaign } from '@/features/campaigns/campaigns.api'
+import { joinCampaign, previewInvite } from '@/features/campaigns/campaigns.api'
 import { listCharacters } from '@/features/characters/characters.api'
 import { AppError, ERROR_COPY, type AppErrorCode } from '@/features/errors'
 import { showToast } from '@/components/ui/toast'
@@ -20,7 +20,7 @@ jest.mock('expo-router', () => ({
   useLocalSearchParams: jest.fn(() => ({})),
 }))
 jest.mock('@/components/ui/toast', () => ({ showToast: jest.fn() }))
-jest.mock('@/features/campaigns/campaigns.api', () => ({ joinCampaign: jest.fn() }))
+jest.mock('@/features/campaigns/campaigns.api', () => ({ joinCampaign: jest.fn(), previewInvite: jest.fn() }))
 jest.mock('@/features/characters/characters.api', () => ({ listCharacters: jest.fn() }))
 
 const CHARACTERS = [
@@ -46,6 +46,7 @@ beforeEach(() => {
   jest.clearAllMocks()
   ;(listCharacters as jest.Mock).mockResolvedValue(CHARACTERS)
   ;(useLocalSearchParams as jest.Mock).mockReturnValue({})
+  ;(previewInvite as jest.Mock).mockResolvedValue({ id: 'camp1', name: 'Odd Game', system_id: 'dnd5e-2024' })
 })
 
 test('the code input uppercases what is typed', () => {
@@ -182,5 +183,56 @@ describe('prefilled from an invite link', () => {
     renderJoin()
     await screen.findByRole('button', { name: 'Character Thorin', selected: true })
     expect(joinCampaign).not.toHaveBeenCalled()
+  })
+})
+
+describe('campaign preview', () => {
+  test('a full code shows which campaign it opens and retitles the screen', async () => {
+    ;(useLocalSearchParams as jest.Mock).mockReturnValue({ code: 'AB12CD' })
+    renderJoin()
+    expect(await screen.findByText('Join Odd Game')).toBeTruthy()
+    expect(previewInvite).toHaveBeenCalledWith('AB12CD')
+  })
+
+  test('typing a full code looks the campaign up; a partial code does not', async () => {
+    renderJoin()
+    fireEvent.changeText(screen.getByLabelText('Invite code'), 'AB12')
+    expect(previewInvite).not.toHaveBeenCalled()
+    fireEvent.changeText(screen.getByLabelText('Invite code'), 'AB12CD')
+    expect(await screen.findByText('Join Odd Game')).toBeTruthy()
+  })
+
+  test('an unknown code shows the invalid_code copy before joining', async () => {
+    ;(previewInvite as jest.Mock).mockRejectedValue(new AppError('invalid_code'))
+    ;(useLocalSearchParams as jest.Mock).mockReturnValue({ code: 'ZZZZZZ' })
+    renderJoin()
+    expect(await screen.findByText(ERROR_COPY.invalid_code)).toBeTruthy()
+    expect(screen.getByText('Join a campaign')).toBeTruthy()
+  })
+
+  test('a failed lookup (e.g. offline) leaves the plain form usable', async () => {
+    ;(previewInvite as jest.Mock).mockRejectedValue(new AppError('network'))
+    ;(useLocalSearchParams as jest.Mock).mockReturnValue({ code: 'AB12CD' })
+    renderJoin()
+    await pickCharacter('Thorin')
+    expect(screen.getByText('Join a campaign')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Join' })).toBeEnabled()
+  })
+
+  test('with one character in the campaign’s system, it is chosen for you: one tap to join', async () => {
+    ;(listCharacters as jest.Mock).mockResolvedValue([CHARACTERS[0], { ...CHARACTERS[1], system_id: 'other' }])
+    ;(useLocalSearchParams as jest.Mock).mockReturnValue({ code: 'AB12CD' })
+    renderJoin()
+    await screen.findByRole('button', { name: 'Character Thorin', selected: true })
+    expect(screen.getByRole('button', { name: 'Join' })).toBeEnabled()
+  })
+
+  test('with several matching characters nothing is chosen for you', async () => {
+    ;(useLocalSearchParams as jest.Mock).mockReturnValue({ code: 'AB12CD' })
+    renderJoin()
+    await screen.findByText('Join Odd Game')
+    await screen.findByRole('button', { name: 'Character Thorin' })
+    expect(screen.queryByRole('button', { name: /Character .*/, selected: true })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Join' })).toBeDisabled()
   })
 })
