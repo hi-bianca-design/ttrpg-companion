@@ -23,4 +23,8 @@ export const qk = {
   packs: ['packs'] as const,
   entitlements: ['entitlements'] as const,
   session: (campaignId: string) => ['session', campaignId] as const,
+  // Three different heads so invalidating one is never a prefix match of another.
+  combat: (campaignId: string) => ['combat', campaignId] as const,
+  combatOrder: (combatId: string) => ['combat-order', combatId] as const,
+  combatEntries: (combatId: string) => ['combat-entries', combatId] as const,
 }

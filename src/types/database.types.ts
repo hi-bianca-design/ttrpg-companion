@@ -298,6 +298,233 @@ export type Database = {
           },
         ]
       }
+      combat_entries: {
+        Row: {
+          ac: number | null
+          campaign_id: string
+          character_id: string | null
+          combat_id: string
+          group_id: string | null
+          hidden: boolean
+          hp: number | null
+          id: string
+          initiative: number | null
+          is_current: boolean
+          kind: string
+          last_batch: string | null
+          max_hp: number | null
+          name: string | null
+          notes: string | null
+          position: number
+          prev_hp: number | null
+          prev_temp: number | null
+          temp_hp: number
+          user_id: string | null
+        }
+        Insert: {
+          ac?: number | null
+          campaign_id: string
+          character_id?: string | null
+          combat_id: string
+          group_id?: string | null
+          hidden?: boolean
+          hp?: number | null
+          id?: string
+          initiative?: number | null
+          is_current?: boolean
+          kind: string
+          last_batch?: string | null
+          max_hp?: number | null
+          name?: string | null
+          notes?: string | null
+          position: number
+          prev_hp?: number | null
+          prev_temp?: number | null
+          temp_hp?: number
+          user_id?: string | null
+        }
+        Update: {
+          ac?: number | null
+          campaign_id?: string
+          character_id?: string | null
+          combat_id?: string
+          group_id?: string | null
+          hidden?: boolean
+          hp?: number | null
+          id?: string
+          initiative?: number | null
+          is_current?: boolean
+          kind?: string
+          last_batch?: string | null
+          max_hp?: number | null
+          name?: string | null
+          notes?: string | null
+          position?: number
+          prev_hp?: number | null
+          prev_temp?: number | null
+          temp_hp?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "combat_entries_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "combat_entries_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "combat_entries_combat_id_fkey"
+            columns: ["combat_id"]
+            isOneToOne: false
+            referencedRelation: "combats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "combat_entries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      combat_order: {
+        Row: {
+          campaign_id: string
+          character_id: string | null
+          combat_id: string
+          id: string
+          initiative: number | null
+          kind: string
+          name: string | null
+          position: number
+          user_id: string | null
+        }
+        Insert: {
+          campaign_id: string
+          character_id?: string | null
+          combat_id: string
+          id: string
+          initiative?: number | null
+          kind: string
+          name?: string | null
+          position: number
+          user_id?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          character_id?: string | null
+          combat_id?: string
+          id?: string
+          initiative?: number | null
+          kind?: string
+          name?: string | null
+          position?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "combat_order_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "combat_order_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "combat_order_combat_id_fkey"
+            columns: ["combat_id"]
+            isOneToOne: false
+            referencedRelation: "combats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "combat_order_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      combats: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          gm_turn: boolean
+          id: string
+          rev: number
+          round: number
+          session_id: string
+          started_by: string | null
+          status: string
+          turn_entry_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          gm_turn?: boolean
+          id?: string
+          rev?: number
+          round?: number
+          session_id: string
+          started_by?: string | null
+          status?: string
+          turn_entry_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          gm_turn?: boolean
+          id?: string
+          rev?: number
+          round?: number
+          session_id?: string
+          started_by?: string | null
+          status?: string
+          turn_entry_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "combats_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "combats_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "combats_started_by_fkey"
+            columns: ["started_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content: {
         Row: {
           campaign_id: string | null
@@ -601,6 +828,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_enemies: {
+        Args: {
+          p_ac: number
+          p_combat_id: string
+          p_count: number
+          p_hidden: boolean
+          p_initiative: number
+          p_max_hp: number
+          p_name: string
+          p_notes: string
+        }
+        Returns: string[]
+      }
+      apply_enemy_hp: {
+        Args: {
+          p_amount: number
+          p_combat_id: string
+          p_entry_ids: string[]
+          p_mode: string
+        }
+        Returns: string
+      }
       campaign_sheet_content_ids: { Args: never; Returns: string[] }
       campaign_visible_character_ids: { Args: never; Returns: string[] }
       can_reference_content: {
@@ -608,6 +857,53 @@ export type Database = {
         Returns: boolean
       }
       can_view_character: { Args: { p_character_id: string }; Returns: boolean }
+      combat_advance: { Args: { p_combat_id: string }; Returns: undefined }
+      combat_delete_entries: {
+        Args: { p_combat_id: string; p_ids: string[] }
+        Returns: undefined
+      }
+      combat_end_for_session: {
+        Args: { p_session_id: string }
+        Returns: undefined
+      }
+      combat_insert_position: {
+        Args: { p_combat_id: string; p_exclude: string; p_initiative: number }
+        Returns: number
+      }
+      combat_lock_for_entry: {
+        Args: { p_entry_id: string }
+        Returns: {
+          campaign_id: string
+          created_at: string
+          gm_turn: boolean
+          id: string
+          rev: number
+          round: number
+          session_id: string
+          started_by: string | null
+          status: string
+          turn_entry_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "combats"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      combat_next_entry: {
+        Args: { p_combat_id: string; p_from: string }
+        Returns: {
+          entry_id: string
+          wrapped: boolean
+        }[]
+      }
+      combat_place_entry: {
+        Args: { p_combat_id: string; p_entry_id: string; p_to: number }
+        Returns: undefined
+      }
+      combat_renumber: { Args: { p_combat_id: string }; Returns: undefined }
       create_campaign: {
         Args: { p_description?: string; p_name: string; p_system_id: string }
         Returns: {
@@ -623,6 +919,50 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "campaigns"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      delay_turn: {
+        Args: { p_combat_id: string; p_expected_entry_id: string }
+        Returns: {
+          campaign_id: string
+          created_at: string
+          gm_turn: boolean
+          id: string
+          rev: number
+          round: number
+          session_id: string
+          started_by: string | null
+          status: string
+          turn_entry_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "combats"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      end_my_turn: {
+        Args: { p_combat_id: string }
+        Returns: {
+          campaign_id: string
+          created_at: string
+          gm_turn: boolean
+          id: string
+          rev: number
+          round: number
+          session_id: string
+          started_by: string | null
+          status: string
+          turn_entry_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "combats"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -676,12 +1016,12 @@ export type Database = {
         Args: { p_character_id: string; p_content_id: string }
         Returns: boolean
       }
-      is_campaign_gm: { Args: { p_campaign_id: string }; Returns: boolean }
-      is_campaign_member: { Args: { p_campaign_id: string }; Returns: boolean }
       is_active_campaign_member: {
         Args: { p_campaign_id: string }
         Returns: boolean
       }
+      is_campaign_gm: { Args: { p_campaign_id: string }; Returns: boolean }
+      is_campaign_member: { Args: { p_campaign_id: string }; Returns: boolean }
       join_campaign: {
         Args: { p_character_id: string; p_code: string }
         Returns: string
@@ -704,6 +1044,72 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "sessions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      lock_combat: {
+        Args: { p_combat_id: string }
+        Returns: {
+          campaign_id: string
+          created_at: string
+          gm_turn: boolean
+          id: string
+          rev: number
+          round: number
+          session_id: string
+          started_by: string | null
+          status: string
+          turn_entry_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "combats"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      move_entry: {
+        Args: { p_entry_id: string; p_to_position: number }
+        Returns: {
+          campaign_id: string
+          created_at: string
+          gm_turn: boolean
+          id: string
+          rev: number
+          round: number
+          session_id: string
+          started_by: string | null
+          status: string
+          turn_entry_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "combats"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      next_turn: {
+        Args: { p_combat_id: string; p_expected_entry_id: string }
+        Returns: {
+          campaign_id: string
+          created_at: string
+          gm_turn: boolean
+          id: string
+          rev: number
+          round: number
+          session_id: string
+          started_by: string | null
+          status: string
+          turn_entry_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "combats"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -733,6 +1139,29 @@ export type Database = {
       own_sheet_content_ids: { Args: never; Returns: string[] }
       owns_character: { Args: { p_character_id: string }; Returns: boolean }
       owns_pack: { Args: { p_pack_id: string }; Returns: boolean }
+      refresh_combat: { Args: { p_combat_id: string }; Returns: undefined }
+      remove_entry: {
+        Args: { p_entry_id: string }
+        Returns: {
+          campaign_id: string
+          created_at: string
+          gm_turn: boolean
+          id: string
+          rev: number
+          round: number
+          session_id: string
+          started_by: string | null
+          status: string
+          turn_entry_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "combats"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       set_combat: {
         Args: { p_in_combat: boolean; p_session_id: string }
         Returns: {
@@ -755,6 +1184,50 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      set_current_entry: {
+        Args: { p_entry_id: string }
+        Returns: {
+          campaign_id: string
+          created_at: string
+          gm_turn: boolean
+          id: string
+          rev: number
+          round: number
+          session_id: string
+          started_by: string | null
+          status: string
+          turn_entry_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "combats"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      set_initiative: {
+        Args: { p_entry_id: string; p_initiative: number }
+        Returns: {
+          campaign_id: string
+          created_at: string
+          gm_turn: boolean
+          id: string
+          rev: number
+          round: number
+          session_id: string
+          started_by: string | null
+          status: string
+          turn_entry_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "combats"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       set_turn: {
         Args: { p_session_id: string; p_user_id: string }
         Returns: {
@@ -773,6 +1246,54 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "sessions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      start_combat: {
+        Args: { p_combat_id: string }
+        Returns: {
+          campaign_id: string
+          created_at: string
+          gm_turn: boolean
+          id: string
+          rev: number
+          round: number
+          session_id: string
+          started_by: string | null
+          status: string
+          turn_entry_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "combats"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      undo_enemy_hp: {
+        Args: { p_batch: string; p_combat_id: string }
+        Returns: number
+      }
+      update_enemy: {
+        Args: { p_entry_id: string; p_patch: Json }
+        Returns: {
+          campaign_id: string
+          created_at: string
+          gm_turn: boolean
+          id: string
+          rev: number
+          round: number
+          session_id: string
+          started_by: string | null
+          status: string
+          turn_entry_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "combats"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -913,3 +1434,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
