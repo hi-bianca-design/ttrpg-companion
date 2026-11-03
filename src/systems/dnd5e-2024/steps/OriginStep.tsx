@@ -5,7 +5,8 @@ import { Text } from '@/components/ui/text'
 import type { BuilderStepProps } from '../../types'
 import { ABILITY_LABELS, type AbilityKey } from '../definition'
 import { customData, type CustomEntry } from '../customEntries'
-import { customEntry } from '../draft'
+import { customEntry, strList } from '../draft'
+import { LanguageEditor } from '../LanguageEditor'
 import { skillKey } from '../rules'
 import { ChoiceCard, CustomChoice, QueryState, StepIntro, useDndContent } from './shared'
 
@@ -59,6 +60,7 @@ export function OriginStep({ draft, update }: BuilderStepProps) {
                 background_id: bg.id,
                 bg_abilities: bg.data.ability_score_options.abilities ?? [],
                 bg_skills: bg.data.skill_proficiencies.map(skillKey),
+                bg_languages: bg.data.languages ?? [],
               })}
             >
               {bg.description ? <Text variant="body-sm" tone="muted" numberOfLines={2}>{bg.description}</Text> : null}
@@ -100,7 +102,7 @@ export function OriginStep({ draft, update }: BuilderStepProps) {
                 title={sp.name}
                 selected={draft.species_id === sp.id}
                 aside={sp.owned ? <Badge>Homebrew</Badge> : null}
-                onPress={() => update({ species_id: sp.id })}
+                onPress={() => update({ species_id: sp.id, species_languages: sp.data.languages ?? [] })}
               >
                 <Text variant="body-sm" tone="muted">{`${sp.data.size} · Speed ${sp.data.speed} ft`}</Text>
                 {traits.length > 0 ? (
@@ -110,6 +112,15 @@ export function OriginStep({ draft, update }: BuilderStepProps) {
             )
           })}
         </View>
+      </SectionHeader>
+
+      <SectionHeader
+        id="builder-languages"
+        title="Languages"
+        action={<Text variant="label" tone="accent">{`${strList(draft.languages_chosen).length} chosen`}</Text>}
+      >
+        <Text variant="body-sm" tone="muted">You know Common and usually two more of your choice. Type any language.</Text>
+        <LanguageEditor fixed={['Common']} value={strList(draft.languages_chosen)} onChange={(next) => update({ languages_chosen: next })} />
       </SectionHeader>
     </View>
   )
