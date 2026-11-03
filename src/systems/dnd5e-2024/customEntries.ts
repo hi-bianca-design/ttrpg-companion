@@ -2,6 +2,7 @@
 // No React, no network: defaults for empty extras, schema-valid data builders, the draft
 // cache for a custom class, and name helpers.
 import type { FieldDef } from '../types'
+import { parseLanguageText } from './languages'
 import { ABILITY_KEYS, DND_CONTENT_KIND_META, SKILLS } from './definition'
 
 export type CustomKind = 'class' | 'species' | 'background'
@@ -41,6 +42,12 @@ function num(v: unknown): number | undefined {
 
 function strList(v: unknown): string[] {
   return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []
+}
+
+/** Granted languages from a homebrew form's text; `Common` is implicit and left out. */
+function languageGrants(v: unknown): { languages?: string[] } {
+  const list = parseLanguageText(typeof v === 'string' ? v : '').filter((l) => l.toLowerCase() !== 'common')
+  return list.length > 0 ? { languages: list } : {}
 }
 
 function text(v: unknown): string {
@@ -87,6 +94,7 @@ export function customData(kind: CustomKind, extras: Record<string, unknown>, on
       creature_type: text(e.creature_type) || DEFAULT_CREATURE_TYPE,
       traits: {},
       ability_score_bonuses: {},
+      ...languageGrants(e.languages),
     }
   }
   const feat = text(e.origin_feat)
@@ -97,6 +105,7 @@ export function customData(kind: CustomKind, extras: Record<string, unknown>, on
     ability_score_options: {},
     ...(feat ? { origin_feat: feat } : {}),
     ...(tool ? { tool_proficiency: tool } : {}),
+    ...languageGrants(e.languages),
   }
 }
 

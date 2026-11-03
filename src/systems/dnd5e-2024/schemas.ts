@@ -37,6 +37,7 @@ export const dnd5eDetailsSchema = z.object({
   other_gear: z.array(z.string()).optional(),
   xp: nonNegInt.optional(),
   inspiration: z.boolean().optional(),
+  languages: z.array(z.string()).optional(),
 })
 
 const levelFeatures = z.record(z.string(), z.array(z.string()))
@@ -76,6 +77,7 @@ const speciesData = z.object({
     size_note: z.string().optional(),
   }).default({}),
   ability_score_bonuses: looseRecord.default({}),
+  languages: z.array(z.string()).optional(),
 })
 
 const backgroundData = z.object({
@@ -84,6 +86,7 @@ const backgroundData = z.object({
   ability_score_options: z.looseObject({ abilities: z.array(z.string()).optional() }).default({}),
   origin_feat: z.string().nullable().optional(),
   tool_proficiency: z.string().nullable().optional(),
+  languages: z.array(z.string()).optional(),
 })
 
 const featData = z.object({
