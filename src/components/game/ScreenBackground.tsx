@@ -2,6 +2,7 @@ import { useId, useState, type ReactNode } from 'react'
 import { Image, PixelRatio, ScrollView, View, type ImageSourcePropType, type LayoutChangeEvent } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg'
+import { useNavInset } from '@/components/ui/nav-inset'
 import { SKY_BANDS, THEME_COLORS } from '@/lib/theme'
 import { cn } from '@/lib/utils'
 
@@ -38,7 +39,17 @@ export function ScreenBackground({ children, scroll = false }: ScreenBackgroundP
   }
   const vignetteId = `screen-vignette-${useId().replace(/[^A-Za-z0-9_-]/g, '')}`
   // Fixed screens fill the height so a child can flex (e.g. a scroll area between header and footer).
-  const content = <View className={cn('gap-8 px-4 pb-8 pt-6', !scroll && 'flex-1')}>{children}</View>
+  // Under the floating bar the content gets extra bottom space so the last item clears it.
+  const navInset = useNavInset()
+  const content = (
+    <View
+      testID="screen-content"
+      className={cn('gap-8 px-4 pt-6', navInset === 0 && 'pb-8', !scroll && 'flex-1')}
+      style={navInset > 0 ? { paddingBottom: 32 + navInset } : undefined}
+    >
+      {children}
+    </View>
+  )
 
   return (
     <View testID="screen-background" className="flex-1 bg-background" onLayout={onLayout}>
