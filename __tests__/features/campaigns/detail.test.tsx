@@ -4,8 +4,8 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { makeTestQueryClient } from '../../helpers/queryClient'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import CampaignDetailScreen from '../../../app/(app)/campaigns/[id]'
-import { getCampaign } from '@/features/campaigns/campaigns.api'
 import { getActiveSession } from '@/features/sessions/sessions.api'
+import { getCampaign, getCharacterCampaign } from '@/features/campaigns/campaigns.api'
 import { ERROR_COPY } from '@/features/errors'
 import { systemName } from '@/systems/registry'
 import { variantOf } from '../../helpers/button'
@@ -20,7 +20,7 @@ jest.mock('expo-router', () => ({
   useLocalSearchParams: () => mockParams,
 }))
 jest.mock('@/features/auth/useAuth', () => ({ useAuth: () => ({ user: { id: 'gm1' } }) }))
-jest.mock('@/features/campaigns/campaigns.api', () => ({ getCampaign: jest.fn() }))
+jest.mock('@/features/campaigns/campaigns.api', () => ({ getCampaign: jest.fn(), getCharacterCampaign: jest.fn() }))
 jest.mock('@/features/party/PartyList', () => ({
   PartyList: () => { const { Text } = require('react-native'); return <Text>party list</Text> },
 }))
@@ -105,6 +105,36 @@ test('a GM sees the Open session control on the campaign screen', async () => {
   ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
   renderDetail()
   expect(await screen.findByRole('button', { name: 'Open session' })).toBeTruthy()
+})
+
+describe('session and combat status on the campaign screen (a GM has no character sheet)', () => {
+  const active = { id: 's1', campaign_id: 'camp1', opened_by: 'gm1', in_combat: false, combat_started_by: null, current_turn_user_id: null }
+  afterEach(() => { ;(getActiveSession as jest.Mock).mockResolvedValue(null) })
+
+  test('a GM sees Session: Active and Enter combat, without any character lookup', async () => {
+    ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
+    ;(getActiveSession as jest.Mock).mockResolvedValue(active)
+    renderDetail()
+    expect(await screen.findByText('Session: Active')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Enter combat' })).toBeTruthy()
+    expect(getCharacterCampaign).not.toHaveBeenCalled()
+  })
+
+  test('combat a player started shows as In combat, and the GM can end it', async () => {
+    ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
+    ;(getActiveSession as jest.Mock).mockResolvedValue({ ...active, in_combat: true, combat_started_by: 'p1' })
+    renderDetail()
+    expect(await screen.findByRole('button', { name: 'In combat' })).toBeTruthy()
+  })
+
+  test('no status row without an active session', async () => {
+    ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
+    ;(getActiveSession as jest.Mock).mockResolvedValue(null)
+    renderDetail()
+    expect(await screen.findByRole('button', { name: 'Open session' })).toBeTruthy()
+    expect(screen.queryByText('Session: Active')).toBeNull()
+    expect(screen.queryByText('Enter combat')).toBeNull()
+  })
 })
 
 test('the campaign screen shows the party for the GM, who has no character sheet', async () => {
