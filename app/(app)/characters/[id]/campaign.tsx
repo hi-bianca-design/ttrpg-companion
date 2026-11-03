@@ -1,13 +1,13 @@
 import { View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Scroll } from 'phosphor-react-native'
-import { EmptyState, ScreenBackground, SectionHeader } from '@/components/game'
+import { EmptyState, ScreenBackground } from '@/components/game'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
 import { useAuth } from '@/features/auth/useAuth'
 import { CampaignCard } from '@/features/campaigns/CampaignCard'
-import { PartyList } from '@/features/party/PartyList'
+import { PartyPage } from '@/features/combat/PartyPage'
 import { SessionControls } from '@/features/sessions/SessionControls'
 import { useCampaign, useCharacterCampaign } from '@/features/campaigns/campaigns.queries'
 import { useCharacter } from '@/features/characters/characters.queries'
@@ -85,9 +85,7 @@ export default function CampaignTab() {
         onPress={() => router.push({ pathname: '/(app)/campaigns/[id]', params: { id: c.id, fromCharacter: id } })}
       />
       <SessionControls campaign={c} />
-      <SectionHeader id={`campaign:${c.id}:party`} title="Party">
-        <PartyList campaign={c} />
-      </SectionHeader>
+      <PartyPage campaign={c} />
     </ScreenBackground>
   )
 }

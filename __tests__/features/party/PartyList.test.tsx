@@ -74,6 +74,14 @@ test('Reconnecting shows only while the live connection is down', () => {
   expect(screen.getByText('Reconnecting…')).toBeTruthy()
 })
 
+test('managed by a parent: no subscription of its own and no marker of its own', () => {
+  ;(usePartyCharacters as jest.Mock).mockReturnValue({ data: [], isLoading: false, isError: false, refetch })
+  ;(usePartyRealtime as jest.Mock).mockReturnValue({ connected: false })
+  render(<PartyList campaign={campaign([member('p1', { character_id: 'c1' })])} managed />)
+  expect(usePartyRealtime).toHaveBeenCalledWith(undefined)
+  expect(screen.queryByText('Reconnecting…')).toBeNull()
+})
+
 test('no Reconnecting marker while connected', () => {
   setup([member('p1', { character_id: 'c1' })], { data: [char('c1', 'Mira')] }, true)
   expect(screen.queryByText('Reconnecting…')).toBeNull()

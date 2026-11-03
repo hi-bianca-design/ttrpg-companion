@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { BackButton, NavRow, ScreenBackground, SectionHeader } from '@/components/game'
+import { BackButton, NavRow, ScreenBackground } from '@/components/game'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { QrCode } from 'phosphor-react-native'
@@ -9,10 +9,9 @@ import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
 import { useAuth } from '@/features/auth/useAuth'
 import { InviteSheet } from '@/features/campaigns/InviteSheet'
-import { PartyList } from '@/features/party/PartyList'
+import { PartyPage } from '@/features/combat/PartyPage'
 import { CampaignSessionStatus } from '@/features/sessions/CampaignSessionStatus'
 import { SessionControls } from '@/features/sessions/SessionControls'
-import { TurnControls } from '@/features/sessions/TurnControls'
 import { useCampaign } from '@/features/campaigns/campaigns.queries'
 import { useReturnToSheet } from '@/features/campaigns/useReturnToSheet'
 import { THEME_COLORS } from '@/lib/theme'
@@ -96,12 +95,9 @@ export default function CampaignDetailScreen() {
         <View className="gap-3">
           <CampaignSessionStatus campaignId={data.id} />
           <SessionControls campaign={data} />
-          <TurnControls campaign={data} />
         </View>
       </View>
-      <SectionHeader id={`campaign:${data.id}:party`} title="Party">
-        <PartyList campaign={data} />
-      </SectionHeader>
+      <PartyPage campaign={data} />
     </ScreenBackground>
   )
 }

@@ -21,8 +21,8 @@ jest.mock('expo-router', () => ({
 }))
 jest.mock('@/features/auth/useAuth', () => ({ useAuth: () => ({ user: { id: 'gm1' } }) }))
 jest.mock('@/features/campaigns/campaigns.api', () => ({ getCampaign: jest.fn(), getCharacterCampaign: jest.fn() }))
-jest.mock('@/features/party/PartyList', () => ({
-  PartyList: () => { const { Text } = require('react-native'); return <Text>party list</Text> },
+jest.mock('@/features/combat/PartyPage', () => ({
+  PartyPage: () => { const { Text } = require('react-native'); return <Text>party list</Text> },
 }))
 jest.mock('@/features/sessions/sessions.api', () => ({ getActiveSession: jest.fn().mockResolvedValue(null), openSession: jest.fn(), endSession: jest.fn() }))
 
@@ -143,7 +143,7 @@ test('the campaign screen shows the party for the GM, who has no character sheet
   expect(await screen.findByText('party list')).toBeTruthy()
 })
 
-test('a GM sees the turn panel while the session is in combat', async () => {
+test('the manual turn picker is gone: the order, not a panel, decides whose turn it is', async () => {
   const player = {
     campaign_id: 'camp1', user_id: 'mira', role: 'player', status: 'active', character_id: 'ch1', created_at: '', updated_at: '',
     username: 'mira', character_name: 'Mira',
@@ -151,8 +151,9 @@ test('a GM sees the turn panel while the session is in combat', async () => {
   ;(getCampaign as jest.Mock).mockResolvedValue({ ...campaign, members: [player] })
   ;(getActiveSession as jest.Mock).mockResolvedValue({ id: 's1', campaign_id: 'camp1', opened_by: 'gm1', in_combat: true, current_turn_user_id: null })
   renderDetail()
-  expect(await screen.findByText('Pick whose turn it is')).toBeTruthy()
-  expect(screen.getByRole('button', { name: 'Give turn to mira' })).toBeTruthy()
+  expect(await screen.findByText('party list')).toBeTruthy()
+  expect(screen.queryByText('Pick whose turn it is')).toBeNull()
+  expect(screen.queryByRole('button', { name: 'Give turn to mira' })).toBeNull()
   ;(getActiveSession as jest.Mock).mockResolvedValue(null)
 })
 
