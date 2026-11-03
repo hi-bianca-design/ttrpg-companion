@@ -57,6 +57,11 @@ export type SaveHomebrewInput = {
   parentId?: string
   /** Used verbatim instead of slugify(name), e.g. to keep one-off entries unique per owner. */
   slug?: string
+  /**
+   * On update: the row's name before this edit. The slug is rewritten to slugify(name) only when the name
+   * changed (or `slug` is given); otherwise it is left alone, so a wizard-made unique slug survives edits.
+   */
+  previousName?: string
 }
 
 export function slugify(name: string): string {
@@ -80,9 +85,12 @@ export async function saveHomebrew(input: SaveHomebrewInput): Promise<ContentRow
   const def = getSystem(input.systemId).contentKinds[input.kind]
   if (!def) throw new Error(`Unknown content kind "${input.kind}" for ${input.systemId}`)
   const data = def.schema.parse(input.data) as Json // throws ZodError before any network call
+  const nameChanged = input.previousName !== undefined && input.previousName !== input.name
+  // Insert always gets a slug. Update touches it only when asked to or when the name changed.
+  const slug = input.slug ?? (!input.id || nameChanged ? slugify(input.name) : undefined)
   const fields = {
     name: input.name,
-    slug: input.slug ?? slugify(input.name),
+    ...(slug !== undefined ? { slug } : {}),
     summary: input.summary ?? null,
     description: input.description ?? null,
     data,
@@ -95,7 +103,7 @@ export async function saveHomebrew(input: SaveHomebrewInput): Promise<ContentRow
     }
     const owner_id = await currentUserId()
     return unwrap(
-      await table.insert({ ...fields, owner_id, system_id: input.systemId, kind: input.kind }).select('*').single(),
+      await table.insert({ ...fields, slug: slug ?? slugify(input.name), owner_id, system_id: input.systemId, kind: input.kind }).select('*').single(),
     )
   } catch (e) {
     // content_owner_slug_key: this user already has homebrew of this kind with that name

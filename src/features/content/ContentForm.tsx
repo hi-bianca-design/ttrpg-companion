@@ -131,6 +131,7 @@ export function ContentForm({ systemId, kind, initial, onSaved, onDeleted }: Con
     save.mutate(
       {
         id: initial?.id,
+        previousName: initial?.name,
         systemId,
         kind,
         name: String(values[NAME_KEY]).trim(),

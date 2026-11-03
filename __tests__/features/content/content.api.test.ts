@@ -81,6 +81,39 @@ describe('saveHomebrew', () => {
     expect(b.eq).toHaveBeenCalledWith('id', 'c1')
     expect(b.insert).not.toHaveBeenCalled()
   })
+
+  describe('slug on update', () => {
+    const base = { id: 'c1', systemId: 'dnd5e-2024' as const, kind: 'class', data: { hit_die: 8, primary_abilities: [], saving_throw_proficiencies: [] } }
+    const run = async (extra: { name: string; previousName?: string; slug?: string }) => {
+      const b = builder({ data: { id: 'c1' }, error: null })
+      ;(supabase.from as jest.Mock).mockReturnValue(b)
+      await saveHomebrew({ ...base, ...extra })
+      return b.update.mock.calls[0][0] as Record<string, unknown>
+    }
+
+    it('does not send a slug when the name is unchanged (keeps a wizard-made unique slug)', async () => {
+      expect(await run({ name: 'Shadow Dancer', previousName: 'Shadow Dancer' })).not.toHaveProperty('slug')
+    })
+
+    it('does not rewrite the slug when the caller gives no previous name', async () => {
+      expect(await run({ name: 'Shadow Dancer' })).not.toHaveProperty('slug')
+    })
+
+    it('sends slugify(name) when the name changed', async () => {
+      expect(await run({ name: 'Moon Dancer', previousName: 'Shadow Dancer' })).toHaveProperty('slug', 'moon-dancer')
+    })
+
+    it('honors an explicit slug', async () => {
+      expect(await run({ name: 'Shadow Dancer', previousName: 'Shadow Dancer', slug: 'custom-slug' })).toHaveProperty('slug', 'custom-slug')
+    })
+
+    it('still sets the slug on insert', async () => {
+      const b = builder({ data: { id: 'c1' }, error: null })
+      ;(supabase.from as jest.Mock).mockReturnValue(b)
+      await saveHomebrew({ ...base, id: undefined, name: 'Shadow Dancer' })
+      expect(b.insert).toHaveBeenCalledWith(expect.objectContaining({ slug: 'shadow-dancer' }))
+    })
+  })
 })
 
 describe('listContent', () => {

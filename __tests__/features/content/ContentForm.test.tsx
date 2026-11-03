@@ -143,3 +143,12 @@ test('a schema issue outside the visible fields blocks the save with a form erro
   await waitFor(() => expect(screen.getByTestId('form-error')).toBeTruthy())
   expect(saveHomebrew).not.toHaveBeenCalled()
 })
+
+test('editing passes the row name before the edit so the API can leave an unchanged name\'s slug alone', async () => {
+  ;(saveHomebrew as jest.Mock).mockResolvedValue({ id: 'f1' })
+  renderForm({ kind: 'feat', initial: featRow({ benefits: 'More HP' }) })
+  fireEvent.changeText(screen.getByLabelText('Name'), 'Tougher Guy')
+  fireEvent.press(screen.getByRole('button', { name: 'Save' }))
+  await waitFor(() => expect(saveHomebrew).toHaveBeenCalledTimes(1))
+  expect(saveHomebrew).toHaveBeenCalledWith(expect.objectContaining({ id: 'f1', name: 'Tougher Guy', previousName: 'Tough Guy' }))
+})
