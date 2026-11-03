@@ -1,25 +1,36 @@
 import { Pressable, View } from 'react-native'
+import { useState } from 'react'
 import { useRouter } from 'expo-router'
-import { Sword, UsersThree } from 'phosphor-react-native'
+import { Sword, User, UsersThree } from 'phosphor-react-native'
 import { EmptyState, ScreenBackground } from '@/components/game'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
+import { AccountDrawer } from '@/features/auth/AccountDrawer'
 import { useAuth } from '@/features/auth/useAuth'
 import { selectUpNext } from '@/features/home/selectUpNext'
 import { UpNextCard } from '@/features/home/UpNextCard'
 import { useHomeData } from '@/features/home/useHomeData'
+import { THEME_COLORS } from '@/lib/theme'
 
 export default function HomeScreen() {
   const router = useRouter()
   const { user } = useAuth()
+  const [accountOpen, setAccountOpen] = useState(false)
   const { characters, campaigns, sessions, isLoading, isError, refetch } = useHomeData()
   const upNext = selectUpNext({ userId: user?.id, campaigns, sessions, characters })
 
   return (
     <ScreenBackground scroll>
-      <Text variant="title">Home</Text>
+      <View className="flex-row items-center justify-between gap-3">
+        <Text variant="title">Home</Text>
+        {/* The only way into Account: it is not on the bottom bar. */}
+        <Button variant="ghost" size="icon" className="h-11 w-11" accessibilityLabel="Account" onPress={() => setAccountOpen(true)}>
+          <User size={24} color={THEME_COLORS.accentForeground} weight="duotone" />
+        </Button>
+      </View>
+      <AccountDrawer open={accountOpen} onOpenChange={setAccountOpen} />
 
       {isLoading ? (
         <View className="gap-2" accessibilityLabel="Loading home">

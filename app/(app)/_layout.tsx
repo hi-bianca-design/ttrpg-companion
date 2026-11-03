@@ -1,14 +1,10 @@
 import { Tabs, useSegments } from 'expo-router'
-import { BookOpen, House, Sword, User, UsersThree } from 'phosphor-react-native'
-import { useState } from 'react'
+import { BookOpen, House, Sword, UsersThree } from 'phosphor-react-native'
 import { BottomNav } from '@/components/ui/bottom-nav'
 import { NavInsetContext } from '@/components/ui/nav-inset'
-import { AccountDrawer } from '@/features/auth/AccountDrawer'
-import { StyleSheet, View } from 'react-native'
 
 export default function AppLayout() {
   const segments = useSegments()
-  const [accountOpen, setAccountOpen] = useState(false)
   // No root tab bar inside a character sheet ([id], which has its own tabs) or the character creation
   // wizard (new): leaving the wizard goes through its Back / Cancel and the discard prompt, not a tab
   // switch. Other tabs' pushed and modal-like screens (campaign detail, join, homebrew forms) keep it.
@@ -21,16 +17,7 @@ export default function AppLayout() {
       <Tabs
         // Back from any root tab returns to Home before leaving the app.
         backBehavior="initialRoute"
-        tabBar={(props) =>
-          hideTabBar ? null : (
-            // Covers the screen without taking touches: the floating bar draws outside a zero-height wrapper, and
-            // Android does not deliver touches outside a parent's bounds.
-            <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-              <BottomNav {...props} extra={{ label: 'Account', icon: User, onPress: () => setAccountOpen(true) }} />
-              <AccountDrawer open={accountOpen} onOpenChange={setAccountOpen} />
-            </View>
-          )
-        }
+        tabBar={(props) => (hideTabBar ? null : <BottomNav {...props} />)}
         screenOptions={{ headerShown: false }}
       >
         <Tabs.Screen

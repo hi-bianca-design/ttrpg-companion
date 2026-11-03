@@ -5,6 +5,9 @@ import { useHomeData } from '@/features/home/useHomeData'
 
 const mockRouter = { push: jest.fn() }
 jest.mock('expo-router', () => ({ useRouter: () => mockRouter }))
+jest.mock('@/features/auth/AccountDrawer', () => ({
+  AccountDrawer: ({ open }: { open: boolean }) => { const { Text } = require('react-native'); return open ? <Text>account drawer</Text> : null },
+}))
 jest.mock('@/features/home/useHomeData', () => ({ useHomeData: jest.fn() }))
 jest.mock('@/features/auth/useAuth', () => ({ useAuth: () => ({ user: { id: 'me' } }) }))
 jest.mock('@/components/game', () => ({
@@ -70,4 +73,12 @@ test('a failed load offers Try again', () => {
   render(<HomeScreen />)
   fireEvent.press(screen.getByRole('button', { name: 'Try again' }))
   expect(refetch).toHaveBeenCalled()
+})
+
+test('Account sits in the top right of Home and opens the account drawer', () => {
+  ;(useHomeData as jest.Mock).mockReturnValue(data())
+  render(<HomeScreen />)
+  expect(screen.queryByText('account drawer')).toBeNull()
+  fireEvent.press(screen.getByRole('button', { name: 'Account' }))
+  expect(screen.getByText('account drawer')).toBeTruthy()
 })

@@ -8,7 +8,7 @@ import { THEME_COLORS } from '@/lib/theme'
 
 type IconProps = { size?: number; color?: string; weight?: 'duotone' | 'regular' | 'fill' }
 
-/** A nav item that is not a tab route (Home on the sheet bar, Account on the root bar): it runs an action and is never active. */
+/** A nav item that is not a tab route (Home on the sheet bar): it runs an action and is never active. */
 export type ExtraNavItem = { label: string; icon: ComponentType<IconProps>; onPress: () => void }
 
 const ICON_SIZE = 22
@@ -62,8 +62,8 @@ function NavItem({ label, active, role, onPress, onLongPress, testID, icon }: Na
  * `useNavInset`. Used by the root tabs and the character sheet's tabs, so both read as the same bar.
  */
 export function BottomNav({
-  state, descriptors, navigation, insets, leading, extra,
-}: BottomTabBarProps & { leading?: ExtraNavItem; extra?: ExtraNavItem }) {
+  state, descriptors, navigation, insets, leading,
+}: BottomTabBarProps & { leading?: ExtraNavItem }) {
   const items = state.routes
     .map((route, index) => ({ route, index, options: descriptors[route.key].options }))
     // expo-router marks `href: null` screens with display none rather than removing them.
@@ -86,7 +86,7 @@ export function BottomNav({
       pointerEvents="box-none"
       style={{ position: 'absolute', left: SIDE_INSET, right: SIDE_INSET, bottom: NAV_BAR_GAP + insets.bottom }}
     >
-      <ShapedSurface testID="bottom-nav-plate" glass="overlay" blur shape="chamfer" fill="rockDeep" stroke="border" strokeWidth={1} shadowOffset={4} className="flex-row items-center px-1 py-2">
+      <ShapedSurface testID="bottom-nav-plate" glass="overlay" blur shape="chamfer" fill="rockDeep" stroke="border" strokeWidth={1} shadowOffset={4} className="flex-row items-center px-4 py-2">
         {leading ? action(leading) : null}
         {items.map(({ route, index, options }) => {
           const active = state.index === index
@@ -107,7 +107,6 @@ export function BottomNav({
             />
           )
         })}
-        {extra ? action(extra) : null}
       </ShapedSurface>
     </View>
   )

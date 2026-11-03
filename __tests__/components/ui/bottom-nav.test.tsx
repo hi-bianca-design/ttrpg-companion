@@ -43,6 +43,7 @@ test('the bar floats: absolutely positioned above the safe area, no pill anywher
 test('the plate keeps 8px above and below the active tablet, and casts a hard shadow so it floats', () => {
   render(<BottomNav {...props(1).p} />)
   expect(screen.getByTestId('bottom-nav-plate').props.className).toContain('py-2')
+  expect(screen.getByTestId('bottom-nav-plate').props.className).toContain('px-4')
   const shadow = screen.UNSAFE_getAllByType(Path).filter((p) => p.props.transform === 'translate(4 4)')
   expect(shadow.length).toBeGreaterThan(0)
 })
@@ -71,13 +72,4 @@ test('pressing another tab emits tabPress then navigates; pressing the active ta
   fireEvent.press(screen.getByRole('tab', { name: 'Campaigns' }))
   expect(navigation.emit).toHaveBeenCalledWith(expect.objectContaining({ type: 'tabPress', target: 'c' }))
   expect(navigation.navigate).toHaveBeenCalledWith('campaigns', undefined)
-})
-
-test('an extra item is a button that runs its action and never takes the active pill', () => {
-  const onPress = jest.fn()
-  const { p } = props(1)
-  render(<BottomNav {...p} extra={{ label: 'Account', icon: () => <Text>user</Text>, onPress }} />)
-  fireEvent.press(screen.getByRole('button', { name: 'Account' }))
-  expect(onPress).toHaveBeenCalledTimes(1)
-  expect(screen.getAllByTestId('nav-active')).toHaveLength(1)
 })

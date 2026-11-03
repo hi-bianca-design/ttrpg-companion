@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react-native'
+import { render, screen } from '@testing-library/react-native'
 import { useSegments } from 'expo-router'
 import AppLayout from '../../app/(app)/_layout'
 
@@ -73,7 +73,15 @@ test('screens leave room for the bar only where it is shown', () => {
   expect(captured.inset).toBe(false)
 })
 
-test('the root bar wrapper covers the screen without taking touches, so the floating bar stays tappable on Android', () => {
-  const bar = tabBarFor(['(app)']) as { props: { pointerEvents?: string; style?: unknown } }
-  expect(bar.props.pointerEvents).toBe('box-none')
+test('the root bar has four tabs and no Account item: that lives on Home', () => {
+  tabBarFor(['(app)'])
+  const names = ['index', 'characters', 'campaigns', 'content']
+  const routes = names.map((name) => ({ key: name, name }))
+  const descriptors = Object.fromEntries(names.map((name) => [name, { options: { title: name, tabBarIcon: () => null } }]))
+  const bar = captured.tabBar?.({
+    state: { index: 0, routes }, descriptors, navigation: { emit: jest.fn(), navigate: jest.fn() }, insets: { top: 0, bottom: 0, left: 0, right: 0 },
+  }) as React.ReactElement
+  render(bar)
+  expect(screen.getAllByRole('tab')).toHaveLength(4)
+  expect(screen.queryByRole('button', { name: 'Account' })).toBeNull()
 })
