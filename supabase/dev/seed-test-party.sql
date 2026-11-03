@@ -1,10 +1,12 @@
 -- Dev-only: fills a campaign with fake players so the GM page and Party page can be tested.
 -- NOT a migration and not run by `supabase db reset`. Run it yourself against a LOCAL or DEV
 -- database only, never production:
---   psql "$DEV_DATABASE_URL" -v campaign_name="'The Lost Mine'" -f supabase/dev/seed-test-party.sql
+--   psql "$DEV_DATABASE_URL" -v campaign_name='The Lost Mine' -f supabase/dev/seed-test-party.sql
 -- The campaign must already exist and use dnd5e-2024. Re-running is safe: everything is
 -- keyed on fixed ids and the fake accounts cannot sign in (no password).
 -- Remove it all:  delete from auth.users where email like '%@seed.local';
+
+select set_config('seed.campaign', :'campaign_name', false);
 
 begin;
 
@@ -17,9 +19,9 @@ declare
   cls uuid;
 begin
   select id into cid from public.campaigns
-   where name = :campaign_name and system_id = 'dnd5e-2024' limit 1;
+   where name = current_setting('seed.campaign') and system_id = 'dnd5e-2024' limit 1;
   if cid is null then
-    raise exception 'No dnd5e-2024 campaign named %', :campaign_name;
+    raise exception 'No dnd5e-2024 campaign named %', current_setting('seed.campaign');
   end if;
 
   for r in select * from (values
