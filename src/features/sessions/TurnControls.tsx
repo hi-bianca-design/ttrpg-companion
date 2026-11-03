@@ -22,6 +22,9 @@ export function TurnControls({ campaign }: { campaign: CampaignFull }) {
 
   const targets = eligibleTurnMembers(campaign.members)
   const holder = targets.find((m) => m.user_id === session.current_turn_user_id)
+  // The member list can lag the session (someone joined, or the GM acted from another device), so
+  // "someone holds the turn" comes from the session, not from finding them in the list.
+  const held = session.current_turn_user_id !== null
 
   // mutateAsync, not mutate's per-call onError: that callback is dropped if this panel unmounts
   // first, which it does when a refetch finds combat has ended.
@@ -34,7 +37,7 @@ export function TurnControls({ campaign }: { campaign: CampaignFull }) {
   return (
     <View className="gap-2">
       <Text variant="subhead">Turn</Text>
-      <Text variant="body-sm" tone="muted">{holder ? `${name(holder)}'s turn` : 'Pick whose turn it is'}</Text>
+      <Text variant="body-sm" tone="muted">{holder ? `${name(holder)}'s turn` : held ? "Someone's turn" : 'Pick whose turn it is'}</Text>
       {targets.map((m) => (
         <Card key={m.user_id} compact>
           <View className="flex-row items-center justify-between gap-2">
@@ -45,15 +48,15 @@ export function TurnControls({ campaign }: { campaign: CampaignFull }) {
             {m.user_id === holder?.user_id ? (
               <Badge variant="tinted">Their turn</Badge>
             ) : (
-              <Button variant="outline" size="sm" accessibilityLabel={`Give turn to ${name(m)}`} onPress={() => give(m.user_id)}>
+              <Button variant="outline" size="sm" accessibilityLabel={`Give turn to ${name(m)}`} disabled={setTurn.isPending} onPress={() => give(m.user_id)}>
                 <Text>Give turn</Text>
               </Button>
             )}
           </View>
         </Card>
       ))}
-      {holder ? (
-        <Button variant="ghost" size="sm" accessibilityLabel="Clear turn" onPress={() => give(null)}>
+      {held ? (
+        <Button variant="ghost" size="sm" accessibilityLabel="Clear turn" disabled={setTurn.isPending} onPress={() => give(null)}>
           <Text>Clear turn</Text>
         </Button>
       ) : null}

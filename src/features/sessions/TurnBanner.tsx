@@ -1,4 +1,5 @@
-import { View } from 'react-native'
+import { useEffect } from 'react'
+import { AccessibilityInfo, View } from 'react-native'
 import { Sword } from 'phosphor-react-native'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -23,7 +24,14 @@ export function TurnBanner() {
   const { user } = useAuth()
   const endTurn = useEndTurn(campaignId ?? '')
 
-  if (!session || !holdsTurn(session, user?.id, ownerId)) return null
+  const holds = !!session && holdsTurn(session, user?.id, ownerId)
+
+  // The turn arrives by poll, so tell screen-reader users when it does.
+  useEffect(() => {
+    if (holds) AccessibilityInfo.announceForAccessibility('Your turn')
+  }, [holds])
+
+  if (!session || !holds) return null
 
   // mutateAsync, not mutate's per-call onError: that callback is dropped if this banner unmounts
   // first, which it does as soon as a poll finds the turn has moved on.
@@ -34,15 +42,15 @@ export function TurnBanner() {
   }
 
   return (
-    <Card tone="selected" className="gap-3">
+    <Card tone="selected" className="gap-3" accessibilityLiveRegion="polite">
       <View className="flex-row items-start gap-3">
         <Sword size={20} color={THEME_COLORS.primary} weight="duotone" />
         <View className="flex-1 gap-1">
-          <Text variant="heading" tone="accent">Your turn</Text>
+          <Text variant="heading" tone="accent" accessibilityRole="header">Your turn</Text>
           <Text variant="body-sm" tone="muted">Take your action, bonus action, and movement</Text>
         </View>
       </View>
-      <Button accessibilityLabel="End Turn" onPress={end}>
+      <Button accessibilityLabel="End Turn" disabled={endTurn.isPending} onPress={end}>
         <Text>End Turn</Text>
       </Button>
     </Card>

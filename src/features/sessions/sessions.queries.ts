@@ -47,8 +47,11 @@ export function useSetTurn(campaignId: string) {
   return useMutation({
     mutationFn: ({ sessionId, userId }: { sessionId: string; userId: string | null }) => setTurn(sessionId, userId),
     onSuccess: (session) => qc.setQueryData(qk.session(campaignId), session),
-    // e.g. the member left meanwhile: refetch so the screen shows the true state.
-    onError: () => qc.invalidateQueries({ queryKey: qk.session(campaignId) }),
+    // e.g. the member left meanwhile: refetch the session, and the member list so they stop being offered.
+    onError: () => Promise.all([
+      qc.invalidateQueries({ queryKey: qk.session(campaignId) }),
+      qc.invalidateQueries({ queryKey: qk.campaign(campaignId) }),
+    ]),
   })
 }
 

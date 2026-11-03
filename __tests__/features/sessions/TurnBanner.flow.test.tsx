@@ -57,3 +57,15 @@ test('the toast still shows when a poll ends the session while the call is in fl
   await act(async () => { rejectCall(new AppError('no_active_session')) })
   await waitFor(() => expect(showToast).toHaveBeenCalledWith(ERROR_COPY.no_active_session))
 })
+
+test('a second tap while the first End Turn is in flight is ignored: one call, no error toast', async () => {
+  ;(getActiveSession as jest.Mock).mockResolvedValue(holding)
+  ;(endTurn as jest.Mock).mockImplementation(() => new Promise(() => {}))
+  renderBanner()
+  fireEvent.press(await screen.findByRole('button', { name: 'End Turn' }))
+  await waitFor(() => expect(screen.getByRole('button', { name: 'End Turn' })).toBeDisabled())
+  fireEvent.press(screen.getByRole('button', { name: 'End Turn' }))
+  await act(async () => {})
+  expect(endTurn).toHaveBeenCalledTimes(1)
+  expect(showToast).not.toHaveBeenCalled()
+})

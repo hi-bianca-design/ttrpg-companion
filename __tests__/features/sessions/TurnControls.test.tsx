@@ -22,10 +22,10 @@ const campaign = {
 const inCombat = { id: 's1', campaign_id: 'camp1', in_combat: true, current_turn_user_id: null }
 const mutateAsync = jest.fn()
 
-function setup(session: object | null, user = 'gm1') {
+function setup(session: object | null, user = 'gm1', isPending = false) {
   mockUserId = user
   ;(useActiveSession as jest.Mock).mockReturnValue({ data: session })
-  ;(useSetTurn as jest.Mock).mockReturnValue({ mutateAsync })
+  ;(useSetTurn as jest.Mock).mockReturnValue({ mutateAsync, isPending })
   return render(<TurnControls campaign={campaign as never} />)
 }
 
@@ -73,4 +73,17 @@ test('a failed change toasts the shared error copy', async () => {
   setup(inCombat)
   fireEvent.press(screen.getByRole('button', { name: 'Give turn to mira' }))
   await waitFor(() => expect(showToast).toHaveBeenCalledWith(ERROR_COPY.invalid_turn_target))
+})
+
+test('a holder missing from the cached member list is still shown and can be cleared', () => {
+  setup({ ...inCombat, current_turn_user_id: 'just-joined' })
+  expect(screen.getByText("Someone's turn")).toBeTruthy()
+  expect(screen.queryByText('Pick whose turn it is')).toBeNull()
+  fireEvent.press(screen.getByRole('button', { name: 'Clear turn' }))
+  expect(mutateAsync).toHaveBeenCalledWith({ sessionId: 's1', userId: null })
+})
+
+test('the actions are disabled while a change is pending', () => {
+  setup({ ...inCombat, current_turn_user_id: 'mira' }, 'gm1', true)
+  expect(screen.getByRole('button', { name: 'Clear turn' })).toBeDisabled()
 })

@@ -154,3 +154,13 @@ describe('turn hooks', () => {
     await waitFor(() => expect(active.result.current.data).toMatchObject({ current_turn_user_id: 'u9' }))
   })
 })
+
+test('a failed setTurn also marks the campaign (member list) stale so a departed member stops being offered', async () => {
+  ;(setTurn as jest.Mock).mockRejectedValue(new AppError('invalid_turn_target'))
+  ;(getActiveSession as jest.Mock).mockResolvedValue(null)
+  const { client, wrapper } = setup()
+  client.setQueryData(qk.campaign('c1'), { id: 'c1', members: [] })
+  const { result } = renderHook(() => useSetTurn('c1'), { wrapper })
+  await act(async () => { await result.current.mutateAsync({ sessionId: 's1', userId: 'gone' }).catch(() => {}) })
+  expect(client.getQueryState(qk.campaign('c1'))?.isInvalidated).toBe(true)
+})

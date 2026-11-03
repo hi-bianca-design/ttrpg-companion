@@ -1,4 +1,5 @@
 import '@testing-library/jest-native/extend-expect'
+import { AccessibilityInfo } from 'react-native'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import { TurnBanner } from '@/features/sessions/TurnBanner'
 import { useCharacterSession } from '@/features/sessions/useCharacterSession'
@@ -19,11 +20,11 @@ jest.mock('expo-router', () => ({ useLocalSearchParams: () => ({}), useGlobalSea
 const holding = { id: 's1', campaign_id: 'camp1', in_combat: true, current_turn_user_id: 'p1' }
 const mutateAsync = jest.fn()
 
-function setup(session: object | null, user: string | null = 'p1', owner = 'p1') {
+function setup(session: object | null, user: string | null = 'p1', owner = 'p1', isPending = false) {
   mockUserId = user ?? undefined
   ;(useCharacterSession as jest.Mock).mockReturnValue(session)
   ;(useCharacter as jest.Mock).mockReturnValue({ data: { id: 'ch1', owner_id: owner } })
-  ;(useEndTurn as jest.Mock).mockReturnValue({ mutateAsync })
+  ;(useEndTurn as jest.Mock).mockReturnValue({ mutateAsync, isPending })
   return render(<TurnBanner />)
 }
 
@@ -62,4 +63,23 @@ test('a failed End Turn toasts the shared error copy', async () => {
   setup(holding)
   fireEvent.press(screen.getByRole('button', { name: 'End Turn' }))
   await waitFor(() => expect(showToast).toHaveBeenCalledWith(ERROR_COPY.not_your_turn))
+})
+
+test('End Turn is disabled while the call is pending, so a double-tap cannot end it twice', () => {
+  setup(holding, 'p1', 'p1', true)
+  expect(screen.getByRole('button', { name: 'End Turn' })).toBeDisabled()
+})
+
+test('the banner is announced to screen readers when it appears', () => {
+  const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {})
+  setup(holding)
+  expect(announce).toHaveBeenCalledWith('Your turn')
+  announce.mockRestore()
+})
+
+test('nothing is announced when the user does not hold the turn', () => {
+  const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {})
+  setup({ ...holding, current_turn_user_id: 'p2' })
+  expect(announce).not.toHaveBeenCalled()
+  announce.mockRestore()
 })
