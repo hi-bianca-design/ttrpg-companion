@@ -5,7 +5,8 @@ import type { HpMode } from './combat.api'
 import { useApplyEnemyHp, useUndoEnemyHp } from './combat.queries'
 
 export type EnemyHp = {
-  apply: (ids: string[], mode: HpMode, amount: number) => Promise<void>
+  /** Resolves true when the server applied it (false when dropped or failed, with the toast already shown). */
+  apply: (ids: string[], mode: HpMode, amount: number) => Promise<boolean>
   undoFor: (entryId: string) => Promise<void>
   canUndo: (entryId: string) => boolean
   pending: boolean
@@ -27,14 +28,16 @@ export function useEnemyHp(campaignId: string, combatId: string): EnemyHp {
   const [pending, setPending] = useState(false)
 
   // State is async, so the ref is what actually stops a second synchronous tap.
-  const exclusive = async (fn: () => Promise<void>) => {
-    if (busy.current) return
+  const exclusive = async (fn: () => Promise<void>): Promise<boolean> => {
+    if (busy.current) return false
     busy.current = true
     setPending(true)
     try {
       await fn()
+      return true
     } catch (e) {
       showToast(errorCopy(e))
+      return false
     } finally {
       busy.current = false
       setPending(false)
@@ -51,14 +54,15 @@ export function useEnemyHp(campaignId: string, combatId: string): EnemyHp {
       })
     })
 
-  const undoFor: EnemyHp['undoFor'] = (entryId) =>
-    exclusive(async () => {
+  const undoFor: EnemyHp['undoFor'] = async (entryId) => {
+    await exclusive(async () => {
       const batch = batches.get(entryId)
       if (!batch) return
       const restored = await undoHp.mutateAsync({ batch })
       setBatches((prev) => new Map([...prev].filter(([, b]) => b !== batch)))
       if (restored === 0) showToast('HP changed since')
     })
+  }
 
   return { apply, undoFor, canUndo: (id) => batches.has(id), pending }
 }

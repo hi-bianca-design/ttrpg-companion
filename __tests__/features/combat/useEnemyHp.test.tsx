@@ -27,6 +27,16 @@ beforeEach(() => {
   mockUndo.mockResolvedValue(1)
 })
 
+test('apply reports whether it worked, so a bulk caller knows to keep its selection', async () => {
+  const { result } = setup()
+  let ok: boolean | undefined
+  await act(async () => { ok = await result.current.apply(['a'], 'damage', 7) })
+  expect(ok).toBe(true)
+  mockApply.mockRejectedValue(new AppError('network'))
+  await act(async () => { ok = await result.current.apply(['a'], 'damage', 7) })
+  expect(ok).toBe(false)
+})
+
 test('apply calls the server once and makes that row undoable', async () => {
   const { result } = setup()
   await act(() => result.current.apply(['a'], 'damage', 7))
