@@ -2,7 +2,8 @@ import { canCreate, initialDraft, pruneDraft, toCharacter } from '@/systems/dnd5
 import { cachedClassFields, cleanName, collidesWithOfficial, type CustomEntry } from '@/systems/dnd5e-2024/customEntries'
 import { dnd5eContentSchemas } from '@/systems/dnd5e-2024/schemas'
 import { classChoicesFor } from '@/systems/dnd5e-2024/classChoices'
-import { slotsFor } from '@/systems/dnd5e-2024/rules'
+import { canMaster, orderFeature, orderOptions, slotsFor, weaponMasteryCountFor } from '@/systems/dnd5e-2024/rules'
+import { featuresFor } from '@/systems/dnd5e-2024/features'
 import { createCharacter } from '@/features/characters/characters.api'
 import { listContent, slugify } from '@/features/content/content.api'
 import type { Draft } from '@/systems/types'
@@ -119,8 +120,16 @@ describe('(c) listContent one-off filter', () => {
     }
   })
 
-  it('keeps rows with no flag (NULL) by construction', () => {
-    expect(FILTER).toContain('is.null')
+  it('keeps rows with no flag (NULL): the or argument passed to the builder has an is.null branch', async () => {
+    for (const scope of ['mine', 'pickable'] as const) {
+      const content = builder({ data: [], error: null })
+      const campaigns = builder({ data: [], error: null })
+      ;(supabase.from as jest.Mock).mockImplementation((t: string) => (t === 'campaigns' ? campaigns : content))
+      await listContent({ systemId: 'dnd5e-2024', kind: 'class', scope })
+      const args = content.or.mock.calls.map((c) => String(c[0]))
+      expect(args).toContain(FILTER)
+      expect(args.find((a) => a.includes('one_off'))).toMatch(/data->>one_off\.is\.null/)
+    }
   })
 })
 
@@ -196,8 +205,16 @@ describe('(f) a padded, lower-case class name', () => {
     expect(slotsFor('wizard', 1)).toEqual(slotsFor('Wizard', 1))
     expect(Object.keys(slotsFor('wizard', 1).tiers).length).toBeGreaterThan(0)
     expect(classChoicesFor('fighter', [])).toEqual(classChoicesFor('Fighter', []))
-    // Observed: feature resources look the class up by exact name.
-    expect(Object.keys(toCharacter(d).resources)).not.toContain('second_wind')
+    expect(Object.keys(toCharacter(d).resources)).toContain('second_wind')
+  })
+
+  it('applies the other name-matched official rules case-insensitively and trimmed', () => {
+    expect(featuresFor(' fighter ')).toEqual(featuresFor('Fighter'))
+    expect(weaponMasteryCountFor(' fighter ', ['Weapon Mastery'])).toBe(3)
+    expect(canMaster('barbarian', { category: 'Martial Ranged Weapon', properties: { mastery: 'Slow' } })).toBe(false)
+    expect(canMaster(' ROGUE ', { category: 'Martial Melee Weapon', properties: { mastery: 'Vex', weapon_properties: ['Heavy'] } })).toBe(false)
+    expect(orderFeature(' cleric ')).toBe('Divine Order')
+    expect(orderOptions('DRUID')).toEqual(orderOptions('Druid'))
   })
 })
 

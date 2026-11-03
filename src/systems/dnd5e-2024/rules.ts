@@ -103,7 +103,7 @@ export function getSpellLimits(
   level: number,
   _abilityMod: number = 0,
 ): { maxCantrips: number; maxSpells: number } {
-  const cls = className.toLowerCase()
+  const cls = className.trim().toLowerCase()
   const lvl = Math.min(Math.max(Math.floor(level), 1), 20)
   const tiers = CANTRIP_TIERS[cls]
   const maxCantrips = tiers ? tiers[lvl < 4 ? 0 : lvl < 10 ? 1 : 2] : 0
@@ -138,7 +138,7 @@ function tiersFrom(counts: number[]): SlotsValue {
  * slots from level 1: the full-caster row at ceil(level / 2).
  */
 export function slotsFor(className: string, level: number): SlotsValue {
-  const cls = className.toLowerCase()
+  const cls = className.trim().toLowerCase()
   const lvl = Math.min(Math.max(Math.floor(level), 1), 20)
   if (FULL_CASTERS.has(cls)) return tiersFrom(FULL_CASTER_SLOTS[lvl - 1])
   if (HALF_CASTERS.has(cls)) return tiersFrom(FULL_CASTER_SLOTS[Math.ceil(lvl / 2) - 1])
@@ -162,6 +162,9 @@ function className(picks: PickRecord[]): string | undefined {
 function stringList(v: unknown): string[] {
   return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []
 }
+
+/** Lower-cased, trimmed class name for case-insensitive rule lookups. */
+const normName = (name: string): string => name.trim().toLowerCase()
 
 /** Trimmed, case-insensitive string equality; false for non-strings. */
 export function sameName(a: unknown, b: unknown): boolean {
@@ -279,7 +282,7 @@ export function rest(c: CharacterRecord, kind: 'short' | 'long', picks: PickReco
   }
 
   if (kind === 'short') {
-    if (className(picks)?.toLowerCase() === 'warlock') set('spell_slots', clearSlots(c.resources.spell_slots))
+    if (sameName(className(picks), 'warlock')) set('spell_slots', clearSlots(c.resources.spell_slots))
     return next
   }
 
@@ -379,17 +382,17 @@ export function levelUp(
 // ── Weapon Mastery ───────────────────────────────────────────
 
 /** Weapons mastered at level 1 (SRD 5.2); a class with the Weapon Mastery feature but not listed here gets 2. */
-const MASTERY_COUNTS: Record<string, number> = { Barbarian: 2, Fighter: 3, Paladin: 2, Ranger: 2, Rogue: 2 }
+const MASTERY_COUNTS: Record<string, number> = { barbarian: 2, fighter: 3, paladin: 2, ranger: 2, rogue: 2 }
 
 export function weaponMasteryCountFor(className: string, level1Features: string[]): number {
-  return level1Features.includes('Weapon Mastery') ? MASTERY_COUNTS[className] ?? 2 : 0
+  return level1Features.includes('Weapon Mastery') ? MASTERY_COUNTS[normName(className)] ?? 2 : 0
 }
 
 /** Whether a class may master an item: Barbarians take melee weapons, Rogues Finesse or Light ones, everyone else any weapon with a mastery property. */
 export function canMaster(className: string, item: { category?: string; properties?: { mastery?: string; weapon_properties?: string[] } }): boolean {
   if (typeof item.properties?.mastery !== 'string' || !item.category?.includes('Weapon')) return false
-  if (className === 'Barbarian') return item.category.includes('Melee')
-  if (className === 'Rogue') return (item.properties.weapon_properties ?? []).some((w) => w === 'Finesse' || w === 'Light')
+  if (sameName(className, 'Barbarian')) return item.category.includes('Melee')
+  if (sameName(className, 'Rogue')) return (item.properties.weapon_properties ?? []).some((w) => w === 'Finesse' || w === 'Light')
   return true
 }
 
@@ -415,8 +418,10 @@ const ORDERS: Record<string, { feature: string; options: OrderOption[] }> = {
   },
 }
 
-export const orderFeature = (className: string): string | null => ORDERS[className]?.feature ?? null
-export const orderOptions = (className: string): OrderOption[] => ORDERS[className]?.options ?? []
+const orderKey = (className: string): string => Object.keys(ORDERS).find((k) => sameName(k, className)) ?? ''
+
+export const orderFeature = (className: string): string | null => ORDERS[orderKey(className)]?.feature ?? null
+export const orderOptions = (className: string): OrderOption[] => ORDERS[orderKey(className)]?.options ?? []
 /** The official order whose key or label matches `value` (trimmed, case-insensitive); undefined for anything else. */
 export const findOrder = (className: string, value: unknown): OrderOption | undefined =>
   orderOptions(className).find((o) => sameName(o.key, value) || sameName(o.label, value))
