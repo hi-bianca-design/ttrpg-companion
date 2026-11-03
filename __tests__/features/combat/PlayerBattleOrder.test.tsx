@@ -4,7 +4,6 @@ import { AccessibilityInfo } from 'react-native'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react-native'
 import { updateResources } from '@/features/characters/characters.api'
 import { getCombatOrder } from '@/features/combat/combat.api'
-import { GM_TURN_COPY } from '@/features/combat/copy'
 import { PlayerBattleOrder } from '@/features/combat/PlayerBattleOrder'
 import { partyKey } from '@/features/party/party.queries'
 import { qk } from '@/lib/query-client'
@@ -50,19 +49,10 @@ beforeEach(() => {
   ;(updateResources as jest.Mock).mockResolvedValue(undefined)
 })
 
-test('a hidden enemy holding the turn is only the pinned GM-turn row, with no name, initiative or hit points', () => {
+test('a hidden enemy holding the turn changes nothing a player sees: no GM turn row, nothing extra', () => {
   setup(combat({ gm_turn: true }))
-  const pinned = screen.getByTestId('gm-turn-row')
-  expect(within(pinned).getByText(GM_TURN_COPY)).toBeTruthy()
-  expect(within(pinned).queryByText(/init/)).toBeNull()
-  expect(within(pinned).queryByText(/\d+\/\d+/)).toBeNull()
-  expect(screen.getAllByTestId(/^row-/)).toHaveLength(3)
-})
-
-test('no pinned row when it is not the GM turn', () => {
-  setup(combat({ turn_entry_id: 'p1' }))
   expect(screen.queryByTestId('gm-turn-row')).toBeNull()
-  expect(screen.queryByText(GM_TURN_COPY)).toBeNull()
+  expect(screen.getAllByTestId(/^row-/)).toHaveLength(3)
 })
 
 test('extra keys a hostile server adds to an order row are never rendered', () => {
@@ -137,17 +127,6 @@ test('when combat ends while the HP entry is open it unmounts without error', as
 
 describe('announcements', () => {
   const announce = () => jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {})
-
-  test('the GM turn is announced once when it begins, not on first render', async () => {
-    const spy = announce()
-    spy.mockClear()
-    const { rerender } = setup(combat({ turn_entry_id: 'p1' }))
-    expect(spy).not.toHaveBeenCalled()
-    rerender(ui(combat({ turn_entry_id: null, gm_turn: true })))
-    await waitFor(() => expect(spy).toHaveBeenCalledWith(GM_TURN_COPY))
-    rerender(ui(combat({ turn_entry_id: null, gm_turn: true, rev: 5 })))
-    expect(spy.mock.calls.filter(([m]) => m === GM_TURN_COPY)).toHaveLength(1)
-  })
 
   test('a new round is announced once', async () => {
     const spy = announce()

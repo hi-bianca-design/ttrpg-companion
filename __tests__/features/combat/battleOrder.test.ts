@@ -17,10 +17,10 @@ describe('buildPlayerOrder', () => {
     orderRow({ id: 'p3', kind: 'player', user_id: 'u3', character_id: 'gone', initiative: null, position: 3 }),
   ]
 
-  test('rows follow position and a hidden turn holder is only the gmTurn flag', () => {
+  test('rows follow position; a hidden turn holder leaves no trace (the pointer simply stays put)', () => {
     const out = buildPlayerOrder({ combat: combat({ gm_turn: true, round: 3 }), order, party, userId: 'u1' })
     expect(out.round).toBe(3)
-    expect(out.gmTurn).toBe(true)
+    expect(Object.keys(out).sort()).toEqual(['round', 'rows'])
     expect(out.rows.map((r) => r.id)).toEqual(['p1', 'e2', 'p3'])
     expect(JSON.stringify(out)).not.toContain('hidden-ogre')
   })

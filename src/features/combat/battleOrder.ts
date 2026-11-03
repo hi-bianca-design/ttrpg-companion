@@ -72,7 +72,7 @@ export function buildPlayerOrder(input: {
   order: OrderRow[]
   party: CharacterFull[]
   userId: string | undefined
-}): { round: number; gmTurn: boolean; rows: (PlayerRow | PlayerSideEnemyRow)[] } {
+}): { round: number; rows: (PlayerRow | PlayerSideEnemyRow)[] } {
   const { combat, order, party, userId } = input
   const rows = [...order]
     .sort((a, b) => a.position - b.position)
@@ -82,7 +82,8 @@ export function buildPlayerOrder(input: {
       if (r.kind === 'enemy') return { kind: 'enemy', id: r.id, name: r.name ?? 'Enemy', initiative: r.initiative, isCurrent }
       return playerRow(r, isCurrent, party, userId)
     })
-  return { round: combat.round, gmTurn: combat.gm_turn, rows }
+  // combat.gm_turn is deliberately not read: while a hidden enemy holds the turn the pointer just stays put.
+  return { round: combat.round, rows }
 }
 
 export function buildGmOrder(input: {

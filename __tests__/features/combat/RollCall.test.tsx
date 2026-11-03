@@ -56,9 +56,10 @@ test('a row per entry: player names, and enemies with an Enemy tag', () => {
   expect(screen.getAllByText('Enemy')).toHaveLength(1)
 })
 
-test('the fields are number pads that advance with enter', () => {
+test('the fields advance with enter and use a keyboard that has a return key and a minus', () => {
   setup()
-  expect(field('Mira').props.keyboardType).toBe('number-pad')
+  // iOS number-pad has neither a return key nor a minus sign, so a typed number could never be sent.
+  expect(field('Mira').props.keyboardType).toBe('numbers-and-punctuation')
   expect(field('Mira').props.returnKeyType).toBe('next')
   expect(field('Mira').props.blurOnSubmit).toBe(false)
 })
@@ -173,4 +174,31 @@ test('with no one in the fight the empty copy shows and Add enemy still opens th
   expect(screen.getByText('No one has joined with a character yet')).toBeTruthy()
   fireEvent.press(screen.getByRole('button', { name: 'Add enemy' }))
   expect(screen.getByLabelText('Max HP')).toBeTruthy()
+})
+
+test('a number is saved when the field loses focus, with no return key needed', async () => {
+  setup()
+  fireEvent.changeText(field('Mira'), '18')
+  fireEvent(field('Mira'), 'endEditing')
+  await waitFor(() => expect(mockInit).toHaveBeenCalledWith('p1', 18))
+})
+
+test('enter then end-editing for the same number is one request', async () => {
+  setup()
+  fireEvent.changeText(field('Mira'), '18')
+  fireEvent(field('Mira'), 'submitEditing')
+  fireEvent(field('Mira'), 'endEditing')
+  await waitFor(() => expect(mockInit).toHaveBeenCalledTimes(1))
+})
+
+test('Start combat first sends every number still typed, then starts', async () => {
+  const order: string[] = []
+  mockInit.mockImplementation(async (id: string) => { order.push(`init:${id}`); return {} })
+  mockStart.mockImplementation(async () => { order.push('start'); return {} })
+  setup()
+  fireEvent.changeText(field('Mira'), '18')
+  fireEvent.changeText(field('Bram'), '12')
+  fireEvent.press(screen.getByRole('button', { name: 'Start combat' }))
+  await waitFor(() => expect(mockStart).toHaveBeenCalled())
+  expect(order).toEqual(['init:p1', 'init:p2', 'start'])
 })

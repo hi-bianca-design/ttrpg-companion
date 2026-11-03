@@ -121,16 +121,31 @@ test('the only write is the resource update for the player’s own character', a
   expect(supabase.rpc).not.toHaveBeenCalled()
 })
 
-test('a write is based on the live party cache, never on a stale sheet cache', async () => {
+test('an already cached sheet is written through, not replaced by the party copy (a late Realtime echo must not undo a newer hit)', async () => {
   const qc = makeTestQueryClient()
-  const live = character('c1', 'Mira', { hp: { current: 10 } })
+  const live = character('c1', 'Mira', { hp: { current: 22 } })
   qc.setQueryData(partyKey('camp1', ['c1']), [live])
-  qc.setQueryData(qk.character('c1'), character('c1', 'Mira', { hp: { current: 30 } }))
+  qc.setQueryData(qk.character('c1'), character('c1', 'Mira', { hp: { current: 14 } }))
   const wrapper = ({ children }: { children: React.ReactNode }) => <QueryClientProvider client={qc}>{children}</QueryClientProvider>
   const { result } = renderHook(() => usePlayerCombatHp(live, 'camp1'), { wrapper })
   act(() => result.current.damage(4))
   await waitFor(() => expect(mockWrite).toHaveBeenCalled())
+  expect(lastWritten().hp).toMatchObject({ current: 10 })
+})
+
+test('with no cached sheet it is seeded from the party copy', async () => {
+  const { result } = setup(character('c1', 'Mira', { hp: { current: 10 } }))
+  act(() => result.current.damage(4))
+  await waitFor(() => expect(mockWrite).toHaveBeenCalled())
   expect(lastWritten().hp).toMatchObject({ current: 6 })
+})
+
+test('two failed hits in flight both roll the party back to before the first', async () => {
+  mockWrite.mockRejectedValue(new Error('boom'))
+  const { result, qc } = setup(character('c1', 'Mira'))
+  act(() => { result.current.damage(5); result.current.damage(3) })
+  await waitFor(() => expect(showToast).toHaveBeenCalledTimes(2))
+  expect(hpOf(partyOf(qc, 'c1')).current).toBe(22)
 })
 
 test('healing from 0 also clears the death saves', async () => {

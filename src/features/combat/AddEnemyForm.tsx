@@ -21,6 +21,11 @@ const toInt = (t: string): number | null => {
   const n = Number.parseInt(t, 10)
   return Number.isFinite(n) ? n : null
 }
+/** The server accepts -20..99; clamp here so a stray number never fails after the enemies exist. */
+const toInitiative = (t: string): number | null => {
+  const n = toInt(t)
+  return n === null ? null : Math.max(-20, Math.min(99, n))
+}
 function clampCount(t: string): string {
   const d = digits(t)
   if (d === '') return ''
@@ -82,19 +87,18 @@ export function AddEnemyForm({ campaignId, combatId, open, onOpenChange }: Props
         name: trimmed,
         count: copies,
         maxHp: hp!,
-        initiative: useRolls ? null : toInt(initiative),
+        initiative: useRolls ? null : toInitiative(initiative),
         ac: toInt(ac),
         notes: notes.trim() || null,
         hidden,
       })
-      if (useRolls) {
-        for (const [i, id] of ids.entries()) {
-          const n = toInt(rolls[i] ?? '')
-          if (n !== null) await setInit.mutateAsync({ entryId: id, initiative: n })
-        }
-      }
+      // The enemies exist now, so reset before the per-copy numbers: a retry would add them again.
+      const entered = useRolls ? ids.map((id, i) => [id, toInitiative(rolls[i] ?? '')] as const) : []
       reset()
       nameRef.current?.focus()
+      for (const [id, n] of entered) {
+        if (n !== null) await setInit.mutateAsync({ entryId: id, initiative: n })
+      }
     } catch (e) {
       showToast(e instanceof Error ? e.message : ERROR_COPY.save_failed)
     } finally {
@@ -123,12 +127,12 @@ export function AddEnemyForm({ campaignId, combatId, open, onOpenChange }: Props
           <View className="flex-row gap-2">
             <View className="flex-1">
               <Field label="Max HP">
-                <Input accessibilityLabel="Max HP" keyboardType="number-pad" inputMode="numeric" value={maxHp} onChangeText={(t) => setMaxHp(digits(t))} />
+                <Input accessibilityLabel="Max HP" keyboardType="number-pad" inputMode="numeric" maxLength={4} value={maxHp} onChangeText={(t) => setMaxHp(digits(t))} />
               </Field>
             </View>
             <View className="flex-1">
               <Field label="AC">
-                <Input accessibilityLabel="AC" keyboardType="number-pad" inputMode="numeric" value={ac} onChangeText={(t) => setAc(digits(t))} />
+                <Input accessibilityLabel="AC" keyboardType="number-pad" inputMode="numeric" maxLength={2} value={ac} onChangeText={(t) => setAc(digits(t))} />
               </Field>
             </View>
             <View className="flex-1">
@@ -145,8 +149,7 @@ export function AddEnemyForm({ campaignId, combatId, open, onOpenChange }: Props
                   <Input
                     accessibilityLabel={`${label} ${i + 1}`}
                     placeholder="Initiative"
-                    keyboardType="number-pad"
-                    inputMode="numeric"
+                    keyboardType="numbers-and-punctuation"
                     value={rolls[i] ?? ''}
                     onChangeText={(t) => setRolls((prev) => { const o = [...prev]; o[i] = signed(t); return o })}
                   />
@@ -155,7 +158,7 @@ export function AddEnemyForm({ campaignId, combatId, open, onOpenChange }: Props
             </View>
           ) : (
             <Field label="Initiative">
-              <Input accessibilityLabel="Initiative" placeholder="Optional" keyboardType="number-pad" inputMode="numeric" value={initiative} onChangeText={(t) => setInitiativeText(signed(t))} />
+              <Input accessibilityLabel="Initiative" placeholder="Optional" keyboardType="numbers-and-punctuation" value={initiative} onChangeText={(t) => setInitiativeText(signed(t))} />
             </Field>
           )}
           <Field label="Notes">

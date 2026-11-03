@@ -41,30 +41,38 @@ export function RollCall({ combat, party }: { combat: Combat; party: CharacterFu
   const { rows } = buildGmOrder({ combat, entries: entries.data ?? [], party, userId: undefined })
   const blank = rows.filter((r) => r.initiative === null).length
 
-  const commit = async (index: number) => {
-    const row = rows[index]
-    const next = inputs.current[index + 1]
-    if (next) next.focus()
-    else inputs.current[index]?.blur()
-    if (typed[row.id] === undefined) return
-    const value = parseInitiative(typed[row.id])
-    if (value === row.initiative) {
-      setTyped(({ [row.id]: _, ...rest }) => rest)
-      return
-    }
+  // One request per row at a time: enter and end-editing both fire for the same number.
+  const saving = useRef(new Set<string>())
+  const save = async (row: (typeof rows)[number]) => {
+    const text = typed[row.id]
+    if (text === undefined || saving.current.has(row.id)) return
+    const value = parseInitiative(text)
+    const forget = () => setTyped(({ [row.id]: _, ...rest }) => rest)
+    if (value === row.initiative) return forget()
+    saving.current.add(row.id)
     try {
       await setInit.mutateAsync({ entryId: row.id, initiative: value })
     } catch (e) {
       showToast(errorCopy(e))
     } finally {
-      setTyped(({ [row.id]: _, ...rest }) => rest)
+      saving.current.delete(row.id)
+      forget()
     }
+  }
+
+  const advance = (index: number) => {
+    const next = inputs.current[index + 1]
+    if (next) next.focus()
+    else inputs.current[index]?.blur()
+    return save(rows[index])
   }
 
   const startCombat = async () => {
     if (starting.current) return
     starting.current = true
     try {
+      // The keyboard may never have sent what is still typed: send it before the order locks.
+      await Promise.all(rows.map(save))
       await start.mutateAsync()
     } catch (e) {
       showToast(errorCopy(e))
@@ -96,13 +104,13 @@ export function RollCall({ combat, party }: { combat: Combat; party: CharacterFu
                 className="w-1/3 text-center"
                 accessibilityLabel={`Initiative for ${row.name}`}
                 placeholder="Init"
-                keyboardType="number-pad"
-                inputMode="numeric"
+                keyboardType="numbers-and-punctuation"
                 returnKeyType="next"
                 blurOnSubmit={false}
                 value={typed[row.id] ?? (row.initiative === null ? '' : String(row.initiative))}
                 onChangeText={(t) => setTyped((prev) => ({ ...prev, [row.id]: signed(t) }))}
-                onSubmitEditing={() => commit(i)}
+                onSubmitEditing={() => advance(i)}
+                onEndEditing={() => save(row)}
               />
             </Card>
           ))}

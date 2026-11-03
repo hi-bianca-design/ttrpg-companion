@@ -163,3 +163,30 @@ test('the submit button is disabled while the request is in flight, so a double 
   expect(mockAdd).toHaveBeenCalledTimes(1)
   await act(async () => { release(['id1']) })
 })
+
+test('initiative is held to -20..99 before anything is sent', async () => {
+  setup()
+  fillGoblins('1')
+  set('Initiative', '150')
+  submit()
+  await waitFor(() => expect(mockAdd).toHaveBeenCalled())
+  expect(mockAdd).toHaveBeenCalledWith('cb1', expect.objectContaining({ initiative: 99 }))
+})
+
+test('Max HP and AC are capped at four and two digits', () => {
+  setup()
+  expect(screen.getByLabelText('Max HP').props.maxLength).toBe(4)
+  expect(screen.getByLabelText('AC').props.maxLength).toBe(2)
+})
+
+test('when a separate initiative fails after the enemies exist, the form resets so a retry cannot add them again', async () => {
+  mockInit.mockRejectedValue(new AppError('invalid_initiative'))
+  setup()
+  fillGoblins()
+  fireEvent.press(screen.getByRole('button', { name: 'Separate rolls' }))
+  set('Goblin 1', '15')
+  submit()
+  await waitFor(() => expect(showToast).toHaveBeenCalledWith(ERROR_COPY.invalid_initiative))
+  await waitFor(() => expect(value('Name')).toBe(''))
+  expect(mockAdd).toHaveBeenCalledTimes(1)
+})
