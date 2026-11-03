@@ -43,7 +43,7 @@ test('the bar floats: absolutely positioned above the safe area, no pill anywher
 test('the plate keeps 8px above and below the active tablet, and casts a hard shadow so it floats', () => {
   render(<BottomNav {...props(1).p} />)
   expect(screen.getByTestId('bottom-nav-plate').props.className).toContain('py-2')
-  expect(screen.getByTestId('bottom-nav-plate').props.className).toContain('px-4')
+  expect(screen.getByTestId('bottom-nav-plate').props.className).toContain('px-2')
   const shadow = screen.UNSAFE_getAllByType(Path).filter((p) => p.props.transform === 'translate(4 4)')
   expect(shadow.length).toBeGreaterThan(0)
 })
