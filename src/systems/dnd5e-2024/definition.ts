@@ -118,6 +118,7 @@ export const DND_CONTENT_KIND_META: Record<string, ContentKindMeta> = {
       { key: 'hit_die', label: 'Hit die', type: 'select', options: ['6', '8', '10', '12'], required: true },
       { key: 'primary_abilities', label: 'Primary abilities', type: 'multiselect', options: [...ABILITY_KEYS], required: true },
       { key: 'saving_throw_proficiencies', label: 'Saving throws', type: 'multiselect', options: [...ABILITY_KEYS], required: true },
+      { key: 'spellcasting_ability', label: 'Spellcasting ability', type: 'select', options: [...ABILITY_KEYS] },
     ],
   },
   subclass: {

@@ -2,7 +2,7 @@
 // No React, no network: defaults for empty extras, schema-valid data builders, the draft
 // cache for a custom class, and name helpers.
 import type { FieldDef } from '../types'
-import { DND_CONTENT_KIND_META, SKILLS } from './definition'
+import { ABILITY_KEYS, DND_CONTENT_KIND_META, SKILLS } from './definition'
 
 export type CustomKind = 'class' | 'species' | 'background'
 
@@ -47,6 +47,10 @@ function text(v: unknown): string {
   return typeof v === 'string' ? v.trim() : ''
 }
 
+function isAbility(v: unknown): v is (typeof ABILITY_KEYS)[number] {
+  return typeof v === 'string' && (ABILITY_KEYS as readonly string[]).includes(v)
+}
+
 function hitDie(extras: Record<string, unknown>): number {
   const n = num(extras.hit_die)
   return n !== undefined && Number.isInteger(n) && n > 0 ? n : DEFAULT_HIT_DIE
@@ -70,6 +74,7 @@ export function customData(kind: CustomKind, extras: Record<string, unknown>, on
       hit_die: hitDie(e),
       primary_abilities: strList(e.primary_abilities),
       saving_throw_proficiencies: strList(e.saving_throw_proficiencies),
+      ...(isAbility(e.spellcasting_ability) ? { spellcasting_ability: e.spellcasting_ability } : {}),
       features: count > 0 ? { skill_choices: { count, from } } : {},
     }
   }

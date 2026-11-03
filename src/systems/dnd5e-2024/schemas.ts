@@ -46,6 +46,7 @@ const classData = z.object({
   one_off: z.boolean().optional(),
   hit_die: int.positive(),
   primary_abilities: z.array(z.string()),
+  spellcasting_ability: z.enum(ABILITY_KEYS).optional(),
   saving_throw_proficiencies: z.array(z.string()),
   features: z.looseObject({
     level_features: levelFeatures.optional(),
