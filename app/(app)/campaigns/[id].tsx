@@ -72,30 +72,32 @@ export default function CampaignDetailScreen() {
   const isGm = data.gm_id === user?.id
   return (
     <ScreenBackground scroll>
-      <View className="gap-3">
-        <NavRow>
-          <BackButton onPress={back} />
-          {isGm ? (
-            <Button variant="outline" size="sm" accessibilityLabel="Invite players" onPress={() => setInviteOpen(true)}>
-              <QrCode size={16} color={THEME_COLORS.accentForeground} />
-              <Text>Invite</Text>
-            </Button>
-          ) : null}
-        </NavRow>
-        <View className="gap-2">
-          <Text variant="title" numberOfLines={2}>{data.name}</Text>
-          <View className="flex-row flex-wrap items-center gap-2">
-            <Badge variant={isGm ? 'accent' : 'default'}>{isGm ? 'GM' : 'Player'}</Badge>
-            <Badge>{systemName(data.system_id)}</Badge>
+      <View className="gap-4">
+        <View className="gap-3">
+          <NavRow>
+            <BackButton onPress={back} />
+            {isGm ? (
+              <Button variant="outline" size="sm" accessibilityLabel="Invite players" onPress={() => setInviteOpen(true)}>
+                <QrCode size={16} color={THEME_COLORS.accentForeground} />
+                <Text>Invite</Text>
+              </Button>
+            ) : null}
+          </NavRow>
+          <View className="gap-2">
+            <Text variant="title" numberOfLines={2}>{data.name}</Text>
+            <View className="flex-row flex-wrap items-center gap-2">
+              <Badge variant={isGm ? 'accent' : 'default'}>{isGm ? 'GM' : 'Player'}</Badge>
+              <Badge>{systemName(data.system_id)}</Badge>
+            </View>
           </View>
+          {data.description ? <Text variant="narrative" tone="muted">{data.description}</Text> : null}
         </View>
-        {data.description ? <Text variant="narrative" tone="muted">{data.description}</Text> : null}
-      </View>
-      {isGm ? <InviteSheet code={data.invite_code} open={inviteOpen} onOpenChange={setInviteOpen} /> : null}
-      <View className="gap-3">
-        <CampaignSessionStatus campaignId={data.id} />
-        <SessionControls campaign={data} />
-        <TurnControls campaign={data} />
+        {isGm ? <InviteSheet code={data.invite_code} open={inviteOpen} onOpenChange={setInviteOpen} /> : null}
+        <View className="gap-3">
+          <CampaignSessionStatus campaignId={data.id} />
+          <SessionControls campaign={data} />
+          <TurnControls campaign={data} />
+        </View>
       </View>
       <SectionHeader id={`campaign:${data.id}:party`} title="Party">
         <PartyList campaign={data} />
