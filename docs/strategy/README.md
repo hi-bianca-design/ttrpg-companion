@@ -1,12 +1,12 @@
 # Strategy: freemium and paid subscriptions
 
-How the D&D companion app makes money, and what it takes to get there. These documents are the single place for the monetization strategy, spread across the department folders so each department finds its part where it expects it. This folder holds the company-level pieces; see the [docs index](../README.md) for all departments.
+How Session Zero, the tabletop companion app, makes money, and what it takes to get there. These documents are the single place for the monetization strategy, spread across the department folders so each department finds its part where it expects it. This folder holds the company-level pieces; see the [docs index](../README.md) for all departments.
 
 **Last reviewed:** 2026-11-03. **Owner:** Bianca. Strategy docs are living documents: when a decision changes, edit the doc and add a line to the [decision log](decision-log.md).
 
 ## The strategy in one paragraph
 
-The core app (build characters, join campaigns, play a session) stays free, because it is what makes people show up and bring their table. **DMs pay** for the tools that run a table, and **anyone can buy packs**: original content and commissioned art that we have the right to sell. Players are free to join, so each paying DM brings 3 to 5 free players. We never sell Wizards of the Coast's non-SRD material. We never lock people out of characters they already made. Everything we sell is either original, licensed, or entered by the user themselves.
+The core app (build characters, join campaigns, play a session) stays free, because it is what makes people show up and bring their table. **DMs pay** for the tools that run a table, and **anyone can buy packs**: original content and commissioned art that we have the right to sell. Players are free to join, so each paying DM brings 3 to 5 free players. We never sell content from outside the SRD, and there is no "full rulebook" tier. We never lock people out of characters they already made. What we charge for is our own work: sync, storage and session tools for DMs, plus original packs and commissioned art. Everything we sell is either original, licensed, or entered by the user themselves. Research on 2026-11-03 backs the shape of this: the market's main complaints are paywalled core tools and distrust of subscription pricing, so a free core with a clear promise ("your content is never gated") is the wedge.
 
 ## How to read these docs
 
@@ -64,5 +64,5 @@ The first piece is built and open as a pull request: pack-gated content, entitle
 - **Pack**: a sellable bundle of content, a theme, or art. Has a slug, a kind (`content`, `theme` or `art`) and an optional artist credit.
 - **Entitlement**: a record that a user owns a pack, optionally until a date. Only the server writes these.
 - **DM Pro**: the proposed paid subscription tier for people who run campaigns. Not built yet.
-- **SRD**: the System Reference Document, the part of D&D that Wizards of the Coast released under Creative Commons (CC BY 4.0). It is the only D&D content we may ship.
+- **SRD**: the System Reference Document, the part of the fifth-edition rules that its publisher released under Creative Commons (CC BY 4.0). It is the only rules content we may ship.
 - **Lapse**: an entitlement that has expired or been cancelled.

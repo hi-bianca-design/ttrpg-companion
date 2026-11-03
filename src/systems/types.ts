@@ -20,7 +20,7 @@ export type ResourceDef =
       kind: 'pool'
       display: 'bar' | 'counter'
       tint?: ResourceTint
-      /** Why damage is unavailable once this pool is at 0 (e.g. D&D: mark a death-save failure instead). */
+      /** Why damage is unavailable once this pool is at 0 (e.g. 5e: mark a death-save failure instead). */
       emptyHint?: string
       /** A limited-use class feature drawn from a pool (e.g. Lay On Hands), tracked on the Actions screen. */
       group?: 'feature'
@@ -147,6 +147,6 @@ export interface GameSystem {
     /** Most items a character may be attuned to at once; undefined = no limit. */
     maxAttuned?: number
   }
-  // Per-system sheet sections, e.g. D&D 'proficiencies'
+  // Per-system sheet sections, e.g. 5e 'proficiencies'
   sheet?: { sections?: Record<string, React.ComponentType<SheetSectionProps>> }
 }

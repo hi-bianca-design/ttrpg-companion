@@ -37,7 +37,7 @@ export default function LoginScreen() {
   return (
     <ScreenBackground scroll>
       <View className="gap-2 pt-8">
-        <Text variant="display">D&D Companion</Text>
+        <Text variant="display">Session Zero</Text>
         <Text tone="muted">Sign in to your account</Text>
       </View>
 

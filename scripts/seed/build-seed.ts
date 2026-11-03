@@ -25,7 +25,7 @@ const OUT_FILE = path.join(ROOT, 'supabase/seed.sql')
 const GAME_SYSTEMS: SystemRow[] = [
   {
     id: 'dnd5e-2024',
-    name: 'D&D 5e (2024 SRD)',
+    name: '5e (2024 SRD)',
     version: '5.2',
     license: 'CC-BY-4.0',
     attribution:
