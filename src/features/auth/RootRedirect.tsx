@@ -16,7 +16,8 @@ export function RootRedirect() {
     const inAuthGroup = segments[0] === '(auth)'
     if (!user && !inAuthGroup) {
       // A join link opened signed out: remember its code so sign-in can resume the join.
-      const onJoin = segments[1] === 'campaigns' && segments[2] === 'join'
+      const [, section, screen] = segments as string[]
+      const onJoin = section === 'campaigns' && screen === 'join'
       const code = onJoin ? parseInviteCode(params.code) : ''
       Promise.resolve(code ? setPendingJoinCode(code) : undefined)
         .catch(() => {})

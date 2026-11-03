@@ -1,17 +1,20 @@
+import { useState } from 'react'
 import { View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { BackButton, NavRow, ScreenBackground, SectionHeader } from '@/components/game'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { QrCode } from 'phosphor-react-native'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
 import { useAuth } from '@/features/auth/useAuth'
-import { InviteCode } from '@/features/campaigns/InviteCode'
+import { InviteSheet } from '@/features/campaigns/InviteSheet'
 import { PartyList } from '@/features/party/PartyList'
 import { SessionControls } from '@/features/sessions/SessionControls'
 import { TurnControls } from '@/features/sessions/TurnControls'
 import { useCampaign } from '@/features/campaigns/campaigns.queries'
 import { useReturnToSheet } from '@/features/campaigns/useReturnToSheet'
+import { THEME_COLORS } from '@/lib/theme'
 import { systemName } from '@/systems/registry'
 import { ERROR_COPY } from '@/features/errors'
 
@@ -21,6 +24,7 @@ export default function CampaignDetailScreen() {
   const { user } = useAuth()
   const { data, isLoading, isError, refetch } = useCampaign(id)
   const returnToSheet = useReturnToSheet()
+  const [inviteOpen, setInviteOpen] = useState(false)
   // Opened from a character sheet's Campaign tab, Back returns to that tab (see useReturnToSheet).
   // Opened directly there is nothing to go back to.
   const back = () => {
@@ -68,7 +72,14 @@ export default function CampaignDetailScreen() {
   return (
     <ScreenBackground scroll>
       <View className="gap-3">
-        {nav}
+        <NavRow>
+          <BackButton onPress={back} />
+          {isGm ? (
+            <Button variant="ghost" size="icon" accessibilityLabel="Invite players" onPress={() => setInviteOpen(true)}>
+              <QrCode size={24} color={THEME_COLORS.accentForeground} />
+            </Button>
+          ) : null}
+        </NavRow>
         <Text variant="title" numberOfLines={2}>{data.name}</Text>
       </View>
       <View className="flex-row flex-wrap items-center gap-2">
@@ -76,7 +87,7 @@ export default function CampaignDetailScreen() {
         <Badge>{systemName(data.system_id)}</Badge>
       </View>
       {data.description ? <Text variant="narrative" tone="muted">{data.description}</Text> : null}
-      {isGm ? <InviteCode code={data.invite_code} /> : null}
+      {isGm ? <InviteSheet code={data.invite_code} open={inviteOpen} onOpenChange={setInviteOpen} /> : null}
       <SessionControls campaign={data} />
       <TurnControls campaign={data} />
       <SectionHeader id={`campaign:${data.id}:party`} title="Party">
