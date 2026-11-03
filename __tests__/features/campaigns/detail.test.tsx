@@ -165,6 +165,14 @@ describe('inviting players', () => {
     expect(screen.queryByText('ABC123')).toBeNull()
   })
 
+  test('the invite control is a labelled outline button, not a bare glyph', async () => {
+    ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
+    renderDetail()
+    const button = await screen.findByRole('button', { name: 'Invite players' })
+    expect(variantOf(button)).toBe('outline')
+    expect(screen.getByText('Invite')).toBeTruthy()
+  })
+
   test('pressing it opens the sheet with the code', async () => {
     ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
     renderDetail()
