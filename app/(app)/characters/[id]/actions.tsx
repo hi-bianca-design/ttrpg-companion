@@ -98,7 +98,7 @@ export default function ActionsTab() {
     )
   }
 
-  // The system's bar-display pools (D&D: hit points), compact, each opening the HP sheet.
+  // The system's bar-display pools (e.g. hit points), compact, each opening the HP sheet.
   const bars = system.resources.flatMap((def) => {
     const v = character.resources[def.key] as PoolValue | undefined
     return def.kind === 'pool' && def.display === 'bar' && v ? [{ def, v }] : []

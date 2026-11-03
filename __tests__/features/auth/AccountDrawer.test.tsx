@@ -41,7 +41,7 @@ test('the drawer shows an initial badge, the username and email, and an outline 
 test('Sign out asks for confirmation before signing out', () => {
   renderMenu()
   openSignOutDialog()
-  expect(screen.getByText('Sign out of D&D Companion?')).toBeTruthy()
+  expect(screen.getByText('Sign out of Session Zero?')).toBeTruthy()
   expect(variantOf(screen.getByRole('button', { name: 'Stay signed in' }))).toBe('outline')
   expect(signOut).not.toHaveBeenCalled()
 })
@@ -50,7 +50,7 @@ test('Stay signed in closes the dialog without signing out', () => {
   renderMenu()
   openSignOutDialog()
   fireEvent.press(screen.getByRole('button', { name: 'Stay signed in' }))
-  expect(screen.queryByText('Sign out of D&D Companion?')).toBeNull()
+  expect(screen.queryByText('Sign out of Session Zero?')).toBeNull()
   expect(signOut).not.toHaveBeenCalled()
 })
 
@@ -70,7 +70,7 @@ test('a failed sign-out shows the shared error copy and keeps the dialog open', 
   openSignOutDialog()
   fireEvent.press(screen.getByRole('button', { name: 'Sign out' }))
   expect(await screen.findByText(ERROR_COPY.network)).toBeTruthy()
-  expect(screen.getByText('Sign out of D&D Companion?')).toBeTruthy()
+  expect(screen.getByText('Sign out of Session Zero?')).toBeTruthy()
 })
 
 test('the drawer closes from a ghost X icon in its header, not a text button under Sign out', () => {

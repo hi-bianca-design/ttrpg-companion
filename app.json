@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "DnD Companion",
-    "slug": "dnd-companion",
+    "name": "Session Zero",
+    "slug": "session-zero",
     "version": "1.0.0",
-    "scheme": "dnd-companion",
+    "scheme": "session-zero",
     "userInterfaceStyle": "dark",
     "web": {
       "bundler": "metro",
@@ -17,7 +17,7 @@
       "typedRoutes": true
     },
     "ios": {
-      "bundleIdentifier": "com.anonymous.dnd-companion"
+      "bundleIdentifier": "com.anonymous.session-zero"
     }
   }
 }

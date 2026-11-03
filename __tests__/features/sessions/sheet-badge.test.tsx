@@ -4,9 +4,11 @@ import { fireEvent, render, screen } from '@testing-library/react-native'
 import { SheetHeader } from '@/features/characters/sheet/SheetHeader'
 import { useCampaign, useCharacterCampaign } from '@/features/campaigns/campaigns.queries'
 import { useActiveSession, useSetCombat } from '@/features/sessions/sessions.queries'
+import { useCharacter } from '@/features/characters/characters.queries'
 
 jest.mock('@/features/campaigns/campaigns.queries', () => ({ useCharacterCampaign: jest.fn(), useCampaign: jest.fn() }))
-jest.mock('@/features/sessions/sessions.queries', () => ({ useActiveSession: jest.fn(), useSetCombat: jest.fn() }))
+jest.mock('@/features/sessions/sessions.queries', () => ({ useActiveSession: jest.fn(), useSetCombat: jest.fn(), useEndTurn: () => ({ mutateAsync: jest.fn() }) }))
+jest.mock('@/features/characters/characters.queries', () => ({ useCharacter: jest.fn() }))
 jest.mock('@/features/auth/useAuth', () => ({ useAuth: () => ({ user: { id: 'gm1' } }) }))
 jest.mock('@/components/ui/toast', () => ({ showToast: jest.fn() }))
 const mockRouter = { dismiss: jest.fn(), replace: jest.fn(), canDismiss: jest.fn(() => true) }
@@ -24,6 +26,7 @@ beforeEach(() => {
   ;(useCampaign as jest.Mock).mockReturnValue({ data: { id: 'camp1', gm_id: 'gm1' } })
   ;(useActiveSession as jest.Mock).mockReturnValue({ data: outOfCombat, isError: false })
   ;(useSetCombat as jest.Mock).mockReturnValue({ mutateAsync: jest.fn() })
+  ;(useCharacter as jest.Mock).mockReturnValue({ data: { id: 'ch1', owner_id: 'gm1' } })
 })
 
 test('the shared sheet header shows Session: Active and Enter combat while the campaign has a session', () => {
@@ -40,6 +43,16 @@ test('in combat the header shows In combat instead of Enter combat', () => {
   expect(screen.getByText('Session: Active')).toBeTruthy()
   expect(screen.getByRole('button', { name: 'In combat' })).toBeTruthy()
   expect(screen.queryByRole('button', { name: 'Enter combat' })).toBeNull()
+})
+
+test('the holder sees the Your turn banner in the header; nobody else does', () => {
+  ;(useActiveSession as jest.Mock).mockReturnValue({ data: { ...outOfCombat, in_combat: true, combat_started_by: 'gm1', current_turn_user_id: 'gm1' }, isError: false })
+  const { unmount } = render(<SheetHeader name="Mira" />)
+  expect(screen.getByText('Your turn')).toBeTruthy()
+  unmount()
+  ;(useActiveSession as jest.Mock).mockReturnValue({ data: { ...outOfCombat, in_combat: true, combat_started_by: 'gm1', current_turn_user_id: 'p2' }, isError: false })
+  render(<SheetHeader name="Mira" />)
+  expect(screen.queryByText('Your turn')).toBeNull()
 })
 
 test('no badges without an active session, and Back still works', () => {

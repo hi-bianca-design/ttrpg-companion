@@ -21,6 +21,10 @@ Likelihood and impact are the author's rough judgement: **to be revisited**, not
 | R11 | **Artist relationships and rights disputes** | Low | High | Written contracts before work; keep records ([Artist commissioning](../content/artist-commissioning.md)) | Bianca |
 | R12 | **Privacy or children's data rules** | Low to medium | High | Minimal data; age policy; privacy policy; get advice | Bianca |
 | R13 | **Backlash to monetization** from the community | Low | Medium | Never lock existing characters; be open about what's free; no dark patterns | Bianca |
+| R14 | **Conversion is near 2%**, so revenue stays too small to matter | High | Medium | Keep fixed costs tiny; plan at 2%; test DM-pays early | Bianca |
+| R15 | **Shared homebrew** brings moderation duties and store rejection (guideline 1.2) | Medium | Medium | Keep homebrew private at launch (D16); build report, block and filter before sharing | Bianca |
+| R16 | **A bigger rival ships live mobile sync** after its 2026 platform rebuild | Medium | High | Be first and best at the free phone-first table experience; own the "never gated" promise | Bianca |
+| R17 | **"Session Zero" fails a trademark search** or is already in use for tabletop software | Low to medium | Medium | First pass found a pending or registered "THE SESSION ZERO SYSTEM" (class 28, a card deck) and a free web GM toolkit called Session Zero Labs; see [Content licensing](../legal/content-licensing.md). Run the official USPTO search and check domains before launch (D13); keep the shortlist (Long Rest, Hearthroll) | Bianca |
 
 ## Open questions
 
@@ -32,7 +36,7 @@ Each one blocks something. The answer goes in the [decision log](decision-log.md
 | Q2 | What should the free caps be, and what's in DM Pro? | Phase 3 | Usage data: who hits what |
 | Q3 | RevenueCat + Stripe, a merchant of record, or Stripe alone? | Phase 3 | Evaluate current fees and terms against web-first launch |
 | Q4 | Web first, or native first? | Phase 3, 6 | The memory says web first; confirm against where the audience is |
-| Q5 | Can the app keep "D&D" in its name? | Phase 1 | Legal advice |
+| Q5 | ~~Can the app keep a game trademark in its name?~~ **Resolved: the app is named Session Zero** (D13). Still run a trademark search before the store launch. | Phase 1 | Trademark search; see [Content licensing](../legal/content-licensing.md) |
 | Q6 | Is the SRD attribution shown correctly? | Phase 1 | Add the licences screen; legal check |
 | Q7 | What age do we allow, and are children in scope? | Phase 1 | Advice; decide and write into the terms |
 | Q8 | Art storage: copy-on-pick or policy mirrors the content rule? | Phase 4 | Scope with the first art pack ([Art storage and delivery](../engineering/art-storage-and-delivery.md)) |
@@ -49,6 +53,6 @@ If one of these is wrong, parts of the plan change:
 - Tables form around a DM and bring free players with them.
 - An audience that cares about original art will buy packs.
 - Web is a good enough first platform.
-- We can write original content that people want, without Wizards' non-SRD material.
+- We can write original content that people want, without relying on any non-SRD material.
 
 Test the first two as early as possible: they decide whether DM-pays works at all.
