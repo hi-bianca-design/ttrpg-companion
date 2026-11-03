@@ -7,8 +7,13 @@ import { CharacterRouteIdContext } from '@/features/characters/useCharacterRoute
 export default function CharacterSheetLayout() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
-  // Leaves the character for the app Home. replace, not push: opened by a deep link there is no history to pop.
-  const goHome = () => router.replace('/(app)')
+  // Leaves the character for the app Home. Pop the characters stack first, or the Characters tab would reopen on
+  // this sheet (with its bar hidden and no Back, the list would be unreachable). replace, not push: opened by a
+  // deep link there is no history to pop.
+  const goHome = () => {
+    if (router.canDismiss()) router.dismissAll()
+    router.replace('/(app)')
+  }
 
   return (
     <CharacterRouteIdContext.Provider value={id}>

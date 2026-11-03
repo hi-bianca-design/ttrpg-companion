@@ -72,3 +72,8 @@ test('screens leave room for the bar only where it is shown', () => {
   tabBarFor(['(app)', 'characters', '[id]'])
   expect(captured.inset).toBe(false)
 })
+
+test('the root bar wrapper covers the screen without taking touches, so the floating bar stays tappable on Android', () => {
+  const bar = tabBarFor(['(app)']) as { props: { pointerEvents?: string; style?: unknown } }
+  expect(bar.props.pointerEvents).toBe('box-none')
+})

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { BottomNav } from '@/components/ui/bottom-nav'
 import { NavInsetContext } from '@/components/ui/nav-inset'
 import { AccountDrawer } from '@/features/auth/AccountDrawer'
-import { View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 
 export default function AppLayout() {
   const segments = useSegments()
@@ -23,7 +23,9 @@ export default function AppLayout() {
         backBehavior="initialRoute"
         tabBar={(props) =>
           hideTabBar ? null : (
-            <View>
+            // Covers the screen without taking touches: the floating bar draws outside a zero-height wrapper, and
+            // Android does not deliver touches outside a parent's bounds.
+            <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
               <BottomNav {...props} extra={{ label: 'Account', icon: User, onPress: () => setAccountOpen(true) }} />
               <AccountDrawer open={accountOpen} onOpenChange={setAccountOpen} />
             </View>

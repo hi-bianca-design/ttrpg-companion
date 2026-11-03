@@ -82,7 +82,7 @@ export default function CampaignTab() {
       <CampaignCard
         campaign={{ ...c, member_count: c.members.length }}
         isGm={c.gm_id === user?.id}
-        onPress={() => router.push({ pathname: '/(app)/campaigns/[id]', params: { id: c.id, fromCharacter: id } })}
+        onPress={() => router.push({ pathname: '/(app)/campaigns/[id]', params: { id: c.id } })}
       />
       <SessionControls campaign={c} />
       <SectionHeader id={`campaign:${c.id}:party`} title="Party">

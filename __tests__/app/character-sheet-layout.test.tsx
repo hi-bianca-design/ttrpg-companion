@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import CharacterSheetLayout from '../../app/(app)/characters/[id]/_layout'
 
-const mockRouter = { replace: jest.fn(), canDismiss: jest.fn(() => false) }
+const mockRouter = { replace: jest.fn(), dismissAll: jest.fn(), canDismiss: jest.fn(() => false) }
 const captured: { tabBar?: (props: object) => React.ReactElement; inset?: boolean; screens: Array<{ name: string; options: Record<string, unknown> }> } = { screens: [] }
 
 jest.mock('expo-router', () => {
@@ -46,4 +46,12 @@ test('Home leads the sheet bar and returns to the app Home even on a deep link w
   expect(screen.getAllByRole('button', { name: 'Home' })).toHaveLength(1)
   fireEvent.press(screen.getByRole('button', { name: 'Home' }))
   expect(mockRouter.replace).toHaveBeenCalledWith('/(app)')
+})
+
+test('Home first pops the characters stack, so the Characters tab does not reopen on this sheet', () => {
+  mockRouter.canDismiss.mockReturnValueOnce(true)
+  render(captured.tabBar!(barProps))
+  fireEvent.press(screen.getByRole('button', { name: 'Home' }))
+  expect(mockRouter.dismissAll).toHaveBeenCalled()
+  expect(mockRouter.dismissAll.mock.invocationCallOrder[0]).toBeLessThan(mockRouter.replace.mock.invocationCallOrder[0])
 })

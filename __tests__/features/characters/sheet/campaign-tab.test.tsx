@@ -57,7 +57,7 @@ test('opening the campaign tells the detail screen which sheet to return to', ()
   ;(useCampaign as jest.Mock).mockReturnValue({ data: camp, isLoading: false, isError: false })
   render(<CampaignTab />)
   fireEvent.press(screen.getByText('Odd Game'))
-  expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/(app)/campaigns/[id]', params: { id: 'camp1', fromCharacter: 'ch1' } })
+  expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/(app)/campaigns/[id]', params: { id: 'camp1' } })
 })
 
 test('Join a campaign passes the character, so join returns here', () => {

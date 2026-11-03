@@ -12,7 +12,7 @@ import { variantOf } from '../../helpers/button'
 
 jest.mock('@/lib/supabase', () => ({ supabase: { from: jest.fn(), rpc: jest.fn(), auth: { getSession: jest.fn() } } }))
 const mockRouter = { back: jest.fn(), push: jest.fn(), navigate: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) }
-const mockParams: { id: string; fromCharacter?: string } = { id: 'camp1' }
+const mockParams: { id: string } = { id: 'camp1' }
 const mockNavigation = { reset: jest.fn() }
 jest.mock('expo-router', () => ({
   useRouter: () => mockRouter,
@@ -56,7 +56,6 @@ test('systemName falls back to the raw id', () => {
 
 describe('no Back arrow (Home on the bar replaces it)', () => {
   beforeEach(() => {
-    delete mockParams.fromCharacter
     ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
   })
 
