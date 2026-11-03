@@ -7,11 +7,13 @@ import { usePartyRealtime } from '@/features/party/usePartyRealtime'
 import { qk } from '@/lib/query-client'
 
 type Handler = (payload: { new: Record<string, unknown> }) => void
+const topics: string[] = []
 const channels: { on: jest.Mock; subscribe: jest.Mock; handler?: Handler; status?: (s: string) => void }[] = []
 
 jest.mock('@/lib/supabase', () => ({
   supabase: {
-    channel: jest.fn(() => {
+    channel: jest.fn((topic: string) => {
+      topics.push(topic)
       const ch: (typeof channels)[number] = { on: jest.fn(), subscribe: jest.fn() }
       ch.on.mockImplementation((_type: string, _filter: unknown, cb: Handler) => { ch.handler = cb; return ch })
       ch.subscribe.mockImplementation((cb: (s: string) => void) => { ch.status = cb; return ch })
@@ -56,6 +58,7 @@ const cached = (client: ReturnType<typeof makeTestQueryClient>) =>
 beforeEach(() => {
   jest.clearAllMocks()
   channels.length = 0
+  topics.length = 0
 })
 
 test('subscribes to updates of exactly the party’s characters', () => {
@@ -127,4 +130,32 @@ test('the first SUBSCRIBED is not a recovery: nothing is refetched', () => {
   const { client } = setup()
   act(() => channels[0].status!('SUBSCRIBED'))
   expect(client.getQueryState([...qk.party('camp1'), 'c1,c2'])?.isInvalidated).toBe(false)
+})
+
+test('two mounted party hooks for the same campaign never share a channel topic', () => {
+  setup()
+  setup()
+  expect(topics).toHaveLength(2)
+  expect(topics[0]).not.toBe(topics[1])
+})
+
+test('a channel the server closed is torn down and rebuilt', () => {
+  jest.useFakeTimers()
+  try {
+    setup()
+    act(() => channels[0].status!('CLOSED'))
+    act(() => { jest.advanceTimersByTime(5000) })
+    expect(supabase.removeChannel).toHaveBeenCalledWith(channels[0])
+    expect(channels).toHaveLength(2)
+  } finally {
+    jest.useRealTimers()
+  }
+})
+
+test('recovery also refetches the campaign so joins and leaves are picked up', () => {
+  const { client } = setup()
+  client.setQueryData(qk.campaign('camp1'), { id: 'camp1' })
+  act(() => channels[0].status!('CHANNEL_ERROR'))
+  act(() => channels[0].status!('SUBSCRIBED'))
+  expect(client.getQueryState(qk.campaign('camp1'))?.isInvalidated).toBe(true)
 })

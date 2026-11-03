@@ -50,12 +50,12 @@ test('shows name, class and level, hit points, conditions and the glance chips',
 test('tapping the card reveals the extra details, and tapping again hides them', () => {
   render(<PartyCard character={character({ details: { inspiration: true } })} />)
   expect(screen.queryByText('Insight 10')).toBeNull()
-  fireEvent.press(screen.getByRole('button', { name: 'Mira details' }))
+  fireEvent.press(screen.getByRole('button', { name: /^Mira,/ }))
   expect(screen.getByText('Insight 10')).toBeTruthy()
   expect(screen.getByText('Investigation 10')).toBeTruthy()
   expect(screen.getByText('Inspiration Inspired')).toBeTruthy()
-  expect(screen.getByRole('button', { name: 'Mira details' })).toHaveAccessibilityState({ expanded: true })
-  fireEvent.press(screen.getByRole('button', { name: 'Mira details' }))
+  expect(screen.getByRole('button', { name: /^Mira,/ })).toHaveAccessibilityState({ expanded: true })
+  fireEvent.press(screen.getByRole('button', { name: /^Mira,/ }))
   expect(screen.queryByText('Insight 10')).toBeNull()
 })
 
@@ -79,9 +79,18 @@ test('a very long name stays on one line', () => {
 
 test('the card never writes a character', () => {
   render(<PartyCard character={character()} />)
-  fireEvent.press(screen.getByRole('button', { name: 'Mira details' }))
-  fireEvent.press(screen.getByRole('button', { name: 'Mira details' }))
+  fireEvent.press(screen.getByRole('button', { name: /^Mira,/ }))
+  fireEvent.press(screen.getByRole('button', { name: /^Mira,/ }))
   const hooks = Object.values(characterQueries).filter((v): v is jest.Mock => jest.isMockFunction(v))
   expect(hooks.length).toBeGreaterThan(0)
   expect(hooks.every((h) => h.mock.calls.length === 0)).toBe(true)
+})
+
+test('the button’s spoken label carries hit points, conditions and chips, not just the name', () => {
+  render(<PartyCard character={character()} />)
+  const label = screen.getByRole('button', { name: /^Mira,/ }).props.accessibilityLabel as string
+  expect(label).toContain('8 of 12 hit points')
+  expect(label).toContain('4 temporary')
+  expect(label).toContain('poisoned')
+  expect(label).toMatch(/AC/)
 })

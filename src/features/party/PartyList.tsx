@@ -19,7 +19,7 @@ export function PartyList({ campaign }: { campaign: CampaignFull }) {
   const { connected } = usePartyRealtime(campaign)
   const members = campaign.members.filter((m) => m.status === 'active' && m.role !== 'gm')
 
-  if (party.isError) {
+  if (party.isError && !party.data) {
     return (
       <View className="items-start gap-2">
         <Text variant="caption" tone="destructive">{ERROR_COPY.load_failed}</Text>
@@ -52,6 +52,8 @@ export function PartyList({ campaign }: { campaign: CampaignFull }) {
   const withCharacter = members.filter((m) => m.character_id)
   const cards = withCharacter.flatMap((m) => (byId.get(m.character_id!) ? [byId.get(m.character_id!)!] : []))
     .sort((a, b) => a.name.localeCompare(b.name))
+  // Every attached character unreadable means the viewer is not an active member (an invitee): show nothing, not errors.
+  if (withCharacter.length > 0 && loaded.length === 0) return null
   const unreadable = withCharacter.filter((m) => !byId.has(m.character_id!))
   const without = members.filter((m) => !m.character_id)
 

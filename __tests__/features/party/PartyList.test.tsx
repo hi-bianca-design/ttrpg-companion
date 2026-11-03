@@ -56,7 +56,7 @@ test('lists cards by character name, leaves the GM out, and marks a member with 
 })
 
 test('a character that could not be read is marked, not hidden or crashing', () => {
-  setup([member('p1', { character_id: 'c1', username: 'Eli' })], { data: [] })
+  setup([member('p1', { character_id: 'c1', username: 'Eli' }), member('p2', { character_id: 'c2' })], { data: [char('c2', 'Torin')] })
   expect(screen.getByText('Eli')).toBeTruthy()
   expect(screen.getByText('Couldn’t load this character')).toBeTruthy()
 })
@@ -82,4 +82,16 @@ test('eight members all render', () => {
   const members = Array.from({ length: 8 }, (_, i) => member(`p${i}`, { character_id: `c${i}` }))
   setup(members, { data: members.map((_, i) => char(`c${i}`, `Hero ${i}`)) })
   expect(screen.getAllByText(/^card:/)).toHaveLength(8)
+})
+
+test('a failed refresh keeps the cards on screen instead of replacing them with an error', () => {
+  setup([member('p1', { character_id: 'c1' })], { data: [char('c1', 'Mira')], isError: true })
+  expect(screen.getByText('card:Mira')).toBeTruthy()
+  expect(screen.queryByText(ERROR_COPY.load_failed)).toBeNull()
+})
+
+test('an invited viewer, for whom every active member’s character is unreadable, sees no error cards', () => {
+  setup([member('p1', { character_id: 'c1', username: 'Eli' }), member('p2', { character_id: 'c2', username: 'Dana' })], { data: [] })
+  expect(screen.queryByText('Couldn’t load this character')).toBeNull()
+  expect(screen.queryByText('Eli')).toBeNull()
 })

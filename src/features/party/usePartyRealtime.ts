@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import type { CampaignFull } from '@/features/campaigns/campaigns.api'
 import type { CharacterFull } from '@/features/characters/characters.api'
@@ -35,16 +35,25 @@ export function usePartyRealtime(campaign: CampaignFull | undefined): { connecte
   const qc = useQueryClient()
   const [connected, setConnected] = useState(true)
   const wasDown = useRef(false)
+  // One topic per hook instance: realtime-js hands back an existing channel for a topic in use, and a second screen would throw or tear it down.
+  const instance = useId()
+  // Bumped to rebuild the channel after the server closes it, which the socket does not rejoin on its own.
+  const [attempt, setAttempt] = useState(0)
   const campaignId = campaign?.id
   const idsKey = partyCharacterIds(campaign).join(',')
 
   useEffect(() => {
     if (!campaignId || !idsKey) return
     let closed = false
-    const refetch = () => qc.invalidateQueries({ queryKey: qk.party(campaignId) })
+    let rebuild: ReturnType<typeof setTimeout> | undefined
+    const refetch = () => {
+      qc.invalidateQueries({ queryKey: qk.party(campaignId) })
+      // Members may have joined or left while the page was not listening.
+      qc.invalidateQueries({ queryKey: qk.campaign(campaignId) })
+    }
 
     const channel = supabase
-      .channel(`party:${campaignId}:${idsKey}`)
+      .channel(`party:${campaignId}:${instance}:${attempt}:${idsKey}`)
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'characters', filter: `id=in.(${idsKey})` },
@@ -76,14 +85,16 @@ export function usePartyRealtime(campaign: CampaignFull | undefined): { connecte
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
           wasDown.current = true
           setConnected(false)
+          if (status === 'CLOSED') rebuild = setTimeout(() => setAttempt((n) => n + 1), 2000)
         }
       })
 
     return () => {
       closed = true
+      clearTimeout(rebuild)
       supabase.removeChannel(channel)
     }
-  }, [campaignId, idsKey, qc])
+  }, [campaignId, idsKey, qc, instance, attempt])
 
   return { connected }
 }

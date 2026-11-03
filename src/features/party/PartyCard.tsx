@@ -22,10 +22,19 @@ export function PartyCard({ character }: { character: CharacterFull }) {
   const className = character.picks.find((p) => p.kind === 'class')?.content?.name
   const pct = hp && hp.max > 0 ? (hp.current / hp.max) * 100 : 0
 
+  const spoken = [
+    character.name,
+    className ? `${className} level ${character.level}` : `level ${character.level}`,
+    hp ? `${hp.current} of ${hp.max} hit points${temp > 0 ? `, ${temp} temporary` : ''}` : null,
+    character.conditions.length > 0 ? character.conditions.join(', ') : null,
+    ...(summary?.glance.map((g) => `${g.label} ${g.value}`) ?? []),
+  ].filter(Boolean).join(', ')
+
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${character.name} details`}
+      accessibilityLabel={spoken}
+      accessibilityHint={open ? 'Hides extra details' : 'Shows extra details'}
       accessibilityState={{ expanded: open }}
       onPress={() => setOpen((o) => !o)}
     >
