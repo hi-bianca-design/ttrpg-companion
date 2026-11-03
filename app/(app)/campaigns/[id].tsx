@@ -8,6 +8,7 @@ import { Text } from '@/components/ui/text'
 import { useAuth } from '@/features/auth/useAuth'
 import { InviteCode } from '@/features/campaigns/InviteCode'
 import { PartyList } from '@/features/party/PartyList'
+import { CampaignSessionStatus } from '@/features/sessions/CampaignSessionStatus'
 import { SessionControls } from '@/features/sessions/SessionControls'
 import { TurnControls } from '@/features/sessions/TurnControls'
 import { useCampaign } from '@/features/campaigns/campaigns.queries'
@@ -77,6 +78,7 @@ export default function CampaignDetailScreen() {
       </View>
       {data.description ? <Text variant="narrative" tone="muted">{data.description}</Text> : null}
       {isGm ? <InviteCode code={data.invite_code} /> : null}
+      <CampaignSessionStatus campaignId={data.id} />
       <SessionControls campaign={data} />
       <TurnControls campaign={data} />
       <SectionHeader id={`campaign:${data.id}:party`} title="Party">

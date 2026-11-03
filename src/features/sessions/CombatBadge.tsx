@@ -12,20 +12,19 @@ import { useCharacterRouteId } from '@/features/characters/useCharacterRouteId'
 import { ERROR_COPY } from '@/features/errors'
 import { THEME_COLORS } from '@/lib/theme'
 import { canEndCombat } from './combat'
-import { useSetCombat } from './sessions.queries'
+import type { Session } from './sessions.api'
+import { useActiveSession, useSetCombat } from './sessions.queries'
 import { useCharacterSession } from './useCharacterSession'
 
 // The badge plate is ~22pt tall; 11pt above and below brings the touch target to 44pt.
 const HIT_SLOP = { top: 11, bottom: 11, left: 8, right: 8 }
 
 /**
- * Combat state for the sheet's session: `Enter combat` for any member out of combat, `In combat`
+ * Combat state for a campaign's session: `Enter combat` for any member out of combat, `In combat`
  * once it starts (tappable to end it for the GM or whoever started it). Nothing without a session.
+ * Takes the campaign and session explicitly so the sheet and the campaign screen can share it.
  */
-export function CombatBadge() {
-  const characterId = useCharacterRouteId()
-  const session = useCharacterSession(characterId)
-  const campaignId = useCharacterCampaign(characterId).data?.id
+export function CombatBadgeView({ campaignId, session }: { campaignId: string | undefined; session: Session | null }) {
   const gmId = useCampaign(campaignId).data?.gm_id
   const { user } = useAuth()
   const setCombat = useSetCombat(campaignId ?? '')
@@ -86,4 +85,18 @@ export function CombatBadge() {
       </Dialog>
     </>
   )
+}
+
+/** The character sheet's combat badge: the campaign and session come from the open sheet's character. */
+export function CombatBadge() {
+  const characterId = useCharacterRouteId()
+  const session = useCharacterSession(characterId)
+  const campaignId = useCharacterCampaign(characterId).data?.id
+  return <CombatBadgeView campaignId={campaignId} session={session} />
+}
+
+/** The campaign screen's combat badge (a GM has no sheet): the campaign is given, never looked up by character. */
+export function CampaignCombatBadge({ campaignId }: { campaignId: string }) {
+  const session = useActiveSession(campaignId).data ?? null
+  return <CombatBadgeView campaignId={campaignId} session={session} />
 }
