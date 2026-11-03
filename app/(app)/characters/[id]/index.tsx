@@ -75,6 +75,7 @@ export default function CharacterTab() {
   const system = getSystem(character.system_id)
   const Proficiencies = system.sheet?.sections?.proficiencies
   const Profile = system.sheet?.sections?.profile
+  const Languages = system.sheet?.sections?.languages
   const hp = character.resources.hp as PoolValue | undefined
 
   return (
@@ -97,6 +98,16 @@ export default function CharacterTab() {
       <StatsSection character={character} />
       {Proficiencies ? <Proficiencies character={character} picks={picks} /> : null}
       {Profile ? <Profile character={character} picks={picks} /> : null}
+      {Languages ? (
+        <Languages
+          character={character}
+          picks={picks}
+          onSaveDetails={(patch) => {
+            setSaveError(null)
+            update.mutate({ details: { ...character.details, ...patch } }, onSaveError)
+          }}
+        />
+      ) : null}
 
       {hp ? (
         <>
