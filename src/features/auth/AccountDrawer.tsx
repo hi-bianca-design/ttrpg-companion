@@ -88,7 +88,7 @@ export function AccountDrawer({ open, onOpenChange }: AccountDrawerProps) {
       <Dialog open={confirming} onOpenChange={(o) => { if (!o && !pending) setConfirming(false) }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Sign out of D&D Companion?</DialogTitle>
+            <DialogTitle>Sign out of Session Zero?</DialogTitle>
             <DialogDescription>Your characters and campaigns stay saved. Sign back in with your email and password.</DialogDescription>
           </DialogHeader>
           {error ? <Text variant="caption" tone="destructive">{error}</Text> : null}

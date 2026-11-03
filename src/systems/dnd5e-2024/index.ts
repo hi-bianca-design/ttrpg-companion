@@ -1,7 +1,9 @@
 import type { ContentKindDef, GameSystem } from '../types'
 import { dnd5eBuilder } from './builder'
 import { DND_CONDITIONS, DND_CONTENT_KIND_META, DND_RESOURCES, DND_STATS } from './definition'
-import { derived, levelUp, MAX_LEVEL, rest } from './rules'
+import { derived, levelUp, MAX_LEVEL, partySummary, rest } from './rules'
+import { LanguagesSection } from './sheet/LanguagesSection'
+import { SpellcastingSection } from './sheet/SpellcastingSection'
 import { LevelUpSection } from './sheet/LevelUpSection'
 import { ProficienciesSection } from './sheet/ProficienciesSection'
 import { ProfileSection } from './sheet/ProfileSection'
@@ -24,6 +26,6 @@ export const dnd5e2024: GameSystem = {
   contentKinds,
   schemas: { stats: dnd5eStatsSchema, resources: dnd5eResourcesSchema, details: dnd5eDetailsSchema },
   builder: dnd5eBuilder,
-  rules: { derived, rest, levelUp, maxAttuned: 3 },
-  sheet: { sections: { proficiencies: ProficienciesSection, profile: ProfileSection, levelUp: LevelUpSection } },
+  rules: { derived, rest, levelUp, partySummary, maxAttuned: 3 },
+  sheet: { sections: { proficiencies: ProficienciesSection, profile: ProfileSection, languages: LanguagesSection, spellcasting: SpellcastingSection, levelUp: LevelUpSection } },
 }

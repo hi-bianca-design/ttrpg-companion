@@ -1,7 +1,7 @@
 // D&D 5e (2024) rules: ability maths, spell slots, derived values and rests.
 // Ported from the pre-rebuild character utils (since removed).
 import type {
-  CharacterRecord, DerivedValue, PickRecord, PoolValue, ResourceValue, SlotsValue,
+  CharacterRecord, DerivedValue, PartySummary, PickRecord, PoolValue, ResourceValue, SlotsValue, SummaryItem,
 } from '../types'
 import type { ChoiceKey } from './classChoices'
 import { ABILITY_KEYS, ABILITY_LABELS, type AbilityKey } from './definition'
@@ -256,9 +256,71 @@ export function derived(c: CharacterRecord, picks: PickRecord[]): DerivedValue[]
     { key: 'ac', label: 'Armor Class', value: armorClass(mod('dexterity'), picks), format: 'plain' },
     { key: 'initiative', label: 'Initiative', value: mod('dexterity') + (alert ? prof : 0), format: 'modifier' },
     { key: 'passive_perception', label: 'Passive Perception', value: 10 + mod('wisdom') + skillBonus(picks, 'perception', prof), format: 'plain' },
+    { key: 'passive_insight', label: 'Passive Insight', value: 10 + mod('wisdom') + skillBonus(picks, 'insight', prof), format: 'plain' },
+    { key: 'passive_investigation', label: 'Passive Investigation', value: 10 + mod('intelligence') + skillBonus(picks, 'investigation', prof), format: 'plain' },
     { key: 'speed', label: 'Speed', value: typeof speciesSpeed === 'number' ? speciesSpeed : 30, format: 'plain' },
     ...(typeof c.details.xp === 'number' ? xpValues(c.level, c.details.xp) : []),
   ]
+}
+
+/**
+ * Darkvision range in feet from the species pick's trait text ("You have Darkvision with a range of 60
+ * feet."). Lineage upgrades (e.g. a Drow elf's 120 ft) are not modelled; null when the species has none.
+ */
+export function darkvisionRange(picks: PickRecord[]): number | null {
+  const traits = asRecord(asRecord(picks.find((p) => p.kind === 'species')?.content.data).traits).traits
+  if (!Array.isArray(traits)) return null
+  for (const t of traits) {
+    const trait = asRecord(t)
+    if (typeof trait.name !== 'string' || !/darkvision/i.test(trait.name)) continue
+    const range = String(trait.description ?? '').match(/range of (\d+)/i)
+    if (range) return Number(range[1])
+  }
+  return null
+}
+
+/** The party card: AC, Passive and Speed at a glance; passive Insight and Investigation, darkvision and inspiration on expand. */
+export function partySummary(c: CharacterRecord, picks: PickRecord[]): PartySummary {
+  const d = derived(c, picks)
+  const show = (key: string, label: string): SummaryItem => ({ key, label, value: String(d.find((v) => v.key === key)?.value ?? '—') })
+  const darkvision = darkvisionRange(picks)
+  return {
+    glance: [show('ac', 'AC'), show('passive_perception', 'Passive'), show('speed', 'Speed')],
+    more: [
+      show('passive_insight', 'Insight'),
+      show('passive_investigation', 'Investigation'),
+      ...(darkvision !== null ? [{ key: 'darkvision', label: 'Darkvision', value: `${darkvision} ft` }] : []),
+      ...(c.details.inspiration === true ? [{ key: 'inspiration', label: 'Inspiration', value: 'Inspired' }] : []),
+    ],
+  }
+}
+
+// ── Spell save DC ────────────────────────────────────────────
+
+/** The ability each SRD casting class casts with (lowercase class name). */
+export const SPELLCASTING_ABILITY: Record<string, AbilityKey> = {
+  bard: 'charisma', paladin: 'charisma', sorcerer: 'charisma', warlock: 'charisma',
+  cleric: 'wisdom', druid: 'wisdom', ranger: 'wisdom',
+  wizard: 'intelligence',
+}
+
+export type SpellSaveDC = { className: string; ability: AbilityKey; dc: number }
+
+/**
+ * Spell save DC (8 + proficiency bonus + ability modifier) for each casting class pick, in pick order.
+ * A homebrew class names its ability in `data.spellcasting_ability`, which wins over the SRD table.
+ * Classes that do not cast give no entry.
+ */
+export function spellSaveDCs(c: CharacterRecord, picks: PickRecord[]): SpellSaveDC[] {
+  const prof = getProficiencyBonus(c.level)
+  return picks.filter((p) => p.kind === 'class').flatMap((p) => {
+    const declared = asRecord(p.content.data).spellcasting_ability
+    const ability = typeof declared === 'string' && (ABILITY_KEYS as readonly string[]).includes(declared)
+      ? (declared as AbilityKey)
+      : SPELLCASTING_ABILITY[p.content.name.trim().toLowerCase()]
+    if (!ability) return []
+    return [{ className: p.content.name, ability, dc: 8 + prof + getAbilityModifier(c.stats[ability] ?? 10) }]
+  })
 }
 
 // ── Rests ────────────────────────────────────────────────────

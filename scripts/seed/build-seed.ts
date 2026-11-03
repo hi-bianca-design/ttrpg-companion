@@ -25,11 +25,11 @@ const OUT_FILE = path.join(ROOT, 'supabase/seed.sql')
 const GAME_SYSTEMS: SystemRow[] = [
   {
     id: 'dnd5e-2024',
-    name: 'D&D 5e (2024 SRD)',
-    version: '5.2',
+    name: '5e (2024 SRD)',
+    version: '5.2.1',
     license: 'CC-BY-4.0',
     attribution:
-      'This work includes material from the System Reference Document 5.2 (“SRD 5.2”) by Wizards of the Coast LLC, licensed under CC-BY-4.0.',
+      'This work includes material from the System Reference Document 5.2.1 (“SRD 5.2.1”) by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.',
   },
   {
     id: 'daggerheart',

@@ -118,6 +118,7 @@ export const DND_CONTENT_KIND_META: Record<string, ContentKindMeta> = {
       { key: 'hit_die', label: 'Hit die', type: 'select', options: ['6', '8', '10', '12'], required: true },
       { key: 'primary_abilities', label: 'Primary abilities', type: 'multiselect', options: [...ABILITY_KEYS], required: true },
       { key: 'saving_throw_proficiencies', label: 'Saving throws', type: 'multiselect', options: [...ABILITY_KEYS], required: true },
+      { key: 'spellcasting_ability', label: 'Spellcasting ability', type: 'select', options: [...ABILITY_KEYS] },
     ],
   },
   subclass: {
@@ -130,6 +131,7 @@ export const DND_CONTENT_KIND_META: Record<string, ContentKindMeta> = {
       { key: 'speed', label: 'Speed', type: 'number', required: true },
       { key: 'size', label: 'Size', type: 'select', options: ['Small', 'Medium', 'Medium or Small'], required: true },
       { key: 'creature_type', label: 'Creature type', type: 'text', required: true },
+      { key: 'languages', label: 'Languages (comma separated)', type: 'text' },
     ],
   },
   background: {
@@ -138,6 +140,7 @@ export const DND_CONTENT_KIND_META: Record<string, ContentKindMeta> = {
       { key: 'skill_proficiencies', label: 'Skill proficiencies', type: 'multiselect', options: SKILLS.map((s) => s.key), required: true },
       { key: 'origin_feat', label: 'Origin feat', type: 'text' },
       { key: 'tool_proficiency', label: 'Tool proficiency', type: 'text' },
+      { key: 'languages', label: 'Languages (comma separated)', type: 'text' },
     ],
   },
   feat: {

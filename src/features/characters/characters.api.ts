@@ -55,14 +55,20 @@ export async function listCharacters(): Promise<CharacterSummary[]> {
   })
 }
 
-export async function getCharacter(id: string): Promise<CharacterFull> {
-  const row = unwrap(
-    await supabase
-      .from('characters')
-      .select('*, character_picks(*, content(*)), character_items(*, content(*))')
-      .eq('id', id)
-      .single(),
-  )
+/** What every character read selects: the row plus its picks and items, each with its content. */
+export const CHARACTER_SELECT = '*, character_picks(*, content(*)), character_items(*, content(*))'
+
+/** The party read: a teammate's sheet without their private notes and portrait. */
+export const PARTY_SELECT =
+  'id, owner_id, system_id, name, level, stats, resources, conditions, details, character_picks(*, content(*)), character_items(*, content(*))'
+
+type CharacterRow = Database['public']['Tables']['characters']['Row'] & {
+  character_picks: unknown[]
+  character_items: unknown[]
+}
+
+/** A characters row (as `CHARACTER_SELECT` returns it) parsed by its system into a full character with derived values. */
+export function toCharacterFull(row: Omit<CharacterRow, 'notes' | 'portrait_url'> & Partial<Pick<CharacterRow, 'notes' | 'portrait_url'>>): CharacterFull {
   const { character_picks, character_items, ...c } = row
   const systemId = c.system_id as SystemId
   const system = getSystem(systemId)
@@ -85,12 +91,17 @@ export async function getCharacter(id: string): Promise<CharacterFull> {
   return {
     ...record,
     owner_id: c.owner_id,
-    notes: c.notes,
-    portrait_url: c.portrait_url,
+    notes: c.notes ?? null,
+    portrait_url: c.portrait_url ?? null,
     picks,
     items,
     derived: system.rules.derived(record, ruleInput),
   }
+}
+
+export async function getCharacter(id: string): Promise<CharacterFull> {
+  const row = unwrap(await supabase.from('characters').select(CHARACTER_SELECT).eq('id', id).single())
+  return toCharacterFull(row as CharacterRow)
 }
 
 export async function createCharacter(input: NewCharacter): Promise<string> {

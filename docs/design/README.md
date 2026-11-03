@@ -7,6 +7,7 @@ How the app looks, feels and reads.
 - [Paywall and upgrade UX](paywall-and-upgrade-ux.md): when and how we ask for money
 - [Shop and pack presentation](shop-and-pack-presentation.md): the shop, pack detail, owned and locked states
 - [Themes and cosmetics](themes-and-cosmetics.md): why paid themes need their own spec
+- [Market research](market-research.md): competitors, market size, Reddit pain points, licensing and store rules, monetization benchmarks and the name check, from three research runs (2026-11-03)
 
 ## The design system
 

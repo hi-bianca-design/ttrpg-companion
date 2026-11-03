@@ -105,6 +105,12 @@ export function ReviewStep({ draft }: BuilderStepProps) {
         </SectionHeader>
       ) : null}
 
+      <SectionHeader id="review-languages" title="Languages">
+        <Card>
+          <Text variant="body-sm">{(c.details.languages as string[]).join(', ')}</Text>
+        </Card>
+      </SectionHeader>
+
       {extraGear.length > 0 ? (
         <SectionHeader id="review-extra-gear" title="Extra gear">
           <Card>

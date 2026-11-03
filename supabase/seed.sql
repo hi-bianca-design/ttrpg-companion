@@ -2,7 +2,7 @@
 -- Regenerate with: npm run db:seed
 
 insert into public.game_systems (id, name, version, license, attribution) values
-  ('dnd5e-2024', 'D&D 5e (2024 SRD)', '5.2', 'CC-BY-4.0', 'This work includes material from the System Reference Document 5.2 (“SRD 5.2”) by Wizards of the Coast LLC, licensed under CC-BY-4.0.'),
+  ('dnd5e-2024', '5e (2024 SRD)', '5.2.1', 'CC-BY-4.0', 'This work includes material from the System Reference Document 5.2.1 (“SRD 5.2.1”) by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.'),
   ('daggerheart', 'Daggerheart', '1.0', 'Darrington Press Community Gaming License', 'This product includes materials from the Daggerheart System Reference Document 1.0, © Critical Role, LLC. under the terms of the Darrington Press Community Gaming (DPCGL) License.')
 on conflict do nothing;
 

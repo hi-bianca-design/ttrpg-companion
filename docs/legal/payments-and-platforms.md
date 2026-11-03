@@ -39,7 +39,7 @@ The app runs on Expo web first (see the project memory). Web checkout avoids sto
 - **A privacy policy** is required by the stores and by law in most places. Say what we collect, why, who it's shared with (the billing provider, the analytics provider), how long we keep it, and how to delete it.
 - **Analytics:** collect only ids and events, never what people typed ([Metrics](../business/metrics.md)). Get consent where required.
 - **Data export and deletion:** let people export their characters and delete their account. This is also a feature of DM Pro (export and backup), but deletion rights shouldn't be paywalled.
-- **Children:** D&D has young players. Decide the minimum age (a typical choice is 13+, higher in some regions), say it in the terms, and check whether the product is "directed to children" under local law. If under-13s are in scope, the rules are far stricter. **Verify** with advice.
+- **Children:** tabletop games have young players. Decide the minimum age (a typical choice is 13+, higher in some regions), say it in the terms, and check whether the product is "directed to children" under local law. If under-13s are in scope, the rules are far stricter. **Verify** with advice.
 
 ## Terms of service
 
@@ -63,3 +63,15 @@ Needs drafting. At minimum: the licence we grant to the app, the licence **users
 - [ ] Restore purchases, cancel and delete-account flows work
 - [ ] Support email set up and monitored
 - [ ] Webhook secrets stored as secrets; sandbox purchases tested end to end
+
+## Store rules found in the 2026-11-03 research (verify against the current Apple guidelines)
+
+| Rule | What it means for Session Zero |
+|---|---|
+| **1.2 User-generated content** | Homebrew shared between users needs a content filter, a report button with timely replies, a way to block users, and published contact details. Keep homebrew private to its author at launch (D16). |
+| **5.1.1(v) Account deletion** | If people can create an account, they must be able to delete it inside the app (D17). |
+| **5.2.1 Third-party IP and names** | No protected trademarks in the name, subtitle, keywords or icon (D13). |
+| **5.2.2 Third-party content** | Showing or charging for another party's content must be allowed by that party's terms. The CC BY SRD is. Anything else is not. |
+| **3.1.1 / 3.1.2 Purchases** | Digital unlocks and subscriptions go through in-app purchase. A subscription must run at least 7 days and give ongoing value. Do not gate features that free users already had (D15). |
+
+A free fan tool for another card game was taken down after a cease-and-desist, so a free app is not automatically safe. We found no tabletop-app takedowns, but this was not exhaustive.

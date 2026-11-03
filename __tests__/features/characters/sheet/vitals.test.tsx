@@ -10,6 +10,7 @@ import { getSystem } from '@/systems/registry'
 import { ERROR_COPY } from '@/features/errors'
 
 jest.mock('@/features/sessions/SessionStatusRow', () => ({ SessionStatusRow: () => null }))
+jest.mock('@/features/sessions/TurnBanner', () => ({ TurnBanner: () => null }))
 jest.mock('@/features/characters/characters.queries', () => ({
   useCharacter: jest.fn(),
   useResourceMutation: jest.fn(),
@@ -226,6 +227,15 @@ test('header: name, class line and species / level / proficiency chips; no XP ba
 test('header shows the XP bar when details.xp exists', () => {
   renderTab({ xp: 1200 })
   expect(screen.getByLabelText(/^Experience/)).toBeTruthy()
+})
+
+test('languages: Add languages on an unset character saves a merge into details', () => {
+  renderTab({ alignment: 'Neutral' })
+  expect(screen.getByText('No languages recorded yet')).toBeTruthy()
+  fireEvent.press(screen.getByRole('button', { name: 'Add languages' }))
+  fireEvent.press(screen.getByRole('button', { name: 'Apply' }))
+  expect(mockUpdateMutate).toHaveBeenCalledTimes(1)
+  expect(mockUpdateMutate.mock.calls[0][0].details).toMatchObject({ alignment: 'Neutral', languages: expect.arrayContaining(['Common']) })
 })
 
 test('vitals: HP / AC / Passive / Speed tiles; inspiration button only when inspired', () => {

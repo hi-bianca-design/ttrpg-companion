@@ -7,9 +7,10 @@ import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
 import { useAuth } from '@/features/auth/useAuth'
 import { InviteCode } from '@/features/campaigns/InviteCode'
+import { PartyList } from '@/features/party/PartyList'
 import { CampaignSessionStatus } from '@/features/sessions/CampaignSessionStatus'
 import { SessionControls } from '@/features/sessions/SessionControls'
-import { MemberList } from '@/features/campaigns/MemberList'
+import { TurnControls } from '@/features/sessions/TurnControls'
 import { useCampaign } from '@/features/campaigns/campaigns.queries'
 import { useReturnToSheet } from '@/features/campaigns/useReturnToSheet'
 import { systemName } from '@/systems/registry'
@@ -79,8 +80,9 @@ export default function CampaignDetailScreen() {
       {isGm ? <InviteCode code={data.invite_code} /> : null}
       <CampaignSessionStatus campaignId={data.id} />
       <SessionControls campaign={data} />
-      <SectionHeader id={`campaign:${data.id}:members`} title="Members">
-        <MemberList members={data.members} />
+      <TurnControls campaign={data} />
+      <SectionHeader id={`campaign:${data.id}:party`} title="Party">
+        <PartyList campaign={data} />
       </SectionHeader>
     </ScreenBackground>
   )

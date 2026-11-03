@@ -101,3 +101,25 @@ describe('helpers', () => {
     expect(customExtraFields('class').find((f) => f.key === 'skill_from')!.options).toHaveLength(18)
   })
 })
+
+describe('homebrew spellcasting ability', () => {
+  const parse = (data: unknown) => dnd5eContentSchemas.class.safeParse(data).success
+
+  it('is kept when it is a valid ability', () => {
+    const data = customData('class', { spellcasting_ability: 'wisdom' }, false) as Record<string, unknown>
+    expect(data.spellcasting_ability).toBe('wisdom')
+    expect(parse(data)).toBe(true)
+  })
+
+  it.each(['', undefined, 'luck'])('is omitted for %p', (v) => {
+    const data = customData('class', { spellcasting_ability: v }, false) as Record<string, unknown>
+    expect('spellcasting_ability' in data).toBe(false)
+    expect(parse(data)).toBe(true)
+  })
+
+  it('has an optional class form field', () => {
+    const field = customExtraFields('class').find((f) => f.key === 'spellcasting_ability')
+    expect(field).toMatchObject({ type: 'select', required: false })
+    expect(field?.options).toContain('intelligence')
+  })
+})

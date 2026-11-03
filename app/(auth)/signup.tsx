@@ -50,7 +50,7 @@ export default function SignupScreen() {
     <ScreenBackground scroll>
       <View className="gap-2 pt-8">
         <Text variant="display">Create account</Text>
-        <Text tone="muted">Join D&D Companion</Text>
+        <Text tone="muted">Join Session Zero</Text>
       </View>
 
       {confirmSent ? (
