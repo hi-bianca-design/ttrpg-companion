@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { View } from 'react-native'
 import { useRouter } from 'expo-router'
-import { ScreenBackground } from '@/components/game'
+import { MoonHero, ScreenBackground } from '@/components/game'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -35,15 +35,16 @@ export default function LoginScreen() {
   }
 
   return (
-    <ScreenBackground scroll>
-      <View className="gap-2 pt-8">
-        <Text variant="display">Session Zero</Text>
-        <Text tone="muted">Sign in to your account</Text>
+    <ScreenBackground>
+      <MoonHero />
+      <View className="items-center gap-2">
+        <Text variant="display" className="text-center">Session Zero</Text>
+        <Text tone="muted" className="text-center">Sign in to your account</Text>
       </View>
 
       <View className="gap-4">
         <View className="gap-2">
-          <Label>Email</Label>
+          <Label pointed>Email</Label>
           <Input
             placeholder="Email"
             value={email}
@@ -55,7 +56,7 @@ export default function LoginScreen() {
           {emailError && <Text variant="caption" tone="destructive">{emailError}</Text>}
         </View>
         <View className="gap-2">
-          <Label>Password</Label>
+          <Label pointed>Password</Label>
           <Input
             placeholder="Password"
             value={password}
