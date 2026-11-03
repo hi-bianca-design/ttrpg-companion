@@ -8,6 +8,8 @@ How the app looks, feels and reads.
 - [Shop and pack presentation](shop-and-pack-presentation.md): the shop, pack detail, owned and locked states
 - [Themes and cosmetics](themes-and-cosmetics.md): why paid themes need their own spec
 - [Reddit pain points](reddit-pain-points.md): what players and DMs complain about in tabletop apps, 34 threads read, with product implications (research, 2026-11-03)
+- [Market research rerun](market-research-rerun.md): an independent second run of the market research (competitors, market size, licensing, monetization, name check), 2026-11-03
+- [Market research comparison](market-research-comparison.md): first round vs rerun vs a Gemini report, what agrees, what conflicts, and the three findings to act on
 
 ## The design system
 
