@@ -46,7 +46,7 @@ test('each instance gets its own vignette gradient and its rect points at it', (
   layoutAll()
   const ids = screen.UNSAFE_getAllByType(RadialGradient).map((g) => g.props.id as string)
   expect(new Set(ids).size).toBe(2)
-  const fills = screen.UNSAFE_getAllByType(Rect).map((r) => r.props.fill as string).filter((f) => f?.startsWith('url('))
+  const fills = screen.UNSAFE_getAllByType(Rect).map((r) => r.props.fill as string).filter((f) => f?.startsWith('url(#screen-vignette') && !f.includes('-sky-fade'))
   expect(fills.sort()).toEqual(ids.map((id) => `url(#${id})`).sort())
   for (const id of ids) expect(id).toMatch(/^[A-Za-z0-9_-]+$/)
 })
@@ -89,4 +89,12 @@ test('platforms without Image.resolveAssetSource (web) still render the grain at
   } finally {
     Image.resolveAssetSource = original
   }
+})
+
+test('the sky eases into the night below its last band instead of ending in a hard step', () => {
+  render(<ScreenBackground><Text>One</Text></ScreenBackground>)
+  layoutAll(400, 1000)
+  const fade = screen.UNSAFE_getAllByType(Rect).find((r) => String(r.props.fill).includes('-sky-fade'))
+  expect(parseFloat(fade?.props.y)).toBeCloseTo(300)
+  expect(parseFloat(fade?.props.y) + parseFloat(fade?.props.height)).toBeCloseTo(460)
 })

@@ -7,6 +7,7 @@ import { AppError } from '@/features/errors'
 jest.mock('@/features/auth/auth.api', () => ({ signIn: jest.fn(), signUp: jest.fn() }))
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: jest.fn(), back: jest.fn(), replace: jest.fn() }) }))
 jest.mock('@/components/game', () => ({
+  MoonHero: () => null,
   ScreenBackground: ({ children }: { children: React.ReactNode }) => children,
 }))
 
