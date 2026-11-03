@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { unwrap } from '@/features/errors'
-import { CHARACTER_SELECT, toCharacterFull, type CharacterFull } from '@/features/characters/characters.api'
+import { PARTY_SELECT, toCharacterFull, type CharacterFull } from '@/features/characters/characters.api'
 
 /**
  * The party's characters, in one request. Row-level security decides which of them the caller may
@@ -9,7 +9,7 @@ import { CHARACTER_SELECT, toCharacterFull, type CharacterFull } from '@/feature
  */
 export async function getPartyCharacters(characterIds: string[]): Promise<CharacterFull[]> {
   if (characterIds.length === 0) return []
-  const rows = unwrap(await supabase.from('characters').select(CHARACTER_SELECT).in('id', characterIds)) ?? []
+  const rows = unwrap(await supabase.from('characters').select(PARTY_SELECT).in('id', characterIds)) ?? []
   return rows.flatMap((row) => {
     try {
       return [toCharacterFull(row as Parameters<typeof toCharacterFull>[0])]

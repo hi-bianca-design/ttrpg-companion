@@ -40,7 +40,7 @@ test('shows name, class and level, hit points, conditions and the glance chips',
   render(<PartyCard character={character()} />)
   expect(screen.getByText('Mira')).toBeTruthy()
   expect(screen.getByText('Rogue · Level 3')).toBeTruthy()
-  expect(screen.getByText('8/12 +4')).toBeTruthy()
+  expect(screen.getByText('8/12 +4 temp')).toBeTruthy()
   expect(screen.getByText('poisoned')).toBeTruthy()
   expect(screen.getByText('AC 15')).toBeTruthy()
   expect(screen.getByText('Passive 10')).toBeTruthy()
@@ -61,12 +61,12 @@ test('tapping the card reveals the extra details, and tapping again hides them',
 
 test('a system without a party summary still shows name, hit points and conditions', () => {
   const generic = {
-    id: 'g1', system_id: 'daggerheart', name: 'Sable', level: 1, stats: {}, resources: { hp: { current: 5, max: 6 } },
+    id: 'g1', system_id: 'daggerheart', name: 'Sable', level: 1, stats: {}, resources: { hp: { tiers: { '1': { max: 6, used: 1 } } } },
     conditions: ['vulnerable'], details: {}, owner_id: 'u2', notes: null, portrait_url: null, picks: [], items: [], derived: [],
   } as unknown as CharacterFull
   render(<PartyCard character={generic} />)
   expect(screen.getByText('Sable')).toBeTruthy()
-  expect(screen.getByText('5/6')).toBeTruthy()
+  expect(screen.queryByText(/undefined/)).toBeNull()
   expect(screen.getByText('vulnerable')).toBeTruthy()
   expect(screen.queryByText(/^AC /)).toBeNull()
 })
@@ -93,4 +93,9 @@ test('the button’s spoken label carries hit points, conditions and chips, not 
   expect(label).toContain('4 temporary')
   expect(label).toContain('poisoned')
   expect(label).toMatch(/AC/)
+})
+
+test('temporary hit points say what they are', () => {
+  render(<PartyCard character={character()} />)
+  expect(screen.getByText('8/12 +4 temp')).toBeTruthy()
 })

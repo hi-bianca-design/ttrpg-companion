@@ -6,7 +6,7 @@ import { toCharacterFull } from '@/features/characters/characters.api'
 import { usePartyRealtime } from '@/features/party/usePartyRealtime'
 import { qk } from '@/lib/query-client'
 
-type Handler = (payload: { new: Record<string, unknown> }) => void
+type Handler = (payload: { new: Record<string, unknown>; errors?: string[] | null }) => void
 const topics: string[] = []
 const channels: { on: jest.Mock; subscribe: jest.Mock; handler?: Handler; status?: (s: string) => void }[] = []
 
@@ -126,10 +126,10 @@ test('connection loss is reported, and recovery refetches the party', () => {
   expect(client.getQueryState([...qk.party('camp1'), 'c1,c2'])?.isInvalidated).toBe(true)
 })
 
-test('the first SUBSCRIBED is not a recovery: nothing is refetched', () => {
+test('the first SUBSCRIBED refetches, to catch changes made while the channel was joining', () => {
   const { client } = setup()
   act(() => channels[0].status!('SUBSCRIBED'))
-  expect(client.getQueryState([...qk.party('camp1'), 'c1,c2'])?.isInvalidated).toBe(false)
+  expect(client.getQueryState([...qk.party('camp1'), 'c1,c2'])?.isInvalidated).toBe(true)
 })
 
 test('two mounted party hooks for the same campaign never share a channel topic', () => {
@@ -158,4 +158,35 @@ test('recovery also refetches the campaign so joins and leaves are picked up', (
   act(() => channels[0].status!('CHANNEL_ERROR'))
   act(() => channels[0].status!('SUBSCRIBED'))
   expect(client.getQueryState(qk.campaign('camp1'))?.isInvalidated).toBe(true)
+})
+
+test('an emptied party is not left showing "reconnecting"', () => {
+  const { result, rerender } = setup()
+  act(() => channels[0].status!('CHANNEL_ERROR'))
+  expect(result.current.connected).toBe(false)
+  rerender({ c: campaign([member('p1', null)]) })
+  expect(result.current.connected).toBe(true)
+})
+
+test('a change that omits unchanged columns (large jsonb) keeps the cached values', () => {
+  const { client } = setup()
+  act(() => channels[0].handler!({ new: { id: 'c1', name: 'Mira', level: 4, resources: { ...resources, hp: { current: 5, max: 30 } }, conditions: [] } }))
+  const mira = cached(client).find((c) => c.id === 'c1')!
+  expect((mira.resources.hp as { current: number }).current).toBe(5)
+  expect(mira.stats).toEqual(stats)
+  expect(client.getQueryState([...qk.party('camp1'), 'c1,c2'])?.isInvalidated).toBe(false)
+})
+
+test('a change with malformed scalar columns refetches instead of corrupting the cache', () => {
+  const { client } = setup()
+  const before = cached(client)
+  act(() => channels[0].handler!({ new: { id: 'c1', name: 'Mira', level: 4, stats, resources, conditions: null, details: {} } }))
+  expect(cached(client)).toEqual(before)
+  expect(client.getQueryState([...qk.party('camp1'), 'c1,c2'])?.isInvalidated).toBe(true)
+})
+
+test('a payload the server flagged as errored refetches', () => {
+  const { client } = setup()
+  act(() => channels[0].handler!({ new: {}, errors: ['payload too large'] }))
+  expect(client.getQueryState([...qk.party('camp1'), 'c1,c2'])?.isInvalidated).toBe(true)
 })

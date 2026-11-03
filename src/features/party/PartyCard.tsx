@@ -16,8 +16,10 @@ import type { PoolValue } from '@/systems/types'
  */
 export function PartyCard({ character }: { character: CharacterFull }) {
   const [open, setOpen] = useState(false)
-  const summary = getSystem(character.system_id).rules.partySummary?.(character, toRuleInput(character.picks, character.items))
-  const hp = character.resources.hp as PoolValue | undefined
+  const system = getSystem(character.system_id)
+  const summary = system.rules.partySummary?.(character, toRuleInput(character.picks, character.items))
+  // Only a pool has current/max to show; a system that tracks hit points as slots has its own display.
+  const hp = system.resources.find((r) => r.key === 'hp')?.kind === 'pool' ? (character.resources.hp as PoolValue | undefined) : undefined
   const temp = hp?.temp ?? 0
   const className = character.picks.find((p) => p.kind === 'class')?.content?.name
   const pct = hp && hp.max > 0 ? (hp.current / hp.max) * 100 : 0
@@ -47,7 +49,7 @@ export function PartyCard({ character }: { character: CharacterFull }) {
         </View>
         {hp ? (
           <View className="gap-1">
-            <Text variant="body-sm">{`${hp.current}/${hp.max}${temp > 0 ? ` +${temp}` : ''}`}</Text>
+            <Text variant="body-sm">{`${hp.current}/${hp.max}${temp > 0 ? ` +${temp} temp` : ''}`}</Text>
             <Progress value={pct} accessibilityLabel={`${character.name} hit points`} />
           </View>
         ) : null}
