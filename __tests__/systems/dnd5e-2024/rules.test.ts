@@ -223,6 +223,15 @@ test('passive perception adds proficiency when a pick grants Perception', () => 
   expect(value(makeCharacter(), [bg], 'passive_perception')?.value).toBe(14)
 })
 
+test('passive insight and investigation use Wisdom and Intelligence, plus proficiency when granted', () => {
+  const c = makeCharacter()
+  expect(value(c, [], 'passive_insight')?.value).toBe(11)
+  expect(value(c, [], 'passive_investigation')?.value).toBe(13)
+  const bg = pick('background', 'Sage', { skill_proficiencies: ['insight', 'investigation'] })
+  expect(value(c, [bg], 'passive_insight')?.value).toBe(14)
+  expect(value(c, [bg], 'passive_investigation')?.value).toBe(16)
+})
+
 test('Alert feat adds proficiency to initiative', () => {
   expect(value(makeCharacter(), [pick('feat', 'Alert', {})], 'initiative')?.value).toBe(2)
 })
