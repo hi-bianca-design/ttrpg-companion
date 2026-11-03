@@ -2,12 +2,12 @@ import type { ReactNode } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
 import { makeTestQueryClient } from '../../helpers/queryClient'
-import { endSession, getActiveSession, openSession, setCombat } from '@/features/sessions/sessions.api'
-import { SESSION_POLL_MS, useActiveSession, useEndSession, useOpenSession, useSetCombat } from '@/features/sessions/sessions.queries'
+import { endSession, endTurn, getActiveSession, openSession, setCombat, setTurn } from '@/features/sessions/sessions.api'
+import { SESSION_POLL_MS, useActiveSession, useEndSession, useOpenSession, useSetCombat, useSetTurn, useEndTurn } from '@/features/sessions/sessions.queries'
 import { AppError } from '@/features/errors'
 import { qk } from '@/lib/query-client'
 
-jest.mock('@/features/sessions/sessions.api', () => ({ getActiveSession: jest.fn(), openSession: jest.fn(), endSession: jest.fn(), setCombat: jest.fn() }))
+jest.mock('@/features/sessions/sessions.api', () => ({ getActiveSession: jest.fn(), openSession: jest.fn(), endSession: jest.fn(), setCombat: jest.fn(), setTurn: jest.fn(), endTurn: jest.fn() }))
 
 const session = { id: 's1', campaign_id: 'c1', status: 'active', opened_by: 'u1' }
 
@@ -111,5 +111,46 @@ describe('useSetCombat', () => {
     const { result } = renderHook(() => useSetCombat('c1'), { wrapper })
     await act(async () => { await result.current.mutateAsync({ sessionId: 's1', inCombat: false }).catch(() => {}) })
     expect(client.getQueryData(qk.session('c1'))).toEqual(inCombat)
+  })
+})
+
+describe('turn hooks', () => {
+  const holding = { ...session, in_combat: true, current_turn_user_id: 'u2' }
+
+  it('useSetTurn writes the returned session and passes null through to clear', async () => {
+    ;(setTurn as jest.Mock).mockResolvedValueOnce(holding).mockResolvedValueOnce({ ...holding, current_turn_user_id: null })
+    const { client, wrapper } = setup()
+    const { result } = renderHook(() => useSetTurn('c1'), { wrapper })
+    await act(async () => { await result.current.mutateAsync({ sessionId: 's1', userId: 'u2' }) })
+    expect(setTurn).toHaveBeenLastCalledWith('s1', 'u2')
+    expect(client.getQueryData(qk.session('c1'))).toEqual(holding)
+    await act(async () => { await result.current.mutateAsync({ sessionId: 's1', userId: null }) })
+    expect(setTurn).toHaveBeenLastCalledWith('s1', null)
+    expect(client.getQueryData<{ current_turn_user_id: string | null }>(qk.session('c1'))?.current_turn_user_id).toBeNull()
+  })
+
+  it('useEndTurn writes the returned session', async () => {
+    ;(endTurn as jest.Mock).mockResolvedValue({ ...holding, current_turn_user_id: null })
+    const { client, wrapper } = setup()
+    client.setQueryData(qk.session('c1'), holding)
+    const { result } = renderHook(() => useEndTurn('c1'), { wrapper })
+    await act(async () => { await result.current.mutateAsync('s1') })
+    expect(endTurn).toHaveBeenCalledWith('s1')
+    expect(client.getQueryData<{ current_turn_user_id: string | null }>(qk.session('c1'))?.current_turn_user_id).toBeNull()
+  })
+
+  it.each([
+    ['useSetTurn', 'invalid_turn_target', () => useSetTurn('c1'), setTurn, { sessionId: 's1', userId: 'u3' }],
+    ['useEndTurn', 'not_your_turn', () => useEndTurn('c1'), endTurn, 's1'],
+  ] as const)('%s rejecting %s exposes the error and refetches the true state', async (_name, code, hook, api, vars) => {
+    ;(api as jest.Mock).mockRejectedValue(new AppError(code))
+    ;(getActiveSession as jest.Mock).mockResolvedValue({ ...holding, current_turn_user_id: 'u9' })
+    const { client, wrapper } = setup()
+    client.setQueryData(qk.session('c1'), holding)
+    const active = renderHook(() => useActiveSession('c1'), { wrapper })
+    const { result } = renderHook(hook as () => { mutateAsync: (v: never) => Promise<unknown>; error: unknown }, { wrapper })
+    await act(async () => { await result.current.mutateAsync(vars as never).catch(() => {}) })
+    await waitFor(() => expect(result.current.error).toMatchObject({ code }))
+    await waitFor(() => expect(active.result.current.data).toMatchObject({ current_turn_user_id: 'u9' }))
   })
 })
