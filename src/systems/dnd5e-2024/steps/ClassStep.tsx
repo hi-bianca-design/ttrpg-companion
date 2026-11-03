@@ -99,6 +99,16 @@ export function ClassStep({ draft, update }: BuilderStepProps) {
       <StepIntro title="Choose a class" description="Your class defines how you fight, cast and explore the world." />
       <LevelPicker level={level} onChange={changeLevel} />
       <QueryState isLoading={classes.isLoading} isError={classes.isError} onRetry={() => classes.refetch()} />
+      {classes.isLoading ? null : (
+        <CustomChoice
+          kind="class"
+          kindLabel="Class"
+          entry={custom}
+          officialNames={classes.items.filter((c) => c.official).map((c) => c.name)}
+          onSave={saveCustom}
+          onRemove={removeCustom}
+        />
+      )}
       {groupClasses(classes.items).map((group) => (
         <SectionHeader key={group.role} id={`builder-class-${group.role}`} title={group.role}>
           <View className="gap-2">
@@ -171,16 +181,6 @@ export function ClassStep({ draft, update }: BuilderStepProps) {
           </View>
         </SectionHeader>
       ))}
-      {classes.isLoading ? null : (
-        <CustomChoice
-          kind="class"
-          kindLabel="Class"
-          entry={custom}
-          officialNames={classes.items.filter((c) => c.official).map((c) => c.name)}
-          onSave={saveCustom}
-          onRemove={removeCustom}
-        />
-      )}
     </View>
   )
 }

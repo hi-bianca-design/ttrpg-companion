@@ -39,6 +39,16 @@ export function OriginStep({ draft, update }: BuilderStepProps) {
       >
         <QueryState isLoading={backgrounds.isLoading} isError={backgrounds.isError} onRetry={() => backgrounds.refetch()} />
         <View className="gap-2">
+          {backgrounds.isLoading ? null : (
+            <CustomChoice
+              kind="background"
+              kindLabel="Background"
+              entry={customBg}
+              officialNames={officialNames(backgrounds.items)}
+              onSave={saveBackground}
+              onRemove={() => update({ background_custom: null, bg_abilities: [], bg_skills: [] })}
+            />
+          )}
           {backgrounds.items.map((bg) => (
             <ChoiceCard
               key={bg.id}
@@ -62,16 +72,6 @@ export function OriginStep({ draft, update }: BuilderStepProps) {
               ) : null}
             </ChoiceCard>
           ))}
-          {backgrounds.isLoading ? null : (
-            <CustomChoice
-              kind="background"
-              kindLabel="Background"
-              entry={customBg}
-              officialNames={officialNames(backgrounds.items)}
-              onSave={saveBackground}
-              onRemove={() => update({ background_custom: null, bg_abilities: [], bg_skills: [] })}
-            />
-          )}
         </View>
       </SectionHeader>
 
@@ -82,6 +82,16 @@ export function OriginStep({ draft, update }: BuilderStepProps) {
       >
         <QueryState isLoading={species.isLoading} isError={species.isError} onRetry={() => species.refetch()} />
         <View className="gap-2">
+          {species.isLoading ? null : (
+            <CustomChoice
+              kind="species"
+              kindLabel="Species"
+              entry={customSp}
+              officialNames={officialNames(species.items)}
+              onSave={(entry) => update({ species_custom: entry, species_id: null })}
+              onRemove={() => update({ species_custom: null })}
+            />
+          )}
           {species.items.map((sp) => {
             const traits = sp.data.traits.traits?.map((t) => t.name) ?? []
             return (
@@ -99,16 +109,6 @@ export function OriginStep({ draft, update }: BuilderStepProps) {
               </ChoiceCard>
             )
           })}
-          {species.isLoading ? null : (
-            <CustomChoice
-              kind="species"
-              kindLabel="Species"
-              entry={customSp}
-              officialNames={officialNames(species.items)}
-              onSave={(entry) => update({ species_custom: entry, species_id: null })}
-              onRemove={() => update({ species_custom: null })}
-            />
-          )}
         </View>
       </SectionHeader>
     </View>
