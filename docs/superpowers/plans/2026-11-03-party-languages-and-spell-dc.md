@@ -177,8 +177,12 @@
 
 - Languages are free text only. The party card shows `Not set` when a character has none recorded. Level-up never prompts for languages; the Character tab edits them at any time.
 
+## Also decided by the owner ("go by your recommendations")
+
+- **No backfill.** Existing characters are not written to; the owner confirms a prefilled editor (Common plus class-granted) when they choose.
+- **Homebrew subclasses cannot declare a spellcasting ability** in this plan (a possible later follow-up).
+- **No spell attack bonus** on the card.
+
 ## Questions for the owner
 
-1. **Backfill existing characters?** Options: (a) recommended: write nothing automatically; each owner confirms a prefilled list (Common plus class-granted) the first time they open the editor; or (b) a one-time data change that records `Common` (and Druidic / Thieves' Cant) on every existing character. (b) is a database write, so it needs the owner's go-ahead.
-2. **Homebrew subclasses that cast:** a few classes (Fighter, Rogue) gain spellcasting only through a subclass (Eldritch Knight, Arcane Trickster). The SRD seed has none, so they get no DC today. Should a homebrew subclass be able to declare a spellcasting ability? Out of this plan; a small follow-up if wanted.
-3. **Spell attack bonus** next to the spell save DC on the card? Not included.
+None open.
