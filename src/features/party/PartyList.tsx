@@ -1,4 +1,5 @@
-import { View } from 'react-native'
+import { useEffect } from 'react'
+import { AccessibilityInfo, Platform, View } from 'react-native'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
@@ -17,6 +18,10 @@ const nameOf = (m: { username: string | null }) => m.username ?? 'Unknown player
 export function PartyList({ campaign }: { campaign: CampaignFull }) {
   const party = usePartyCharacters(campaign)
   const { connected } = usePartyRealtime(campaign)
+  // accessibilityLiveRegion is Android-only; iOS needs an explicit announcement.
+  useEffect(() => {
+    if (!connected && Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility('Reconnecting')
+  }, [connected])
   const members = campaign.members.filter((m) => m.status === 'active' && m.role !== 'gm')
 
   if (party.isError && !party.data) {

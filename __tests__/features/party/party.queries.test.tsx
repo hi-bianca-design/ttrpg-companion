@@ -69,5 +69,17 @@ describe('usePartyCharacters', () => {
     await waitFor(() => expect(getPartyCharacters).toHaveBeenCalledWith(['c1', 'c2']))
   })
 
+  it('keeps showing the last party while a changed list of characters loads', async () => {
+    ;(getPartyCharacters as jest.Mock).mockResolvedValueOnce([{ id: 'c1' }]).mockReturnValueOnce(new Promise(() => {}))
+    const { wrapper } = setup()
+    const { result, rerender } = renderHook(({ c }: { c: never }) => usePartyCharacters(c), {
+      wrapper, initialProps: { c: campaign([member('p1', { character_id: 'c1' })]) },
+    })
+    await waitFor(() => expect(result.current.data).toEqual([{ id: 'c1' }]))
+    rerender({ c: campaign([member('p1', { character_id: 'c1' }), member('p2', { character_id: 'c2' })]) })
+    expect(result.current.isLoading).toBe(false)
+    expect(result.current.data).toEqual([{ id: 'c1' }])
+  })
+
   it('refreshes derived values on a slow interval', () => expect(PARTY_REFRESH_MS).toBe(60_000))
 })

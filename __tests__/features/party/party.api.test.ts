@@ -69,3 +69,13 @@ describe('getPartyCharacters', () => {
     expect(party.map((c) => c.id)).toEqual(['a', 'c'])
   })
 })
+
+test('the party read does not select teammates’ private columns', async () => {
+  const b = builder({ data: [], error: null })
+  ;(supabase.from as jest.Mock).mockReturnValue(b)
+  await getPartyCharacters(['c1'])
+  const selected = (b.select as jest.Mock).mock.calls[0][0] as string
+  expect(selected.startsWith('*')).toBe(false)
+  expect(selected).not.toMatch(/\bnotes\b|portrait_url/)
+  expect(selected).toContain('character_picks')
+})

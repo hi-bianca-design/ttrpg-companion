@@ -18,11 +18,13 @@ import {
 import { Inter_400Regular, Inter_600SemiBold } from '@expo-google-fonts/inter'
 import { IBMPlexMono_500Medium } from '@expo-google-fonts/ibm-plex-mono'
 import { NAV_THEME } from '@/lib/theme'
+import { installAppFocus } from '@/lib/app-focus'
 import { queryClient } from '@/lib/query-client'
 import { AuthProvider } from '@/features/auth/AuthProvider'
 import { useAuth } from '@/features/auth/useAuth'
 
 SplashScreen.preventAutoHideAsync()
+installAppFocus()
 
 // Cap system font scaling at 2x so layouts hold; the smallest type role (label, 11px)
 // is never scaled below spec because maxFontSizeMultiplier only limits enlarging.

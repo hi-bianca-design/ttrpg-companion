@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import type { CampaignFull } from '@/features/campaigns/campaigns.api'
 import { qk } from '@/lib/query-client'
 import { getPartyCharacters } from './party.api'
@@ -20,6 +20,7 @@ export function usePartyCharacters(campaign: CampaignFull | undefined) {
     queryKey: partyKey(campaign?.id ?? '', ids),
     queryFn: () => getPartyCharacters(ids),
     enabled: !!campaign,
+    placeholderData: keepPreviousData,
     refetchInterval: PARTY_REFRESH_MS,
   })
 }

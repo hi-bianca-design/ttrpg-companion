@@ -1,4 +1,5 @@
 import '@testing-library/jest-native/extend-expect'
+import { AccessibilityInfo, Platform } from 'react-native'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import { PartyList } from '@/features/party/PartyList'
 import { usePartyCharacters } from '@/features/party/party.queries'
@@ -94,4 +95,17 @@ test('an invited viewer, for whom every active member’s character is unreadabl
   setup([member('p1', { character_id: 'c1', username: 'Eli' }), member('p2', { character_id: 'c2', username: 'Dana' })], { data: [] })
   expect(screen.queryByText('Couldn’t load this character')).toBeNull()
   expect(screen.queryByText('Eli')).toBeNull()
+})
+
+test('on iOS, losing the connection is announced to the screen reader', () => {
+  const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {})
+  const os = Platform.OS
+  Platform.OS = 'ios'
+  try {
+    setup([member('p1', { character_id: 'c1' })], { data: [char('c1', 'Mira')] }, false)
+    expect(announce).toHaveBeenCalledWith('Reconnecting')
+  } finally {
+    Platform.OS = os
+    announce.mockRestore()
+  }
 })
