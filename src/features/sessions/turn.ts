@@ -1,3 +1,4 @@
+import type { CampaignMember } from '@/features/campaigns/campaigns.api'
 import type { Session } from './sessions.api'
 
 /**
@@ -11,4 +12,9 @@ export function holdsTurn(
 ): boolean {
   if (!userId || !characterOwnerId) return false
   return session.in_combat && session.current_turn_user_id === userId && characterOwnerId === userId
+}
+
+/** Who the GM can give the turn to: active members with a character attached (the DB enforces the same). */
+export function eligibleTurnMembers(members: CampaignMember[]): CampaignMember[] {
+  return members.filter((m) => m.status === 'active' && m.character_id !== null)
 }

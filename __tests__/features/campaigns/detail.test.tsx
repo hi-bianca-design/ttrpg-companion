@@ -4,6 +4,7 @@ import { makeTestQueryClient } from '../../helpers/queryClient'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import CampaignDetailScreen from '../../../app/(app)/campaigns/[id]'
 import { getCampaign } from '@/features/campaigns/campaigns.api'
+import { getActiveSession } from '@/features/sessions/sessions.api'
 import { ERROR_COPY } from '@/features/errors'
 import { systemName } from '@/systems/registry'
 import { variantOf } from '../../helpers/button'
@@ -100,4 +101,17 @@ test('a GM sees the Open session control on the campaign screen', async () => {
   ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
   renderDetail()
   expect(await screen.findByRole('button', { name: 'Open session' })).toBeTruthy()
+})
+
+test('a GM sees the turn panel while the session is in combat', async () => {
+  const player = {
+    campaign_id: 'camp1', user_id: 'mira', role: 'player', status: 'active', character_id: 'ch1', created_at: '', updated_at: '',
+    username: 'mira', character_name: 'Mira',
+  }
+  ;(getCampaign as jest.Mock).mockResolvedValue({ ...campaign, members: [player] })
+  ;(getActiveSession as jest.Mock).mockResolvedValue({ id: 's1', campaign_id: 'camp1', opened_by: 'gm1', in_combat: true, current_turn_user_id: null })
+  renderDetail()
+  expect(await screen.findByText('Pick whose turn it is')).toBeTruthy()
+  expect(screen.getByRole('button', { name: 'Give turn to mira' })).toBeTruthy()
+  ;(getActiveSession as jest.Mock).mockResolvedValue(null)
 })
