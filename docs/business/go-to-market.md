@@ -4,7 +4,7 @@
 
 ## Who it is for
 
-- **Primary buyer: the DM** of a regular home or online group playing the 2024 edition of D&D 5e. They organise sessions, prepare content, and have the most to gain from tools.
+- **Primary buyer: the DM** of a regular home or online group playing the 2024 edition of 5e. They organise sessions, prepare content, and have the most to gain from tools.
 - **Primary user: the player** of that group. They want a character sheet that is quick to use at the table and don't want to pay for it.
 - **Secondary: other systems.** The codebase already supports a second game system (Daggerheart). Packs are system-scoped (`packs.system_id`), so a different audience can be added later without a redesign.
 
@@ -51,6 +51,14 @@ Don't pay for ads until the loop and the conversion rate are known.
 
 ## What not to do
 
-- Don't use Wizards of the Coast trademarks or logos in marketing.
+- Don't use any third-party game trademarks or logos in marketing. Say "compatible with fifth edition" only in the description, never in the title.
 - Don't promise official content.
 - Don't gate the join flow behind payment.
+
+## Market notes from the 2026-11-03 research
+
+- **Why now.** The 2024 rules revision pushed players to rebuild characters, and the leading official tool is rebuilding its platform through 2026 with no promise of mobile live sync or better homebrew. Its sister virtual tabletop is shutting its servers down at the end of October 2026, so some of its users are looking for a new home.
+- **Who first.** In-person players aged roughly 18 to 34, and in-person DMs, who bring their whole table. Online-first players are the least attractive segment: big virtual tabletops already serve them.
+- **The pitch, in the market's own words.** Free to use, no paywalled basics, works on a phone at the table, real-time HP and initiative, homebrew that does not need exact internal terms.
+- **Search crowding.** "Companion", "5e", "character sheet" and "initiative" are crowded App Store terms. The name stands apart (Session Zero); put the keywords in the subtitle, for example "Characters, campaigns and live sessions".
+- **Reddit evidence.** A deeper, sourced pain-point report is in `docs/market/reddit-pain-points.md` when it finishes.

@@ -9,7 +9,7 @@ type EmptyPoolTrackersProps = {
 }
 
 /**
- * The system's slots resources that only matter while a pool is empty (`showWhenEmpty`, e.g. D&D
+ * The system's slots resources that only matter while a pool is empty (`showWhenEmpty`, e.g. 5e
  * death saves at 0 HP), one pip tracker per tier. Renders nothing while every such pool is above 0.
  */
 export function EmptyPoolTrackers({ defs, resources, onChangeResource }: EmptyPoolTrackersProps) {

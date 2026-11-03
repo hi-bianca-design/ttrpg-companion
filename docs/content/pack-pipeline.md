@@ -21,7 +21,7 @@ The first real pack should be a **`content` pack with a small amount of art** or
 ```
 
 1. **Concept.** One sentence: who is it for, and what gap does it fill? ("Six cinder-themed subclasses and the monsters that go with them.") Check [Content policy](content-policy.md) before spending anything.
-2. **Rules and writing.** Write content in the app's own data shape. It must validate against the system's schema (the same Zod schemas used for homebrew). Original names and fiction. No Wizards of the Coast product identity (see [Content licensing](../legal/content-licensing.md)).
+2. **Rules and writing.** Write content in the app's own data shape. It must validate against the system's schema (the same Zod schemas used for homebrew). Original names and fiction. No third-party product identity (see [Content licensing](../legal/content-licensing.md)).
 3. **Art brief.** For each piece: purpose, size, mood, references (originals only), deliverables, deadline. See [Artist commissioning](artist-commissioning.md).
 4. **Commission.** Contract with usage rights *before* work starts.
 5. **Integrate.** Content rows with `pack_id` set and `owner_id` null. Art uploaded to the private bucket. A pack row, unpublished.
@@ -32,7 +32,7 @@ The first real pack should be a **`content` pack with a small amount of art** or
 ## QA checklist
 
 - [ ] Every content row validates against its kind's schema.
-- [ ] No text copied from non-SRD sources; no Wizards of the Coast product names or trademarked monsters.
+- [ ] No text copied from non-SRD sources; no third-party product names or trademarked monsters.
 - [ ] Every piece of art has a signed rights agreement on file and an artist credit entry.
 - [ ] A user with no entitlement cannot see the content (RLS) and a user with one can.
 - [ ] A user whose entitlement has lapsed keeps content already on a sheet and cannot add new ones.
