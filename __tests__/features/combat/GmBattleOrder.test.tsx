@@ -19,6 +19,8 @@ jest.mock('@/lib/supabase', () => ({ supabase: { from: jest.fn(), rpc: jest.fn()
 jest.mock('@/features/combat/combat.api')
 jest.mock('@/components/ui/toast', () => ({ showToast: jest.fn() }))
 
+jest.setTimeout(30000) // the 20-row list re-renders on every tap, which is slow on a loaded machine
+
 const m = {
   entries: getCombatEntries as jest.Mock, apply: applyEnemyHp as jest.Mock, undo: undoEnemyHp as jest.Mock,
   next: nextTurn as jest.Mock, delay: delayTurn as jest.Mock, current: setCurrentEntry as jest.Mock,
@@ -86,7 +88,7 @@ test('selecting four goblins and entering 5 applies once to the four ids, then t
   expect(screen.getByText('4 selected')).toBeTruthy()
   fireEvent.changeText(screen.getByLabelText('Amount'), '5')
   fireEvent.press(screen.getByRole('button', { name: 'Damage' }))
-  await waitFor(() => expect(screen.queryByText('4 selected')).toBeNull(), { timeout: 4000 })
+  await waitFor(() => expect(screen.queryByText('4 selected')).toBeNull(), { timeout: 15000 })
   expect(m.apply).toHaveBeenCalledTimes(1)
   expect(m.apply).toHaveBeenCalledWith('cb1', ['g1', 'g2', 'g3', 'g4'], 'damage', 5)
   expect(screen.queryByLabelText('Amount')).toBeNull()

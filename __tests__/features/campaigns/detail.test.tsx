@@ -108,7 +108,7 @@ test('a GM sees the Open session control on the campaign screen', async () => {
 })
 
 describe('session and combat status on the campaign screen (a GM has no character sheet)', () => {
-  const active = { id: 's1', campaign_id: 'camp1', opened_by: 'gm1', in_combat: false, combat_started_by: null, current_turn_user_id: null }
+  const active = { id: 's1', campaign_id: 'camp1', opened_by: 'gm1', in_combat: false, combat_started_by: null }
   afterEach(() => { ;(getActiveSession as jest.Mock).mockResolvedValue(null) })
 
   test('a GM sees Session: Active and Enter combat, without any character lookup', async () => {
@@ -149,7 +149,7 @@ test('the manual turn picker is gone: the order, not a panel, decides whose turn
     username: 'mira', character_name: 'Mira',
   }
   ;(getCampaign as jest.Mock).mockResolvedValue({ ...campaign, members: [player] })
-  ;(getActiveSession as jest.Mock).mockResolvedValue({ id: 's1', campaign_id: 'camp1', opened_by: 'gm1', in_combat: true, current_turn_user_id: null })
+  ;(getActiveSession as jest.Mock).mockResolvedValue({ id: 's1', campaign_id: 'camp1', opened_by: 'gm1', in_combat: true })
   renderDetail()
   expect(await screen.findByText('party list')).toBeTruthy()
   expect(screen.queryByText('Pick whose turn it is')).toBeNull()

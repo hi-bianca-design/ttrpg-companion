@@ -2,7 +2,7 @@
 begin;
 set local client_min_messages to warning;
 create extension if not exists pgtap with schema extensions;
-select plan(19);
+select plan(14);
 
 -- Fixtures (as the superuser; RLS bypassed)
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -59,30 +59,9 @@ select throws_ok(
     values ('e4000000-0000-0000-0000-00000000000e', 'a4000000-0000-0000-0000-00000000000a', 'ended', now(), true)$$,
   '23514', null, 'an ended session cannot be in combat');
 select throws_ok(
-  $$insert into public.sessions (campaign_id, opened_by, status, ended_at, current_turn_user_id)
-    values ('e4000000-0000-0000-0000-00000000000e', 'a4000000-0000-0000-0000-00000000000a', 'ended', now(), 'b4000000-0000-0000-0000-00000000000b')$$,
-  '23514', null, 'a turn requires combat');
-select throws_ok(
   $$insert into public.sessions (campaign_id, opened_by, status)
     values ('e4000000-0000-0000-0000-00000000000e', 'a4000000-0000-0000-0000-00000000000a', 'ended')$$,
   '23514', null, 'an ended session needs ended_at');
-
--- Turn cleanup when the holder leaves
-update public.sessions set in_combat = true, combat_started_by = 'b4000000-0000-0000-0000-00000000000b',
-  current_turn_user_id = 'b4000000-0000-0000-0000-00000000000b';
-update public.campaign_members set role = 'gm' where user_id = 'a4000000-0000-0000-0000-00000000000a';
-select is((select current_turn_user_id from public.sessions), 'b4000000-0000-0000-0000-00000000000b'::uuid,
-  'an unrelated membership change keeps the turn');
-update public.campaign_members set character_id = null where user_id = 'b4000000-0000-0000-0000-00000000000b';
-select is((select current_turn_user_id from public.sessions), null, 'detaching the character clears the turn');
-update public.campaign_members set character_id = 'f4000000-0000-0000-0000-000000000001' where user_id = 'b4000000-0000-0000-0000-00000000000b';
-update public.sessions set current_turn_user_id = 'b4000000-0000-0000-0000-00000000000b';
-update public.campaign_members set status = 'invited' where user_id = 'b4000000-0000-0000-0000-00000000000b';
-select is((select current_turn_user_id from public.sessions), null, 'losing active status clears the turn');
-update public.campaign_members set status = 'active' where user_id = 'b4000000-0000-0000-0000-00000000000b';
-update public.sessions set current_turn_user_id = 'b4000000-0000-0000-0000-00000000000b';
-delete from public.campaign_members where user_id = 'b4000000-0000-0000-0000-00000000000b';
-select is((select current_turn_user_id from public.sessions), null, 'leaving the campaign clears the turn');
 
 delete from auth.users where id = 'b4000000-0000-0000-0000-00000000000b';
 select is((select count(*)::int from public.sessions where id = '51000000-0000-0000-0000-000000000001'), 1,

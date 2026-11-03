@@ -1,4 +1,4 @@
-import { endSession, endTurn, getActiveSession, openSession, setCombat, setTurn } from '@/features/sessions/sessions.api'
+import { endSession, getActiveSession, openSession, setCombat } from '@/features/sessions/sessions.api'
 
 jest.mock('@/lib/supabase', () => ({
   supabase: { from: jest.fn(), rpc: jest.fn() },
@@ -6,7 +6,7 @@ jest.mock('@/lib/supabase', () => ({
 
 import { supabase } from '@/lib/supabase'
 
-const session = { id: 's1', campaign_id: 'c1', status: 'active', in_combat: false, current_turn_user_id: null }
+const session = { id: 's1', campaign_id: 'c1', status: 'active', in_combat: false }
 
 function builder(result: unknown) {
   const b: Record<string, unknown> = {}
@@ -22,20 +22,17 @@ describe('session rpc wrappers', () => {
     ['openSession', () => openSession('c1'), 'open_session', { p_campaign_id: 'c1' }],
     ['endSession', () => endSession('s1'), 'end_session', { p_session_id: 's1' }],
     ['setCombat', () => setCombat('s1', true), 'set_combat', { p_session_id: 's1', p_in_combat: true }],
-    ['setTurn', () => setTurn('s1', 'u2'), 'set_turn', { p_session_id: 's1', p_user_id: 'u2' }],
-    ['setTurn (clear)', () => setTurn('s1', null), 'set_turn', { p_session_id: 's1', p_user_id: null }],
-    ['endTurn', () => endTurn('s1'), 'end_turn', { p_session_id: 's1' }],
   ])('%s calls the rpc and returns the session', async (_name, call, fn, args) => {
     ;(supabase.rpc as jest.Mock).mockResolvedValue({ data: session, error: null })
     await expect(call()).resolves.toEqual(session)
     expect(supabase.rpc).toHaveBeenCalledWith(fn, args)
   })
 
-  it.each(['not_member', 'no_active_session', 'not_allowed', 'not_in_combat', 'invalid_turn_target', 'not_your_turn'])(
+  it.each(['not_member', 'no_active_session', 'not_allowed'])(
     'maps P0001 %s to AppError',
     async (message) => {
       ;(supabase.rpc as jest.Mock).mockResolvedValue({ data: null, error: { code: 'P0001', message } })
-      await expect(setTurn('s1', 'u2')).rejects.toMatchObject({ name: 'AppError', code: message })
+      await expect(setCombat('s1', true)).rejects.toMatchObject({ name: 'AppError', code: message })
     },
   )
 })

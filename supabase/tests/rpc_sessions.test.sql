@@ -1,8 +1,8 @@
--- RPCs: open_session, end_session, set_combat, set_turn, end_turn.
+-- RPCs: open_session, end_session, set_combat (the manual turn picker, set_turn/end_turn, is retired: the turn lives in the combat order).
 begin;
 set local client_min_messages to warning;
 create extension if not exists pgtap with schema extensions;
-select plan(35);
+select plan(25);
 
 -- Fixtures (as the superuser; RLS bypassed). GM has no character; p1/p2 do; inv is invited.
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -52,30 +52,11 @@ set local request.jwt.claims to '{"sub":"b5000000-0000-0000-0000-00000000000b","
 select is((select combat_started_by from public.set_combat(public.t_sid(), true)), 'c5000000-0000-0000-0000-00000000000c'::uuid, 'entering combat again changes nothing');
 select throws_ok($$select public.set_combat(public.t_sid(), false)$$, 'P0001', 'not_allowed', 'another player cannot end combat');
 
--- set_turn / end_turn
-select throws_ok($$select public.set_turn(public.t_sid(), 'c5000000-0000-0000-0000-00000000000c')$$, 'P0001', 'not_allowed', 'a player cannot set the turn');
-set local request.jwt.claims to '{"sub":"a5000000-0000-0000-0000-00000000000a","role":"authenticated"}';
-select throws_ok($$select public.set_turn(public.t_sid(), 'a5000000-0000-0000-0000-00000000000a')$$, 'P0001', 'invalid_turn_target', 'a member without a character cannot hold the turn');
-select throws_ok($$select public.set_turn(public.t_sid(), 'd5000000-0000-0000-0000-00000000000d')$$, 'P0001', 'invalid_turn_target', 'an invited member cannot hold the turn');
-select throws_ok($$select public.set_turn(public.t_sid(), 'f5000000-0000-0000-0000-00000000000f')$$, 'P0001', 'invalid_turn_target', 'an outsider cannot hold the turn');
-select is((select current_turn_user_id from public.set_turn(public.t_sid(), 'b5000000-0000-0000-0000-00000000000b')), 'b5000000-0000-0000-0000-00000000000b'::uuid, 'GM gives the turn to a player');
-select is((select current_turn_user_id from public.set_turn(public.t_sid(), 'c5000000-0000-0000-0000-00000000000c')), 'c5000000-0000-0000-0000-00000000000c'::uuid, 'moving the turn replaces the holder');
-select throws_ok($$select public.end_turn(public.t_sid())$$, 'P0001', 'not_your_turn', 'GM cannot end a player''s turn');
-set local request.jwt.claims to '{"sub":"b5000000-0000-0000-0000-00000000000b","role":"authenticated"}';
-select throws_ok($$select public.end_turn(public.t_sid())$$, 'P0001', 'not_your_turn', 'a non-holder cannot end the turn');
-set local request.jwt.claims to '{"sub":"c5000000-0000-0000-0000-00000000000c","role":"authenticated"}';
-select is((select current_turn_user_id from public.end_turn(public.t_sid())), null, 'the holder ends their own turn');
-set local request.jwt.claims to '{"sub":"a5000000-0000-0000-0000-00000000000a","role":"authenticated"}';
-select public.set_turn(public.t_sid(), 'b5000000-0000-0000-0000-00000000000b');
-select is((select current_turn_user_id from public.set_turn(public.t_sid(), null)), null, 'GM clears the turn');
-
--- ending combat clears starter and turn; the starter and the GM may end it
-select public.set_turn(public.t_sid(), 'b5000000-0000-0000-0000-00000000000b');
+-- ending combat clears the starter; the starter and the GM may end it
 set local request.jwt.claims to '{"sub":"c5000000-0000-0000-0000-00000000000c","role":"authenticated"}';
 select is((select in_combat from public.set_combat(public.t_sid(), false)), false, 'the starter can end combat');
-select is((select current_turn_user_id is null and combat_started_by is null from public.sessions where id = public.t_sid()), true, 'ending combat clears turn and starter');
+select is((select combat_started_by is null from public.sessions where id = public.t_sid()), true, 'ending combat clears the starter');
 set local request.jwt.claims to '{"sub":"a5000000-0000-0000-0000-00000000000a","role":"authenticated"}';
-select throws_ok($$select public.set_turn(public.t_sid(), 'b5000000-0000-0000-0000-00000000000b')$$, 'P0001', 'not_in_combat', 'the turn cannot be set outside combat');
 select public.set_combat(public.t_sid(), true);
 select is((select in_combat from public.set_combat(public.t_sid(), false)), false, 'the GM can end combat');
 
@@ -89,13 +70,11 @@ create temp table t_ended as select public.t_sid() as id;
 grant select on t_ended to authenticated;
 set local role authenticated;
 select is((select status from public.end_session((select id from t_ended))), 'ended', 'the opener can end the session');
-select is((select in_combat::text || coalesce(current_turn_user_id::text, '-') || (ended_at is not null)::text from public.sessions where id = (select id from t_ended)), 'false-true', 'ending the session ends combat and records ended_at');
+select is((select in_combat::text || (ended_at is not null)::text from public.sessions where id = (select id from t_ended)), 'falsetrue', 'ending the session ends combat and records ended_at');
 
 -- calls on the ended session
 select throws_ok($$select public.end_session((select id from t_ended))$$, 'P0001', 'no_active_session', 'ending an ended session is refused');
 select throws_ok($$select public.set_combat((select id from t_ended), true)$$, 'P0001', 'no_active_session', 'combat cannot start on an ended session');
-select throws_ok($$select public.set_turn((select id from t_ended), 'b5000000-0000-0000-0000-00000000000b')$$, 'P0001', 'no_active_session', 'the turn cannot be set on an ended session');
-select throws_ok($$select public.end_turn((select id from t_ended))$$, 'P0001', 'no_active_session', 'a turn cannot end on an ended session');
 
 -- a new session can be opened after one ended; the GM can end a session they did not open
 select is((select count(*)::int from public.open_session('e5000000-0000-0000-0000-00000000000e') s where s.id <> (select id from t_ended)), 1, 'a new session opens after the last one ended');
@@ -106,9 +85,12 @@ reset role;
 select ok(not (
   has_function_privilege('anon', 'public.open_session(uuid)', 'execute')
   or has_function_privilege('anon', 'public.end_session(uuid)', 'execute')
-  or has_function_privilege('anon', 'public.set_combat(uuid, boolean)', 'execute')
-  or has_function_privilege('anon', 'public.set_turn(uuid, uuid)', 'execute')
-  or has_function_privilege('anon', 'public.end_turn(uuid)', 'execute')), 'anon cannot execute any session RPC');
+  or has_function_privilege('anon', 'public.set_combat(uuid, boolean)', 'execute')), 'anon cannot execute any session RPC');
+
+-- The manual turn is gone: no column, no RPCs (the combat order holds the turn).
+select hasnt_column('public', 'sessions', 'current_turn_user_id', 'sessions has no current_turn_user_id column');
+select hasnt_function('public', 'set_turn', array['uuid', 'uuid'], 'set_turn no longer exists');
+select hasnt_function('public', 'end_turn', array['uuid'], 'end_turn no longer exists');
 
 -- authenticated keeps execute on the internal helper: a revoked-from-authenticated function is
 -- a permission-denied path that crashed the local Postgres image when called through the API role.
