@@ -5,6 +5,7 @@ import { BackButton, NavRow } from '@/components/game/HeaderNav'
 import { Button } from '@/components/ui/button'
 import { Text } from '@/components/ui/text'
 import { SessionStatusRow } from '@/features/sessions/SessionStatusRow'
+import { TurnBanner } from '@/features/sessions/TurnBanner'
 
 type SheetHeaderProps = {
   /** The character's name; omitted while it loads. */
@@ -41,6 +42,7 @@ export function SheetHeader({ name, eyebrow, subtitle, onLevelUp, children }: Sh
         ) : null}
       </NavRow>
       <SessionStatusRow />
+      <TurnBanner />
       {name ? (
         <View className="gap-1">
           {eyebrow ? <Text variant="label" tone="accent">{eyebrow}</Text> : null}

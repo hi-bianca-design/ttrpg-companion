@@ -9,6 +9,7 @@ import { showToast } from '@/components/ui/toast'
 import { variantOf } from '../../../helpers/button'
 
 jest.mock('@/features/sessions/SessionStatusRow', () => ({ SessionStatusRow: () => null }))
+jest.mock('@/features/sessions/TurnBanner', () => ({ TurnBanner: () => null }))
 jest.mock('@/features/characters/characters.queries', () => ({
   useCharacter: jest.fn(),
   useResourceMutation: jest.fn(),
