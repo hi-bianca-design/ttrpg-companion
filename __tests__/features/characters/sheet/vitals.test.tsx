@@ -229,6 +229,15 @@ test('header shows the XP bar when details.xp exists', () => {
   expect(screen.getByLabelText(/^Experience/)).toBeTruthy()
 })
 
+test('languages: Add languages on an unset character saves a merge into details', () => {
+  renderTab({ alignment: 'Neutral' })
+  expect(screen.getByText('No languages recorded yet')).toBeTruthy()
+  fireEvent.press(screen.getByRole('button', { name: 'Add languages' }))
+  fireEvent.press(screen.getByRole('button', { name: 'Apply' }))
+  expect(mockUpdateMutate).toHaveBeenCalledTimes(1)
+  expect(mockUpdateMutate.mock.calls[0][0].details).toMatchObject({ alignment: 'Neutral', languages: expect.arrayContaining(['Common']) })
+})
+
 test('vitals: HP / AC / Passive / Speed tiles; inspiration button only when inspired', () => {
   renderTab()
   expect(screen.getByRole('button', { name: 'HP 10/20 +5' }).props.accessibilityHint).toBe('Adjust hit points')

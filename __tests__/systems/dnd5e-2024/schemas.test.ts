@@ -121,3 +121,10 @@ test('details alignment uses SRD 5.2 naming ("Neutral", not "True Neutral")', ()
   expect(dnd5eDetailsSchema.safeParse({ alignment: 'Neutral' }).success).toBe(true)
   expect(dnd5eDetailsSchema.safeParse({ alignment: 'True Neutral' }).success).toBe(false)
 })
+
+test('class data accepts an optional spellcasting ability and rejects an unknown one', () => {
+  const base = { hit_die: 8, primary_abilities: [], saving_throw_proficiencies: [] }
+  expect(dnd5eContentSchemas.class.safeParse(base).success).toBe(true)
+  expect(dnd5eContentSchemas.class.safeParse({ ...base, spellcasting_ability: 'intelligence' }).success).toBe(true)
+  expect(dnd5eContentSchemas.class.safeParse({ ...base, spellcasting_ability: 'luck' }).success).toBe(false)
+})

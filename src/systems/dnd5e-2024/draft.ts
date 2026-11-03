@@ -4,6 +4,7 @@
 import type { Draft, NewCharacter, NewCustomContent } from '../types'
 import { cachedClassFields, cleanName, customData, type CustomEntry, type CustomKind } from './customEntries'
 import { ABILITY_KEYS } from './definition'
+import { startingLanguages } from './languages'
 import { featureResources } from './features'
 import { findOrder, getAbilityModifier, getMaxHP, getMaxSpellLevel, getSpellLimits, slotsFor } from './rules'
 
@@ -117,6 +118,11 @@ function fitSpells(draft: Draft): string[] {
   })
 }
 
+/** Languages a custom species or background entry grants (empty when none). */
+function grantedLanguages(kind: 'species' | 'background', entry: CustomEntry): string[] {
+  return (customData(kind, entry.extras, false) as { languages?: string[] }).languages ?? []
+}
+
 const CUSTOM_KINDS: readonly CustomKind[] = ['class', 'species', 'background']
 
 /** A draft's `*_custom` value as a `CustomEntry`, or null when unset or malformed. */
@@ -168,6 +174,9 @@ export function abilitiesFilled(draft: Draft): boolean {
  *   bg_bonus_two / bg_bonus_one (ability keys receiving +2 / +1)
  * - spell_ids, spell_classes (spell id → lowercase class list) and spell_levels (spell id →
  *   level), both cached by the spells step so pruneDraft can stay pure
+ * - languages_chosen (the player's picks and typed languages, never pruned), species_languages and
+ *   bg_languages (grants cached when a species / background is picked, or read from a custom one's extras);
+ *   `toCharacter` writes Common + class grants + these into `details.languages`
  * - name, alignment, personality_trait, ideal, bond, flaw, appearance, backstory
  */
 export function initialDraft(): Draft {
@@ -184,6 +193,9 @@ export function initialDraft(): Draft {
     background_custom: null,
     bg_abilities: [],
     bg_skills: [],
+    languages_chosen: [],
+    species_languages: [],
+    bg_languages: [],
     class_skill_count: 0,
     class_skill_options: [],
     class_skills: [],
@@ -246,9 +258,14 @@ export function pruneDraft(draft: Draft, changed: Partial<Draft>): Draft {
     if (!('bg_bonus_two' in changed)) next.bg_bonus_two = null
     if (!('bg_bonus_one' in changed)) next.bg_bonus_one = null
     if (!('bg_abilities' in changed)) next.bg_abilities = []
+    if (!('bg_languages' in changed)) next.bg_languages = bgEntry ? grantedLanguages('background', bgEntry) : []
     if (!('bg_skills' in changed)) {
       next.bg_skills = bgEntry ? (customData('background', bgEntry.extras, false) as { skill_proficiencies: string[] }).skill_proficiencies : []
     }
+  }
+  if (moved('species_id') || moved('species_custom')) {
+    const spEntry = customEntry(next.species_custom)
+    if (!('species_languages' in changed)) next.species_languages = spEntry ? grantedLanguages('species', spEntry) : []
   }
   const classChanged = moved('class_id') || moved('class_custom')
   const levelChanged = 'level' in changed && changed.level !== draft.level
@@ -330,6 +347,12 @@ export function toCharacter(draft: Draft): NewCharacter {
       flaw: str(draft.flaw),
       appearance: str(draft.appearance),
       backstory: str(draft.backstory),
+      languages: startingLanguages({
+        className: str(draft.class_name),
+        species: strList(draft.species_languages),
+        background: strList(draft.bg_languages),
+        chosen: strList(draft.languages_chosen),
+      }),
     },
     items: Array.isArray(draft.equipment_items) ? (draft.equipment_items as NewCharacter['items']) : [],
     picks: [
