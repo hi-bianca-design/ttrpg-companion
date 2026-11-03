@@ -396,6 +396,29 @@ export type Database = {
           },
         ]
       }
+      combat_hp_batches: {
+        Row: {
+          batch_id: string
+          combat_id: string
+        }
+        Insert: {
+          batch_id: string
+          combat_id: string
+        }
+        Update: {
+          batch_id?: string
+          combat_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "combat_hp_batches_combat_id_fkey"
+            columns: ["combat_id"]
+            isOneToOne: false
+            referencedRelation: "combats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       combat_order: {
         Row: {
           campaign_id: string
@@ -465,7 +488,6 @@ export type Database = {
         Row: {
           campaign_id: string
           created_at: string
-          gm_turn: boolean
           id: string
           rev: number
           round: number
@@ -478,7 +500,6 @@ export type Database = {
         Insert: {
           campaign_id: string
           created_at?: string
-          gm_turn?: boolean
           id?: string
           rev?: number
           round?: number
@@ -491,7 +512,6 @@ export type Database = {
         Update: {
           campaign_id?: string
           created_at?: string
-          gm_turn?: boolean
           id?: string
           rev?: number
           round?: number
@@ -844,6 +864,7 @@ export type Database = {
       apply_enemy_hp: {
         Args: {
           p_amount: number
+          p_batch: string
           p_combat_id: string
           p_entry_ids: string[]
           p_mode: string
@@ -875,7 +896,6 @@ export type Database = {
         Returns: {
           campaign_id: string
           created_at: string
-          gm_turn: boolean
           id: string
           rev: number
           round: number
@@ -928,7 +948,6 @@ export type Database = {
         Returns: {
           campaign_id: string
           created_at: string
-          gm_turn: boolean
           id: string
           rev: number
           round: number
@@ -946,11 +965,10 @@ export type Database = {
         }
       }
       end_my_turn: {
-        Args: { p_combat_id: string }
+        Args: { p_combat_id: string; p_expected_round: number }
         Returns: {
           campaign_id: string
           created_at: string
-          gm_turn: boolean
           id: string
           rev: number
           round: number
@@ -1053,7 +1071,6 @@ export type Database = {
         Returns: {
           campaign_id: string
           created_at: string
-          gm_turn: boolean
           id: string
           rev: number
           round: number
@@ -1075,7 +1092,6 @@ export type Database = {
         Returns: {
           campaign_id: string
           created_at: string
-          gm_turn: boolean
           id: string
           rev: number
           round: number
@@ -1097,7 +1113,6 @@ export type Database = {
         Returns: {
           campaign_id: string
           created_at: string
-          gm_turn: boolean
           id: string
           rev: number
           round: number
@@ -1113,14 +1128,6 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
-      }
-      preview_campaign_invite: {
-        Args: { p_code: string }
-        Returns: {
-          id: string
-          name: string
-          system_id: string
-        }[]
       }
       open_session: {
         Args: { p_campaign_id: string }
@@ -1147,13 +1154,20 @@ export type Database = {
       own_sheet_content_ids: { Args: never; Returns: string[] }
       owns_character: { Args: { p_character_id: string }; Returns: boolean }
       owns_pack: { Args: { p_pack_id: string }; Returns: boolean }
+      preview_campaign_invite: {
+        Args: { p_code: string }
+        Returns: {
+          id: string
+          name: string
+          system_id: string
+        }[]
+      }
       refresh_combat: { Args: { p_combat_id: string }; Returns: undefined }
       remove_entry: {
         Args: { p_entry_id: string }
         Returns: {
           campaign_id: string
           created_at: string
-          gm_turn: boolean
           id: string
           rev: number
           round: number
@@ -1197,7 +1211,6 @@ export type Database = {
         Returns: {
           campaign_id: string
           created_at: string
-          gm_turn: boolean
           id: string
           rev: number
           round: number
@@ -1219,7 +1232,6 @@ export type Database = {
         Returns: {
           campaign_id: string
           created_at: string
-          gm_turn: boolean
           id: string
           rev: number
           round: number
@@ -1263,7 +1275,6 @@ export type Database = {
         Returns: {
           campaign_id: string
           created_at: string
-          gm_turn: boolean
           id: string
           rev: number
           round: number
@@ -1289,7 +1300,6 @@ export type Database = {
         Returns: {
           campaign_id: string
           created_at: string
-          gm_turn: boolean
           id: string
           rev: number
           round: number

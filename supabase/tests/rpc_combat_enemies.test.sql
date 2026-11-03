@@ -3,7 +3,7 @@
 begin;
 set local client_min_messages to warning;
 create extension if not exists pgtap with schema extensions;
-select plan(111);
+select plan(129);
 
 create temp table k (name text primary key, id uuid not null default gen_random_uuid());
 insert into k (name) values ('gm'), ('p1'), ('inv'), ('out'), ('gm2'), ('s1'), ('s2'), ('c1'), ('c2'),
@@ -133,62 +133,62 @@ select throws_ok($$select public.add_enemies(public.t_id('c1'), 'X', 1, 5, 100, 
 select lives_ok($$select public.add_enemies(public.t_id('c1'), 'T', 1, 30, null, null, null, false)$$, 'a 30 hp enemy');
 select lives_ok($$select public.update_enemy(public.t_eid('c1', 'T'), '{"hp": 22}')$$, 'typed correction to 22');
 select is(public.t_hp('c1', 'T'), '22/30+0', 'at 22/30');
-select lives_ok($$select public.t_save('b_a', public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'damage', 7))$$, 'damage 7');
+select lives_ok($$select public.t_save('b_a', public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'damage', 7, gen_random_uuid()))$$, 'damage 7');
 select is(public.t_hp('c1', 'T'), '15/30+0', '22/30 damage 7 -> 15/30');
-select lives_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'damage', 20)$$, 'damage 20');
+select lives_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'damage', 20, gen_random_uuid())$$, 'damage 20');
 select is(public.t_hp('c1', 'T'), '0/30+0', '15/30 damage 20 -> 0/30');
-select lives_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'heal', 50)$$, 'heal 50');
+select lives_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'heal', 50, gen_random_uuid())$$, 'heal 50');
 select is(public.t_hp('c1', 'T'), '30/30+0', 'heal is capped at max');
-select lives_ok($$select public.update_enemy(public.t_eid('c1', 'T'), '{"hp": 12}'); select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'temp', 5); select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'damage', 7)$$, 'temp 5 then damage 7 at 12 hp');
+select lives_ok($$select public.update_enemy(public.t_eid('c1', 'T'), '{"hp": 12}'); select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'temp', 5, gen_random_uuid()); select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'damage', 7, gen_random_uuid())$$, 'temp 5 then damage 7 at 12 hp');
 select is(public.t_hp('c1', 'T'), '10/30+0', 'temp absorbs first: temp 0, hp 10');
-select lives_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'temp', 4); select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'heal', 3)$$, 'temp 4 then heal 3');
+select lives_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'temp', 4, gen_random_uuid()); select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'heal', 3, gen_random_uuid())$$, 'temp 4 then heal 3');
 select is(public.t_hp('c1', 'T'), '13/30+4', 'heal leaves temp unchanged');
-select lives_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'temp', 8)$$, 'temp 8 over 4');
+select lives_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'temp', 8, gen_random_uuid())$$, 'temp 8 over 4');
 select is(public.t_hp('c1', 'T'), '13/30+8', 'temp keeps the larger (8)');
-select lives_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'temp', 3)$$, 'temp 3 over 8');
+select lives_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'temp', 3, gen_random_uuid())$$, 'temp 3 over 8');
 select is(public.t_hp('c1', 'T'), '13/30+8', 'temp keeps the larger (still 8)');
 
 -- bulk
 select lives_ok($$select public.add_enemies(public.t_id('c1'), 'Gob', 4, 7, null, null, null, false)$$, 'four Gobs at 7/7');
-select lives_ok($$select public.t_save('b_bulk', public.apply_enemy_hp(public.t_id('c1'), public.t_ids('c1', 'Gob'), 'damage', 5))$$, 'bulk damage 5');
+select lives_ok($$select public.t_save('b_bulk', public.apply_enemy_hp(public.t_id('c1'), public.t_ids('c1', 'Gob'), 'damage', 5, gen_random_uuid()))$$, 'bulk damage 5');
 select is((select string_agg(public.t_hp('c1', 'Gob ' || i), ',' order by i) from generate_series(1, 4) i), '2/7+0,2/7+0,2/7+0,2/7+0', 'all four are at 2/7');
 select lives_ok($$select public.add_enemies(public.t_id('c1'), 'Gob', 2, 7, null, null, null, false)$$, 'two more Gobs arrive later');
 select is(public.t_hp('c1', 'Gob 5') || ',' || public.t_hp('c1', 'Gob 6'), '7/7+0,7/7+0', 'the newcomers are untouched');
 
 -- invalid input
-select throws_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'damage', 0)$$, 'P0001', 'invalid_amount', 'amount 0');
-select throws_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'damage', -1)$$, 'P0001', 'invalid_amount', 'amount -1');
-select throws_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'crit', 5)$$, 'P0001', 'invalid_mode', 'mode crit');
-select throws_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T'), public.t_id('e_p1')], 'damage', 5)$$, 'P0001', 'invalid_target', 'a player entry in the list');
-select throws_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T'), public.t_eid('c2', 'A')], 'damage', 5)$$, 'P0001', 'invalid_target', 'another combat''s entry in the list');
-select throws_ok($$select public.apply_enemy_hp(public.t_id('c1'), '{}'::uuid[], 'damage', 5)$$, 'P0001', 'invalid_target', 'an empty list');
+select throws_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'damage', 0, gen_random_uuid())$$, 'P0001', 'invalid_amount', 'amount 0');
+select throws_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'damage', -1, gen_random_uuid())$$, 'P0001', 'invalid_amount', 'amount -1');
+select throws_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'crit', 5, gen_random_uuid())$$, 'P0001', 'invalid_mode', 'mode crit');
+select throws_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T'), public.t_id('e_p1')], 'damage', 5, gen_random_uuid())$$, 'P0001', 'invalid_target', 'a player entry in the list');
+select throws_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T'), public.t_eid('c2', 'A')], 'damage', 5, gen_random_uuid())$$, 'P0001', 'invalid_target', 'another combat''s entry in the list');
+select throws_ok($$select public.apply_enemy_hp(public.t_id('c1'), '{}'::uuid[], 'damage', 5, gen_random_uuid())$$, 'P0001', 'invalid_target', 'an empty list');
 select is(public.t_hp('c1', 'T'), '13/30+8', 'nothing was applied by the refused calls');
 select public.t_as('p1');
-select throws_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'damage', 5)$$, 'P0001', 'not_allowed', 'a player cannot apply damage');
+select throws_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'damage', 5, gen_random_uuid())$$, 'P0001', 'not_allowed', 'a player cannot apply damage');
 select public.t_as('gm');
-select is(pg_typeof(public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'heal', 1))::text, 'uuid', 'it returns a batch uuid');
+select is(pg_typeof(public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'heal', 1, gen_random_uuid()))::text, 'uuid', 'it returns a batch uuid');
 
 -- hit points never touch the combats row
 select public.t_snap();
-select lives_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'Ogre')], 'damage', 10); select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'Goblin 1')], 'damage', 3)$$, 'damage a hidden and a visible enemy');
+select lives_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'Ogre')], 'damage', 10, gen_random_uuid()); select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'Goblin 1')], 'damage', 3, gen_random_uuid())$$, 'damage a hidden and a visible enemy');
 select ok(public.t_same(), 'the combats row was not written (rev, updated_at, ctid identical)');
 
 -- ---- undo
 select lives_ok($$select public.add_enemies(public.t_id('c1'), 'Imp', 4, 7, null, null, null, false)$$, 'four Imps');
-select lives_ok($$select public.t_save('b_imp', public.apply_enemy_hp(public.t_id('c1'), public.t_ids('c1', 'Imp'), 'damage', 5))$$, 'bulk damage');
+select lives_ok($$select public.t_save('b_imp', public.apply_enemy_hp(public.t_id('c1'), public.t_ids('c1', 'Imp'), 'damage', 5, gen_random_uuid()))$$, 'bulk damage');
 select public.t_as('p1');
 select throws_ok($$select public.undo_enemy_hp(public.t_id('c1'), public.t_id('b_imp'))$$, 'P0001', 'not_allowed', 'a player cannot undo');
 select public.t_as('gm');
 select is(public.undo_enemy_hp(public.t_id('c1'), public.t_id('b_imp')), 4, 'a bulk undo restores all four');
 select is((select string_agg(public.t_hp('c1', 'Imp ' || i), ',' order by i) from generate_series(1, 4) i), '7/7+0,7/7+0,7/7+0,7/7+0', 'all Imps are back at 7/7');
 select is(public.undo_enemy_hp(public.t_id('c1'), public.t_id('b_imp')), 0, 'undoing the same batch again restores nothing');
-select lives_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'temp', 9)$$, 'T gets temp 9');
-select lives_ok($$select public.t_save('b_t', public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'damage', 10))$$, 'and takes 10');
+select lives_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'temp', 9, gen_random_uuid())$$, 'T gets temp 9');
+select lives_ok($$select public.t_save('b_t', public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'T')], 'damage', 10, gen_random_uuid()))$$, 'and takes 10');
 select is(public.t_hp('c1', 'T'), '13/30+0', 'temp 9 absorbed, 1 from hp');
 select is(public.undo_enemy_hp(public.t_id('c1'), public.t_id('b_t')), 1, 'undo restores hp and temp');
 select is(public.t_hp('c1', 'T'), '14/30+9', 'back to 14/30 with temp 9');
 -- a stale undo: Gob 1 gets a newer batch
-select lives_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'Gob 1')], 'damage', 1)$$, 'Gob 1 takes a newer hit');
+select lives_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'Gob 1')], 'damage', 1, gen_random_uuid())$$, 'Gob 1 takes a newer hit');
 select is(public.undo_enemy_hp(public.t_id('c1'), public.t_id('b_bulk')), 3, 'undoing the older bulk batch restores only the three untouched Gobs');
 select is((select string_agg(public.t_hp('c1', 'Gob ' || i), ',' order by i) from generate_series(1, 4) i), '1/7+0,7/7+0,7/7+0,7/7+0', 'Gob 1 keeps the newer state');
 
@@ -218,11 +218,34 @@ select ok(public.t_vis('c1') like 'Ogre,P1,Goblin Boss,%', 'it appears at its pl
 select lives_ok($$select public.update_enemy(public.t_eid('c1', 'Ogre'), '{"hidden": true}')$$, 'hide it again');
 select ok(public.t_vis('c1') like 'P1,Goblin Boss,%' and public.t_vis('c1') not like '%Ogre%', 'its row is gone');
 select lives_ok($$select public.set_current_entry(public.t_eid('c1', 'Ogre'))$$, 'the hidden ogre takes the turn');
-select results_eq($$select turn_entry_id is null, gm_turn from public.combats where id = public.t_id('c1')$$, $$values (true, true)$$, 'gm_turn, no id');
+select results_eq($$select turn_entry_id = public.t_id('e_p1') from public.combats where id = public.t_id('c1')$$, $$values (true)$$, 'the pointer stays on the last visible holder (P1)');
 select lives_ok($$select public.update_enemy(public.t_eid('c1', 'Ogre'), '{"hidden": false}')$$, 'reveal the turn holder');
-select results_eq($$select turn_entry_id = public.t_eid('c1', 'Ogre'), gm_turn from public.combats where id = public.t_id('c1')$$, $$values (true, false)$$, 'the pointer moves from gm_turn to its row');
+select results_eq($$select turn_entry_id = public.t_eid('c1', 'Ogre') from public.combats where id = public.t_id('c1')$$, $$values (true)$$, 'the pointer moves onto its row');
 select lives_ok($$select public.update_enemy(public.t_eid('c1', 'Ogre'), '{"hidden": true}')$$, 'hide the turn holder');
-select results_eq($$select turn_entry_id is null, gm_turn from public.combats where id = public.t_id('c1')$$, $$values (true, true)$$, 'and back to gm_turn');
+select results_eq($$select turn_entry_id is null from public.combats where id = public.t_id('c1')$$, $$values (true)$$, 'and, with no visible row before it, the pointer clears rather than naming the hidden id');
+
+-- ---- hidden xN copies never show through the numbering a player sees (I1)
+select public.t_as('gm');
+select lives_ok($$select public.add_enemies(public.t_id('c1'), 'Fiend', 3, 5, null, null, null, true)$$, 'three hidden Fiends');
+select lives_ok($$select public.add_enemies(public.t_id('c1'), 'Fiend', 2, 5, null, null, null, false)$$, 'then two visible Fiends');
+select is((select string_agg(name, ',' order by name) from public.combat_entries where combat_id = public.t_id('c1') and name like 'Fiend%'), 'Fiend 1,Fiend 2,Fiend 3,Fiend 4,Fiend 5', 'the GM keeps the real, unique names');
+select is((select string_agg(name, ',' order by position) from public.combat_order where combat_id = public.t_id('c1') and name like 'Fiend%'), 'Fiend 1,Fiend 2', 'players see Fiend 1 and Fiend 2: the hidden count is not inferable');
+select lives_ok($$select public.update_enemy(public.t_eid('c1', 'Fiend 2'), '{"hidden": false}')$$, 'reveal a hidden Fiend');
+select is((select string_agg(name, ',' order by position) from public.combat_order where combat_id = public.t_id('c1') and name like 'Fiend%'), 'Fiend 1,Fiend 2,Fiend 3', 'the revealed copy takes its place in the dense numbering');
+select lives_ok($$select public.update_enemy(public.t_eid('c1', 'Fiend 2'), '{"hidden": true}')$$, 'hide it again');
+select is((select string_agg(name, ',' order by position) from public.combat_order where combat_id = public.t_id('c1') and name like 'Fiend%'), 'Fiend 1,Fiend 2', 'and the numbering closes up again');
+
+-- ---- apply_enemy_hp is idempotent per client batch id (I3)
+select lives_ok($$select public.add_enemies(public.t_id('c1'), 'Idem', 1, 20, null, null, null, false)$$, 'a 20 hp enemy');
+select lives_ok($$select public.t_save('b_idem', gen_random_uuid())$$, 'a client batch id');
+select is(public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'Idem')], 'damage', 5, public.t_id('b_idem')), public.t_id('b_idem'), 'the call returns the client batch id');
+select is(public.t_hp('c1', 'Idem'), '15/20+0', 'damage applied once');
+select is(public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'Idem')], 'damage', 5, public.t_id('b_idem')), public.t_id('b_idem'), 'a repeat returns the same batch');
+select is(public.t_hp('c1', 'Idem'), '15/20+0', 'a repeat with the same batch id changes nothing');
+select is(public.undo_enemy_hp(public.t_id('c1'), public.t_id('b_idem')), 1, 'undo still restores the batch');
+select lives_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'Idem')], 'damage', 5, public.t_id('b_idem'))$$, 'a late retry after the undo');
+select is(public.t_hp('c1', 'Idem'), '20/20+0', 'a retry after an undo is still a no-op');
+select throws_ok($$select public.apply_enemy_hp(public.t_id('c1'), array[public.t_eid('c1', 'Idem')], 'damage', 5, null)$$, 'P0001', 'invalid_batch', 'a missing batch id is refused');
 
 -- ---- remove_entry (c2: A,B,C,D with B current)
 select public.t_as('gm');

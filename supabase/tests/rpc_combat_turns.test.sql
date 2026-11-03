@@ -3,7 +3,7 @@
 begin;
 set local client_min_messages to warning;
 create extension if not exists pgtap with schema extensions;
-select plan(84);
+select plan(88);
 
 create temp table k (name text primary key, id uuid not null default gen_random_uuid());
 insert into k (name) values ('gm'), ('p1'), ('p2'), ('p3'), ('inv'), ('out'), ('gm2'), ('p4'),
@@ -78,6 +78,10 @@ select public.t_as('gm');
 select throws_ok($$select public.set_initiative(public.t_id('e_p1'), 100)$$, 'P0001', 'invalid_initiative', '100 is not a valid initiative');
 select throws_ok($$select public.set_initiative(public.t_id('e_p1'), -21)$$, 'P0001', 'invalid_initiative', '-21 is not a valid initiative');
 select throws_ok($$select public.next_turn(public.t_id('c1'), public.t_id('e_p1'))$$, 'P0001', 'not_active', 'next_turn while rolling is refused');
+select throws_ok($$select public.set_current_entry(public.t_id('e_p1'))$$, 'P0001', 'not_active', 'set_current_entry while rolling is refused');
+select public.t_as('p1');
+select throws_ok($$select public.end_my_turn(public.t_id('c1'), 1)$$, 'P0001', 'not_active', 'end_my_turn while rolling is refused');
+select public.t_as('gm');
 select lives_ok($$select public.set_initiative(public.t_id('e_p2'), 12)$$, 'P2 rolls 12');
 select is(public.t_order('c1'), 'P2,P1,Goblin', 'a rolled number sorts above blanks');
 select lives_ok($$select public.set_initiative(public.t_id('e_p1'), 18); select public.set_initiative(public.t_id('e_gob'), 15)$$, 'P1 18, Goblin 15');
@@ -163,7 +167,7 @@ select public.t_as('gm');
 select lives_ok($$select public.set_current_entry(public.t_id('e_p1'))$$, 'the GM gives P1 the turn');
 select is(public.t_state('c1'), 'P1|2', 'set_current_entry does not change the round');
 select public.t_as('p1');
-select lives_ok($$select public.end_my_turn(public.t_id('c1'))$$, 'P1 ends their turn');
+select lives_ok($$select public.end_my_turn(public.t_id('c1'), (select round from public.combats where id = public.t_id('c1')))$$, 'P1 ends their turn');
 select is(public.t_state('c1'), 'Wolf|2', 'the turn passed to the next row');
 select public.t_as('gm');
 select lives_ok($$select public.next_turn(public.t_id('c1'), public.t_id('e_p1'))$$, 'the GM taps next with a stale expected id');
@@ -171,30 +175,33 @@ select is(public.t_state('c1'), 'Wolf|2', 'the stale tap did nothing');
 
 -- end_my_turn
 select public.t_as('p2');
-select throws_ok($$select public.end_my_turn(public.t_id('c1'))$$, 'P0001', 'not_your_turn', 'a non-holder cannot end the turn');
+select throws_ok($$select public.end_my_turn(public.t_id('c1'), (select round from public.combats where id = public.t_id('c1')))$$, 'P0001', 'not_your_turn', 'a non-holder cannot end the turn');
 select public.t_as('gm');
-select throws_ok($$select public.end_my_turn(public.t_id('c1'))$$, 'P0001', 'not_your_turn', 'the GM has no player row to end');
+select throws_ok($$select public.end_my_turn(public.t_id('c1'), (select round from public.combats where id = public.t_id('c1')))$$, 'P0001', 'not_your_turn', 'the GM has no player row to end');
 select public.t_as('p3');
-select throws_ok($$select public.end_my_turn(public.t_id('c1'))$$, 'P0001', 'not_your_turn', 'a member with no entry cannot end the turn');
+select throws_ok($$select public.end_my_turn(public.t_id('c1'), (select round from public.combats where id = public.t_id('c1')))$$, 'P0001', 'not_your_turn', 'a member with no entry cannot end the turn');
 select public.t_as('inv');
-select throws_ok($$select public.end_my_turn(public.t_id('c1'))$$, 'P0001', 'not_member', 'an invited member is not a member');
+select throws_ok($$select public.end_my_turn(public.t_id('c1'), (select round from public.combats where id = public.t_id('c1')))$$, 'P0001', 'not_member', 'an invited member is not a member');
 select public.t_as('gm');
 select public.set_current_entry(public.t_id('e_p1'));
 select public.t_as('p1');
-select lives_ok($$select public.end_my_turn(public.t_id('c1'))$$, 'the holder ends their turn');
-select throws_ok($$select public.end_my_turn(public.t_id('c1'))$$, 'P0001', 'not_your_turn', 'a second end_my_turn in a row is refused');
+select lives_ok($$select public.end_my_turn(public.t_id('c1'), (select round from public.combats where id = public.t_id('c1')))$$, 'the holder ends their turn');
+select throws_ok($$select public.end_my_turn(public.t_id('c1'), (select round from public.combats where id = public.t_id('c1')))$$, 'P0001', 'not_your_turn', 'a second end_my_turn in a row is refused');
 select public.t_as('gm');
 select public.move_entry(public.t_id('e_p1'), 5);
 select public.set_current_entry(public.t_id('e_p1'));
 select public.t_as('p1');
-select lives_ok($$select public.end_my_turn(public.t_id('c1'))$$, 'the last row ends their turn');
+select lives_ok($$select public.end_my_turn(public.t_id('c1'), (select round from public.combats where id = public.t_id('c1')))$$, 'the last row ends their turn');
 select is(public.t_state('c1'), 'P2|3', 'it wraps to the first row with a new round');
+select public.t_as('p2');
+select lives_ok($$select public.end_my_turn(public.t_id('c1'), 2)$$, 'a double tap from before the wrap (expected round 2)');
+select is(public.t_state('c1'), 'P2|3', 'a stale expected round is a no-op');
 
 -- set_current_entry
 select public.t_as('gm');
 select lives_ok($$select public.set_current_entry(public.t_id('e_ogre'))$$, 'the GM gives the hidden ogre the turn');
-select results_eq($$select turn_entry_id, gm_turn from public.combats where id = public.t_id('c1')$$,
-  $$values (null::uuid, true)$$, 'players see gm_turn and no id');
+select results_eq($$select turn_entry_id = public.t_id('e_p2') from public.combats where id = public.t_id('c1')$$,
+  $$values (true)$$, 'a hidden holder leaves the player pointer on the last visible holder (P2)');
 select throws_ok($$select public.set_current_entry(public.t_id('e_solo'))$$, 'P0001', 'invalid_target', 'the GM cannot target an entry that is not theirs');
 select throws_ok($$select public.set_current_entry(public.t_id('rand'))$$, 'P0001', 'invalid_target', 'a random id gives the GM the same error');
 select public.t_as('p1');
@@ -231,7 +238,7 @@ select throws_ok($$select public.set_initiative(public.t_id('e_old'), 5)$$, 'P00
 select throws_ok($$select public.move_entry(public.t_id('e_old'), 1)$$, 'P0001', 'no_active_combat', 'move_entry on an ended combat');
 select throws_ok($$select public.set_current_entry(public.t_id('e_old'))$$, 'P0001', 'no_active_combat', 'set_current_entry on an ended combat');
 select public.t_as('p4');
-select throws_ok($$select public.end_my_turn(public.t_id('c2'))$$, 'P0001', 'no_active_combat', 'end_my_turn on an ended combat');
+select throws_ok($$select public.end_my_turn(public.t_id('c2'), 1)$$, 'P0001', 'no_active_combat', 'end_my_turn on an ended combat');
 reset role;
 
 -- internal helpers are not callable by authenticated
