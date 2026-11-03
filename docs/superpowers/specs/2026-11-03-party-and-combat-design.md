@@ -61,7 +61,7 @@ The original design had a **Party** tab: party members seeing each other's stats
 **Requirements (P0)**
 - **Party page** for players (replaces the content of the sheet's Campaign tab, keeping the campaign card) and for the GM (the campaign screen). One card per active member who has a character.
 - **Card, always visible:** name, class and level, a hit-point bar with current/max, conditions, and compact chips for AC, passive perception and speed.
-- **Card, expanded on tap:** passive insight and passive investigation, darkvision and other senses, languages, spell save DC (casters), inspiration.
+- **Card, expanded on tap:** passive insight and passive investigation, darkvision (read from the species' trait text), inspiration. *Deferred:* languages and spell save DC, because the app has no data for them today (no languages in the species or background content, no spellcasting-ability mapping per class); they follow when that data exists.
 - **Read-only for everyone but the owner.** A player edits their own numbers on their Character tab; the party page never edits another member's.
 - **Live:** a change on one phone is visible on the others within about 2 seconds, replacing the 10-second polling for this data, with a quiet "reconnecting" marker when the connection drops and a refetch on reconnect.
 - **States:** loading (skeleton cards), empty ("No one has joined with a character yet"), a member with no character (listed by name only, marked), error with retry. Works with 1 to about 8 members and long names.
