@@ -2,19 +2,27 @@ import { render } from '@testing-library/react-native'
 import { useSegments } from 'expo-router'
 import AppLayout from '../../app/(app)/_layout'
 
-const captured: { tabBar?: (props: object) => unknown } = {}
+const captured: { tabBar?: (props: object) => unknown; inset?: boolean; backBehavior?: string; screens: Array<{ name: string; options: Record<string, unknown> }> } = { screens: [] }
 
 jest.mock('@/features/auth/AccountDrawer', () => ({ AccountDrawer: () => null }))
 jest.mock('expo-router', () => {
-  const Tabs = (props: { tabBar: (p: object) => unknown }) => {
+  const { useContext } = jest.requireActual('react')
+  const { NavInsetContext } = jest.requireActual('@/components/ui/nav-inset')
+  const Tabs = (props: { tabBar: (p: object) => unknown; backBehavior?: string; children?: unknown }) => {
     captured.tabBar = props.tabBar
+    captured.backBehavior = props.backBehavior
+    captured.inset = useContext(NavInsetContext)
+    return props.children ?? null
+  }
+  Tabs.Screen = (props: { name: string; options: Record<string, unknown> }) => {
+    captured.screens.push(props)
     return null
   }
-  Tabs.Screen = () => null
   return { Tabs, useSegments: jest.fn() }
 })
 
 function tabBarFor(segments: string[]) {
+  captured.screens = []
   ;(useSegments as jest.Mock).mockReturnValue(segments)
   render(<AppLayout />)
   return captured.tabBar?.({})
@@ -43,4 +51,24 @@ test('other tabs keep the root tab bar on their pushed and modal-like screens', 
   ]) {
     expect(tabBarFor(segs)).not.toBeNull()
   }
+})
+
+test('Home is the first root tab: visible, titled Home, and the back target of the other tabs', () => {
+  tabBarFor(['(app)'])
+  const [first] = captured.screens
+  expect(first.name).toBe('index')
+  expect(first.options.title).toBe('Home')
+  expect(first.options.href).toBeUndefined()
+  expect(captured.backBehavior).toBe('initialRoute')
+})
+
+test('screens leave room for the bar only where it is shown', () => {
+  tabBarFor(['(app)'])
+  expect(captured.inset).toBe(true)
+  tabBarFor(['(app)', 'campaigns', '[id]'])
+  expect(captured.inset).toBe(true)
+  tabBarFor(['(app)', 'characters', 'new', '[step]'])
+  expect(captured.inset).toBe(false)
+  tabBarFor(['(app)', 'characters', '[id]'])
+  expect(captured.inset).toBe(false)
 })

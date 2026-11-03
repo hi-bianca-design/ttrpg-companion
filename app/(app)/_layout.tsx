@@ -1,7 +1,8 @@
 import { Tabs, useSegments } from 'expo-router'
-import { BookOpen, Sword, User, UsersThree } from 'phosphor-react-native'
+import { BookOpen, House, Sword, User, UsersThree } from 'phosphor-react-native'
 import { useState } from 'react'
 import { BottomNav } from '@/components/ui/bottom-nav'
+import { NavInsetContext } from '@/components/ui/nav-inset'
 import { AccountDrawer } from '@/features/auth/AccountDrawer'
 import { View } from 'react-native'
 
@@ -16,40 +17,50 @@ export default function AppLayout() {
 
   return (
     // No top safe-area wrapper: ScreenBackground paints the glow up under the status bar and insets its own content.
-    <Tabs
-      tabBar={(props) =>
-        hideTabBar ? null : (
-          <View>
-            <BottomNav {...props} extra={{ label: 'Account', icon: User, onPress: () => setAccountOpen(true) }} />
-            <AccountDrawer open={accountOpen} onOpenChange={setAccountOpen} />
-          </View>
-        )
-      }
-      screenOptions={{ headerShown: false }}
-    >
-      <Tabs.Screen name="index" options={{ href: null }} />
-      <Tabs.Screen name="shop" options={{ href: null }} />
-      <Tabs.Screen
-        name="characters"
-        options={{
-          title: 'Characters',
-          tabBarIcon: ({ color, size }) => <Sword size={size} color={color} weight="duotone" />,
-        }}
-      />
-      <Tabs.Screen
-        name="campaigns"
-        options={{
-          title: 'Campaigns',
-          tabBarIcon: ({ color, size }) => <UsersThree size={size} color={color} weight="duotone" />,
-        }}
-      />
-      <Tabs.Screen
-        name="content"
-        options={{
-          title: 'Homebrew',
-          tabBarIcon: ({ color, size }) => <BookOpen size={size} color={color} weight="duotone" />,
-        }}
-      />
-    </Tabs>
+    <NavInsetContext.Provider value={!hideTabBar}>
+      <Tabs
+        // Back from any root tab returns to Home before leaving the app.
+        backBehavior="initialRoute"
+        tabBar={(props) =>
+          hideTabBar ? null : (
+            <View>
+              <BottomNav {...props} extra={{ label: 'Account', icon: User, onPress: () => setAccountOpen(true) }} />
+              <AccountDrawer open={accountOpen} onOpenChange={setAccountOpen} />
+            </View>
+          )
+        }
+        screenOptions={{ headerShown: false }}
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Home',
+            tabBarIcon: ({ color, size }) => <House size={size} color={color} weight="duotone" />,
+          }}
+        />
+        <Tabs.Screen name="shop" options={{ href: null }} />
+        <Tabs.Screen
+          name="characters"
+          options={{
+            title: 'Characters',
+            tabBarIcon: ({ color, size }) => <Sword size={size} color={color} weight="duotone" />,
+          }}
+        />
+        <Tabs.Screen
+          name="campaigns"
+          options={{
+            title: 'Campaigns',
+            tabBarIcon: ({ color, size }) => <UsersThree size={size} color={color} weight="duotone" />,
+          }}
+        />
+        <Tabs.Screen
+          name="content"
+          options={{
+            title: 'Homebrew',
+            tabBarIcon: ({ color, size }) => <BookOpen size={size} color={color} weight="duotone" />,
+          }}
+        />
+      </Tabs>
+    </NavInsetContext.Provider>
   )
 }
