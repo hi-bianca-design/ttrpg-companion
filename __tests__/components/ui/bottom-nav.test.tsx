@@ -1,7 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs'
-import { Text } from 'react-native'
+import { StyleSheet, Text } from 'react-native'
 import { BottomNav } from '@/components/ui/bottom-nav'
+import { NAV_BAR_GAP } from '@/components/ui/nav-inset'
 
 function props(index = 0) {
   const navigation = { emit: jest.fn(() => ({ defaultPrevented: false })), navigate: jest.fn() }
@@ -24,17 +25,34 @@ test('hidden (href null) screens get no tab', () => {
   expect(screen.getAllByRole('tab')).toHaveLength(2)
 })
 
-test('the active tab is selected and only its icon gets the pill', () => {
+test('the active tab is selected and only it is drawn as the active plate', () => {
   render(<BottomNav {...props(1).p} />)
   expect(screen.getByRole('tab', { name: 'Characters' }).props.accessibilityState).toEqual({ selected: true })
   expect(screen.getByRole('tab', { name: 'Campaigns' }).props.accessibilityState).toEqual({ selected: false })
-  expect(screen.getAllByTestId('nav-pill')).toHaveLength(1)
+  expect(screen.getAllByTestId('nav-active')).toHaveLength(1)
 })
 
-test('labels are plain caption text on a simple bordered bar, so they never truncate inside a plate', () => {
+test('the bar floats: absolutely positioned above the safe area, no pill anywhere', () => {
+  const { toJSON } = render(<BottomNav {...props(1).p} />)
+  const style = StyleSheet.flatten(screen.getByTestId('bottom-nav').props.style)
+  expect(style).toEqual(expect.objectContaining({ position: 'absolute', left: 12, right: 12, bottom: NAV_BAR_GAP + 34 }))
+  expect(JSON.stringify(toJSON())).not.toContain('rounded-full')
+})
+
+test('every item is at least 44pt tall and its label stays on one line', () => {
   render(<BottomNav {...props(1).p} />)
-  expect(screen.getByTestId('bottom-nav').props.className).toContain('border-t')
-  expect(screen.getByText('Characters').props.className).not.toContain('uppercase')
+  for (const tab of screen.getAllByRole('tab')) expect(tab.props.className).toContain('min-h-11')
+  expect(screen.getByText('Characters').props.numberOfLines).toBe(1)
+})
+
+test('a leading item renders before the tabs as a button that never takes the active plate', () => {
+  const onPress = jest.fn()
+  render(<BottomNav {...props(1).p} leading={{ label: 'Home', icon: () => <Text>house</Text>, onPress }} />)
+  const labels = screen.getAllByText(/^(Home|Characters|Campaigns)$/).map((n) => n.props.children)
+  expect(labels).toEqual(['Home', 'Characters', 'Campaigns'])
+  fireEvent.press(screen.getByRole('button', { name: 'Home' }))
+  expect(onPress).toHaveBeenCalledTimes(1)
+  expect(screen.getAllByTestId('nav-active')).toHaveLength(1)
 })
 
 test('pressing another tab emits tabPress then navigates; pressing the active tab does not', () => {
@@ -53,5 +71,5 @@ test('an extra item is a button that runs its action and never takes the active 
   render(<BottomNav {...p} extra={{ label: 'Account', icon: () => <Text>user</Text>, onPress }} />)
   fireEvent.press(screen.getByRole('button', { name: 'Account' }))
   expect(onPress).toHaveBeenCalledTimes(1)
-  expect(screen.getAllByTestId('nav-pill')).toHaveLength(1)
+  expect(screen.getAllByTestId('nav-active')).toHaveLength(1)
 })
