@@ -21,7 +21,7 @@ export function OriginStep({ draft, update }: BuilderStepProps) {
   const species = useDndContent('species')
   const customBg = customEntry(draft.background_custom)
   const customSp = customEntry(draft.species_custom)
-  const officialNames = (items: Array<{ name: string; owned: boolean }>) => items.filter((i) => !i.owned).map((i) => i.name)
+  const officialNames = (items: Array<{ name: string; official: boolean }>) => items.filter((i) => i.official).map((i) => i.name)
 
   const saveBackground = (entry: CustomEntry) => update({
     background_custom: entry, background_id: null, bg_abilities: [],

@@ -28,12 +28,14 @@ export type ContentItem<K extends Kind> = {
   description: string | null
   parent_id: string | null
   owned: boolean
+  /** Official (SRD) content: no owner. Campaign rows other members own and the user's own rows are not. */
+  official: boolean
   data: z.infer<(typeof dnd5eContentSchemas)[K]>
 }
 
 /**
  * D&D content of one kind the user may pick (official, own, their campaigns'), with `data` parsed by
- * its schema; rows that don't validate are dropped. `owned` = the user's own homebrew.
+ * its schema; rows that don't validate are dropped. `owned` = the user's own homebrew; `official` = no owner.
  */
 export function useDndContent<K extends Kind>(kind: K) {
   const query = useContentList('dnd5e-2024', kind, 'pickable')
@@ -43,7 +45,7 @@ export function useDndContent<K extends Kind>(kind: K) {
     if (!parsed.success) return []
     return [{
       id: row.id, name: row.name, description: row.description, parent_id: row.parent_id,
-      owned: uid !== undefined && row.owner_id === uid, data: parsed.data as ContentItem<K>['data'],
+      owned: uid !== undefined && row.owner_id === uid, official: row.owner_id == null, data: parsed.data as ContentItem<K>['data'],
     }]
   }), [query.data, kind, uid])
   return { items, isLoading: query.isLoading, isError: query.isError, refetch: query.refetch }
@@ -133,7 +135,7 @@ type CustomChoiceProps = {
   kindLabel: string
   /** The pending custom entry from the draft, or null. */
   entry: CustomEntry | null
-  /** Names of the official (not the user's own) items in the list, for the form's warning. */
+  /** Names of the official (ownerless) items in the list, for the form's warning. */
   officialNames: string[]
   onSave(entry: CustomEntry): void
   onRemove(): void
@@ -144,6 +146,16 @@ type CustomChoiceProps = {
  * pending custom entry as a selected card with Edit and Remove. The form keeps its own state and
  * calls `onSave` once per Save, never per keystroke.
  */
+const sortedJson = (v: unknown): string => JSON.stringify(v, (_k, val: unknown) =>
+  val && typeof val === 'object' && !Array.isArray(val)
+    ? Object.fromEntries(Object.entries(val as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b)))
+    : val)
+
+/** Same name, description, library flag and extras (key order ignored). */
+function sameEntry(a: CustomEntry, b: CustomEntry): boolean {
+  return a.name === b.name && a.description === b.description && a.library === b.library && sortedJson(a.extras) === sortedJson(b.extras)
+}
+
 export function CustomChoice({ kind, kindLabel, entry, officialNames, onSave, onRemove }: CustomChoiceProps) {
   const [open, setOpen] = useState(false)
   // Bumped on every open so the form (which reads `initial` once) remounts with fresh state.
@@ -154,13 +166,20 @@ export function CustomChoice({ kind, kindLabel, entry, officialNames, onSave, on
     return (
       <Card className="gap-3">
         <Text variant="subhead">{entry ? `Edit your ${kind}` : `Make your own ${kind}`}</Text>
+        {entry && kind === 'class' ? (
+          <Text variant="caption" tone="muted">Saving changes resets your skill picks and class choices.</Text>
+        ) : null}
         <CustomEntryForm
           key={`${kind}-${entry ? 'edit' : 'new'}-${opened}`}
           kindLabel={kindLabel}
           fields={customExtraFields(kind)}
           initial={entry ?? undefined}
           officialNames={officialNames}
-          onSubmit={(e) => { setOpen(false); onSave(e) }}
+          onSubmit={(e) => {
+            setOpen(false)
+            // An unchanged save is a no-op: a new class_custom object would count as a class change and wipe picks.
+            if (!entry || !sameEntry(entry, e)) onSave(e)
+          }}
           onCancel={() => setOpen(false)}
         />
       </Card>

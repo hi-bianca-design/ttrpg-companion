@@ -10,6 +10,7 @@ import { dnd5eBuilder } from '@/systems/dnd5e-2024/builder'
 import { WizardProgress } from '@/features/characters/builder/WizardProgress'
 import { createCharacter } from '@/features/characters/characters.api'
 import { listContent } from '@/features/content/content.api'
+import { currentUserId } from '@/features/session'
 import { abilitiesFilled } from '@/systems/dnd5e-2024/draft'
 import { AbilityScoresStep } from '@/systems/dnd5e-2024/steps/AbilityScoresStep'
 import { OriginStep } from '@/systems/dnd5e-2024/steps/OriginStep'
@@ -660,12 +661,17 @@ describe('Make your own', () => {
       expect(update).toHaveBeenCalledTimes(2)
       expect(draft()).toMatchObject({ class_custom: { name: 'Ember Knight' }, class_name: 'Ember Knight' })
 
+      // Picks made on later steps; the real pruneDraft must clear them on Remove.
+      act(() => useBuilderStore.getState().update({ class_skills: ['athletics'], class_choices: { fighting_style: ['Defense'] } }))
+      expect(draft()).toMatchObject({ class_skills: ['athletics'], class_choices: { fighting_style: ['Defense'] } })
+      update.mockClear()
       fireEvent.press(screen.getByRole('button', { name: 'Remove custom class' }))
-      expect(update).toHaveBeenCalledTimes(3)
+      expect(update).toHaveBeenCalledTimes(1)
       const fresh = dnd5eBuilder.initialDraft()
       expect(draft()).toMatchObject({
         class_custom: null, class_id: null, class_name: fresh.class_name, hit_die: fresh.hit_die,
         class_skill_count: 0, class_skill_options: [], class_features: [], class_equipment_options: [],
+        class_skills: [], class_choices: {},
       })
       // Reopening after a remove starts empty (the form is remounted).
       fireEvent.press(screen.getByRole('button', { name: 'Make your own class' }))
@@ -681,6 +687,62 @@ describe('Make your own', () => {
       expect(screen.queryByLabelText('Class name')).toBeNull()
       fireEvent.press(screen.getByRole('button', { name: 'Make your own class' }))
       expect(screen.getByLabelText('Class name').props.value).toBe('')
+    })
+
+    test('saving an edit with no changes closes the form without an update; a changed save updates once', async () => {
+      const update = spied(ClassStep)
+      fireEvent.press(await screen.findByRole('button', { name: 'Make your own class' }))
+      fireEvent.changeText(screen.getByLabelText('Class name'), 'Ashen Knight')
+      fireEvent.changeText(screen.getByLabelText('Skills to choose'), '1')
+      fireEvent.press(screen.getByRole('button', { name: 'athletics' }))
+      fireEvent.press(screen.getByLabelText('Save class'))
+      expect(update).toHaveBeenCalledTimes(1)
+      act(() => useBuilderStore.getState().update({ class_skills: ['athletics'] }))
+      update.mockClear()
+
+      fireEvent.press(screen.getByRole('button', { name: 'Edit custom class' }))
+      fireEvent.press(screen.getByLabelText('Save class'))
+      expect(update).not.toHaveBeenCalled()
+      expect(screen.queryByLabelText('Class name')).toBeNull()
+      expect(draft().class_skills).toEqual(['athletics'])
+
+      fireEvent.press(screen.getByRole('button', { name: 'Edit custom class' }))
+      fireEvent.changeText(screen.getByLabelText('Class description'), 'Fire and steel.')
+      fireEvent.press(screen.getByLabelText('Save class'))
+      expect(update).toHaveBeenCalledTimes(1)
+      expect(draft()).toMatchObject({ class_custom: { description: 'Fire and steel.' } })
+    })
+
+    test('editing a custom class warns that saving resets picks; a new class does not', async () => {
+      renderWithQuery(<Bound Step={ClassStep} />)
+      const caption = 'Saving changes resets your skill picks and class choices.'
+      fireEvent.press(await screen.findByRole('button', { name: 'Make your own class' }))
+      expect(screen.queryByText(caption)).toBeNull()
+      fireEvent.changeText(screen.getByLabelText('Class name'), 'Ashen Knight')
+      fireEvent.press(screen.getByLabelText('Save class'))
+      fireEvent.press(screen.getByRole('button', { name: 'Edit custom class' }))
+      expect(screen.getByText(caption)).toBeTruthy()
+    })
+
+    test('the collision note counts only official rows, not campaign or own homebrew', async () => {
+      mockList.mockImplementation(async ({ kind }: { kind: string }) => kind === 'class'
+        ? [
+            ...CONTENT.class,
+            { ...row('class', 'camp-cls', 'Runeblade', { hit_die: 10, primary_abilities: [], saving_throw_proficiencies: [] }), owner_id: 'gm', campaign_id: 'camp' },
+            { ...row('class', 'my-cls', 'Hexer', { hit_die: 8, primary_abilities: [], saving_throw_proficiencies: [] }), owner_id: 'me' },
+          ]
+        : CONTENT[kind] ?? [])
+      // The current user id never resolves: `owned` is false for every row.
+      ;(currentUserId as jest.Mock).mockReturnValueOnce(new Promise(() => {}))
+      render(<QueryClientProvider client={makeTestQueryClient()}><Bound Step={ClassStep} /></QueryClientProvider>)
+      fireEvent.press(await screen.findByRole('button', { name: 'Make your own class' }))
+      const note = /An official class has this name/
+      fireEvent.changeText(screen.getByLabelText('Class name'), 'Runeblade')
+      expect(screen.queryByText(note)).toBeNull()
+      fireEvent.changeText(screen.getByLabelText('Class name'), 'Hexer')
+      expect(screen.queryByText(note)).toBeNull()
+      fireEvent.changeText(screen.getByLabelText('Class name'), 'Fighter')
+      expect(screen.getByText(note)).toBeTruthy()
     })
 
     test('the form warns about official class names', async () => {
@@ -740,6 +802,10 @@ describe('Make your own', () => {
       expect(update.mock.calls[0][0]).toEqual({ species_custom: { name: 'Moonkin', description: '', library: false, extras: {} }, species_id: null })
       expect(screen.getByRole('button', { name: 'Moonkin, custom species' })).toHaveTextContent(/Custom/)
 
+      fireEvent.press(screen.getByRole('button', { name: 'Edit custom species' }))
+      expect(screen.queryByText('Saving changes resets your skill picks and class choices.')).toBeNull()
+      fireEvent.press(screen.getByRole('button', { name: 'Cancel' }))
+
       fireEvent.press(screen.getByRole('button', { name: 'Remove custom species' }))
       expect(update).toHaveBeenLastCalledWith({ species_custom: null })
       expect(draft().species_custom).toBeNull()
@@ -761,9 +827,25 @@ describe('Make your own', () => {
       expect(draft()).toMatchObject({ bg_skills: ['perception', 'survival'], bg_abilities: [] })
       expect(screen.getByRole('button', { name: 'Lighthouse Keeper, custom background' })).toHaveTextContent(/Custom/)
 
+      fireEvent.press(screen.getByRole('button', { name: 'Edit custom background' }))
+      expect(screen.queryByText('Saving changes resets your skill picks and class choices.')).toBeNull()
+      fireEvent.press(screen.getByRole('button', { name: 'Cancel' }))
+
       fireEvent.press(screen.getByRole('button', { name: 'Remove custom background' }))
       expect(update).toHaveBeenLastCalledWith({ background_custom: null, bg_abilities: [], bg_skills: [] })
       expect(draft()).toMatchObject({ background_custom: null, bg_skills: [], bg_abilities: [] })
+    })
+
+    test('the collision note ignores a campaign background another member owns', async () => {
+      mockList.mockImplementation(async ({ kind }: { kind: string }) => kind === 'background'
+        ? [...CONTENT.background, { ...row('background', 'camp-bg', 'Guild Runner', { skill_proficiencies: ['insight'], ability_score_options: {} }), owner_id: 'gm', campaign_id: 'camp' }]
+        : CONTENT[kind] ?? [])
+      renderWithQuery(<Bound Step={OriginStep} />)
+      fireEvent.press(await screen.findByRole('button', { name: 'Make your own background' }))
+      fireEvent.changeText(screen.getByLabelText('Background name'), 'guild runner')
+      expect(screen.queryByText(/An official background has this name/)).toBeNull()
+      fireEvent.changeText(screen.getByLabelText('Background name'), 'sage')
+      expect(screen.getByText(/An official background has this name/)).toBeTruthy()
     })
 
     test('picking an official background afterwards clears the custom one', async () => {
@@ -787,7 +869,7 @@ describe('Make your own', () => {
     expect(await screen.findByText('Level 1 Ashen Knight')).toBeTruthy()
     expect(screen.getByText('Moonkin')).toBeTruthy()
     expect(screen.getByText('Lighthouse Keeper')).toBeTruthy()
-    expect(screen.getByText('35')).toBeTruthy()
+    expect(screen.getByLabelText('Speed 35')).toBeTruthy()
     await act(async () => {})
   })
 })

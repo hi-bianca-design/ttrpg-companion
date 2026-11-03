@@ -176,7 +176,7 @@ export function ClassStep({ draft, update }: BuilderStepProps) {
           kind="class"
           kindLabel="Class"
           entry={custom}
-          officialNames={classes.items.filter((c) => !c.owned).map((c) => c.name)}
+          officialNames={classes.items.filter((c) => c.official).map((c) => c.name)}
           onSave={saveCustom}
           onRemove={removeCustom}
         />
