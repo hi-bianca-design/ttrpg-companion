@@ -1,14 +1,15 @@
 import React from 'react'
 import { renderHook, act, waitFor } from '@testing-library/react-native'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useResourceMutation } from '@/features/characters/characters.queries'
-import { updateResources } from '@/features/characters/characters.api'
+import { useCreateCharacter, useResourceMutation } from '@/features/characters/characters.queries'
+import { createCharacter, updateResources } from '@/features/characters/characters.api'
 import { qk } from '@/lib/query-client'
 import { restoreSlot, spendSlot } from '@/systems/resources'
 import type { SlotsValue } from '@/systems/types'
 
 jest.mock('@/features/characters/characters.api', () => ({
   updateResources: jest.fn(),
+  createCharacter: jest.fn(),
 }))
 jest.mock('@/lib/supabase', () => ({ supabase: {} }))
 
@@ -115,5 +116,34 @@ describe('useResourceMutation', () => {
       hp: { current: 9, max: 9 },
       spell_slots: { tiers: { '1': { max: 4, used: 0 } } },
     })
+  })
+})
+
+describe('useCreateCharacter', () => {
+  const entry = (library: boolean) => ({ kind: 'class', name: 'X', description: '', data: {}, library, pick: { state: {}, acquired_at_level: 1 } })
+
+  async function create(custom: ReturnType<typeof entry>[] | undefined) {
+    ;(createCharacter as jest.Mock).mockResolvedValue('ch9')
+    const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
+    client = qc
+    const spy = jest.spyOn(qc, 'invalidateQueries')
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+    )
+    const { result } = renderHook(() => useCreateCharacter(), { wrapper })
+    await act(async () => { result.current.mutate({ custom } as never) })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    return spy.mock.calls.map((c) => (c[0] as { queryKey: unknown }).queryKey)
+  }
+
+  it('invalidates the content queries when a custom entry went to the library', async () => {
+    const keys = await create([entry(false), entry(true)])
+    expect(keys).toContainEqual(qk.characters)
+    expect(keys).toContainEqual(['content'])
+  })
+
+  it('does not invalidate content for one-off entries or no custom entries', async () => {
+    expect(await create([entry(false)])).not.toContainEqual(['content'])
+    expect(await create(undefined)).not.toContainEqual(['content'])
   })
 })
