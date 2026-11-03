@@ -1,4 +1,5 @@
 import '@testing-library/jest-native/extend-expect'
+import { PortalHost } from '@rn-primitives/portal'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { makeTestQueryClient } from '../../helpers/queryClient'
 import { fireEvent, render, screen } from '@testing-library/react-native'
@@ -27,7 +28,7 @@ jest.mock('@/features/sessions/sessions.api', () => ({ getActiveSession: jest.fn
 
 function renderDetail() {
   const client = makeTestQueryClient()
-  render(<QueryClientProvider client={client}><CampaignDetailScreen /></QueryClientProvider>)
+  render(<QueryClientProvider client={client}><CampaignDetailScreen /><PortalHost /></QueryClientProvider>)
 }
 
 const campaign = {
@@ -153,4 +154,43 @@ test('a GM sees the turn panel while the session is in combat', async () => {
   expect(await screen.findByText('Pick whose turn it is')).toBeTruthy()
   expect(screen.getByRole('button', { name: 'Give turn to mira' })).toBeTruthy()
   ;(getActiveSession as jest.Mock).mockResolvedValue(null)
+})
+
+describe('inviting players', () => {
+  test('the GM has an Invite players button in the header and no inline code card', async () => {
+    ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
+    renderDetail()
+    expect(await screen.findByRole('button', { name: 'Invite players' })).toBeTruthy()
+    expect(screen.queryByText('Invite code')).toBeNull()
+    expect(screen.queryByText('ABC123')).toBeNull()
+  })
+
+  test('the invite control is a labelled outline button, not a bare glyph', async () => {
+    ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
+    renderDetail()
+    const button = await screen.findByRole('button', { name: 'Invite players' })
+    expect(variantOf(button)).toBe('outline')
+    expect(screen.getByText('Invite')).toBeTruthy()
+  })
+
+  test('pressing it opens the sheet with the code', async () => {
+    ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
+    renderDetail()
+    fireEvent.press(await screen.findByRole('button', { name: 'Invite players' }))
+    expect(await screen.findByText('ABC123')).toBeTruthy()
+  })
+
+  test('a player sees no invite button', async () => {
+    ;(getCampaign as jest.Mock).mockResolvedValue({ ...campaign, gm_id: 'someone-else' })
+    renderDetail()
+    await screen.findByText('Odd Game')
+    expect(screen.queryByRole('button', { name: 'Invite players' })).toBeNull()
+  })
+
+  test('the load failure state has no invite button', async () => {
+    ;(getCampaign as jest.Mock).mockRejectedValue(new Error('boom'))
+    renderDetail()
+    await screen.findByText(ERROR_COPY.load_failed)
+    expect(screen.queryByRole('button', { name: 'Invite players' })).toBeNull()
+  })
 })

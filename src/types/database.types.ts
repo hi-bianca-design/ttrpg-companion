@@ -1114,6 +1114,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      preview_campaign_invite: {
+        Args: { p_code: string }
+        Returns: {
+          id: string
+          name: string
+          system_id: string
+        }[]
+      }
       open_session: {
         Args: { p_campaign_id: string }
         Returns: {
