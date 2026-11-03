@@ -86,7 +86,7 @@ export function BottomNav({
       pointerEvents="box-none"
       style={{ position: 'absolute', left: SIDE_INSET, right: SIDE_INSET, bottom: NAV_BAR_GAP + insets.bottom }}
     >
-      <ShapedSurface glass="overlay" blur shape="chamfer" fill="rockDeep" stroke="border" strokeWidth={1} shadowOffset={0} className="flex-row items-center p-1">
+      <ShapedSurface testID="bottom-nav-plate" glass="overlay" blur shape="chamfer" fill="rockDeep" stroke="border" strokeWidth={1} shadowOffset={4} className="flex-row items-center px-1 py-2">
         {leading ? action(leading) : null}
         {items.map(({ route, index, options }) => {
           const active = state.index === index

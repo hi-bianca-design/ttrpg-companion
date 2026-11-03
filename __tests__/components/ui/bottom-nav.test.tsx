@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs'
 import { StyleSheet, Text } from 'react-native'
+import { Path } from 'react-native-svg'
 import { BottomNav } from '@/components/ui/bottom-nav'
 import { NAV_BAR_GAP } from '@/components/ui/nav-inset'
 
@@ -37,6 +38,13 @@ test('the bar floats: absolutely positioned above the safe area, no pill anywher
   const style = StyleSheet.flatten(screen.getByTestId('bottom-nav').props.style)
   expect(style).toEqual(expect.objectContaining({ position: 'absolute', left: 12, right: 12, bottom: NAV_BAR_GAP + 34 }))
   expect(JSON.stringify(toJSON())).not.toContain('rounded-full')
+})
+
+test('the plate keeps 8px above and below the active tablet, and casts a hard shadow so it floats', () => {
+  render(<BottomNav {...props(1).p} />)
+  expect(screen.getByTestId('bottom-nav-plate').props.className).toContain('py-2')
+  const shadow = screen.UNSAFE_getAllByType(Path).filter((p) => p.props.transform === 'translate(4 4)')
+  expect(shadow.length).toBeGreaterThan(0)
 })
 
 test('every item is at least 44pt tall and its label stays on one line', () => {
