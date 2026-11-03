@@ -41,6 +41,11 @@ test('the Campaign tab carries the shared header: caret Back and the character n
   expect(mockRouter.replace).toHaveBeenCalledWith('/(app)/characters')
 })
 
+test('the tab is labelled Party in its header eyebrow', () => {
+  render(<CampaignTab />)
+  expect(screen.getByText('Party')).toBeTruthy()
+})
+
 test('the header shows while the campaign loads', () => {
   ;(useCharacterCampaign as jest.Mock).mockReturnValue({ data: undefined, isLoading: true, isError: false })
   render(<CampaignTab />)

@@ -24,7 +24,7 @@ export default function CampaignTab() {
   const membership = useCharacterCampaign(id)
   const campaign = useCampaign(membership.data?.id)
 
-  const header = <SheetHeader name={character?.name} eyebrow="Campaign" />
+  const header = <SheetHeader name={character?.name} eyebrow="Party" />
 
   if (membership.isLoading || (membership.data && campaign.isLoading)) {
     return (
