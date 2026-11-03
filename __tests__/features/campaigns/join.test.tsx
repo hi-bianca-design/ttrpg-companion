@@ -164,3 +164,23 @@ describe('opened from a character sheet', () => {
     expect(mockNavigation.reset).toHaveBeenCalledWith({ index: 0, routes: [{ name: 'index' }] })
   })
 })
+
+describe('prefilled from an invite link', () => {
+  test.each([
+    ['ab12cd ', 'AB12CD'],
+    ['ABCDEFGH', 'ABCDEF'],
+    [['xy9z88'], 'XY9Z88'],
+    [undefined, ''],
+  ])('code param %p shows %p', (param, shown) => {
+    ;(useLocalSearchParams as jest.Mock).mockReturnValue({ code: param })
+    renderJoin()
+    expect(screen.getByLabelText('Invite code').props.value).toBe(shown)
+  })
+
+  test('never joins by itself', async () => {
+    ;(useLocalSearchParams as jest.Mock).mockReturnValue({ code: 'AB12CD', characterId: 'ch1' })
+    renderJoin()
+    await screen.findByRole('button', { name: 'Character Thorin', selected: true })
+    expect(joinCampaign).not.toHaveBeenCalled()
+  })
+})
