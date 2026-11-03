@@ -7,26 +7,31 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Text } from '@/components/ui/text'
 import { showToast } from '@/components/ui/toast'
+import { CODE_LENGTH, parseInviteCode } from '@/features/campaigns/inviteLink'
 import { OptionChips } from '@/features/campaigns/OptionChips'
-import { useJoinCampaign } from '@/features/campaigns/campaigns.queries'
+import { useInvitePreview, useJoinCampaign } from '@/features/campaigns/campaigns.queries'
 import { useReturnToSheet } from '@/features/campaigns/useReturnToSheet'
 import { useCharacters } from '@/features/characters/characters.queries'
 import { ERROR_COPY, toAppError } from '@/features/errors'
 
-const CODE_LENGTH = 6
-
 export default function JoinCampaignScreen() {
   const router = useRouter()
-  const params = useLocalSearchParams<{ characterId?: string }>()
+  const params = useLocalSearchParams<{ characterId?: string; code?: string | string[] }>()
   const characters = useCharacters()
   const join = useJoinCampaign()
-  const [code, setCode] = useState('')
+  const [code, setCode] = useState(() => parseInviteCode(params.code))
   const [characterId, setCharacterId] = useState<string | null>(params.characterId ?? null)
   const [error, setError] = useState<string | null>(null)
+  const preview = useInvitePreview(code)
 
   useEffect(() => {
     if (params.characterId) setCharacterId(params.characterId)
   }, [params.characterId])
+
+  useEffect(() => {
+    const fromLink = parseInviteCode(params.code)
+    if (fromLink) setCode(fromLink)
+  }, [params.code])
 
   // Opened from a character sheet's Campaign tab: Cancel and a successful join return there.
   const fromSheet = params.characterId
@@ -34,6 +39,14 @@ export default function JoinCampaignScreen() {
   const cancel = () => (fromSheet ? backToSheet(fromSheet) : router.back())
 
   const list = characters.data ?? []
+
+  // One character fits the campaign's system: choose it, so a scanned invite is one tap from joined.
+  const previewSystem = preview.data?.system_id
+  useEffect(() => {
+    if (!previewSystem || characterId) return
+    const fits = list.filter((c) => c.system_id === previewSystem)
+    if (fits.length === 1) setCharacterId(fits[0].id)
+  }, [previewSystem, characterId, characters.data])
   const chosen = list.find((c) => c.id === characterId)
   const canJoin = code.length === CODE_LENGTH && !!chosen && !join.isPending
 
@@ -59,7 +72,7 @@ export default function JoinCampaignScreen() {
         <NavRow>
           <CancelButton onPress={cancel} />
         </NavRow>
-        <Text variant="title">Join a campaign</Text>
+        <Text variant="title">{preview.data ? `Join ${preview.data.name}` : 'Join a campaign'}</Text>
       </View>
 
       <View className="gap-2">
@@ -74,6 +87,12 @@ export default function JoinCampaignScreen() {
           placeholder="AB12CD"
         />
         {error ? <Text variant="caption" tone="destructive">{error}</Text> : null}
+        {!error && preview.error ? (
+          // A lookup that failed for any other reason (offline) is not shown: the form still works.
+          toAppError(preview.error).code === 'invalid_code' ? (
+            <Text variant="caption" tone="destructive">{ERROR_COPY.invalid_code}</Text>
+          ) : null
+        ) : null}
       </View>
 
       <View className="gap-2">

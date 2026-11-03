@@ -1,7 +1,7 @@
 import '../global.css'
 import { useEffect } from 'react'
 import { Text, TextInput } from 'react-native'
-import { Slot, SplashScreen, useRouter, useSegments } from 'expo-router'
+import { SplashScreen } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { ThemeProvider } from '@react-navigation/native'
 import { PortalHost } from '@rn-primitives/portal'
@@ -21,7 +21,7 @@ import { NAV_THEME } from '@/lib/theme'
 import { installAppFocus } from '@/lib/app-focus'
 import { queryClient } from '@/lib/query-client'
 import { AuthProvider } from '@/features/auth/AuthProvider'
-import { useAuth } from '@/features/auth/useAuth'
+import { RootRedirect } from '@/features/auth/RootRedirect'
 
 SplashScreen.preventAutoHideAsync()
 installAppFocus()
@@ -32,21 +32,6 @@ installAppFocus()
 type WithDefaults = { defaultProps?: { maxFontSizeMultiplier?: number } }
 for (const Component of [Text, TextInput] as unknown as WithDefaults[]) {
   Component.defaultProps = { ...Component.defaultProps, maxFontSizeMultiplier: 2 }
-}
-
-function RootRedirect() {
-  const { user, loading } = useAuth()
-  const router = useRouter()
-  const segments = useSegments()
-
-  useEffect(() => {
-    if (loading) return
-    const inAuthGroup = segments[0] === '(auth)'
-    if (!user && !inAuthGroup) router.replace('/(auth)/login')
-    if (user && inAuthGroup) router.replace('/(app)')
-  }, [user, loading, segments])
-
-  return <Slot />
 }
 
 export default function RootLayout() {

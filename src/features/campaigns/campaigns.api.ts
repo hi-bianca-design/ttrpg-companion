@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import type { Database } from '@/types/database.types'
 import type { SystemId } from '@/systems/types'
-import { unwrap } from '@/features/errors'
+import { AppError, unwrap } from '@/features/errors'
 
 type CampaignRow = Database['public']['Tables']['campaigns']['Row']
 type MemberRow = Database['public']['Tables']['campaign_members']['Row']
@@ -46,6 +46,15 @@ export async function createCampaign(input: { name: string; systemId: SystemId; 
 
 export async function joinCampaign(code: string, characterId: string): Promise<string> {
   return unwrap(await supabase.rpc('join_campaign', { p_code: code, p_character_id: characterId }))
+}
+
+export type InvitePreview = { id: string; name: string; system_id: string }
+
+/** Which campaign an invite code opens (name and system only); throws invalid_code for an unknown code. */
+export async function previewInvite(code: string): Promise<InvitePreview> {
+  const rows = unwrap(await supabase.rpc('preview_campaign_invite', { p_code: code }))
+  if (!rows[0]) throw new AppError('invalid_code')
+  return rows[0]
 }
 
 /** The campaign this character is active in (a character belongs to at most one), or null. */
