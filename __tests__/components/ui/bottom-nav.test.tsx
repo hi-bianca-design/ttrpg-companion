@@ -36,7 +36,7 @@ test('the active tab is selected and only it is drawn as the active plate', () =
 test('the bar floats: absolutely positioned above the safe area, no pill anywhere', () => {
   const { toJSON } = render(<BottomNav {...props(1).p} />)
   const style = StyleSheet.flatten(screen.getByTestId('bottom-nav').props.style)
-  expect(style).toEqual(expect.objectContaining({ position: 'absolute', left: 12, right: 12, bottom: NAV_BAR_GAP + 34 }))
+  expect(style).toEqual(expect.objectContaining({ position: 'absolute', left: 16, right: 16, bottom: 16 + 34 }))
   expect(JSON.stringify(toJSON())).not.toContain('rounded-full')
 })
 

@@ -3,7 +3,7 @@ import { SafeAreaInsetsContext } from 'react-native-safe-area-context'
 
 /** Content height of the floating bottom bar, and the gap that lifts it off the bottom edge. */
 export const NAV_BAR_HEIGHT = 62
-export const NAV_BAR_GAP = 12
+export const NAV_BAR_GAP = 16
 
 /** True below a layout that shows the floating bar; screens read it to leave room for the bar. */
 export const NavInsetContext = createContext(false)

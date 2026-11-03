@@ -12,7 +12,8 @@ type IconProps = { size?: number; color?: string; weight?: 'duotone' | 'regular'
 export type ExtraNavItem = { label: string; icon: ComponentType<IconProps>; onPress: () => void }
 
 const ICON_SIZE = 22
-const SIDE_INSET = 12
+// The 16px screen margin, same as every screen's content and the toast.
+const SIDE_INSET = 16
 
 type NavItemProps = {
   label: string
