@@ -21,6 +21,7 @@ import { NAV_THEME } from '@/lib/theme'
 import { installAppFocus } from '@/lib/app-focus'
 import { queryClient } from '@/lib/query-client'
 import { AuthProvider } from '@/features/auth/AuthProvider'
+import { BootOverlay } from '@/features/auth/BootOverlay'
 import { RootRedirect } from '@/features/auth/RootRedirect'
 
 SplashScreen.preventAutoHideAsync()
@@ -58,6 +59,7 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <RootRedirect />
+          <BootOverlay />
         </AuthProvider>
       </QueryClientProvider>
       <WipeCurtain />
