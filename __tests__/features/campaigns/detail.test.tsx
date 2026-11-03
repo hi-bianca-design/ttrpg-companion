@@ -54,143 +54,25 @@ test('systemName falls back to the raw id', () => {
   expect(systemName('nope')).toBe('nope')
 })
 
-describe('back affordance', () => {
+describe('no Back arrow (Home on the bar replaces it)', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
     delete mockParams.fromCharacter
     ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
   })
 
-  test('an ornate arrow Back sits at the top-left, above the title (no "Back" pill)', async () => {
+  test('the loaded screen has no Back, and the GM still gets Invite', async () => {
     renderDetail()
     await screen.findByText('Odd Game')
-    const back = screen.getByRole('button', { name: 'Back' })
-    expect(screen.getByTestId('back-glyph')).toBeTruthy()
-    expect(screen.queryByText('Back')).toBeNull()
-    const json = JSON.stringify(screen.toJSON())
-    expect(json.indexOf('"Back"')).toBeLessThan(json.indexOf('Odd Game'))
+    expect(screen.queryByRole('button', { name: 'Back' })).toBeNull()
+    expect(screen.queryByTestId('back-glyph')).toBeNull()
+    expect(screen.getByRole('button', { name: 'Invite players' })).toBeTruthy()
   })
 
-  test('Back goes back, or to the campaigns list when opened directly', async () => {
-    renderDetail()
-    await screen.findByText('Odd Game')
-    fireEvent.press(screen.getByRole('button', { name: 'Back' }))
-    expect(mockRouter.back).toHaveBeenCalled()
-    expect(mockNavigation.reset).not.toHaveBeenCalled()
-    mockRouter.canGoBack.mockReturnValueOnce(false)
-    fireEvent.press(screen.getByRole('button', { name: 'Back' }))
-    expect(mockRouter.replace).toHaveBeenCalledWith('/(app)/campaigns')
-  })
-
-  test('opened from a character sheet, Back returns to its Campaign tab', async () => {
-    mockParams.fromCharacter = 'ch1'
-    renderDetail()
-    await screen.findByText('Odd Game')
-    fireEvent.press(screen.getByRole('button', { name: 'Back' }))
-    expect(mockRouter.navigate).toHaveBeenCalledWith({ pathname: '/(app)/characters/[id]/campaign', params: { id: 'ch1' } })
-    expect(mockRouter.back).not.toHaveBeenCalled()
-    // The campaigns stack was only borrowed: the Campaigns tab must reopen on its list, not this detail.
-    expect(mockNavigation.reset).toHaveBeenCalledWith({ index: 0, routes: [{ name: 'index' }] })
-  })
-})
-
-test('the campaign description reads as narrative text', async () => {
-  ;(getCampaign as jest.Mock).mockResolvedValue({ ...campaign, description: 'A siege in the salt marshes.' })
-  renderDetail()
-  const text = await screen.findByText('A siege in the salt marshes.')
-  expect(text.props.className).toContain('font-narrative')
-})
-
-test('a GM sees the Open session control on the campaign screen', async () => {
-  ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
-  renderDetail()
-  expect(await screen.findByRole('button', { name: 'Open session' })).toBeTruthy()
-})
-
-describe('session and combat status on the campaign screen (a GM has no character sheet)', () => {
-  const active = { id: 's1', campaign_id: 'camp1', opened_by: 'gm1', in_combat: false, combat_started_by: null, current_turn_user_id: null }
-  afterEach(() => { ;(getActiveSession as jest.Mock).mockResolvedValue(null) })
-
-  test('a GM sees Session: Active and Enter combat, without any character lookup', async () => {
-    ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
-    ;(getActiveSession as jest.Mock).mockResolvedValue(active)
-    renderDetail()
-    expect(await screen.findByText('Session: Active')).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Enter combat' })).toBeTruthy()
-    expect(getCharacterCampaign).not.toHaveBeenCalled()
-  })
-
-  test('combat a player started shows as In combat, and the GM can end it', async () => {
-    ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
-    ;(getActiveSession as jest.Mock).mockResolvedValue({ ...active, in_combat: true, combat_started_by: 'p1' })
-    renderDetail()
-    expect(await screen.findByRole('button', { name: 'In combat' })).toBeTruthy()
-  })
-
-  test('no status row without an active session', async () => {
-    ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
-    ;(getActiveSession as jest.Mock).mockResolvedValue(null)
-    renderDetail()
-    expect(await screen.findByRole('button', { name: 'Open session' })).toBeTruthy()
-    expect(screen.queryByText('Session: Active')).toBeNull()
-    expect(screen.queryByText('Enter combat')).toBeNull()
-  })
-})
-
-test('the campaign screen shows the party for the GM, who has no character sheet', async () => {
-  ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
-  renderDetail()
-  expect(await screen.findByText('party list')).toBeTruthy()
-})
-
-test('a GM sees the turn panel while the session is in combat', async () => {
-  const player = {
-    campaign_id: 'camp1', user_id: 'mira', role: 'player', status: 'active', character_id: 'ch1', created_at: '', updated_at: '',
-    username: 'mira', character_name: 'Mira',
-  }
-  ;(getCampaign as jest.Mock).mockResolvedValue({ ...campaign, members: [player] })
-  ;(getActiveSession as jest.Mock).mockResolvedValue({ id: 's1', campaign_id: 'camp1', opened_by: 'gm1', in_combat: true, current_turn_user_id: null })
-  renderDetail()
-  expect(await screen.findByText('Pick whose turn it is')).toBeTruthy()
-  expect(screen.getByRole('button', { name: 'Give turn to mira' })).toBeTruthy()
-  ;(getActiveSession as jest.Mock).mockResolvedValue(null)
-})
-
-describe('inviting players', () => {
-  test('the GM has an Invite players button in the header and no inline code card', async () => {
-    ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
-    renderDetail()
-    expect(await screen.findByRole('button', { name: 'Invite players' })).toBeTruthy()
-    expect(screen.queryByText('Invite code')).toBeNull()
-    expect(screen.queryByText('ABC123')).toBeNull()
-  })
-
-  test('the invite control is a labelled outline button, not a bare glyph', async () => {
-    ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
-    renderDetail()
-    const button = await screen.findByRole('button', { name: 'Invite players' })
-    expect(variantOf(button)).toBe('outline')
-    expect(screen.getByText('Invite')).toBeTruthy()
-  })
-
-  test('pressing it opens the sheet with the code', async () => {
-    ;(getCampaign as jest.Mock).mockResolvedValue(campaign)
-    renderDetail()
-    fireEvent.press(await screen.findByRole('button', { name: 'Invite players' }))
-    expect(await screen.findByText('ABC123')).toBeTruthy()
-  })
-
-  test('a player sees no invite button', async () => {
-    ;(getCampaign as jest.Mock).mockResolvedValue({ ...campaign, gm_id: 'someone-else' })
-    renderDetail()
-    await screen.findByText('Odd Game')
-    expect(screen.queryByRole('button', { name: 'Invite players' })).toBeNull()
-  })
-
-  test('the load failure state has no invite button', async () => {
+  test('the loading and failed states have no Back either', async () => {
     ;(getCampaign as jest.Mock).mockRejectedValue(new Error('boom'))
     renderDetail()
+    expect(screen.queryByRole('button', { name: 'Back' })).toBeNull()
     await screen.findByText(ERROR_COPY.load_failed)
-    expect(screen.queryByRole('button', { name: 'Invite players' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Back' })).toBeNull()
   })
 })

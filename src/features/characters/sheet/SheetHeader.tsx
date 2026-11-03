@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import { View } from 'react-native'
-import { useRouter } from 'expo-router'
-import { BackButton, NavRow } from '@/components/game/HeaderNav'
+import { NavRow } from '@/components/game/HeaderNav'
 import { Button } from '@/components/ui/button'
 import { Text } from '@/components/ui/text'
 import { SessionStatusRow } from '@/features/sessions/SessionStatusRow'
@@ -21,26 +20,21 @@ type SheetHeaderProps = {
 }
 
 /**
- * The one header on every character-sheet tab: caret Back (leaves the sheet, whichever tab is
- * open), optional Level up, then the session status row (Session: Active + combat badge) while the campaign has a session, then eyebrow + name. The nav row is separate from the name, so a long
+ * The one header on every character-sheet tab: optional Level up (Home on the bottom bar leaves the sheet, so
+ * there is no Back arrow), then the session status row (Session: Active + combat badge) while the campaign has a session, then eyebrow + name. The nav row is separate from the name, so a long
  * name can't push the actions off screen.
  */
 export function SheetHeader({ name, eyebrow, subtitle, onLevelUp, children }: SheetHeaderProps) {
-  const router = useRouter()
-  // router.back() on a sheet tab would only switch tabs; dismiss pops the whole sheet off the
-  // characters stack. Opened directly (deep link / reload) there is nothing to pop.
-  const leave = () => (router.canDismiss() ? router.dismiss() : router.replace('/(app)/characters'))
-
   return (
     <View className="gap-3">
-      <NavRow>
-        <BackButton onPress={leave} />
-        {onLevelUp && name ? (
+      {onLevelUp && name ? (
+        <NavRow>
+          <View />
           <Button variant="ghost" size="sm" accessibilityLabel="Level up" onPress={onLevelUp}>
             <Text>Level up</Text>
           </Button>
-        ) : null}
-      </NavRow>
+        </NavRow>
+      ) : null}
       <SessionStatusRow />
       <TurnBanner />
       {name ? (
