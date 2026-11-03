@@ -36,8 +36,8 @@ export function PlayerRowCard({ row, onPress, expanded, children }: { row: Playe
     row.isCurrent ? 'current turn' : null,
   ].filter(Boolean).join(', ')
 
-  const body = (
-    <Card compact tone={row.isCurrent ? 'selected' : 'default'} className="gap-2">
+  const summary = (
+    <View className="gap-2">
       <View className="flex-row items-center gap-2">
         <View className="flex-1 gap-1">
           <Text variant="subhead" numberOfLines={1}>{row.name}</Text>
@@ -61,13 +61,20 @@ export function PlayerRowCard({ row, onPress, expanded, children }: { row: Playe
           {row.conditions.map((c) => <Badge key={c} variant="tinted">{c}</Badge>)}
         </View>
       ) : null}
+    </View>
+  )
+  // The children (the own row's HP entry) sit beside the summary, not inside it: an accessible parent
+  // would hide its buttons from screen readers.
+  return (
+    <Card compact tone={row.isCurrent ? 'selected' : 'default'} className="gap-2">
+      {onPress ? (
+        <Pressable accessibilityRole="button" accessibilityLabel={spoken} accessibilityState={{ expanded: !!expanded }} onPress={onPress}>
+          {summary}
+        </Pressable>
+      ) : (
+        <View accessible accessibilityLabel={spoken}>{summary}</View>
+      )}
       {children}
     </Card>
-  )
-  if (!onPress) return <View accessible accessibilityLabel={spoken}>{body}</View>
-  return (
-    <Pressable accessibilityRole="button" accessibilityLabel={spoken} accessibilityState={{ expanded: !!expanded }} onPress={onPress}>
-      {body}
-    </Pressable>
   )
 }

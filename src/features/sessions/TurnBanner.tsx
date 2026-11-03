@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { AccessibilityInfo, View } from 'react-native'
 import { Sword } from 'phosphor-react-native'
 import { Button } from '@/components/ui/button'
@@ -7,38 +7,46 @@ import { Text } from '@/components/ui/text'
 import { showToast } from '@/components/ui/toast'
 import { useAuth } from '@/features/auth/useAuth'
 import { useCharacterCampaign } from '@/features/campaigns/campaigns.queries'
-import { useCharacter } from '@/features/characters/characters.queries'
+import { useActiveCombat, useCombatOrder, useEndMyTurn } from '@/features/combat/combat.queries'
+import { useCombatRealtime } from '@/features/combat/useCombatRealtime'
 import { useCharacterRouteId } from '@/features/characters/useCharacterRouteId'
 import { ERROR_COPY } from '@/features/errors'
 import { THEME_COLORS } from '@/lib/theme'
-import { useEndTurn } from './sessions.queries'
-import { holdsTurn } from './turn'
-import { useCharacterSession } from './useCharacterSession'
 
-/** "Your turn" for the player the GM gave the turn to, on their own sheet; nothing otherwise. */
+/**
+ * "Your turn" for the player whose row in the battle order is current, on their own sheet; nothing
+ * otherwise. Read from the combat, so it works on every tab and updates as the GM moves the turn.
+ */
 export function TurnBanner() {
   const characterId = useCharacterRouteId()
-  const session = useCharacterSession(characterId)
   const campaignId = useCharacterCampaign(characterId).data?.id
-  const ownerId = useCharacter(characterId).data?.owner_id
   const { user } = useAuth()
-  const endTurn = useEndTurn(campaignId ?? '')
+  useCombatRealtime(campaignId, !!campaignId && !!user)
+  const combat = useActiveCombat(campaignId).data ?? null
+  const order = useCombatOrder(combat).data
+  const endTurn = useEndMyTurn(campaignId ?? '', combat?.id)
+  const ending = useRef(false)
 
-  const holds = !!session && holdsTurn(session, user?.id, ownerId)
+  const mine = user && characterId ? order?.find((r) => r.user_id === user.id && r.character_id === characterId) : undefined
+  const holds = !!combat && combat.status === 'active' && !!mine && combat.turn_entry_id === mine.id
 
-  // The turn arrives by poll, so tell screen-reader users when it does.
+  // The turn arrives by Realtime, so tell screen-reader users when it does.
   useEffect(() => {
     if (holds) AccessibilityInfo.announceForAccessibility('Your turn')
   }, [holds])
 
-  if (!session || !holds) return null
+  if (!combat || !holds) return null
 
   // mutateAsync, not mutate's per-call onError: that callback is dropped if this banner unmounts
-  // first, which it does as soon as a poll finds the turn has moved on.
+  // first, which it does as soon as the refetch finds the turn has moved on. The ref is the double-tap
+  // guard: `isPending` only turns true on the next render.
   const end = () => {
+    if (ending.current) return
+    ending.current = true
     endTurn
-      .mutateAsync(session.id)
+      .mutateAsync()
       .catch((e) => showToast(e instanceof Error ? e.message : ERROR_COPY.save_failed))
+      .finally(() => { ending.current = false })
   }
 
   return (
