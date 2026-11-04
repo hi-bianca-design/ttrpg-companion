@@ -30,7 +30,7 @@ function CharacterCard({ character, onPress, onLongPress }: CardProps) {
         onLongPress={onLongPress}
       >
         <Card className="gap-3">
-          <View className="gap-1 pr-10">
+          <View className="gap-1 pr-11">
             <Text variant="subhead" numberOfLines={1}>{character.name}</Text>
             <Text variant="body-sm" tone="muted">{subtitle}</Text>
           </View>
