@@ -108,7 +108,7 @@ select columns_are('public', 'combat_order',
   array['id','combat_id','campaign_id','kind','user_id','character_id','name','initiative','position'],
   'combat_order has exactly the player-safe columns');
 select columns_are('public', 'combats',
-  array['id','session_id','campaign_id','status','round','turn_entry_id','gm_turn','rev','started_by','created_at','updated_at'],
+  array['id','session_id','campaign_id','status','round','turn_entry_id','rev','started_by','created_at','updated_at'],
   'combats has exactly its reviewed columns');
 
 -- Publication

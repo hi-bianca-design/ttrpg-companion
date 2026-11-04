@@ -23,6 +23,7 @@ export type AppErrorCode =
   | 'invalid_position'
   | 'invalid_enemy'
   | 'invalid_patch'
+  | 'invalid_batch'
   | 'network'
   | 'load_failed'
   | 'save_failed'
@@ -52,6 +53,7 @@ export const ERROR_COPY: Record<AppErrorCode, string> = {
   invalid_position: "That spot isn't in the order.",
   invalid_enemy: 'Check the enemy details: a name up to 60 characters, at least 1 hit point, armor class 0 to 40, up to 20 copies.',
   invalid_patch: 'Something went wrong. Please try again.',
+  invalid_batch: 'Something went wrong. Please try again.',
   network: "Can't reach the server. Check your connection and try again.",
   load_failed: 'Couldn’t load this. Check your connection and try again.',
   save_failed: 'Couldn’t save. Try again.',
@@ -70,7 +72,7 @@ export class AppError extends Error {
 const RPC_CODES: ReadonlySet<string> = new Set([
   'invalid_code', 'already_member', 'system_mismatch', 'not_your_character',
   'not_member', 'no_active_session', 'not_allowed', 'not_in_combat', 'invalid_turn_target', 'not_your_turn',
-  'no_active_combat', 'not_rolling', 'not_active', 'invalid_target', 'invalid_amount', 'invalid_mode', 'invalid_initiative', 'invalid_position', 'invalid_enemy', 'invalid_patch',
+  'no_active_combat', 'not_rolling', 'not_active', 'invalid_target', 'invalid_amount', 'invalid_mode', 'invalid_initiative', 'invalid_position', 'invalid_enemy', 'invalid_patch', 'invalid_batch',
 ])
 const NETWORK_PATTERN = /network request failed|failed to fetch|network error|networkerror|load failed/i
 

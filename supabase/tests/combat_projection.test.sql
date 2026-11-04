@@ -44,8 +44,8 @@ insert into public.combat_entries (id, combat_id, campaign_id, kind, user_id, ch
 -- rolling: nothing is projected, even with entries and a current flag
 select public.refresh_combat('c0800000-0000-0000-0000-000000000001');
 select is((select count(*)::int from public.combat_order where combat_id = 'c0800000-0000-0000-0000-000000000001'), 0, 'rolling: the order projection stays empty');
-select results_eq($$select turn_entry_id, gm_turn from public.combats where id = 'c0800000-0000-0000-0000-000000000001'$$,
-  $$values (null::uuid, false)$$, 'rolling: no turn projection');
+select results_eq($$select turn_entry_id from public.combats where id = 'c0800000-0000-0000-0000-000000000001'$$,
+  $$values (null::uuid)$$, 'rolling: no turn projection');
 
 -- active: dense visible order without the ogre
 update public.combats set status = 'active' where id = 'c0800000-0000-0000-0000-000000000001';
@@ -59,18 +59,18 @@ select is((select count(*)::int from public.combats c where c.id = 'c0800000-000
   and (to_jsonb(c)::text ilike '%e1800000-0000-0000-0000-000000000002%' or to_jsonb(c)::text ilike '%Ogre%')), 0, 'the ogre is not in the combats row');
 
 -- turn projection
-select results_eq($$select turn_entry_id, gm_turn from public.combats where id = 'c0800000-0000-0000-0000-000000000001'$$,
-  $$values ('e1800000-0000-0000-0000-000000000001'::uuid, false)$$, 'current = P1 projects its id');
+select results_eq($$select turn_entry_id from public.combats where id = 'c0800000-0000-0000-0000-000000000001'$$,
+  $$values ('e1800000-0000-0000-0000-000000000001'::uuid)$$, 'current = P1 projects its id');
 update public.combat_entries set is_current = false where combat_id = 'c0800000-0000-0000-0000-000000000001';
 update public.combat_entries set is_current = true where id = 'e1800000-0000-0000-0000-000000000002';
 select public.refresh_combat('c0800000-0000-0000-0000-000000000001');
-select results_eq($$select turn_entry_id, gm_turn from public.combats where id = 'c0800000-0000-0000-0000-000000000001'$$,
-  $$values (null::uuid, true)$$, 'current = hidden ogre projects gm_turn, no id');
+select results_eq($$select turn_entry_id from public.combats where id = 'c0800000-0000-0000-0000-000000000001'$$,
+  $$values ('e1800000-0000-0000-0000-000000000001'::uuid)$$, 'current = hidden ogre leaves the pointer on the last visible holder (P1)');
 update public.combat_entries set is_current = false where combat_id = 'c0800000-0000-0000-0000-000000000001';
 update public.combat_entries set is_current = true where id = 'e1800000-0000-0000-0000-000000000003';
 select public.refresh_combat('c0800000-0000-0000-0000-000000000001');
-select results_eq($$select turn_entry_id, gm_turn from public.combats where id = 'c0800000-0000-0000-0000-000000000001'$$,
-  $$values ('e1800000-0000-0000-0000-000000000003'::uuid, false)$$, 'current = visible goblin projects its id');
+select results_eq($$select turn_entry_id from public.combats where id = 'c0800000-0000-0000-0000-000000000001'$$,
+  $$values ('e1800000-0000-0000-0000-000000000003'::uuid)$$, 'current = visible goblin projects its id');
 
 -- reveal / hide while the ogre holds the turn
 update public.combat_entries set is_current = false where combat_id = 'c0800000-0000-0000-0000-000000000001';
@@ -79,12 +79,12 @@ update public.combat_entries set hidden = false where id = 'e1800000-0000-0000-0
 select public.refresh_combat('c0800000-0000-0000-0000-000000000001');
 select is((select count(*)::int from public.combat_order where combat_id = 'c0800000-0000-0000-0000-000000000001'), 4, 'reveal: four order rows');
 select is((select position from public.combat_order where id = 'e1800000-0000-0000-0000-000000000002'), 2, 'reveal: the ogre appears at its place');
-select results_eq($$select turn_entry_id, gm_turn from public.combats where id = 'c0800000-0000-0000-0000-000000000001'$$,
-  $$values ('e1800000-0000-0000-0000-000000000002'::uuid, false)$$, 'reveal: the pointer moves from gm_turn to its row');
+select results_eq($$select turn_entry_id from public.combats where id = 'c0800000-0000-0000-0000-000000000001'$$,
+  $$values ('e1800000-0000-0000-0000-000000000002'::uuid)$$, 'reveal: the pointer moves onto its row');
 update public.combat_entries set hidden = true where id = 'e1800000-0000-0000-0000-000000000002';
 select public.refresh_combat('c0800000-0000-0000-0000-000000000001');
 select is((select count(*)::int from public.combat_order where id = 'e1800000-0000-0000-0000-000000000002'), 0, 'hide: its row is deleted again');
-select is((select gm_turn from public.combats where id = 'c0800000-0000-0000-0000-000000000001'), true, 'hide: gm_turn is true again');
+select is((select turn_entry_id from public.combats where id = 'c0800000-0000-0000-0000-000000000001'), 'e1800000-0000-0000-0000-000000000001'::uuid, 'hide: the pointer falls back to the nearest visible row before it, never a hidden id');
 
 -- pointer stability: an entry inserted at position 2 does not move the turn
 update public.combat_entries set position = position + 1 where combat_id = 'c0800000-0000-0000-0000-000000000001' and position >= 2;
@@ -143,8 +143,8 @@ select is((select round from public.combats where id = 'c0800000-0000-0000-0000-
 update public.campaign_members set status = 'invited' where user_id = 'b8000000-0000-0000-0000-00000000000e';
 select public.refresh_combat('c0800000-0000-0000-0000-000000000002');
 select is((select count(*)::int from public.combat_entries where combat_id = 'c0800000-0000-0000-0000-000000000002'), 0, 'the only entry is removed');
-select results_eq($$select turn_entry_id, gm_turn from public.combats where id = 'c0800000-0000-0000-0000-000000000002'$$,
-  $$values (null::uuid, false)$$, 'no entries means no turn pointer');
+select results_eq($$select turn_entry_id from public.combats where id = 'c0800000-0000-0000-0000-000000000002'$$,
+  $$values (null::uuid)$$, 'no entries means no turn pointer');
 
 -- combat_next_entry
 select results_eq($$select entry_id, wrapped from public.combat_next_entry('c0800000-0000-0000-0000-000000000001', 'e1800000-0000-0000-0000-000000000002')$$,

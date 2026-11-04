@@ -57,6 +57,7 @@ describe('toAppError', () => {
       invalid_position: "That spot isn't in the order.",
       invalid_enemy: 'Check the enemy details: a name up to 60 characters, at least 1 hit point, armor class 0 to 40, up to 20 copies.',
       invalid_patch: 'Something went wrong. Please try again.',
+      invalid_batch: 'Something went wrong. Please try again.',
     })
   })
 })

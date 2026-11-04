@@ -93,8 +93,8 @@ reset role;
 select is((select status from public.combats where id = (select id from k where name = 'first')), 'ended', 'the combat is ended');
 select is((select count(*)::int from public.combat_entries where combat_id = (select id from k where name = 'first')), 0, 'ending deletes the entries');
 select is((select count(*)::int from public.combat_order where combat_id = (select id from k where name = 'first')), 0, 'ending deletes the order rows');
-select results_eq($$select turn_entry_id, gm_turn from public.combats where id = (select id from k where name = 'first')$$,
-  $$values (null::uuid, false)$$, 'ending clears the turn pointer');
+select results_eq($$select turn_entry_id from public.combats where id = (select id from k where name = 'first')$$,
+  $$values (null::uuid)$$, 'ending clears the turn pointer');
 select is((select in_combat from public.sessions where campaign_id = 'e9000000-0000-0000-0000-00000000000e' and status = 'active'), false, 'sessions.in_combat is false');
 
 -- the starter may end it; entering again creates a new combat

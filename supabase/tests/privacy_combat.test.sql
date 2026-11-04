@@ -127,13 +127,13 @@ select public.t_as('p1');
 select is((select array_agg(k order by k) from (select distinct jsonb_object_keys(to_jsonb(o)) k from public.combat_order o) x),
   array['campaign_id','character_id','combat_id','id','initiative','kind','name','position','user_id'], 'order rows have exactly the player-safe keys');
 
--- ---- the ogre holds the turn: players see only gm_turn, with no gap in the order
-select results_eq($$select turn_entry_id is null, gm_turn from public.combats where id = public.t_cid()$$, $$values (true, true)$$, 'p1 sees gm_turn and no turn id');
+-- ---- the ogre holds the turn: the player projection does not change (pointer stays on P1), no gap in the order
+select results_eq($$select turn_entry_id = public.t_eid('P1') from public.combats where id = public.t_cid()$$, $$values (true)$$, 'p1 still sees the pointer on the last visible holder');
 select is((select array_agg(position order by position) from public.combat_order where combat_id = public.t_cid()), array[1,2,3], 'three visible rows at positions 1..3');
 select public.t_as('gm');
 select lives_ok($$select public.next_turn(public.t_cid(), public.t_eid('Ogre Secretmark'))$$, 'next turn');
 select public.t_as('p1');
-select results_eq($$select not gm_turn, turn_entry_id in (select id from public.combat_order) from public.combats where id = public.t_cid()$$, $$values (true, true)$$, 'the turn is now a visible row');
+select results_eq($$select turn_entry_id in (select id from public.combat_order) from public.combats where id = public.t_cid()$$, $$values (true)$$, 'the turn is now a visible row');
 select public.t_as('gm');
 select public.set_current_entry(public.t_eid('Ogre Secretmark'));
 select lives_ok($$select public.update_enemy(public.t_eid('Ogre Secretmark'), '{"hidden": false}')$$, 'reveal the ogre');
@@ -143,14 +143,14 @@ select public.t_as('gm');
 select lives_ok($$select public.update_enemy(public.t_eid('Ogre Secretmark'), '{"hidden": true}')$$, 'hide it again');
 select public.t_as('p1');
 select is((select count(*)::int from public.combat_order where name = 'Ogre Secretmark'), 0, 'its row is gone');
-select results_eq($$select gm_turn, turn_entry_id is null from public.combats where id = public.t_cid()$$, $$values (true, true)$$, 'and gm_turn follows the pointer');
+select results_eq($$select turn_entry_id = public.t_eid('P1') from public.combats where id = public.t_cid()$$, $$values (true)$$, 'and the pointer falls back to a visible row, never the hidden id');
 select is(public.t_leaks(), 0, 'still no secrets after the reveal and hide');
 
 -- ---- enemy edits do not touch the combats row (no event, no timing hint)
 select public.t_as('gm');
 select public.t_snap();
 select lives_ok($$select 1;
-  select public.apply_enemy_hp(public.t_cid(), array[public.t_eid('Ogre Secretmark'), public.t_eid('Visible Goblin')], 'damage', 4);
+  select public.apply_enemy_hp(public.t_cid(), array[public.t_eid('Ogre Secretmark'), public.t_eid('Visible Goblin')], 'damage', 4, gen_random_uuid());
   select public.update_enemy(public.t_eid('Ogre Secretmark'), '{"notes": "new secret", "ac": 18}');
   select public.update_enemy(public.t_eid('Visible Goblin'), '{"notes": "new visible", "ac": 12, "hp": 5}');
   select public.undo_enemy_hp(public.t_cid(), public.t_id('rand'))$$, 'damage, notes, ac and undo on hidden and visible enemies');
@@ -164,8 +164,8 @@ select throws_ok($$select public.remove_entry(public.t_eid('Ogre Secretmark'))$$
 select throws_ok($$select public.remove_entry(public.t_id('rand'))$$, 'P0001', 'not_allowed', 'remove_entry, random id');
 select throws_ok($$select public.set_current_entry(public.t_eid('Ogre Secretmark'))$$, 'P0001', 'not_allowed', 'set_current_entry, real hidden id');
 select throws_ok($$select public.set_current_entry(public.t_id('rand'))$$, 'P0001', 'not_allowed', 'set_current_entry, random id');
-select throws_ok($$select public.apply_enemy_hp(public.t_cid(), array[public.t_eid('Ogre Secretmark')], 'damage', 1)$$, 'P0001', 'not_allowed', 'apply_enemy_hp, real hidden id');
-select throws_ok($$select public.apply_enemy_hp(public.t_cid(), array[public.t_id('rand')], 'damage', 1)$$, 'P0001', 'not_allowed', 'apply_enemy_hp, random id');
+select throws_ok($$select public.apply_enemy_hp(public.t_cid(), array[public.t_eid('Ogre Secretmark')], 'damage', 1, gen_random_uuid())$$, 'P0001', 'not_allowed', 'apply_enemy_hp, real hidden id');
+select throws_ok($$select public.apply_enemy_hp(public.t_cid(), array[public.t_id('rand')], 'damage', 1, gen_random_uuid())$$, 'P0001', 'not_allowed', 'apply_enemy_hp, random id');
 select throws_ok($$select public.set_initiative(public.t_eid('Ogre Secretmark'), 5)$$, 'P0001', 'not_allowed', 'set_initiative, real hidden id');
 select throws_ok($$select public.set_initiative(public.t_id('rand'), 5)$$, 'P0001', 'not_allowed', 'set_initiative, random id');
 select throws_ok($$select public.move_entry(public.t_eid('Ogre Secretmark'), 1)$$, 'P0001', 'not_allowed', 'move_entry, real hidden id');
@@ -185,23 +185,23 @@ select throws_ok($$select public.remove_entry(public.t_id('rand'))$$, 'P0001', '
 select public.t_as('inv');
 select throws_ok(sql, 'P0001', 'not_member', 'invited: ' || sql) from (values
   ($$select public.start_combat(public.t_cid())$$), ($$select public.next_turn(public.t_cid(), public.t_id('rand'))$$),
-  ($$select public.end_my_turn(public.t_cid())$$), ($$select public.delay_turn(public.t_cid(), public.t_id('rand'))$$),
+  ($$select public.end_my_turn(public.t_cid(), 1)$$), ($$select public.delay_turn(public.t_cid(), public.t_id('rand'))$$),
   ($$select public.add_enemies(public.t_cid(), 'X', 1, 1, 1, 1, null, false)$$),
-  ($$select public.apply_enemy_hp(public.t_cid(), array[public.t_id('rand')], 'damage', 1)$$),
+  ($$select public.apply_enemy_hp(public.t_cid(), array[public.t_id('rand')], 'damage', 1, gen_random_uuid())$$),
   ($$select public.undo_enemy_hp(public.t_cid(), public.t_id('rand'))$$)) v (sql);
 select public.t_as('out');
 select throws_ok(sql, 'P0001', 'not_member', 'outsider: ' || sql) from (values
   ($$select public.start_combat(public.t_cid())$$), ($$select public.next_turn(public.t_cid(), public.t_id('rand'))$$),
-  ($$select public.end_my_turn(public.t_cid())$$), ($$select public.delay_turn(public.t_cid(), public.t_id('rand'))$$),
+  ($$select public.end_my_turn(public.t_cid(), 1)$$), ($$select public.delay_turn(public.t_cid(), public.t_id('rand'))$$),
   ($$select public.add_enemies(public.t_cid(), 'X', 1, 1, 1, 1, null, false)$$),
-  ($$select public.apply_enemy_hp(public.t_cid(), array[public.t_id('rand')], 'damage', 1)$$),
+  ($$select public.apply_enemy_hp(public.t_cid(), array[public.t_id('rand')], 'damage', 1, gen_random_uuid())$$),
   ($$select public.undo_enemy_hp(public.t_cid(), public.t_id('rand'))$$)) v (sql);
 select public.t_as('pB');
 select throws_ok(sql, 'P0001', 'not_member', 'other campaign player: ' || sql) from (values
   ($$select public.start_combat(public.t_cid())$$), ($$select public.next_turn(public.t_cid(), public.t_id('rand'))$$),
-  ($$select public.end_my_turn(public.t_cid())$$), ($$select public.delay_turn(public.t_cid(), public.t_id('rand'))$$),
+  ($$select public.end_my_turn(public.t_cid(), 1)$$), ($$select public.delay_turn(public.t_cid(), public.t_id('rand'))$$),
   ($$select public.add_enemies(public.t_cid(), 'X', 1, 1, 1, 1, null, false)$$),
-  ($$select public.apply_enemy_hp(public.t_cid(), array[public.t_id('rand')], 'damage', 1)$$),
+  ($$select public.apply_enemy_hp(public.t_cid(), array[public.t_id('rand')], 'damage', 1, gen_random_uuid())$$),
   ($$select public.undo_enemy_hp(public.t_cid(), public.t_id('rand'))$$)) v (sql);
 
 -- ---- privileges and publication
@@ -220,7 +220,7 @@ select public.t_as('gm');
 select lives_ok($$select public.set_combat(public.t_sid(), false)$$, 'the GM ends combat');
 select is((select count(*)::int from public.combat_entries where combat_id = public.t_cid()), 0, 'no entries remain, even for the GM');
 select is((select count(*)::int from public.combat_order where combat_id = public.t_cid()), 0, 'no order rows remain');
-select results_eq($$select status, turn_entry_id is null, gm_turn from public.combats where id = public.t_cid()$$, $$values ('ended', true, false)$$, 'the combat is ended with no turn pointer');
+select results_eq($$select status, turn_entry_id is null from public.combats where id = public.t_cid()$$, $$values ('ended', true)$$, 'the combat is ended with no turn pointer');
 
 set constraints all immediate;
 select * from finish();
