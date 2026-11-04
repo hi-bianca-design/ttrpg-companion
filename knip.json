@@ -1,0 +1,39 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "app/**/*.{ts,tsx}",
+    "scripts/**/*.{ts,mjs}",
+    "__tests__/**/*.{ts,tsx}",
+    "metro.config.js",
+    "babel.config.js"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "app/**/*.{ts,tsx}",
+    "scripts/**/*"
+  ],
+  "ignore": [
+    "src/types/database.types.ts"
+  ],
+  "ignoreDependencies": [
+    "supabase",
+    "react-native-worklets",
+    "prettier-plugin-tailwindcss",
+    "expo-.*",
+    "babel-plugin-module-resolver",
+    "babel-preset-expo"
+  ],
+  "rules": {
+    "files": "error",
+    "dependencies": "error",
+    "devDependencies": "error",
+    "unlisted": "error",
+    "unresolved": "error",
+    "exports": "warn",
+    "types": "warn",
+    "duplicates": "warn"
+  },
+  "ignoreUnresolved": [
+    "babel-jest"
+  ]
+}
