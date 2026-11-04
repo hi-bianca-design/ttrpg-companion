@@ -198,11 +198,10 @@ test('a second quantity tap is blocked while the first write is pending (no lost
   resolve()
 })
 
-test('shared header with the character name and caret Back', async () => {
+test('shared header with the character name and no Back arrow', async () => {
   setup(character([owned('a', 'Ring A', false)]))
   expect(await screen.findByText('Mira')).toBeTruthy()
-  fireEvent.press(screen.getByRole('button', { name: 'Back' }))
-  expect(mockRouter.dismiss).toHaveBeenCalled()
+  expect(screen.queryByRole('button', { name: 'Back' })).toBeNull()
 })
 
 test('rows keep a stable order (created_at, then name) whatever the server returns', async () => {

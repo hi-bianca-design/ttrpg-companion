@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '@/lib/query-client'
 import {
   addEnemies, applyEnemyHp, delayTurn, endMyTurn, getActiveCombat, getCombatEntries, getCombatOrder, moveEntry,
-  nextTurn, removeEntry, setCurrentEntry, setInitiative, startCombat, undoEnemyHp, updateEnemy,
+  newBatchId, nextTurn, removeEntry, setCurrentEntry, setInitiative, startCombat, undoEnemyHp, updateEnemy,
   type Combat, type EnemyPatch, type HpMode, type NewEnemy,
 } from './combat.api'
 
@@ -70,7 +70,7 @@ export const useNextTurn = (campaignId: string, combatId: string | undefined) =>
   useCombatMutation(campaignId, combatId, (id, v: { expectedEntryId: string }) => nextTurn(id, v.expectedEntryId))
 
 export const useEndMyTurn = (campaignId: string, combatId: string | undefined) =>
-  useCombatMutation(campaignId, combatId, (id, _: void) => endMyTurn(id))
+  useCombatMutation(campaignId, combatId, (id, v: { expectedRound: number }) => endMyTurn(id, v.expectedRound))
 
 export const useSetCurrentEntry = (campaignId: string, combatId: string | undefined) =>
   useCombatMutation(campaignId, combatId, (_id, v: { entryId: string }) => setCurrentEntry(v.entryId))
@@ -88,7 +88,7 @@ export const useRemoveEntry = (campaignId: string, combatId: string | undefined)
   useCombatMutation(campaignId, combatId, (_id, v: { entryId: string }) => removeEntry(v.entryId))
 
 export const useApplyEnemyHp = (campaignId: string, combatId: string | undefined) =>
-  useCombatMutation(campaignId, combatId, (id, v: { entryIds: string[]; mode: HpMode; amount: number }) => applyEnemyHp(id, v.entryIds, v.mode, v.amount))
+  useCombatMutation(campaignId, combatId, (id, v: { entryIds: string[]; mode: HpMode; amount: number; batch?: string }) => applyEnemyHp(id, v.entryIds, v.mode, v.amount, v.batch ?? newBatchId()))
 
 export const useUndoEnemyHp = (campaignId: string, combatId: string | undefined) =>
   useCombatMutation(campaignId, combatId, (id, v: { batch: string }) => undoEnemyHp(id, v.batch))

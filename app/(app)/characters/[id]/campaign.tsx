@@ -24,7 +24,7 @@ export default function CampaignTab() {
   const membership = useCharacterCampaign(id)
   const campaign = useCampaign(membership.data?.id)
 
-  const header = <SheetHeader name={character?.name} eyebrow="Campaign" />
+  const header = <SheetHeader name={character?.name} eyebrow="Party" />
 
   if (membership.isLoading || (membership.data && campaign.isLoading)) {
     return (
@@ -82,7 +82,7 @@ export default function CampaignTab() {
       <CampaignCard
         campaign={{ ...c, member_count: c.members.length }}
         isGm={c.gm_id === user?.id}
-        onPress={() => router.push({ pathname: '/(app)/campaigns/[id]', params: { id: c.id, fromCharacter: id } })}
+        onPress={() => router.push({ pathname: '/(app)/campaigns/[id]', params: { id: c.id } })}
       />
       <SessionControls campaign={c} />
       <SectionHeader id={`campaign:${c.id}:party`} title="Party">

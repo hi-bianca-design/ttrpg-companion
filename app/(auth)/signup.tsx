@@ -65,7 +65,7 @@ export default function SignupScreen() {
         <>
           <View className="gap-4">
             <View className="gap-2">
-              <Label>Email</Label>
+              <Label pointed>Email</Label>
               <Input
                 placeholder="Email"
                 value={email}
@@ -77,7 +77,7 @@ export default function SignupScreen() {
               {errors.email && <Text variant="caption" tone="destructive">{errors.email}</Text>}
             </View>
             <View className="gap-2">
-              <Label>Username</Label>
+              <Label pointed>Username</Label>
               <Input
                 placeholder="Username"
                 value={username}
@@ -89,7 +89,7 @@ export default function SignupScreen() {
               {errors.username && <Text variant="caption" tone="destructive">{errors.username}</Text>}
             </View>
             <View className="gap-2">
-              <Label>Password</Label>
+              <Label pointed>Password</Label>
               <Input
                 placeholder="Password"
                 value={password}

@@ -1,13 +1,10 @@
 import { Tabs, useSegments } from 'expo-router'
-import { BookOpen, Sword, User, UsersThree } from 'phosphor-react-native'
-import { useState } from 'react'
+import { BookOpen, House, Sword, UsersThree } from 'phosphor-react-native'
 import { BottomNav } from '@/components/ui/bottom-nav'
-import { AccountDrawer } from '@/features/auth/AccountDrawer'
-import { View } from 'react-native'
+import { NavInsetContext } from '@/components/ui/nav-inset'
 
 export default function AppLayout() {
-  const segments = useSegments()
-  const [accountOpen, setAccountOpen] = useState(false)
+  const segments: string[] = useSegments()
   // No root tab bar inside a character sheet ([id], which has its own tabs) or the character creation
   // wizard (new): leaving the wizard goes through its Back / Cancel and the discard prompt, not a tab
   // switch. Other tabs' pushed and modal-like screens (campaign detail, join, homebrew forms) keep it.
@@ -16,40 +13,43 @@ export default function AppLayout() {
 
   return (
     // No top safe-area wrapper: ScreenBackground paints the glow up under the status bar and insets its own content.
-    <Tabs
-      tabBar={(props) =>
-        hideTabBar ? null : (
-          <View>
-            <BottomNav {...props} extra={{ label: 'Account', icon: User, onPress: () => setAccountOpen(true) }} />
-            <AccountDrawer open={accountOpen} onOpenChange={setAccountOpen} />
-          </View>
-        )
-      }
-      screenOptions={{ headerShown: false }}
-    >
-      <Tabs.Screen name="index" options={{ href: null }} />
-      <Tabs.Screen name="shop" options={{ href: null }} />
-      <Tabs.Screen
-        name="characters"
-        options={{
-          title: 'Characters',
-          tabBarIcon: ({ color, size }) => <Sword size={size} color={color} weight="duotone" />,
-        }}
-      />
-      <Tabs.Screen
-        name="campaigns"
-        options={{
-          title: 'Campaigns',
-          tabBarIcon: ({ color, size }) => <UsersThree size={size} color={color} weight="duotone" />,
-        }}
-      />
-      <Tabs.Screen
-        name="content"
-        options={{
-          title: 'Homebrew',
-          tabBarIcon: ({ color, size }) => <BookOpen size={size} color={color} weight="duotone" />,
-        }}
-      />
-    </Tabs>
+    <NavInsetContext.Provider value={!hideTabBar}>
+      <Tabs
+        // Back from any root tab returns to Home before leaving the app.
+        backBehavior="initialRoute"
+        tabBar={(props) => (hideTabBar ? null : <BottomNav {...props} />)}
+        screenOptions={{ headerShown: false }}
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Home',
+            tabBarIcon: ({ color, size }) => <House size={size} color={color} weight="duotone" />,
+          }}
+        />
+        <Tabs.Screen name="shop" options={{ href: null }} />
+        <Tabs.Screen
+          name="characters"
+          options={{
+            title: 'Characters',
+            tabBarIcon: ({ color, size }) => <Sword size={size} color={color} weight="duotone" />,
+          }}
+        />
+        <Tabs.Screen
+          name="campaigns"
+          options={{
+            title: 'Campaigns',
+            tabBarIcon: ({ color, size }) => <UsersThree size={size} color={color} weight="duotone" />,
+          }}
+        />
+        <Tabs.Screen
+          name="content"
+          options={{
+            title: 'Homebrew',
+            tabBarIcon: ({ color, size }) => <BookOpen size={size} color={color} weight="duotone" />,
+          }}
+        />
+      </Tabs>
+    </NavInsetContext.Provider>
   )
 }

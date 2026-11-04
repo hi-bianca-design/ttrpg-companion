@@ -73,9 +73,12 @@ export async function nextTurn(combatId: string, expectedEntryId: string): Promi
   return unwrap(await supabase.rpc('next_turn', { p_combat_id: combatId, p_expected_entry_id: expectedEntryId }))
 }
 
-/** The turn holder passes the turn to the next row. */
-export async function endMyTurn(combatId: string): Promise<Combat> {
-  return unwrap(await supabase.rpc('end_my_turn', { p_combat_id: combatId }))
+/**
+ * The turn holder passes the turn to the next row. `expectedRound` is the round the screen showed: if
+ * the round has moved on (a double tap across a wrap) the server does nothing and the client refetches.
+ */
+export async function endMyTurn(combatId: string, expectedRound: number): Promise<Combat> {
+  return unwrap(await supabase.rpc('end_my_turn', { p_combat_id: combatId, p_expected_round: expectedRound }))
 }
 
 /** GM only: makes any row current (skip, go back). */
@@ -115,9 +118,22 @@ export async function removeEntry(entryId: string): Promise<Combat> {
   return unwrap(await supabase.rpc('remove_entry', { p_entry_id: entryId }))
 }
 
-/** GM only: one amount applied to each listed enemy. Returns the batch id for undo. */
-export async function applyEnemyHp(combatId: string, entryIds: string[], mode: HpMode, amount: number): Promise<string> {
-  return unwrap(await supabase.rpc('apply_enemy_hp', { p_combat_id: combatId, p_entry_ids: entryIds, p_mode: mode, p_amount: amount }))
+/** A fresh batch id for apply_enemy_hp. Generate one per user action and reuse it on any retry. */
+export function newBatchId(): string {
+  const c = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto
+  if (c?.randomUUID) return c.randomUUID()
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (ch) => {
+    const r = Math.floor(Math.random() * 16)
+    return (ch === 'x' ? r : (r & 3) | 8).toString(16)
+  })
+}
+
+/**
+ * GM only: one amount applied to each listed enemy. Idempotent per `batch` (a repeat with the same id
+ * changes nothing), which is also the id `undoEnemyHp` takes. Returns the batch id.
+ */
+export async function applyEnemyHp(combatId: string, entryIds: string[], mode: HpMode, amount: number, batch: string): Promise<string> {
+  return unwrap(await supabase.rpc('apply_enemy_hp', { p_combat_id: combatId, p_entry_ids: entryIds, p_mode: mode, p_amount: amount, p_batch: batch }))
 }
 
 /** GM only. Returns how many rows were restored (0 when everything changed again since). */

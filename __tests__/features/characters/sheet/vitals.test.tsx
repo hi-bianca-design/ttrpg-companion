@@ -332,7 +332,7 @@ test('long name and big HP: the name wraps to two lines max, HP value fits on on
   expect(value).toHaveProp('adjustsFontSizeToFit', true)
   expect(within(hpTile).getByText('/120 +15')).toHaveProp('numberOfLines', 1)
   // nav actions live in their own row above the header, so a long name can't push them off
-  expect(screen.getByRole('button', { name: 'Back' })).toBeTruthy()
+  expect(screen.queryByRole('button', { name: 'Back' })).toBeNull()
   expect(screen.getByRole('button', { name: 'Level up' })).toBeTruthy()
 })
 
@@ -399,10 +399,9 @@ test('conditions use the tinted badge', () => {
   expect(screen.getByText('Prone').props.className).toContain('text-tinted-foreground')
 })
 
-test('shared sheet header: caret Back leaves the sheet; Level up opens the level-up screen', () => {
+test('shared sheet header: no Back arrow; Level up opens the level-up screen', () => {
   renderTab()
-  fireEvent.press(screen.getByRole('button', { name: 'Back' }))
-  expect(mockRouter.dismiss).toHaveBeenCalled()
+  expect(screen.queryByRole('button', { name: 'Back' })).toBeNull()
   fireEvent.press(screen.getByRole('button', { name: 'Level up' }))
   expect(mockRouter.push).toHaveBeenCalledWith('/(app)/characters/ch1/level-up')
 })

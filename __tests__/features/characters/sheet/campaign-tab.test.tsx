@@ -32,19 +32,22 @@ beforeEach(() => {
   ;(useCampaign as jest.Mock).mockReturnValue({ data: undefined, isLoading: false, isError: false })
 })
 
-test('the Campaign tab carries the shared header: caret Back and the character name', () => {
+test('the Party tab carries the shared header: the character name and no Back arrow', () => {
   render(<CampaignTab />)
   expect(screen.getByText('Mira Thistledown')).toBeTruthy()
   expect(screen.getByText('No campaign yet')).toBeTruthy()
-  // Nothing to dismiss (deep link): Back falls back to the characters list.
-  fireEvent.press(screen.getByRole('button', { name: 'Back' }))
-  expect(mockRouter.replace).toHaveBeenCalledWith('/(app)/characters')
+  expect(screen.queryByRole('button', { name: 'Back' })).toBeNull()
+})
+
+test('the tab is labelled Party in its header eyebrow', () => {
+  render(<CampaignTab />)
+  expect(screen.getByText('Party')).toBeTruthy()
 })
 
 test('the header shows while the campaign loads', () => {
   ;(useCharacterCampaign as jest.Mock).mockReturnValue({ data: undefined, isLoading: true, isError: false })
   render(<CampaignTab />)
-  expect(screen.getByRole('button', { name: 'Back' })).toBeTruthy()
+  expect(screen.getByText('Mira Thistledown')).toBeTruthy()
   expect(screen.getByLabelText('Loading campaign')).toBeTruthy()
 })
 
@@ -54,7 +57,7 @@ test('opening the campaign tells the detail screen which sheet to return to', ()
   ;(useCampaign as jest.Mock).mockReturnValue({ data: camp, isLoading: false, isError: false })
   render(<CampaignTab />)
   fireEvent.press(screen.getByText('Odd Game'))
-  expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/(app)/campaigns/[id]', params: { id: 'camp1', fromCharacter: 'ch1' } })
+  expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/(app)/campaigns/[id]', params: { id: 'camp1' } })
 })
 
 test('Join a campaign passes the character, so join returns here', () => {

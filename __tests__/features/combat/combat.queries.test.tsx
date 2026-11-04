@@ -13,7 +13,7 @@ jest.mock('@/features/combat/combat.api', () => ({
   getActiveCombat: jest.fn(), getCombatOrder: jest.fn(), getCombatEntries: jest.fn(),
   startCombat: jest.fn(), setInitiative: jest.fn(), moveEntry: jest.fn(), nextTurn: jest.fn(), endMyTurn: jest.fn(),
   setCurrentEntry: jest.fn(), delayTurn: jest.fn(), addEnemies: jest.fn(), updateEnemy: jest.fn(), removeEntry: jest.fn(),
-  applyEnemyHp: jest.fn(), undoEnemyHp: jest.fn(),
+  applyEnemyHp: jest.fn(), undoEnemyHp: jest.fn(), newBatchId: jest.fn(() => 'gen-1'),
 }))
 
 const active = { id: 'cb1', campaign_id: 'c1', status: 'active' } as never
@@ -99,11 +99,19 @@ describe('mutations', () => {
     const spy = jest.spyOn(client, 'invalidateQueries')
     const { result } = renderHook(() => useApplyEnemyHp('c1', 'cb1'), { wrapper })
     await act(async () => {
-      await expect(result.current.mutateAsync({ entryIds: ['e1'], mode: 'damage', amount: 5 })).resolves.toBe('batch-1')
+      await expect(result.current.mutateAsync({ entryIds: ['e1'], mode: 'damage', amount: 5, batch: 'b-1' })).resolves.toBe('batch-1')
     })
-    expect(api.applyEnemyHp).toHaveBeenCalledWith('cb1', ['e1'], 'damage', 5)
+    expect(api.applyEnemyHp).toHaveBeenCalledWith('cb1', ['e1'], 'damage', 5, 'b-1')
     const keys = spy.mock.calls.map((c) => (c[0] as { queryKey: unknown }).queryKey)
     expect(keys).toEqual(expect.arrayContaining([qk.combat('c1'), qk.combatOrder('cb1'), qk.combatEntries('cb1')]))
+  })
+
+  it('generates a batch id when the caller gives none', async () => {
+    ;(api.applyEnemyHp as jest.Mock).mockResolvedValue('gen-1')
+    const { wrapper } = setup()
+    const { result } = renderHook(() => useApplyEnemyHp('c1', 'cb1'), { wrapper })
+    await act(async () => { await result.current.mutateAsync({ entryIds: ['e1'], mode: 'heal', amount: 2 }) })
+    expect(api.applyEnemyHp).toHaveBeenCalledWith('cb1', ['e1'], 'heal', 2, 'gen-1')
   })
 
   it('a failing mutation surfaces the error and still invalidates the three keys', async () => {

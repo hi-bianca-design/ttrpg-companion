@@ -34,7 +34,7 @@ test('the shared sheet header shows Session: Active and Enter combat while the c
   render(<SheetHeader name="Mira" eyebrow="Your character" onLevelUp={jest.fn()} />)
   expect(screen.getByText('Session: Active')).toBeTruthy()
   expect(screen.getByRole('button', { name: 'Enter combat' })).toBeTruthy()
-  expect(screen.getByRole('button', { name: 'Back' })).toBeTruthy()
+  expect(screen.queryByRole('button', { name: 'Back' })).toBeNull()
   expect(screen.getByRole('button', { name: 'Level up' })).toBeTruthy()
 })
 
@@ -56,13 +56,11 @@ test('the holder sees the Your turn banner in the header; nobody else does', () 
   expect(screen.queryByText('Your turn')).toBeNull()
 })
 
-test('no badges without an active session, and Back still works', () => {
+test('no badges without an active session', () => {
   ;(useActiveSession as jest.Mock).mockReturnValue({ data: null, isError: false })
   render(<SheetHeader name="Mira" />)
   expect(screen.queryByText('Session: Active')).toBeNull()
   expect(screen.queryByText('Enter combat')).toBeNull()
-  fireEvent.press(screen.getByRole('button', { name: 'Back' }))
-  expect(mockRouter.dismiss).toHaveBeenCalled()
 })
 
 test('a failing session query leaves the header intact', () => {
