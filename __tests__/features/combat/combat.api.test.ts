@@ -1,5 +1,5 @@
 import {
-  addEnemies, applyEnemyHp, delayTurn, endMyTurn, getActiveCombat, getCombatEntries, getCombatOrder, moveEntry,
+  newBatchId, addEnemies, applyEnemyHp, delayTurn, endMyTurn, getActiveCombat, getCombatEntries, getCombatOrder, moveEntry,
   nextTurn, removeEntry, setCurrentEntry, setInitiative, startCombat, undoEnemyHp, updateEnemy,
 } from '@/features/combat/combat.api'
 
@@ -13,6 +13,14 @@ const combat = { id: 'cb1', campaign_id: 'c1', status: 'active', round: 1 }
 
 beforeEach(() => jest.clearAllMocks())
 
+describe('newBatchId', () => {
+  it('returns distinct uuid-shaped ids', () => {
+    const a = newBatchId()
+    expect(a).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)
+    expect(newBatchId()).not.toBe(a)
+  })
+})
+
 describe('combat rpc wrappers', () => {
   it.each([
     ['startCombat', () => startCombat('cb1'), 'start_combat', { p_combat_id: 'cb1' }],
@@ -20,7 +28,7 @@ describe('combat rpc wrappers', () => {
     ['setInitiative (clear)', () => setInitiative('e1', null), 'set_initiative', { p_entry_id: 'e1', p_initiative: null }],
     ['moveEntry', () => moveEntry('e1', 3), 'move_entry', { p_entry_id: 'e1', p_to_position: 3 }],
     ['nextTurn', () => nextTurn('cb1', 'e1'), 'next_turn', { p_combat_id: 'cb1', p_expected_entry_id: 'e1' }],
-    ['endMyTurn', () => endMyTurn('cb1'), 'end_my_turn', { p_combat_id: 'cb1' }],
+    ['endMyTurn', () => endMyTurn('cb1', 3), 'end_my_turn', { p_combat_id: 'cb1', p_expected_round: 3 }],
     ['setCurrentEntry', () => setCurrentEntry('e1'), 'set_current_entry', { p_entry_id: 'e1' }],
     ['delayTurn', () => delayTurn('cb1', 'e1'), 'delay_turn', { p_combat_id: 'cb1', p_expected_entry_id: 'e1' }],
     ['updateEnemy', () => updateEnemy('e1', { hp: 4, notes: null }), 'update_enemy', { p_entry_id: 'e1', p_patch: { hp: 4, notes: null } }],
@@ -41,8 +49,8 @@ describe('combat rpc wrappers', () => {
 
   it('applyEnemyHp returns the batch id', async () => {
     ;(supabase.rpc as jest.Mock).mockResolvedValue({ data: 'batch-1', error: null })
-    await expect(applyEnemyHp('cb1', ['e1', 'e2'], 'damage', 5)).resolves.toBe('batch-1')
-    expect(supabase.rpc).toHaveBeenCalledWith('apply_enemy_hp', { p_combat_id: 'cb1', p_entry_ids: ['e1', 'e2'], p_mode: 'damage', p_amount: 5 })
+    await expect(applyEnemyHp('cb1', ['e1', 'e2'], 'damage', 5, 'batch-1')).resolves.toBe('batch-1')
+    expect(supabase.rpc).toHaveBeenCalledWith('apply_enemy_hp', { p_combat_id: 'cb1', p_entry_ids: ['e1', 'e2'], p_mode: 'damage', p_amount: 5, p_batch: 'batch-1' })
   })
 
   it('undoEnemyHp returns the number of rows restored, including 0', async () => {
@@ -62,6 +70,7 @@ describe('combat rpc wrappers', () => {
     ['invalid_position', "That spot isn't in the order."],
     ['invalid_enemy', 'Check the enemy details: a name up to 60 characters, at least 1 hit point, armor class 0 to 40, up to 20 copies.'],
     ['invalid_patch', 'Something went wrong. Please try again.'],
+    ['invalid_batch', 'Something went wrong. Please try again.'],
   ])('maps P0001 %s to its plain copy', async (message, copy) => {
     ;(supabase.rpc as jest.Mock).mockResolvedValue({ data: null, error: { code: 'P0001', message } })
     await expect(nextTurn('cb1', 'e1')).rejects.toMatchObject({ name: 'AppError', code: message, message: copy })

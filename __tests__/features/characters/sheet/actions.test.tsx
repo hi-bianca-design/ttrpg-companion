@@ -102,11 +102,10 @@ test('slot tiers show the "available/max" count next to the tier label', () => {
   expect(screen.getByLabelText('Level 1 slots, 1 of 2 available')).toBeTruthy()
 })
 
-test('shared header: caret Back + character name', () => {
+test('shared header: character name, no Back arrow (Home on the bar leaves the sheet)', () => {
   setup(character(slots(0)))
   expect(screen.getByText('Mira')).toBeTruthy()
-  fireEvent.press(screen.getByRole('button', { name: 'Back' }))
-  expect(mockRouter.dismiss).toHaveBeenCalled()
+  expect(screen.queryByRole('button', { name: 'Back' })).toBeNull()
 })
 
 test('a compact HP bar opens the hit points sheet', () => {
