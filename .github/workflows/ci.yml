@@ -27,3 +27,5 @@ jobs:
       - run: npm run typecheck
       # Design-token lint, then Jest.
       - run: npm test -- --ci
+      # Unused files and dependencies fail the build; unused exports only warn (see knip.json).
+      - run: npm run lint:dead
