@@ -1,6 +1,6 @@
 import { cva, type VariantProps } from 'class-variance-authority'
 import { useState } from 'react'
-import { Pressable } from 'react-native'
+import { Pressable, type PressableStateCallbackType } from 'react-native'
 import { ShapedSurface, type ThemeColorKey } from '@/components/ui/shaped-surface'
 import { TextClassContext } from '@/components/ui/text'
 import { cn } from '@/lib/utils'
@@ -74,7 +74,7 @@ function Button({ className, variant, size, disabled, hitSlop, lit, stroke, onPr
           setPressed(false)
           onPressOut?.(e)
         }}
-        style={[typeof style === 'function' ? style({ pressed, hovered: false }) : style, sunk && { transform: [{ translateX: SINK }, { translateY: SINK }] }]}
+        style={[typeof style === 'function' ? style({ pressed } as PressableStateCallbackType) : style, sunk && { transform: [{ translateX: SINK }, { translateY: SINK }] }]}
         {...props}
       >
         {plate ? (

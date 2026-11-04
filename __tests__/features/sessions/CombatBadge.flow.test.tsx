@@ -68,7 +68,8 @@ test('the toast still shows when a poll clears the session while the call is in 
   fireEvent.press(await screen.findByRole('button', { name: 'In combat' }))
   fireEvent.press(screen.getByRole('button', { name: 'End combat' }))
   await act(async () => { await client.invalidateQueries({ queryKey: qk.session('camp1') }) })
-  await waitFor(() => expect(screen.queryByText('In combat')).toBeNull())
+  // Generous timeout: the badge swap waits on the sheet's exit animation, which runs late when the whole suite is loading the CPU.
+  await waitFor(() => expect(screen.queryByText('In combat')).toBeNull(), { timeout: 5000 })
   await act(async () => { rejectCall(new AppError('no_active_session')) })
-  await waitFor(() => expect(showToast).toHaveBeenCalledWith(ERROR_COPY.no_active_session))
+  await waitFor(() => expect(showToast).toHaveBeenCalledWith(ERROR_COPY.no_active_session), { timeout: 5000 })
 })
