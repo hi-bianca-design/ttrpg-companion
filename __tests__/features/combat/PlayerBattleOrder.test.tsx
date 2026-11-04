@@ -50,7 +50,7 @@ beforeEach(() => {
 })
 
 test('a hidden enemy holding the turn changes nothing a player sees: no GM turn row, nothing extra', () => {
-  setup(combat({ gm_turn: true }))
+  setup(combat({ turn_entry_id: null }))
   expect(screen.queryByTestId('gm-turn-row')).toBeNull()
   expect(screen.getAllByTestId(/^row-/)).toHaveLength(3)
 })

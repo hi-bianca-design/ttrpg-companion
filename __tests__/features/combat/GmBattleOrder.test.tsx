@@ -5,7 +5,7 @@ import { PortalHost } from '@rn-primitives/portal'
 import { AccessibilityInfo } from 'react-native'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react-native'
 import {
-  applyEnemyHp, delayTurn, getCombatEntries, moveEntry, nextTurn, removeEntry, setCurrentEntry, undoEnemyHp, updateEnemy,
+  applyEnemyHp, newBatchId, delayTurn, getCombatEntries, moveEntry, nextTurn, removeEntry, setCurrentEntry, undoEnemyHp, updateEnemy,
   type CombatEntry,
 } from '@/features/combat/combat.api'
 import { GmBattleOrder } from '@/features/combat/GmBattleOrder'
@@ -55,6 +55,7 @@ const select = (name: string) => fireEvent.press(screen.getByRole('button', { na
 
 beforeEach(() => {
   jest.clearAllMocks()
+  ;(newBatchId as jest.Mock).mockReturnValue('client-batch')
   let n = 0
   m.apply.mockImplementation(async () => `batch-${++n}`)
   for (const k of ['undo', 'next', 'delay', 'current', 'move', 'update', 'remove'] as const) m[k].mockResolvedValue(1)
@@ -90,7 +91,7 @@ test('selecting four goblins and entering 5 applies once to the four ids, then t
   fireEvent.press(screen.getByRole('button', { name: 'Damage' }))
   await waitFor(() => expect(screen.queryByText('4 selected')).toBeNull(), { timeout: 15000 })
   expect(m.apply).toHaveBeenCalledTimes(1)
-  expect(m.apply).toHaveBeenCalledWith('cb1', ['g1', 'g2', 'g3', 'g4'], 'damage', 5)
+  expect(m.apply).toHaveBeenCalledWith('cb1', ['g1', 'g2', 'g3', 'g4'], 'damage', 5, 'client-batch')
   expect(screen.queryByLabelText('Amount')).toBeNull()
 })
 
@@ -99,11 +100,11 @@ test('bulk Heal and Temp HP pass their modes', async () => {
   select('Goblin 1')
   fireEvent.changeText(screen.getByLabelText('Amount'), '2')
   fireEvent.press(screen.getByRole('button', { name: 'Heal' }))
-  await waitFor(() => expect(m.apply).toHaveBeenCalledWith('cb1', ['g1'], 'heal', 2))
+  await waitFor(() => expect(m.apply).toHaveBeenCalledWith('cb1', ['g1'], 'heal', 2, 'client-batch'))
   select('Goblin 2')
   fireEvent.changeText(screen.getByLabelText('Amount'), '3')
   fireEvent.press(screen.getByRole('button', { name: 'Temp HP' }))
-  await waitFor(() => expect(m.apply).toHaveBeenCalledWith('cb1', ['g2'], 'temp', 3))
+  await waitFor(() => expect(m.apply).toHaveBeenCalledWith('cb1', ['g2'], 'temp', 3, 'client-batch'))
 })
 
 test('Select group selects exactly the group, not the goblin added later', () => {

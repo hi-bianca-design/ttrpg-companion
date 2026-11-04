@@ -1,6 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
-import { applyEnemyHp, undoEnemyHp } from '@/features/combat/combat.api'
+import { applyEnemyHp, newBatchId, undoEnemyHp } from '@/features/combat/combat.api'
 import { useEnemyHp } from '@/features/combat/useEnemyHp'
 import { showToast } from '@/components/ui/toast'
 import { AppError, ERROR_COPY } from '@/features/errors'
@@ -23,6 +23,7 @@ let n = 0
 beforeEach(() => {
   jest.clearAllMocks()
   n = 0
+  ;(newBatchId as jest.Mock).mockReturnValue('client-batch')
   mockApply.mockImplementation(async () => `batch-${++n}`)
   mockUndo.mockResolvedValue(1)
 })
@@ -41,7 +42,7 @@ test('apply calls the server once and makes that row undoable', async () => {
   const { result } = setup()
   await act(() => result.current.apply(['a'], 'damage', 7))
   expect(mockApply).toHaveBeenCalledTimes(1)
-  expect(mockApply).toHaveBeenCalledWith('cb1', ['a'], 'damage', 7)
+  expect(mockApply).toHaveBeenCalledWith('cb1', ['a'], 'damage', 7, 'client-batch')
   expect(result.current.canUndo('a')).toBe(true)
   expect(result.current.canUndo('b')).toBe(false)
 })

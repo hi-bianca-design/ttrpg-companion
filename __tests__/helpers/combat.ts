@@ -23,7 +23,7 @@ export function character(id: string, name: string, over: { hp?: Record<string, 
 
 export function combat(over: Partial<Combat> = {}): Combat {
   return {
-    id: 'cb1', campaign_id: 'camp1', session_id: 's1', status: 'active', round: 1, turn_entry_id: null, gm_turn: false,
+    id: 'cb1', campaign_id: 'camp1', session_id: 's1', status: 'active', round: 1, turn_entry_id: null,
     rev: 1, started_by: null, created_at: '', updated_at: '', ...over,
   }
 }

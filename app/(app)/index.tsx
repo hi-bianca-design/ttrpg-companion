@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
 import { AccountDrawer } from '@/features/auth/AccountDrawer'
-import { useAuth } from '@/features/auth/useAuth'
 import { selectUpNext } from '@/features/home/selectUpNext'
 import { UpNextCard } from '@/features/home/UpNextCard'
 import { useHomeData } from '@/features/home/useHomeData'
@@ -16,10 +15,9 @@ import { THEME_COLORS } from '@/lib/theme'
 
 export default function HomeScreen() {
   const router = useRouter()
-  const { user } = useAuth()
   const [accountOpen, setAccountOpen] = useState(false)
-  const { characters, campaigns, sessions, isLoading, isError, refetch } = useHomeData()
-  const upNext = selectUpNext({ userId: user?.id, campaigns, sessions, characters })
+  const { characters, campaigns, sessions, turnCampaignIds, isLoading, isError, refetch } = useHomeData()
+  const upNext = selectUpNext({ turnCampaignIds, campaigns, sessions, characters })
 
   return (
     <ScreenBackground scroll>

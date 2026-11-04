@@ -44,7 +44,7 @@ export function TurnBanner() {
     if (ending.current) return
     ending.current = true
     endTurn
-      .mutateAsync()
+      .mutateAsync({ expectedRound: combat.round })
       .catch((e) => showToast(e instanceof Error ? e.message : ERROR_COPY.save_failed))
       .finally(() => { ending.current = false })
   }

@@ -44,7 +44,7 @@ test('the holder sees the banner with the agreed copy and an End Turn button', (
 test.each([
   ['no combat', { combat: null }],
   ['someone else holds the turn', { combat: combat({ turn_entry_id: 'p2' }) }],
-  ['a hidden enemy holds the turn', { combat: combat({ turn_entry_id: null, gm_turn: true }) }],
+  ['a hidden enemy holds the turn', { combat: combat({ turn_entry_id: null }) }],
   ['combat is still rolling', { combat: combat({ status: 'rolling', turn_entry_id: 'p1' }) }],
   ['the viewer has no row (the GM, or an invitee, viewing the holder’s sheet)', { user: 'gm1' }],
   ['the order has no row for this sheet’s character', { order: [orderRow({ id: 'p1', user_id: 'u1', character_id: 'other', position: 1 })] }],
@@ -58,6 +58,8 @@ test('End Turn ends the turn by combat id', () => {
   setup()
   fireEvent.press(screen.getByRole('button', { name: 'End Turn' }))
   expect(mutateAsync).toHaveBeenCalledTimes(1)
+  // The round on screen goes along: a stale tap after the round moved on is a server no-op.
+  expect(mutateAsync).toHaveBeenCalledWith({ expectedRound: 1 })
   expect(useEndMyTurn).toHaveBeenCalledWith('camp1', 'cb1')
 })
 

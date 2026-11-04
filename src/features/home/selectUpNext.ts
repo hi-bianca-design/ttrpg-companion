@@ -9,7 +9,8 @@ export type UpNext =
   | { kind: 'none' }
 
 type Input = {
-  userId: string | undefined
+  /** Campaigns whose combat order points at one of the viewer's own rows (see useHomeData). */
+  turnCampaignIds: readonly string[]
   campaigns: CampaignSummary[]
   /** Active session per campaign id; null = none, undefined = not loaded (or failed) yet. */
   sessions: Record<string, Session | null | undefined>
@@ -18,12 +19,9 @@ type Input = {
 }
 
 /** What Home's top card should show: your turn, else a live session, else the latest character. */
-export function selectUpNext({ userId, campaigns, sessions, characters }: Input): UpNext {
+export function selectUpNext({ turnCampaignIds, campaigns, sessions, characters }: Input): UpNext {
   const live = campaigns.filter((c) => !!sessions[c.id])
-  const mine = live.find((c) => {
-    const s = sessions[c.id]!
-    return !!userId && s.in_combat && s.current_turn_user_id === userId
-  })
+  const mine = live.find((c) => turnCampaignIds.includes(c.id))
   if (mine) return { kind: 'turn', campaign: mine }
   if (live[0]) return { kind: 'live', campaign: live[0] }
   if (characters[0]) return { kind: 'recent', character: characters[0] }

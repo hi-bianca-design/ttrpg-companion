@@ -82,7 +82,6 @@ export function buildPlayerOrder(input: {
       if (r.kind === 'enemy') return { kind: 'enemy', id: r.id, name: r.name ?? 'Enemy', initiative: r.initiative, isCurrent }
       return playerRow(r, isCurrent, party, userId)
     })
-  // combat.gm_turn is deliberately not read: while a hidden enemy holds the turn the pointer just stays put.
   return { round: combat.round, rows }
 }
 

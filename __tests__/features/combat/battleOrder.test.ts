@@ -18,7 +18,7 @@ describe('buildPlayerOrder', () => {
   ]
 
   test('rows follow position; a hidden turn holder leaves no trace (the pointer simply stays put)', () => {
-    const out = buildPlayerOrder({ combat: combat({ gm_turn: true, round: 3 }), order, party, userId: 'u1' })
+    const out = buildPlayerOrder({ combat: combat({ round: 3 }), order, party, userId: 'u1' })
     expect(out.round).toBe(3)
     expect(Object.keys(out).sort()).toEqual(['round', 'rows'])
     expect(out.rows.map((r) => r.id)).toEqual(['p1', 'e2', 'p3'])
