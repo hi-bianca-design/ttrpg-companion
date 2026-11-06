@@ -55,8 +55,9 @@ export function CombatBadgeView({ campaignId, session }: { campaignId: string | 
 
   if (!canEndCombat(session, user?.id, gmId)) return <Badge variant="tinted">In combat</Badge>
 
+  // One wrapper, not a fragment: the dialog would otherwise be a third child of a justify-between row and push this badge off the right edge.
   return (
-    <>
+    <View>
       <Pressable accessibilityRole="button" accessibilityLabel="In combat" accessibilityHint="Ends combat" hitSlop={HIT_SLOP} onPress={() => setConfirming(true)}>
         <Badge variant="tinted">In combat</Badge>
       </Pressable>
@@ -83,7 +84,7 @@ export function CombatBadgeView({ campaignId, session }: { campaignId: string | 
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </View>
   )
 }
 
