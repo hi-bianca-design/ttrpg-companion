@@ -18,7 +18,10 @@ jest.mock('@/lib/supabase', () => ({
   },
 }))
 
+jest.mock('@/lib/offline', () => ({ clearPersistedCombat: jest.fn(() => Promise.resolve()), setOfflineUser: jest.fn(() => Promise.resolve()) }))
+
 import { supabase } from '@/lib/supabase'
+import { clearPersistedCombat, setOfflineUser } from '@/lib/offline'
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <AuthProvider>{children}</AuthProvider>
@@ -78,5 +81,33 @@ describe('useAuth', () => {
     const listener = (supabase.auth.onAuthStateChange as jest.Mock).mock.calls[0][0]
     act(() => listener('SIGNED_OUT', null))
     expect(useBuilderStore.getState()).toMatchObject({ systemId: null, draft: {} })
+  })
+
+  it('clears the persisted combat cache on sign-out, before the query cache', async () => {
+    ;(supabase.auth.getSession as jest.Mock).mockResolvedValue({ data: { session: null } })
+    const clear = jest.spyOn(queryClient, 'clear')
+    renderHook(() => useAuth(), { wrapper })
+    await act(async () => {})
+    const listener = (supabase.auth.onAuthStateChange as jest.Mock).mock.calls[0][0]
+    act(() => listener('SIGNED_OUT', null))
+    expect(clearPersistedCombat).toHaveBeenCalledTimes(1)
+    expect((clearPersistedCombat as jest.Mock).mock.invocationCallOrder[0]).toBeLessThan(clear.mock.invocationCallOrder[0])
+    clear.mockRestore()
+  })
+
+  it('names the signed-in user for offline persistence once the session is known, and follows a user change', async () => {
+    ;(supabase.auth.getSession as jest.Mock).mockResolvedValue({ data: { session: { user: { id: 'u1' } } } })
+    renderHook(() => useAuth(), { wrapper })
+    await act(async () => {})
+    expect(setOfflineUser).toHaveBeenLastCalledWith('u1')
+    const listener = (supabase.auth.onAuthStateChange as jest.Mock).mock.calls[0][0]
+    act(() => listener('SIGNED_IN', { user: { id: 'u2' } }))
+    expect(setOfflineUser).toHaveBeenLastCalledWith('u2')
+  })
+
+  it('does not touch offline persistence while the session is still loading', () => {
+    renderHook(() => useAuth(), { wrapper })
+    expect(setOfflineUser).not.toHaveBeenCalled()
+    expect(clearPersistedCombat).not.toHaveBeenCalled()
   })
 })
