@@ -14,10 +14,11 @@ const nameOf = (m: { username: string | null }) => m.username ?? 'Unknown player
 /**
  * The party: a card per active member's character (by character name), then the members who have
  * none yet. The GM has no character and is not listed. Live; says so when the connection drops.
+ * `managed`: a parent (PartyPage) already keeps the party live and shows the one Reconnecting marker.
  */
-export function PartyList({ campaign }: { campaign: CampaignFull }) {
+export function PartyList({ campaign, managed = false }: { campaign: CampaignFull; managed?: boolean }) {
   const party = usePartyCharacters(campaign)
-  const { connected } = usePartyRealtime(campaign)
+  const { connected } = usePartyRealtime(managed ? undefined : campaign)
   // accessibilityLiveRegion is Android-only; iOS needs an explicit announcement.
   useEffect(() => {
     if (!connected && Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility('Reconnecting')

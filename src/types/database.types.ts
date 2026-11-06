@@ -777,7 +777,6 @@ export type Database = {
           campaign_id: string
           combat_started_by: string | null
           created_at: string
-          current_turn_user_id: string | null
           ended_at: string | null
           id: string
           in_combat: boolean
@@ -790,7 +789,6 @@ export type Database = {
           campaign_id: string
           combat_started_by?: string | null
           created_at?: string
-          current_turn_user_id?: string | null
           ended_at?: string | null
           id?: string
           in_combat?: boolean
@@ -803,7 +801,6 @@ export type Database = {
           campaign_id?: string
           combat_started_by?: string | null
           created_at?: string
-          current_turn_user_id?: string | null
           ended_at?: string | null
           id?: string
           in_combat?: boolean
@@ -823,13 +820,6 @@ export type Database = {
           {
             foreignKeyName: "sessions_combat_started_by_fkey"
             columns: ["combat_started_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sessions_current_turn_user_id_fkey"
-            columns: ["current_turn_user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -991,29 +981,6 @@ export type Database = {
           campaign_id: string
           combat_started_by: string | null
           created_at: string
-          current_turn_user_id: string | null
-          ended_at: string | null
-          id: string
-          in_combat: boolean
-          opened_by: string | null
-          started_at: string
-          status: string
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "sessions"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      end_turn: {
-        Args: { p_session_id: string }
-        Returns: {
-          campaign_id: string
-          combat_started_by: string | null
-          created_at: string
-          current_turn_user_id: string | null
           ended_at: string | null
           id: string
           in_combat: boolean
@@ -1050,7 +1017,6 @@ export type Database = {
           campaign_id: string
           combat_started_by: string | null
           created_at: string
-          current_turn_user_id: string | null
           ended_at: string | null
           id: string
           in_combat: boolean
@@ -1135,7 +1101,6 @@ export type Database = {
           campaign_id: string
           combat_started_by: string | null
           created_at: string
-          current_turn_user_id: string | null
           ended_at: string | null
           id: string
           in_combat: boolean
@@ -1190,7 +1155,6 @@ export type Database = {
           campaign_id: string
           combat_started_by: string | null
           created_at: string
-          current_turn_user_id: string | null
           ended_at: string | null
           id: string
           in_combat: boolean
@@ -1244,28 +1208,6 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "combats"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      set_turn: {
-        Args: { p_session_id: string; p_user_id: string }
-        Returns: {
-          campaign_id: string
-          combat_started_by: string | null
-          created_at: string
-          current_turn_user_id: string | null
-          ended_at: string | null
-          id: string
-          in_combat: boolean
-          opened_by: string | null
-          started_at: string
-          status: string
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "sessions"
           isOneToOne: true
           isSetofReturn: false
         }

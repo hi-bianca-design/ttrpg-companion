@@ -22,8 +22,8 @@ jest.mock('expo-router', () => ({
 }))
 jest.mock('@/features/auth/useAuth', () => ({ useAuth: () => ({ user: { id: 'gm1' } }) }))
 jest.mock('@/features/campaigns/campaigns.api', () => ({ getCampaign: jest.fn(), getCharacterCampaign: jest.fn() }))
-jest.mock('@/features/party/PartyList', () => ({
-  PartyList: () => { const { Text } = require('react-native'); return <Text>party list</Text> },
+jest.mock('@/features/combat/PartyPage', () => ({
+  PartyPage: () => { const { Text } = require('react-native'); return <Text>party list</Text> },
 }))
 jest.mock('@/features/sessions/sessions.api', () => ({ getActiveSession: jest.fn().mockResolvedValue(null), openSession: jest.fn(), endSession: jest.fn() }))
 

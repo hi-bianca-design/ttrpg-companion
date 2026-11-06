@@ -5,7 +5,7 @@ import { splitClassName } from '@/lib/class-split'
 import { THEME_COLORS } from '@/lib/theme'
 import { cn } from '@/lib/utils'
 
-type InputProps = React.ComponentProps<typeof TextInput> & { className?: string }
+type InputProps = React.ComponentProps<typeof TextInput> & { className?: string; ref?: React.Ref<TextInput> }
 
 /**
  * Recessed pointed plate with the value in Cormorant. A placeholder cannot be styled apart from the
