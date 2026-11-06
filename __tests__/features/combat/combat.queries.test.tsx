@@ -4,7 +4,7 @@ import { act, renderHook, waitFor } from '@testing-library/react-native'
 import { makeTestQueryClient } from '../../helpers/queryClient'
 import * as api from '@/features/combat/combat.api'
 import {
-  useActiveCombat, useApplyEnemyHp, useCombatEntries, useCombatOrder, useNextTurn,
+  useActiveCombat, useAddEncounterEnemies, useApplyEnemyHp, useCombatEntries, useCombatOrder, useNextTurn, useStartPreparedCombat,
 } from '@/features/combat/combat.queries'
 import { AppError } from '@/features/errors'
 import { qk } from '@/lib/query-client'
@@ -14,6 +14,7 @@ jest.mock('@/features/combat/combat.api', () => ({
   startCombat: jest.fn(), setInitiative: jest.fn(), moveEntry: jest.fn(), nextTurn: jest.fn(), endMyTurn: jest.fn(),
   setCurrentEntry: jest.fn(), delayTurn: jest.fn(), addEnemies: jest.fn(), updateEnemy: jest.fn(), removeEntry: jest.fn(),
   applyEnemyHp: jest.fn(), undoEnemyHp: jest.fn(), newBatchId: jest.fn(() => 'gen-1'),
+  startPreparedCombat: jest.fn(), addEncounterEnemies: jest.fn(),
 }))
 
 const active = { id: 'cb1', campaign_id: 'c1', status: 'active' } as never
@@ -124,5 +125,50 @@ describe('mutations', () => {
     })
     const keys = spy.mock.calls.map((c) => (c[0] as { queryKey: unknown }).queryKey)
     expect(keys).toEqual(expect.arrayContaining([qk.combat('c1'), qk.combatOrder('cb1'), qk.combatEntries('cb1')]))
+  })
+})
+
+describe('prepared combat mutations', () => {
+  const launch = { encounterIds: ['e1'], order: ['player:ch1'], hiddenKeys: [] }
+  const keysOf = (spy: jest.SpyInstance) => spy.mock.calls.map((c) => (c[0] as { queryKey: unknown }).queryKey)
+  // The combat id is not known before launch, so the order and entries are invalidated for every combat.
+  const launchKeys = () => [qk.combat('c1'), qk.session('c1'), [qk.combatOrder('')[0]], [qk.combatEntries('')[0]]]
+
+  it('useStartPreparedCombat calls the api with the session and invalidates after success', async () => {
+    ;(api.startPreparedCombat as jest.Mock).mockResolvedValue(active)
+    const { client, wrapper } = setup()
+    const spy = jest.spyOn(client, 'invalidateQueries')
+    const { result } = renderHook(() => useStartPreparedCombat('c1', 's1'), { wrapper })
+    await act(async () => { await expect(result.current.mutateAsync(launch)).resolves.toEqual(active) })
+    expect(api.startPreparedCombat).toHaveBeenCalledWith('s1', launch)
+    expect(keysOf(spy)).toEqual(expect.arrayContaining(launchKeys()))
+  })
+
+  it('useStartPreparedCombat invalidates after an error too', async () => {
+    ;(api.startPreparedCombat as jest.Mock).mockRejectedValue(new AppError('not_rolling'))
+    const { client, wrapper } = setup()
+    const spy = jest.spyOn(client, 'invalidateQueries')
+    const { result } = renderHook(() => useStartPreparedCombat('c1', 's1'), { wrapper })
+    await act(async () => { await expect(result.current.mutateAsync(launch)).rejects.toMatchObject({ code: 'not_rolling' }) })
+    expect(keysOf(spy)).toEqual(expect.arrayContaining(launchKeys()))
+  })
+
+  it('useAddEncounterEnemies calls the api with the combat and invalidates after success', async () => {
+    ;(api.addEncounterEnemies as jest.Mock).mockResolvedValue(['x1'])
+    const { client, wrapper } = setup()
+    const spy = jest.spyOn(client, 'invalidateQueries')
+    const { result } = renderHook(() => useAddEncounterEnemies('c1', 'cb1'), { wrapper })
+    await act(async () => { await expect(result.current.mutateAsync({ encounterId: 'e1' })).resolves.toEqual(['x1']) })
+    expect(api.addEncounterEnemies).toHaveBeenCalledWith('cb1', 'e1')
+    expect(keysOf(spy)).toEqual(expect.arrayContaining([qk.combat('c1'), qk.combatOrder('cb1'), qk.combatEntries('cb1')]))
+  })
+
+  it('useAddEncounterEnemies invalidates after an error too', async () => {
+    ;(api.addEncounterEnemies as jest.Mock).mockRejectedValue(new AppError('invalid_target'))
+    const { client, wrapper } = setup()
+    const spy = jest.spyOn(client, 'invalidateQueries')
+    const { result } = renderHook(() => useAddEncounterEnemies('c1', 'cb1'), { wrapper })
+    await act(async () => { await expect(result.current.mutateAsync({ encounterId: 'e1' })).rejects.toMatchObject({ code: 'invalid_target' }) })
+    expect(keysOf(spy)).toEqual(expect.arrayContaining([qk.combat('c1'), qk.combatOrder('cb1'), qk.combatEntries('cb1')]))
   })
 })

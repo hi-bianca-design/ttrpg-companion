@@ -947,6 +947,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_encounter_enemies: {
+        Args: { p_combat_id: string; p_encounter_id: string }
+        Returns: string[]
+      }
       add_enemies: {
         Args: {
           p_ac: number
@@ -980,6 +984,13 @@ export type Database = {
         Returns: boolean
       }
       can_view_character: { Args: { p_character_id: string }; Returns: boolean }
+      combat_add_encounter_enemies: {
+        Args: { p_combat_id: string; p_encounter_id: string }
+        Returns: {
+          entry_id: string
+          key: string
+        }[]
+      }
       combat_advance: { Args: { p_combat_id: string }; Returns: undefined }
       combat_delete_entries: {
         Args: { p_combat_id: string; p_ids: string[] }
@@ -1326,6 +1337,32 @@ export type Database = {
       }
       start_combat: {
         Args: { p_combat_id: string }
+        Returns: {
+          campaign_id: string
+          created_at: string
+          id: string
+          rev: number
+          round: number
+          session_id: string
+          started_by: string | null
+          status: string
+          turn_entry_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "combats"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      start_prepared_combat: {
+        Args: {
+          p_encounter_ids: string[]
+          p_hidden_keys: string[]
+          p_order: string[]
+          p_session_id: string
+        }
         Returns: {
           campaign_id: string
           created_at: string

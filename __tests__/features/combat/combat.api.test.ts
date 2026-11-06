@@ -1,6 +1,7 @@
 import {
-  newBatchId, addEnemies, applyEnemyHp, delayTurn, endMyTurn, getActiveCombat, getCombatEntries, getCombatOrder, moveEntry,
-  nextTurn, removeEntry, setCurrentEntry, setInitiative, startCombat, undoEnemyHp, updateEnemy,
+  newBatchId, addEncounterEnemies, addEnemies, applyEnemyHp, delayTurn, endMyTurn, getActiveCombat, getCombatEntries,
+  getCombatOrder, moveEntry, nextTurn, removeEntry, setCurrentEntry, setInitiative, startCombat, startPreparedCombat,
+  undoEnemyHp, updateEnemy,
 } from '@/features/combat/combat.api'
 
 jest.mock('@/lib/supabase', () => ({
@@ -37,6 +38,25 @@ describe('combat rpc wrappers', () => {
     ;(supabase.rpc as jest.Mock).mockResolvedValue({ data: combat, error: null })
     await expect(call()).resolves.toEqual(combat)
     expect(supabase.rpc).toHaveBeenCalledWith(fn, args)
+  })
+
+  it('startPreparedCombat sends the encounters, order and hidden keys and returns the combat', async () => {
+    ;(supabase.rpc as jest.Mock).mockResolvedValue({ data: combat, error: null })
+    await expect(startPreparedCombat('s1', { encounterIds: ['e1'], order: ['player:c1'], hiddenKeys: [] })).resolves.toEqual(combat)
+    expect(supabase.rpc).toHaveBeenCalledWith('start_prepared_combat', {
+      p_session_id: 's1', p_encounter_ids: ['e1'], p_order: ['player:c1'], p_hidden_keys: [],
+    })
+  })
+
+  it('addEncounterEnemies returns the new entry ids', async () => {
+    ;(supabase.rpc as jest.Mock).mockResolvedValue({ data: ['x1', 'x2'], error: null })
+    await expect(addEncounterEnemies('cb1', 'e1')).resolves.toEqual(['x1', 'x2'])
+    expect(supabase.rpc).toHaveBeenCalledWith('add_encounter_enemies', { p_combat_id: 'cb1', p_encounter_id: 'e1' })
+  })
+
+  it('startPreparedCombat surfaces a coded error', async () => {
+    ;(supabase.rpc as jest.Mock).mockResolvedValue({ data: null, error: { message: 'not_rolling', code: 'P0001' } })
+    await expect(startPreparedCombat('s1', { encounterIds: [], order: [], hiddenKeys: [] })).rejects.toMatchObject({ code: 'not_rolling' })
   })
 
   it('addEnemies sends every field and returns the new entry ids', async () => {
