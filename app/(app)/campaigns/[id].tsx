@@ -12,6 +12,7 @@ import { InviteSheet } from '@/features/campaigns/InviteSheet'
 import { PartyPage } from '@/features/combat/PartyPage'
 import { CampaignSessionStatus } from '@/features/sessions/CampaignSessionStatus'
 import { SessionControls } from '@/features/sessions/SessionControls'
+import { useSessionRealtime } from '@/features/sessions/useSessionRealtime'
 import { useCampaign } from '@/features/campaigns/campaigns.queries'
 import { THEME_COLORS } from '@/lib/theme'
 import { systemName } from '@/systems/registry'
@@ -21,6 +22,7 @@ export default function CampaignDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { user } = useAuth()
   const { data, isLoading, isError, refetch } = useCampaign(id)
+  useSessionRealtime(data?.id)
   const [inviteOpen, setInviteOpen] = useState(false)
 
   if (isLoading) {

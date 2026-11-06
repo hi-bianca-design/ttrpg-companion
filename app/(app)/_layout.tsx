@@ -4,7 +4,7 @@ import { BottomNav } from '@/components/ui/bottom-nav'
 import { NavInsetContext } from '@/components/ui/nav-inset'
 
 export default function AppLayout() {
-  const segments = useSegments()
+  const segments: string[] = useSegments()
   // No root tab bar inside a character sheet ([id], which has its own tabs) or the character creation
   // wizard (new): leaving the wizard goes through its Back / Cancel and the discard prompt, not a tab
   // switch. Other tabs' pushed and modal-like screens (campaign detail, join, homebrew forms) keep it.

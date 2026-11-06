@@ -7,6 +7,7 @@ import { useActiveSession, useSetCombat } from '@/features/sessions/sessions.que
 import { useCharacter } from '@/features/characters/characters.queries'
 import { useActiveCombat, useCombatOrder } from '@/features/combat/combat.queries'
 
+jest.mock('@/features/sessions/useSessionRealtime', () => ({ useSessionRealtime: jest.fn() }))
 jest.mock('@/features/campaigns/campaigns.queries', () => ({ useCharacterCampaign: jest.fn(), useCampaign: jest.fn() }))
 jest.mock('@/features/sessions/sessions.queries', () => ({ useActiveSession: jest.fn(), useSetCombat: jest.fn() }))
 jest.mock('@/lib/supabase', () => ({ supabase: { from: jest.fn(), rpc: jest.fn(), auth: { getSession: jest.fn() } } }))
