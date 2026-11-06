@@ -27,4 +27,5 @@ export const qk = {
   combat: (campaignId: string) => ['combat', campaignId] as const,
   combatOrder: (combatId: string) => ['combat-order', combatId] as const,
   combatEntries: (combatId: string) => ['combat-entries', combatId] as const,
+  encounters: (campaignId: string) => ['encounters', campaignId] as const,
 }

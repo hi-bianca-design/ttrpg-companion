@@ -301,9 +301,12 @@ export type Database = {
       combat_entries: {
         Row: {
           ac: number | null
+          attacks: Json
           campaign_id: string
           character_id: string | null
           combat_id: string
+          conditions: string[]
+          defense_label: string | null
           group_id: string | null
           hidden: boolean
           hp: number | null
@@ -320,12 +323,16 @@ export type Database = {
           prev_temp: number | null
           temp_hp: number
           user_id: string | null
+          xp: number | null
         }
         Insert: {
           ac?: number | null
+          attacks?: Json
           campaign_id: string
           character_id?: string | null
           combat_id: string
+          conditions?: string[]
+          defense_label?: string | null
           group_id?: string | null
           hidden?: boolean
           hp?: number | null
@@ -342,12 +349,16 @@ export type Database = {
           prev_temp?: number | null
           temp_hp?: number
           user_id?: string | null
+          xp?: number | null
         }
         Update: {
           ac?: number | null
+          attacks?: Json
           campaign_id?: string
           character_id?: string | null
           combat_id?: string
+          conditions?: string[]
+          defense_label?: string | null
           group_id?: string | null
           hidden?: boolean
           hp?: number | null
@@ -364,6 +375,7 @@ export type Database = {
           prev_temp?: number | null
           temp_hp?: number
           user_id?: string | null
+          xp?: number | null
         }
         Relationships: [
           {
@@ -632,6 +644,103 @@ export type Database = {
           },
         ]
       }
+      encounter_enemies: {
+        Row: {
+          ac: number | null
+          attacks: Json
+          campaign_id: string
+          count: number
+          defense_label: string | null
+          encounter_id: string
+          hidden: boolean
+          id: string
+          max_hp: number
+          name: string
+          notes: string | null
+          position: number
+          xp: number | null
+        }
+        Insert: {
+          ac?: number | null
+          attacks?: Json
+          campaign_id: string
+          count?: number
+          defense_label?: string | null
+          encounter_id: string
+          hidden?: boolean
+          id?: string
+          max_hp: number
+          name: string
+          notes?: string | null
+          position?: number
+          xp?: number | null
+        }
+        Update: {
+          ac?: number | null
+          attacks?: Json
+          campaign_id?: string
+          count?: number
+          defense_label?: string | null
+          encounter_id?: string
+          hidden?: boolean
+          id?: string
+          max_hp?: number
+          name?: string
+          notes?: string | null
+          position?: number
+          xp?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "encounter_enemies_encounter_fk"
+            columns: ["encounter_id", "campaign_id"]
+            isOneToOne: false
+            referencedRelation: "encounters"
+            referencedColumns: ["id", "campaign_id"]
+          },
+        ]
+      }
+      encounters: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          id: string
+          name: string
+          story_after: string | null
+          story_before: string | null
+          story_why: string | null
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          id?: string
+          name: string
+          story_after?: string | null
+          story_before?: string | null
+          story_why?: string | null
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          story_after?: string | null
+          story_before?: string | null
+          story_why?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "encounters_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_systems: {
         Row: {
           attribution: string
@@ -838,16 +947,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_encounter_enemies: {
+        Args: { p_combat_id: string; p_encounter_id: string }
+        Returns: string[]
+      }
       add_enemies: {
         Args: {
           p_ac: number
+          p_attacks?: Json
           p_combat_id: string
           p_count: number
+          p_defense_label?: string
           p_hidden: boolean
           p_initiative: number
           p_max_hp: number
           p_name: string
           p_notes: string
+          p_xp?: number
         }
         Returns: string[]
       }
@@ -868,6 +984,13 @@ export type Database = {
         Returns: boolean
       }
       can_view_character: { Args: { p_character_id: string }; Returns: boolean }
+      combat_add_encounter_enemies: {
+        Args: { p_combat_id: string; p_encounter_id: string }
+        Returns: {
+          entry_id: string
+          key: string
+        }[]
+      }
       combat_advance: { Args: { p_combat_id: string }; Returns: undefined }
       combat_delete_entries: {
         Args: { p_combat_id: string; p_ids: string[] }
@@ -1214,6 +1337,32 @@ export type Database = {
       }
       start_combat: {
         Args: { p_combat_id: string }
+        Returns: {
+          campaign_id: string
+          created_at: string
+          id: string
+          rev: number
+          round: number
+          session_id: string
+          started_by: string | null
+          status: string
+          turn_entry_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "combats"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      start_prepared_combat: {
+        Args: {
+          p_encounter_ids: string[]
+          p_hidden_keys: string[]
+          p_order: string[]
+          p_session_id: string
+        }
         Returns: {
           campaign_id: string
           created_at: string

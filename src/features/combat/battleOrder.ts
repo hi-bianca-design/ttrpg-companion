@@ -1,6 +1,6 @@
 import type { CharacterFull } from '@/features/characters/characters.api'
 import type { PoolValue } from '@/systems/types'
-import type { Combat, CombatEntry, OrderRow } from './combat.api'
+import type { Attack, Combat, CombatEntry, OrderRow } from './combat.api'
 
 /** A party member's row. Shared by the player and GM screens: hit points come from the party cache, never the order. */
 export type PlayerRow = {
@@ -40,6 +40,10 @@ export type GmEnemyRow = {
   tempHp: number
   ac: number | null
   notes: string | null
+  defenseLabel: string | null
+  attacks: Attack[]
+  xp: number | null
+  conditions: string[]
   hidden: boolean
   groupId: string | null
   isDown: boolean
@@ -106,6 +110,10 @@ export function buildGmOrder(input: {
         tempHp: e.temp_hp,
         ac: e.ac,
         notes: e.notes,
+        defenseLabel: e.defense_label,
+        attacks: e.attacks as Attack[],
+        xp: e.xp,
+        conditions: e.conditions,
         hidden: e.hidden,
         groupId: e.group_id,
         isDown: hp === 0,

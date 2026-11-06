@@ -34,9 +34,10 @@ export function orderRow(over: Partial<OrderRow> & { id: string }): OrderRow {
 
 export function entry(over: Partial<CombatEntry> & { id: string }): CombatEntry {
   return {
-    ac: null, campaign_id: 'camp1', character_id: null, combat_id: 'cb1', group_id: null, hidden: false, hp: null,
+    ac: null, attacks: [], campaign_id: 'camp1', character_id: null, combat_id: 'cb1', conditions: [], defense_label: null,
+    group_id: null, hidden: false, hp: null,
     initiative: null, is_current: false, kind: 'player', last_batch: null, max_hp: null, name: null, notes: null,
-    position: 1, prev_hp: null, prev_temp: null, temp_hp: 0, user_id: null, ...over,
+    position: 1, prev_hp: null, prev_temp: null, temp_hp: 0, user_id: null, xp: null, ...over,
   }
 }
 

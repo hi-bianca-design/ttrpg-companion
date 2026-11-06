@@ -1,6 +1,7 @@
 import {
-  newBatchId, addEnemies, applyEnemyHp, delayTurn, endMyTurn, getActiveCombat, getCombatEntries, getCombatOrder, moveEntry,
-  nextTurn, removeEntry, setCurrentEntry, setInitiative, startCombat, undoEnemyHp, updateEnemy,
+  newBatchId, addEncounterEnemies, addEnemies, applyEnemyHp, delayTurn, endMyTurn, getActiveCombat, getCombatEntries,
+  getCombatOrder, moveEntry, nextTurn, removeEntry, setCurrentEntry, setInitiative, startCombat, startPreparedCombat,
+  undoEnemyHp, updateEnemy,
 } from '@/features/combat/combat.api'
 
 jest.mock('@/lib/supabase', () => ({
@@ -39,12 +40,45 @@ describe('combat rpc wrappers', () => {
     expect(supabase.rpc).toHaveBeenCalledWith(fn, args)
   })
 
+  it('startPreparedCombat sends the encounters, order and hidden keys and returns the combat', async () => {
+    ;(supabase.rpc as jest.Mock).mockResolvedValue({ data: combat, error: null })
+    await expect(startPreparedCombat('s1', { encounterIds: ['e1'], order: ['player:c1'], hiddenKeys: [] })).resolves.toEqual(combat)
+    expect(supabase.rpc).toHaveBeenCalledWith('start_prepared_combat', {
+      p_session_id: 's1', p_encounter_ids: ['e1'], p_order: ['player:c1'], p_hidden_keys: [],
+    })
+  })
+
+  it('addEncounterEnemies returns the new entry ids', async () => {
+    ;(supabase.rpc as jest.Mock).mockResolvedValue({ data: ['x1', 'x2'], error: null })
+    await expect(addEncounterEnemies('cb1', 'e1')).resolves.toEqual(['x1', 'x2'])
+    expect(supabase.rpc).toHaveBeenCalledWith('add_encounter_enemies', { p_combat_id: 'cb1', p_encounter_id: 'e1' })
+  })
+
+  it('startPreparedCombat surfaces a coded error', async () => {
+    ;(supabase.rpc as jest.Mock).mockResolvedValue({ data: null, error: { message: 'not_rolling', code: 'P0001' } })
+    await expect(startPreparedCombat('s1', { encounterIds: [], order: [], hiddenKeys: [] })).rejects.toMatchObject({ code: 'not_rolling' })
+  })
+
   it('addEnemies sends every field and returns the new entry ids', async () => {
     ;(supabase.rpc as jest.Mock).mockResolvedValue({ data: ['e1', 'e2'], error: null })
     await expect(addEnemies('cb1', { name: 'Goblin', count: 2, maxHp: 7, initiative: 15, ac: 13, notes: null, hidden: true })).resolves.toEqual(['e1', 'e2'])
     expect(supabase.rpc).toHaveBeenCalledWith('add_enemies', {
       p_combat_id: 'cb1', p_name: 'Goblin', p_count: 2, p_max_hp: 7, p_initiative: 15, p_ac: 13, p_notes: null, p_hidden: true,
+      p_defense_label: undefined, p_attacks: undefined, p_xp: undefined,
     })
+  })
+
+  it('addEnemies passes the card fields: defense label, attacks and xp', async () => {
+    ;(supabase.rpc as jest.Mock).mockResolvedValue({ data: ['e1'], error: null })
+    const attacks = [{ name: 'Bite', toHit: '+4', damage: '2d4+2' }]
+    await addEnemies('cb1', { name: 'Wolf', count: 1, maxHp: 11, initiative: null, ac: 13, notes: null, hidden: false, defenseLabel: 'AC', attacks, xp: 50 })
+    expect(supabase.rpc).toHaveBeenCalledWith('add_enemies', expect.objectContaining({ p_defense_label: 'AC', p_attacks: attacks, p_xp: 50 }))
+  })
+
+  it('updateEnemy passes the card fields through as the patch', async () => {
+    ;(supabase.rpc as jest.Mock).mockResolvedValue({ data: combat, error: null })
+    await updateEnemy('e1', { xp: 75, conditions: ['prone'] })
+    expect(supabase.rpc).toHaveBeenCalledWith('update_enemy', { p_entry_id: 'e1', p_patch: { xp: 75, conditions: ['prone'] } })
   })
 
   it('applyEnemyHp returns the batch id', async () => {

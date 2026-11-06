@@ -8,6 +8,9 @@ export type OrderRow = Database['public']['Tables']['combat_order']['Row']
 /** The GM's truth (enemy hit points, armor class, notes, hidden). Readable by the GM only. */
 export type CombatEntry = Database['public']['Tables']['combat_entries']['Row']
 
+/** One attack on an enemy's card. Free text: the GM types "+4" and "2d4+2" as they appear in the book. */
+export type Attack = { name: string; toHit: string; damage: string }
+
 export type NewEnemy = {
   name: string
   count: number
@@ -16,6 +19,10 @@ export type NewEnemy = {
   ac: number | null
   notes: string | null
   hidden: boolean
+  /** Optional: omitted fields take the server defaults (no label, no attacks, no xp). */
+  defenseLabel?: string | null
+  attacks?: Attack[]
+  xp?: number | null
 }
 
 export type EnemyPatch = Partial<{
@@ -25,9 +32,19 @@ export type EnemyPatch = Partial<{
   ac: number | null
   notes: string | null
   hidden: boolean
+  defense_label: string | null
+  attacks: Attack[]
+  xp: number | null
+  conditions: string[]
 }>
 
 export type HpMode = 'damage' | 'heal' | 'temp'
+
+/**
+ * A prepared launch. Keys name the review screen's rows: `player:<characterId>` and
+ * `enemy:<encounterEnemyId>:<n>` (copy n, 1-based). Keys left out of `order` go last.
+ */
+export type PreparedLaunch = { encounterIds: string[]; order: string[]; hiddenKeys: string[] }
 
 /** The campaign's combat that has not ended (rolling or active), or null. */
 export async function getActiveCombat(campaignId: string): Promise<Combat | null> {
@@ -68,6 +85,27 @@ export async function moveEntry(entryId: string, toPosition: number): Promise<Co
   return unwrap(await supabase.rpc('move_entry', { p_entry_id: entryId, p_to_position: toPosition }))
 }
 
+/**
+ * GM only: launches the session's fight from prepared encounters, in the given order, and starts it
+ * (active, round 1, first row current). Reuses the live rolling combat or creates one. Unknown
+ * encounters or keys raise `invalid_target`; an already active combat raises `not_rolling`.
+ */
+export async function startPreparedCombat(sessionId: string, input: PreparedLaunch): Promise<Combat> {
+  return unwrap(
+    await supabase.rpc('start_prepared_combat', {
+      p_session_id: sessionId,
+      p_encounter_ids: input.encounterIds,
+      p_order: input.order,
+      p_hidden_keys: input.hiddenKeys,
+    }),
+  )
+}
+
+/** GM only, rolling or active: an encounter's enemies join at the bottom as reinforcements. Returns the new entry ids. */
+export async function addEncounterEnemies(combatId: string, encounterId: string): Promise<string[]> {
+  return unwrap(await supabase.rpc('add_encounter_enemies', { p_combat_id: combatId, p_encounter_id: encounterId }))
+}
+
 /** GM only. A stale tap (expected entry is no longer current) is a server no-op; refetch. */
 export async function nextTurn(combatId: string, expectedEntryId: string): Promise<Combat> {
   return unwrap(await supabase.rpc('next_turn', { p_combat_id: combatId, p_expected_entry_id: expectedEntryId }))
@@ -104,6 +142,10 @@ export async function addEnemies(combatId: string, input: NewEnemy): Promise<str
       p_ac: input.ac as number,
       p_notes: input.notes as string,
       p_hidden: input.hidden,
+      // Omitted (not null) when unset, so the function's own defaults apply.
+      p_defense_label: input.defenseLabel ?? undefined,
+      p_attacks: input.attacks,
+      p_xp: input.xp ?? undefined,
     }),
   )
 }

@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '@/lib/query-client'
 import {
-  addEnemies, applyEnemyHp, delayTurn, endMyTurn, getActiveCombat, getCombatEntries, getCombatOrder, moveEntry,
-  newBatchId, nextTurn, removeEntry, setCurrentEntry, setInitiative, startCombat, undoEnemyHp, updateEnemy,
-  type Combat, type EnemyPatch, type HpMode, type NewEnemy,
+  addEncounterEnemies, addEnemies, applyEnemyHp, delayTurn, endMyTurn, getActiveCombat, getCombatEntries, getCombatOrder,
+  moveEntry, newBatchId, nextTurn, removeEntry, setCurrentEntry, setInitiative, startCombat, startPreparedCombat,
+  undoEnemyHp, updateEnemy,
+  type Combat, type EnemyPatch, type HpMode, type NewEnemy, type PreparedLaunch,
 } from './combat.api'
 
 /** The campaign's live (rolling or active) combat, or null. Realtime on `combats` invalidates it. */
@@ -92,3 +93,27 @@ export const useApplyEnemyHp = (campaignId: string, combatId: string | undefined
 
 export const useUndoEnemyHp = (campaignId: string, combatId: string | undefined) =>
   useCombatMutation(campaignId, combatId, (id, v: { batch: string }) => undoEnemyHp(id, v.batch))
+
+export const useAddEncounterEnemies = (campaignId: string, combatId: string | undefined) =>
+  useCombatMutation(campaignId, combatId, (id, v: { encounterId: string }) => addEncounterEnemies(id, v.encounterId))
+
+/**
+ * GM only: the prepared launch. The combat's id may not exist yet (the launch can create it), so
+ * success and error invalidate the order and entries of every combat, plus the campaign's combat
+ * and session (the launch can enter combat).
+ */
+export function useStartPreparedCombat(campaignId: string, sessionId: string | undefined) {
+  const qc = useQueryClient()
+  const refetch = () =>
+    Promise.all([
+      qc.invalidateQueries({ queryKey: qk.combat(campaignId) }),
+      qc.invalidateQueries({ queryKey: qk.session(campaignId) }),
+      qc.invalidateQueries({ queryKey: [qk.combatOrder('')[0]] }),
+      qc.invalidateQueries({ queryKey: [qk.combatEntries('')[0]] }),
+    ])
+  return useMutation({
+    mutationFn: (input: PreparedLaunch) => startPreparedCombat(sessionId ?? '', input),
+    onSuccess: refetch,
+    onError: refetch,
+  })
+}
