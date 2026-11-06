@@ -20,12 +20,12 @@ jest.mock('@/components/game', () => ({
 
 const ch = { id: 'ch1', name: 'Brannoch', level: 3, class_name: 'Cleric', system_id: 'dnd5e-2024', hp: null }
 const camp = { id: 'c1', name: 'Ember Hollow', gm_id: 'gm', system_id: 'dnd5e-2024', member_count: 3 }
-const data = (over = {}) => ({ characters: [ch], campaigns: [camp], sessions: {}, isLoading: false, isError: false, refetch: jest.fn(), ...over })
+const data = (over = {}) => ({ characters: [ch], campaigns: [camp], sessions: {}, turnCampaignIds: [], isLoading: false, isError: false, refetch: jest.fn(), ...over })
 
 beforeEach(() => { jest.clearAllMocks() })
 
 test('your turn tops Home with an Open turn action into that campaign', () => {
-  ;(useHomeData as jest.Mock).mockReturnValue(data({ sessions: { c1: { in_combat: true, current_turn_user_id: 'me' } } }))
+  ;(useHomeData as jest.Mock).mockReturnValue(data({ sessions: { c1: { in_combat: true } }, turnCampaignIds: ['c1'] }))
   render(<HomeScreen />)
   expect(screen.getByText('Your turn')).toBeTruthy()
   fireEvent.press(screen.getByRole('button', { name: 'Open turn' }))
@@ -40,7 +40,7 @@ test('with nothing live the card picks up the latest character', () => {
 })
 
 test('lists show characters and campaigns, and a live campaign carries a LIVE badge', () => {
-  ;(useHomeData as jest.Mock).mockReturnValue(data({ sessions: { c1: { in_combat: false, current_turn_user_id: null } } }))
+  ;(useHomeData as jest.Mock).mockReturnValue(data({ sessions: { c1: { in_combat: false } } }))
   render(<HomeScreen />)
   expect(screen.getByRole('button', { name: 'Brannoch, Level 3 Cleric' })).toBeTruthy()
   expect(screen.getAllByText('Live').length).toBeGreaterThan(0)

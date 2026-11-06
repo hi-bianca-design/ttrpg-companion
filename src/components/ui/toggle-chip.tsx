@@ -1,5 +1,5 @@
 import { Check } from 'phosphor-react-native'
-import { Pressable } from 'react-native'
+import { Pressable, View } from 'react-native'
 import { ShapedSurface } from '@/components/ui/shaped-surface'
 import { Text } from '@/components/ui/text'
 import { THEME_COLORS } from '@/lib/theme'
@@ -40,6 +40,21 @@ function ToggleChip({
   const checkColor = THEME_COLORS.accentForeground
   const filled = selected && tone === 'fill'
   const outlined = selected && tone === 'outline'
+  const content = (
+    <>
+      {outlined ? <Check testID="toggle-chip-check" size={14} weight="bold" color={checkColor} /> : null}
+      <Text
+        variant="body-sm"
+        className={cn(
+          'font-sans-semibold',
+          filled ? 'text-primary-foreground' : outlined ? 'text-accent-foreground' : 'text-foreground',
+        )}
+        numberOfLines={1}
+      >
+        {label}
+      </Text>
+    </>
+  )
   return (
     <Pressable
       role="button"
@@ -50,27 +65,27 @@ function ToggleChip({
       className={cn(size === 'sm' ? 'h-8' : size === 'square' ? 'h-11 w-11' : 'h-11', disabled && 'opacity-50', className)}
       {...props}
     >
-      <ShapedSurface
-        fill={filled ? 'primary' : outlined ? 'rockDeep' : 'card'}
-        stroke={filled ? 'ink' : outlined ? 'secondary' : 'border'}
-        glow={filled && !disabled ? 'torch' : undefined}
-        strokeWidth={1.5}
-        point={size === 'sm' ? 10 : undefined}
-        shadowOffset={size === 'sm' ? 1 : 2}
-        className={cn('flex-1 flex-row items-center justify-center gap-1', size === 'sm' ? 'px-4' : size === 'square' ? 'px-0' : 'px-6')}
-      >
-        {outlined ? <Check testID="toggle-chip-check" size={14} weight="bold" color={checkColor} /> : null}
-        <Text
-          variant="body-sm"
-          className={cn(
-            'font-sans-semibold',
-            filled ? 'text-primary-foreground' : outlined ? 'text-accent-foreground' : 'text-foreground',
-          )}
-          numberOfLines={1}
+      {size === 'sm' ? (
+        // Compact chips repeat in dense groups (per-row toggles): a plain rectangle, not an SVG plate each.
+        <View
+          testID={props.testID ? `${props.testID}-plate` : undefined}
+          className="flex-1 flex-row items-center justify-center gap-1 rounded-sm px-4"
+          style={{ backgroundColor: THEME_COLORS[filled ? 'primary' : outlined ? 'rockDeep' : 'card'], borderColor: THEME_COLORS[filled ? 'ink' : outlined ? 'secondary' : 'border'], borderWidth: 1.5 }}
         >
-          {label}
-        </Text>
-      </ShapedSurface>
+          {content}
+        </View>
+      ) : (
+        <ShapedSurface
+          fill={filled ? 'primary' : outlined ? 'rockDeep' : 'card'}
+          stroke={filled ? 'ink' : outlined ? 'secondary' : 'border'}
+          glow={filled && !disabled ? 'torch' : undefined}
+          strokeWidth={1.5}
+          shadowOffset={2}
+          className={cn('flex-1 flex-row items-center justify-center gap-1', size === 'square' ? 'px-0' : 'px-6')}
+        >
+          {content}
+        </ShapedSurface>
+      )}
     </Pressable>
   )
 }

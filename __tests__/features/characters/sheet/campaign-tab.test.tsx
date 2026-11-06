@@ -4,8 +4,8 @@ import CampaignTab from '../../../../app/(app)/characters/[id]/campaign'
 import { useCharacter } from '@/features/characters/characters.queries'
 import { useCampaign, useCharacterCampaign } from '@/features/campaigns/campaigns.queries'
 
-jest.mock('@/features/party/PartyList', () => ({
-  PartyList: () => { const { Text } = require('react-native'); return <Text>party list</Text> },
+jest.mock('@/features/combat/PartyPage', () => ({
+  PartyPage: () => { const { Text } = require('react-native'); return <Text>party list</Text> },
 }))
 jest.mock('@/features/sessions/SessionStatusRow', () => ({ SessionStatusRow: () => null }))
 jest.mock('@/features/sessions/TurnBanner', () => ({ TurnBanner: () => null }))

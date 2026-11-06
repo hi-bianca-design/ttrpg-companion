@@ -20,7 +20,7 @@ export async function openSession(campaignId: string): Promise<Session> {
   return unwrap(await supabase.rpc('open_session', { p_campaign_id: campaignId }))
 }
 
-/** GM or the opener. Also ends combat and clears the turn. */
+/** GM or the opener. Also ends the combat. */
 export async function endSession(sessionId: string): Promise<Session> {
   return unwrap(await supabase.rpc('end_session', { p_session_id: sessionId }))
 }
@@ -28,15 +28,4 @@ export async function endSession(sessionId: string): Promise<Session> {
 /** Any active member may enter combat; ending is for the GM or whoever entered it. */
 export async function setCombat(sessionId: string, inCombat: boolean): Promise<Session> {
   return unwrap(await supabase.rpc('set_combat', { p_session_id: sessionId, p_in_combat: inCombat }))
-}
-
-/** GM only, while in combat. `null` clears the turn. */
-export async function setTurn(sessionId: string, userId: string | null): Promise<Session> {
-  // Generated Args can't express a nullable parameter; the function accepts null to clear.
-  return unwrap(await supabase.rpc('set_turn', { p_session_id: sessionId, p_user_id: userId as string }))
-}
-
-/** The current turn holder ends their own turn. */
-export async function endTurn(sessionId: string): Promise<Session> {
-  return unwrap(await supabase.rpc('end_turn', { p_session_id: sessionId }))
 }

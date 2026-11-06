@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '@/lib/query-client'
-import { endSession, endTurn, getActiveSession, openSession, setCombat, setTurn } from './sessions.api'
+import { endSession, getActiveSession, openSession, setCombat } from './sessions.api'
 
 /** Safety net only: Realtime (useCombatRealtime) invalidates this query when the session changes. */
 export const SESSION_POLL_MS = 60_000
@@ -38,29 +38,6 @@ export function useSetCombat(campaignId: string) {
     mutationFn: ({ sessionId, inCombat }: { sessionId: string; inCombat: boolean }) => setCombat(sessionId, inCombat),
     onSuccess: (session) => qc.setQueryData(qk.session(campaignId), session),
     // e.g. the session ended meanwhile: refetch so the badge shows the true state.
-    onError: () => qc.invalidateQueries({ queryKey: qk.session(campaignId) }),
-  })
-}
-
-export function useSetTurn(campaignId: string) {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({ sessionId, userId }: { sessionId: string; userId: string | null }) => setTurn(sessionId, userId),
-    onSuccess: (session) => qc.setQueryData(qk.session(campaignId), session),
-    // e.g. the member left meanwhile: refetch the session, and the member list so they stop being offered.
-    onError: () => Promise.all([
-      qc.invalidateQueries({ queryKey: qk.session(campaignId) }),
-      qc.invalidateQueries({ queryKey: qk.campaign(campaignId) }),
-    ]),
-  })
-}
-
-export function useEndTurn(campaignId: string) {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (sessionId: string) => endTurn(sessionId),
-    onSuccess: (session) => qc.setQueryData(qk.session(campaignId), session),
-    // e.g. the GM already moved the turn: refetch so the banner reflects it.
     onError: () => qc.invalidateQueries({ queryKey: qk.session(campaignId) }),
   })
 }

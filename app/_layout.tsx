@@ -1,6 +1,7 @@
 import '../global.css'
 import { useEffect } from 'react'
 import { Text, TextInput } from 'react-native'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SplashScreen } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { ThemeProvider } from '@react-navigation/native'
@@ -53,18 +54,21 @@ export default function RootLayout() {
 
   if (!fontsLoaded && !fontError) return null
 
+  // The battle order's drag grips are gesture-handler gestures, which need a root view (Android in particular).
   return (
-    <ThemeProvider value={NAV_THEME}>
-      <StatusBar style="light" />
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <RootRedirect />
-          <BootOverlay />
-        </AuthProvider>
-      </QueryClientProvider>
-      <WipeCurtain />
-      <PortalHost />
-      <Toaster />
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider value={NAV_THEME}>
+        <StatusBar style="light" />
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <RootRedirect />
+            <BootOverlay />
+          </AuthProvider>
+        </QueryClientProvider>
+        <WipeCurtain />
+        <PortalHost />
+        <Toaster />
+      </ThemeProvider>
+    </GestureHandlerRootView>
   )
 }

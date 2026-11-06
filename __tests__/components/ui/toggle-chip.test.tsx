@@ -1,6 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react-native'
+import { StyleSheet } from 'react-native'
 import { ShapedSurface } from '@/components/ui/shaped-surface'
 import { ToggleChip } from '@/components/ui/toggle-chip'
+import { THEME_COLORS } from '@/lib/theme'
 
 const surfaces = () => screen.UNSAFE_getAllByType(ShapedSurface).map((n) => n.props)
 
@@ -46,6 +48,15 @@ test('compact size is h-8 with a 6px hitSlop (44pt target)', () => {
   expect(chip.props.className).toContain('h-8')
   expect(chip.props.className).not.toContain('h-11')
   expect(chip.props.hitSlop).toEqual({ top: 6, bottom: 6, left: 6, right: 6 })
+})
+
+test('compact chips are plain rectangles: no SVG plate, fill and edge from the theme', () => {
+  render(<ToggleChip label="Equipped" tone="outline" size="sm" selected onPress={() => {}} testID="c" />)
+  expect(screen.UNSAFE_queryByType(ShapedSurface)).toBeNull()
+  const plate = screen.getByTestId('c-plate')
+  expect(plate.props.className).toContain('rounded-sm')
+  expect(StyleSheet.flatten(plate.props.style)).toMatchObject({ backgroundColor: THEME_COLORS.rockDeep, borderColor: THEME_COLORS.secondary })
+  expect(screen.getByText('Equipped').props.className).toContain('text-accent-foreground')
 })
 
 test('chips are pointed plates with a 1.5px stroke, like the buttons', () => {

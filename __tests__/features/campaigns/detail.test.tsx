@@ -10,6 +10,7 @@ import { ERROR_COPY } from '@/features/errors'
 import { systemName } from '@/systems/registry'
 import { variantOf } from '../../helpers/button'
 
+jest.mock('@/features/sessions/useSessionRealtime', () => ({ useSessionRealtime: jest.fn() }))
 jest.mock('@/lib/supabase', () => ({ supabase: { from: jest.fn(), rpc: jest.fn(), auth: { getSession: jest.fn() } } }))
 const mockRouter = { back: jest.fn(), push: jest.fn(), navigate: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) }
 const mockParams: { id: string } = { id: 'camp1' }
@@ -21,8 +22,8 @@ jest.mock('expo-router', () => ({
 }))
 jest.mock('@/features/auth/useAuth', () => ({ useAuth: () => ({ user: { id: 'gm1' } }) }))
 jest.mock('@/features/campaigns/campaigns.api', () => ({ getCampaign: jest.fn(), getCharacterCampaign: jest.fn() }))
-jest.mock('@/features/party/PartyList', () => ({
-  PartyList: () => { const { Text } = require('react-native'); return <Text>party list</Text> },
+jest.mock('@/features/combat/PartyPage', () => ({
+  PartyPage: () => { const { Text } = require('react-native'); return <Text>party list</Text> },
 }))
 jest.mock('@/features/sessions/sessions.api', () => ({ getActiveSession: jest.fn().mockResolvedValue(null), openSession: jest.fn(), endSession: jest.fn() }))
 
