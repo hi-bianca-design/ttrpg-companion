@@ -1,9 +1,16 @@
 import '@testing-library/jest-native/extend-expect'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import { ResourceTracker } from '@/components/game/ResourceTracker'
+import { StyleSheet } from 'react-native'
 import { ShapedSurface } from '@/components/ui/shaped-surface'
+import { THEME_COLORS } from '@/lib/theme'
 
-const strokeOf = (name: string) => screen.getByRole('button', { name }).findAllByType(ShapedSurface)[0].props.stroke
+// The +/- controls are plain square buttons: their edge colour is a theme colour in the plate's style.
+const strokeOf = (name: string) => {
+  const edge = screen.getByRole('button', { name }).findAll((n) => typeof n.type === 'string' && !!StyleSheet.flatten(n.props.style)?.borderColor)[0]
+  const colour = StyleSheet.flatten(edge.props.style).borderColor
+  return (Object.keys(THEME_COLORS) as Array<keyof typeof THEME_COLORS>).find((k) => THEME_COLORS[k] === colour)
+}
 
 test('pips: renders max pips, used ones marked spent', () => {
   render(<ResourceTracker display="pips" label="Level 1" max={4} used={1} onSpend={jest.fn()} onRestore={jest.fn()} />)
