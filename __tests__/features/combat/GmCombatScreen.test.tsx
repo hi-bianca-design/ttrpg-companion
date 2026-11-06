@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler/jestSetup'
 import '@testing-library/jest-native/extend-expect'
-import { QueryClientProvider, type QueryClient } from '@tanstack/react-query'
+import { QueryClientProvider, onlineManager, type QueryClient } from '@tanstack/react-query'
 import { PortalHost } from '@rn-primitives/portal'
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native'
 import {
@@ -374,5 +374,56 @@ describe('search', () => {
     expect(screen.getAllByTestId(/^card-/).length).toBeGreaterThan(0)
     fireEvent.press(screen.getByRole('button', { name: 'Close search' }))
     expect(screen.queryByTestId('search-panel')).toBeNull()
+  })
+})
+
+describe('offline', () => {
+  afterEach(() => act(() => onlineManager.setOnline(true)))
+  const goblin = () => [
+    entry({ id: 'p1', user_id: 'u1', character_id: 'c1', position: 1, is_current: true }),
+    enemy({ id: 'g1', name: 'Goblin 1', hp: 22, max_hp: 30, position: 2 }),
+    entry({ id: 'p2', user_id: 'u2', character_id: 'c2', position: 3 }),
+  ]
+
+  test('the header shows the quiet Offline marker only while offline', () => {
+    setup(goblin())
+    expect(screen.queryByText('Offline: changes will sync')).toBeNull()
+    act(() => onlineManager.setOnline(false))
+    expect(screen.getByText('Offline: changes will sync')).toBeTruthy()
+  })
+
+  test('damage and Next turn apply on the cards at once, keep accepting taps, and sync once each on return', async () => {
+    setup(goblin())
+    act(() => onlineManager.setOnline(false))
+    hit('g1', '7')
+    await waitFor(() => expect(within(card('g1')).getByText('15/30')).toBeTruthy())
+    ;(newBatchId as jest.Mock).mockReturnValue('client-batch-2')
+    hit('g1', '5')
+    await waitFor(() => expect(within(card('g1')).getByText('10/30')).toBeTruthy())
+    // No undo while offline: it would need the server.
+    expect(within(card('g1')).queryByRole('button', { name: 'Undo' })).toBeNull()
+    fireEvent.press(screen.getByRole('button', { name: 'Next turn' }))
+    await waitFor(() => expect(within(card('g1')).getByText('Current')).toBeTruthy())
+    fireEvent.press(screen.getByRole('button', { name: 'Next turn' }))
+    await waitFor(() => expect(within(card('g1')).queryByText('Current')).toBeNull())
+    expect(m.apply).not.toHaveBeenCalled()
+    expect(m.next).not.toHaveBeenCalled()
+
+    act(() => onlineManager.setOnline(true))
+    await waitFor(() => expect(m.next).toHaveBeenCalledTimes(2))
+    expect(m.apply.mock.calls).toEqual([['cb1', ['g1'], 'damage', 7, 'client-batch'], ['cb1', ['g1'], 'damage', 5, 'client-batch-2']])
+    expect(m.next.mock.calls).toEqual([['cb1', 'p1'], ['cb1', 'g1']])
+    await waitFor(() => expect(within(card('g1')).getByText('10/30')).toBeTruthy())
+  })
+
+  test('Hide applies on the card while offline and is sent on return', async () => {
+    setup(goblin())
+    act(() => onlineManager.setOnline(false))
+    openStatBlock('g1')
+    fireEvent.press(within(card('g1')).getByRole('button', { name: 'Hide' }))
+    await waitFor(() => expect(within(card('g1')).getByText('Hidden')).toBeTruthy())
+    expect(m.update).not.toHaveBeenCalled()
+    act(() => onlineManager.setOnline(true))
+    await waitFor(() => expect(m.update).toHaveBeenCalledWith('g1', { hidden: true }))
   })
 })

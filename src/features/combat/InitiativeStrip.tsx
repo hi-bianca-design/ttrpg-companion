@@ -7,6 +7,7 @@ import { ERROR_COPY } from '@/features/errors'
 import { cn } from '@/lib/utils'
 import type { GmEnemyRow, PlayerRow } from './battleOrder'
 import { useMoveEntry, useNextTurn, useSetCurrentEntry } from './combat.queries'
+import { sentOrQueued } from './offlineMutations'
 import { CurrentMark } from './PlayerRowCard'
 
 /**
@@ -41,7 +42,8 @@ export function InitiativeStrip({ campaignId, combatId, rows, currentId, round }
     if (x !== undefined) scroller.current?.scrollTo({ x: Math.max(0, x - 16), animated: true })
   }, [currentId])
 
-  // Errors surface here, not per call: a refetch can unmount the chip that started the request.
+  // Errors surface here, not per call: a refetch can unmount the chip that started the request. Offline,
+  // each call resolves once queued (the cards already show it), so the busy guard never blocks the next tap.
   const run = async (fn: () => Promise<unknown>, exclusive = false) => {
     if (exclusive) {
       if (turnBusy.current) return
@@ -76,7 +78,7 @@ export function InitiativeStrip({ campaignId, combatId, rows, currentId, round }
               className={cn('flex-row items-center gap-1 shrink-0 rounded-sm border px-2', row.isCurrent ? 'border-accent' : 'border-border')}
             >
               {i > 0 ? (
-                <Button variant="ghost" size="icon" accessibilityLabel={`Move earlier: ${row.name}`} onPress={() => run(() => move.mutateAsync({ entryId: row.id, toPosition: i }))}>
+                <Button variant="ghost" size="icon" accessibilityLabel={`Move earlier: ${row.name}`} onPress={() => run(() => sentOrQueued(move.mutateAsync({ entryId: row.id, toPosition: i })))}>
                   <Text>‹</Text>
                 </Button>
               ) : null}
@@ -84,7 +86,7 @@ export function InitiativeStrip({ campaignId, combatId, rows, currentId, round }
                 accessibilityRole="button"
                 accessibilityLabel={label}
                 className="min-h-11 justify-center px-1"
-                onPress={() => run(() => setCurrent.mutateAsync({ entryId: row.id }))}
+                onPress={() => run(() => sentOrQueued(setCurrent.mutateAsync({ entryId: row.id })))}
               >
                 <Text variant="subhead" numberOfLines={1} className={down ? 'line-through' : undefined}>{row.name}</Text>
                 <View className="flex-row items-center gap-1">
@@ -94,7 +96,7 @@ export function InitiativeStrip({ campaignId, combatId, rows, currentId, round }
                 </View>
               </Pressable>
               {i < rows.length - 1 ? (
-                <Button variant="ghost" size="icon" accessibilityLabel={`Move later: ${row.name}`} onPress={() => run(() => move.mutateAsync({ entryId: row.id, toPosition: i + 2 }))}>
+                <Button variant="ghost" size="icon" accessibilityLabel={`Move later: ${row.name}`} onPress={() => run(() => sentOrQueued(move.mutateAsync({ entryId: row.id, toPosition: i + 2 })))}>
                   <Text>›</Text>
                 </Button>
               ) : null}
@@ -103,7 +105,7 @@ export function InitiativeStrip({ campaignId, combatId, rows, currentId, round }
         })}
         </View>
       </ScrollView>
-      <Button disabled={!currentId} onPress={() => currentId && run(() => next.mutateAsync({ expectedEntryId: currentId }), true)}>
+      <Button disabled={!currentId} onPress={() => currentId && run(() => sentOrQueued(next.mutateAsync({ expectedEntryId: currentId })), true)}>
         <Text>Next turn</Text>
       </Button>
     </View>

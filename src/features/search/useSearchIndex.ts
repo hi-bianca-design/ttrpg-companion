@@ -5,7 +5,7 @@ import { qk } from '@/lib/query-client'
 import type { SystemId } from '@/systems/types'
 import type { SearchResult } from './search'
 
-const SEARCH_KINDS = ['spell', 'magic_item', 'item', 'feat', 'class', 'species', 'background', 'subclass'] as const
+export const SEARCH_KINDS = ['spell', 'magic_item', 'item', 'feat', 'class', 'species', 'background', 'subclass'] as const
 
 /** Loaded once per system and kept a day, so search keeps working from the cache (persisted later). */
 const STALE_TIME = 24 * 60 * 60 * 1000

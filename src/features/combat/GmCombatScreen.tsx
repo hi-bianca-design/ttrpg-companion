@@ -18,6 +18,8 @@ import { useSearchIndex } from '@/features/search/useSearchIndex'
 import { useHotkey } from '@/lib/useHotkey'
 import { SEARCH_BUTTON_LABEL } from './copy'
 import { EnemyCard } from './EnemyCard'
+import { OfflineBadge } from './OfflineBadge'
+import { sentOrQueued } from './offlineMutations'
 import { InitiativeStrip } from './InitiativeStrip'
 import { PlayerRowCard } from './PlayerRowCard'
 import { useCopyEnemy } from './useCopyEnemy'
@@ -81,7 +83,8 @@ export function GmCombatScreen({ campaign, combat, party }: { campaign: Campaign
       showToast(e instanceof Error ? e.message : ERROR_COPY.save_failed)
     }
   }
-  const patch = (entryId: string) => (p: EnemyPatch) => run(() => update.mutateAsync({ entryId, patch: p }))
+  // Offline the edit is already on the card and queued, so the caller does not wait for the server.
+  const patch = (entryId: string) => (p: EnemyPatch) => run(() => sentOrQueued(update.mutateAsync({ entryId, patch: p })))
   const copy = (row: GmEnemyRow) => run(() => copyEnemy(row))
 
   // One column fills the width; otherwise every card has the same fixed width for this window.
@@ -92,8 +95,9 @@ export function GmCombatScreen({ campaign, combat, party }: { campaign: Campaign
     <View testID="gm-combat" className="flex-1 gap-4" onLayout={(e: LayoutChangeEvent) => setGridWidth(e.nativeEvent.layout.width)}>
       <View className="flex-row flex-wrap items-center gap-3">
         {/* Only where kill XP is awarded: some enemy carries an XP value. */}
-        <View className="flex-1">
+        <View className="flex-1 flex-row flex-wrap items-center gap-3">
           {xp !== null ? <Text variant="subhead" tone="muted">{`XP earned: ${xp}`}</Text> : null}
+          <OfflineBadge />
         </View>
         <Button variant="outline" accessibilityLabel={SEARCH_BUTTON_LABEL} onPress={() => setSearching(true)}>
           <Text>{SEARCH_BUTTON_LABEL}</Text>
