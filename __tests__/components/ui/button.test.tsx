@@ -4,6 +4,7 @@ import { StyleSheet } from 'react-native'
 import { Button } from '@/components/ui/button'
 import { ShapedSurface } from '@/components/ui/shaped-surface'
 import { Text } from '@/components/ui/text'
+import { THEME_COLORS } from '@/lib/theme'
 
 const surface = () => screen.UNSAFE_getByType(ShapedSurface).props
 
@@ -64,10 +65,21 @@ test('default size is h-11 and sm is h-8 with a 44pt hit area; no pill radius', 
   expect(screen.getByTestId('a').props.hitSlop).toBeUndefined()
 })
 
-test('icon buttons are square chamfered plates', () => {
-  render(<Button size="icon" testID="i"><Text>+</Text></Button>)
-  expect(screen.getByTestId('i').props.className).toContain('w-8')
-  expect(surface().shape).toBe('chamfer')
+test('icon buttons are plain square buttons: no SVG plate, the edge and fill come from the theme', () => {
+  render(<Button variant="outline" size="icon" testID="i"><Text>+</Text></Button>)
+  const btn = screen.getByTestId('i')
+  expect(btn.props.className).toContain('w-8')
+  expect(screen.UNSAFE_queryByType(ShapedSurface)).toBeNull()
+  expect(screen.getByTestId('i-plate').props.className).toContain('rounded-sm')
+  expect(StyleSheet.flatten(screen.getByTestId('i-plate').props.style)).toMatchObject({
+    backgroundColor: THEME_COLORS.rockDeep,
+    borderColor: THEME_COLORS.secondary,
+  })
+})
+
+test('an icon button takes its edge colour from the stroke prop', () => {
+  render(<Button variant="outline" size="icon" stroke="tintedBorder" testID="i"><Text>+</Text></Button>)
+  expect(StyleSheet.flatten(screen.getByTestId('i-plate').props.style).borderColor).toBe(THEME_COLORS.tintedBorder)
 })
 
 test('pressing sinks the button into its shadow, releasing restores it', () => {

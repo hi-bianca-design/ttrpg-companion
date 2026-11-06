@@ -1,8 +1,9 @@
 import { cva, type VariantProps } from 'class-variance-authority'
 import { useState } from 'react'
-import { Pressable, type PressableStateCallbackType } from 'react-native'
+import { Pressable, View, type PressableStateCallbackType } from 'react-native'
 import { ShapedSurface, type ThemeColorKey } from '@/components/ui/shaped-surface'
 import { TextClassContext } from '@/components/ui/text'
+import { THEME_COLORS } from '@/lib/theme'
 import { cn } from '@/lib/utils'
 
 // Size and touch target live on the Pressable; the pointed plate is drawn behind the label.
@@ -77,9 +78,18 @@ function Button({ className, variant, size, disabled, hitSlop, lit, stroke, onPr
         style={[typeof style === 'function' ? style({ pressed } as PressableStateCallbackType) : style, sunk && { transform: [{ translateX: SINK }, { translateY: SINK }] }]}
         {...props}
       >
-        {plate ? (
+        {plate && s === 'icon' ? (
+          // Icon buttons repeat in rows (quantity steppers, resource trackers): a plain square, not an SVG plate each.
+          <View
+            testID={props.testID ? `${props.testID}-plate` : undefined}
+            className="h-8 w-8 flex-row items-center justify-center rounded-sm"
+            style={{ backgroundColor: THEME_COLORS[plate.fill], borderColor: THEME_COLORS[stroke ?? plate.stroke], borderWidth: 2 }}
+          >
+            {children as React.ReactNode}
+          </View>
+        ) : plate ? (
           <ShapedSurface
-            shape={s === 'icon' ? 'chamfer' : 'auto'}
+            shape="auto"
             fill={plate.fill}
             stroke={stroke ?? plate.stroke}
             shadowOffset={sunk ? SHADOW - SINK : SHADOW}
