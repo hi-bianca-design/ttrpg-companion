@@ -644,6 +644,103 @@ export type Database = {
           },
         ]
       }
+      encounter_enemies: {
+        Row: {
+          ac: number | null
+          attacks: Json
+          campaign_id: string
+          count: number
+          defense_label: string | null
+          encounter_id: string
+          hidden: boolean
+          id: string
+          max_hp: number
+          name: string
+          notes: string | null
+          position: number
+          xp: number | null
+        }
+        Insert: {
+          ac?: number | null
+          attacks?: Json
+          campaign_id: string
+          count?: number
+          defense_label?: string | null
+          encounter_id: string
+          hidden?: boolean
+          id?: string
+          max_hp: number
+          name: string
+          notes?: string | null
+          position?: number
+          xp?: number | null
+        }
+        Update: {
+          ac?: number | null
+          attacks?: Json
+          campaign_id?: string
+          count?: number
+          defense_label?: string | null
+          encounter_id?: string
+          hidden?: boolean
+          id?: string
+          max_hp?: number
+          name?: string
+          notes?: string | null
+          position?: number
+          xp?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "encounter_enemies_encounter_fk"
+            columns: ["encounter_id", "campaign_id"]
+            isOneToOne: false
+            referencedRelation: "encounters"
+            referencedColumns: ["id", "campaign_id"]
+          },
+        ]
+      }
+      encounters: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          id: string
+          name: string
+          story_after: string | null
+          story_before: string | null
+          story_why: string | null
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          id?: string
+          name: string
+          story_after?: string | null
+          story_before?: string | null
+          story_why?: string | null
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          story_after?: string | null
+          story_before?: string | null
+          story_why?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "encounters_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_systems: {
         Row: {
           attribution: string
