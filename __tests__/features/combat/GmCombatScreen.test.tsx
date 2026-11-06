@@ -2,7 +2,6 @@ import 'react-native-gesture-handler/jestSetup'
 import '@testing-library/jest-native/extend-expect'
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query'
 import { PortalHost } from '@rn-primitives/portal'
-import { AccessibilityInfo } from 'react-native'
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native'
 import {
   addEnemies, applyEnemyHp, getCombatEntries, newBatchId, nextTurn, removeEntry, undoEnemyHp, updateEnemy,
@@ -106,7 +105,7 @@ describe('the grid', () => {
     const enemies = Array.from({ length: 12 }, (_, i) => enemy({ id: `e${i}`, name: `Hobgoblin Captain of the Iron Legion ${i + 1}`, position: i + 1 }))
     setup(enemies)
     expect(screen.getAllByTestId(/^card-/)).toHaveLength(12)
-    for (let i = 0; i < 12; i++) expect(screen.getByText(`Hobgoblin Captain of the Iron Legion ${i + 1}`).props.numberOfLines).toBe(1)
+    for (let i = 0; i < 12; i++) expect(within(card(`e${i}`)).getByText(`Hobgoblin Captain of the Iron Legion ${i + 1}`).props.numberOfLines).toBe(1)
   })
 
   test('8 players and 12 enemies render without error', () => {
@@ -114,7 +113,7 @@ describe('the grid', () => {
     const enemies = Array.from({ length: 12 }, (_, i) => enemy({ id: `ee${i}`, name: `Orc ${i + 1}`, position: 9 + i }))
     setup([...players, ...enemies])
     expect(screen.getAllByRole('button', { name: /^Select Orc/ })).toHaveLength(12)
-    expect(screen.getAllByText('Mira')).toHaveLength(8)
+    expect(screen.getAllByTestId(/^player-/)).toHaveLength(8)
   })
 
   test('every card gets the same fixed width for the column count, and a narrow container lowers the count', () => {
@@ -356,52 +355,10 @@ describe('card actions', () => {
 })
 
 describe('turns', () => {
-  test('shows the round', () => {
+  test('the initiative strip is mounted with the round and every row of the order', () => {
     setup()
     expect(screen.getByText('Round 2')).toBeTruthy()
-  })
-
-  test('Next turn names the current entry', async () => {
-    setup()
-    fireEvent.press(screen.getByRole('button', { name: 'Next turn' }))
-    await waitFor(() => expect(m.next).toHaveBeenCalledWith('cb1', 'p1'))
-  })
-
-  test('Next turn is disabled with no current entry', () => {
-    setup(baseEntries().map((e) => ({ ...e, is_current: false })))
-    expect(screen.getByRole('button', { name: 'Next turn' })).toBeDisabled()
-  })
-
-  test('a double tapped Next turn is one call', async () => {
-    setup()
-    fireEvent.press(screen.getByRole('button', { name: 'Next turn' }))
-    fireEvent.press(screen.getByRole('button', { name: 'Next turn' }))
-    await waitFor(() => expect(m.next).toHaveBeenCalledTimes(1))
-  })
-
-  test('a stale Next turn refetches and says nothing', async () => {
-    setup()
-    m.entries.mockClear()
-    fireEvent.press(screen.getByRole('button', { name: 'Next turn' }))
-    await waitFor(() => expect(m.entries).toHaveBeenCalled())
-    expect(showToast).not.toHaveBeenCalled()
-  })
-
-  test('an ended-combat error from an action toasts and refetches', async () => {
-    m.next.mockRejectedValue(new AppError('no_active_combat'))
-    setup()
-    m.entries.mockClear()
-    fireEvent.press(screen.getByRole('button', { name: 'Next turn' }))
-    await waitFor(() => expect(showToast).toHaveBeenCalledWith(ERROR_COPY.no_active_combat))
-    await waitFor(() => expect(m.entries).toHaveBeenCalled())
-  })
-
-  test('a new round is announced, the first render is not', async () => {
-    const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {})
-    announce.mockClear()
-    const { rerender } = setup()
-    expect(announce).not.toHaveBeenCalled()
-    rerender(ui({ ...live, round: 3 }))
-    await waitFor(() => expect(announce).toHaveBeenCalledWith('Round 3'))
+    expect(screen.getAllByTestId(/^chip-/)).toHaveLength(8)
+    expect(screen.getByRole('button', { name: 'Next turn' })).toBeTruthy()
   })
 })

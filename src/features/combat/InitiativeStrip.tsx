@@ -1,0 +1,99 @@
+import { useEffect, useRef } from 'react'
+import { AccessibilityInfo, Pressable, View } from 'react-native'
+import { Button } from '@/components/ui/button'
+import { Text } from '@/components/ui/text'
+import { showToast } from '@/components/ui/toast'
+import { ERROR_COPY } from '@/features/errors'
+import { cn } from '@/lib/utils'
+import type { GmEnemyRow, PlayerRow } from './battleOrder'
+import { useMoveEntry, useNextTurn, useSetCurrentEntry } from './combat.queries'
+import { CurrentMark } from './PlayerRowCard'
+
+/**
+ * The turn control: the round, everyone in order as chips, and one large Next turn. It reads the GM order
+ * rows the screen already built (no second source of truth). The server skips downed enemies on Next turn;
+ * tapping a chip is how the GM stops on one. Order changes are the move buttons (position plus or minus one).
+ */
+export function InitiativeStrip({ campaignId, combatId, rows, currentId, round }: {
+  campaignId: string
+  combatId: string
+  rows: (PlayerRow | GmEnemyRow)[]
+  currentId: string | null
+  round: number
+}) {
+  const next = useNextTurn(campaignId, combatId)
+  const setCurrent = useSetCurrentEntry(campaignId, combatId)
+  const move = useMoveEntry(campaignId, combatId)
+  const turnBusy = useRef(false)
+
+  const lastRound = useRef(round)
+  useEffect(() => {
+    if (round !== lastRound.current) AccessibilityInfo.announceForAccessibility(`Round ${round}`)
+    lastRound.current = round
+  }, [round])
+
+  // Errors surface here, not per call: a refetch can unmount the chip that started the request.
+  const run = async (fn: () => Promise<unknown>, exclusive = false) => {
+    if (exclusive) {
+      if (turnBusy.current) return
+      turnBusy.current = true
+    }
+    try {
+      await fn()
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : ERROR_COPY.save_failed)
+    } finally {
+      if (exclusive) turnBusy.current = false
+    }
+  }
+
+  return (
+    <View testID="initiative-strip" className="gap-3">
+      <View className="flex-row flex-wrap items-center gap-3">
+        <Text variant="heading" accessibilityRole="header">{`Round ${round}`}</Text>
+        <View className="flex-1" />
+        <Button size="default" disabled={!currentId} onPress={() => currentId && run(() => next.mutateAsync({ expectedEntryId: currentId }), true)}>
+          <Text>Next turn</Text>
+        </Button>
+      </View>
+      <View className="flex-row flex-wrap gap-2">
+        {rows.map((row, i) => {
+          const down = row.kind === 'enemy' && row.isDown
+          const hidden = row.kind === 'enemy' && row.hidden
+          const label = [row.name, row.isCurrent ? 'current turn' : null, down ? 'down' : null, hidden ? 'hidden' : null].filter(Boolean).join(', ')
+          return (
+            <View
+              key={row.id}
+              testID={`chip-${row.id}`}
+              className={cn('flex-row items-center gap-1 rounded-sm border px-2', row.isCurrent ? 'border-accent' : 'border-border')}
+            >
+              {i > 0 ? (
+                <Button variant="ghost" size="icon" accessibilityLabel={`Move earlier: ${row.name}`} onPress={() => run(() => move.mutateAsync({ entryId: row.id, toPosition: i }))}>
+                  <Text>‹</Text>
+                </Button>
+              ) : null}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={label}
+                className="min-h-11 justify-center px-1"
+                onPress={() => run(() => setCurrent.mutateAsync({ entryId: row.id }))}
+              >
+                <Text variant="subhead" numberOfLines={1} className={down ? 'line-through' : undefined}>{row.name}</Text>
+                <View className="flex-row flex-wrap items-center gap-1">
+                  {row.isCurrent ? <CurrentMark /> : null}
+                  {down ? <Text variant="label">Down</Text> : null}
+                  {hidden ? <Text variant="label" tone="muted">Hidden</Text> : null}
+                </View>
+              </Pressable>
+              {i < rows.length - 1 ? (
+                <Button variant="ghost" size="icon" accessibilityLabel={`Move later: ${row.name}`} onPress={() => run(() => move.mutateAsync({ entryId: row.id, toPosition: i + 2 }))}>
+                  <Text>›</Text>
+                </Button>
+              ) : null}
+            </View>
+          )
+        })}
+      </View>
+    </View>
+  )
+}
