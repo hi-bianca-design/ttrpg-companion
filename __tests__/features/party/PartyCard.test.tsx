@@ -118,3 +118,18 @@ test('tapping a teammate’s card expands it and does not navigate', () => {
   fireEvent.press(screen.getByRole('button', { name: /^Mira,/ }))
   expect(mockPush).not.toHaveBeenCalled()
 })
+
+test('an expanded card shows Not set for a character with no languages recorded', () => {
+  render(<PartyCard character={character()} />)
+  fireEvent.press(screen.getByRole('button', { name: /^Mira,/ }))
+  expect(screen.getByText('Languages Not set')).toBeTruthy()
+})
+
+test('twelve languages show in full on the expanded card, wrapping instead of truncating', () => {
+  const langs = ['Common', 'Elvish', 'Dwarvish', 'Giant', 'Gnomish', 'Goblin', 'Halfling', 'Orc', 'Abyssal', 'Celestial', 'Draconic', 'Sylvan']
+  render(<PartyCard character={character({ details: { languages: langs } })} />)
+  fireEvent.press(screen.getByRole('button', { name: /^Mira,/ }))
+  const text = screen.getByText(`Languages ${langs.join(', ')}`)
+  expect(text.props.numberOfLines).toBeUndefined()
+  expect(JSON.stringify(screen.toJSON())).toContain('max-w-full')
+})
