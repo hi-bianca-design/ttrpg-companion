@@ -12,6 +12,7 @@ import { usePartyRealtime } from '@/features/party/usePartyRealtime'
 import { CombatStarting } from './CombatStarting'
 import { GmCombatScreen } from './GmCombatScreen'
 import { PlayerBattleOrder } from './PlayerBattleOrder'
+import { EndCombatSummaryHost } from './EndCombatSummaryHost'
 import { EncounterPicker } from './EncounterPicker'
 import { ReviewScreen } from './ReviewScreen'
 import { useActiveCombat } from './combat.queries'
@@ -102,6 +103,7 @@ export function PartyPage({ campaign }: { campaign: CampaignFull }) {
       <View className="gap-2">
         {!connected ? <Text variant="caption" tone="muted" accessibilityLiveRegion="polite">Reconnecting…</Text> : null}
         {body}
+        {isGm ? <EndCombatSummaryHost campaignId={campaign.id} /> : null}
       </View>
     </SectionHeader>
   )

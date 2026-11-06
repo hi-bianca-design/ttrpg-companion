@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useWindowDimensions, View, type LayoutChangeEvent } from 'react-native'
 import { Button } from '@/components/ui/button'
 import { Text } from '@/components/ui/text'
@@ -23,6 +23,8 @@ import { PlayerRowCard } from './PlayerRowCard'
 import { useCopyEnemy } from './useCopyEnemy'
 import { useEnemyHp } from './useEnemyHp'
 import { xpEarned } from './xp'
+import { clearSnapshot, setSnapshot } from './endCombatSummaryStore'
+import { useEndCombat } from './useEndCombat'
 
 /**
  * The GM's combat screen: a header (XP earned, Add enemy), the initiative strip (round, order, Next turn), every enemy as a fixed-width card in a
@@ -40,6 +42,8 @@ export function GmCombatScreen({ campaign, combat, party }: { campaign: Campaign
   const [adding, setAdding] = useState(false)
   const [gridWidth, setGridWidth] = useState(0)
   const [searching, setSearching] = useState(false)
+  const [dismissedAllDown, setDismissedAllDown] = useState(false)
+  const endCombat = useEndCombat(campaign.id)
   const search = useSearchIndex(campaign.system_id, campaign.id, true)
   // Only while this screen is mounted; Cmd/Ctrl+K opens search from anywhere on it.
   useHotkey('mod+k', () => setSearching(true), true)
@@ -54,6 +58,19 @@ export function GmCombatScreen({ campaign, combat, party }: { campaign: Campaign
   const { round, currentId, rows } = buildGmOrder({ combat, entries: entries.data ?? [], party, userId: undefined })
   const enemies = rows.filter((r): r is GmEnemyRow => r.kind === 'enemy')
   const players = rows.filter((r): r is PlayerRow => r.kind === 'player')
+  const showsXp = enemies.some((e) => e.xp !== null)
+  const xp = showsXp ? xpEarned(enemies) : null
+  const allDown = enemies.length > 0 && enemies.every((e) => e.isDown)
+
+  // Keep the latest round and XP where the end action can read them: the server deletes the entries when combat ends.
+  useEffect(() => {
+    setSnapshot(campaign.id, { round, xp })
+  }, [campaign.id, round, xp])
+  useEffect(() => () => clearSnapshot(campaign.id), [campaign.id])
+  // A new "all down" (an enemy healed, then dropped again) asks again.
+  useEffect(() => {
+    if (!allDown) setDismissedAllDown(false)
+  }, [allDown])
   const selectedIds = enemies.filter((e) => selected.has(e.id)).map((e) => e.id)
 
   // Errors surface here, not per call: a refetch can unmount the card that started the request.
@@ -76,7 +93,7 @@ export function GmCombatScreen({ campaign, combat, party }: { campaign: Campaign
       <View className="flex-row flex-wrap items-center gap-3">
         {/* Only where kill XP is awarded: some enemy carries an XP value. */}
         <View className="flex-1">
-          {enemies.some((e) => e.xp !== null) ? <Text variant="subhead" tone="muted">{`XP earned: ${xpEarned(enemies)}`}</Text> : null}
+          {xp !== null ? <Text variant="subhead" tone="muted">{`XP earned: ${xp}`}</Text> : null}
         </View>
         <Button variant="outline" accessibilityLabel={SEARCH_BUTTON_LABEL} onPress={() => setSearching(true)}>
           <Text>{SEARCH_BUTTON_LABEL}</Text>
@@ -85,6 +102,17 @@ export function GmCombatScreen({ campaign, combat, party }: { campaign: Campaign
           <Text>Add enemy</Text>
         </Button>
       </View>
+      {allDown && !dismissedAllDown ? (
+        <View testID="all-down-prompt" className="flex-row flex-wrap items-center gap-3">
+          <Text variant="body-sm" className="flex-1">All enemies down. End combat?</Text>
+          <Button variant="outline" accessibilityLabel="Not now" onPress={() => setDismissedAllDown(true)}>
+            <Text>Not now</Text>
+          </Button>
+          <Button variant="destructive" accessibilityLabel="End combat" onPress={() => run(() => endCombat(combat.session_id))}>
+            <Text>End combat</Text>
+          </Button>
+        </View>
+      ) : null}
       <InitiativeStrip campaignId={campaign.id} combatId={combat.id} rows={rows} currentId={currentId} round={round} />
 
       {selectedIds.length > 0 ? (

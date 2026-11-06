@@ -11,6 +11,7 @@ import { useCampaign, useCharacterCampaign } from '@/features/campaigns/campaign
 import { useCharacterRouteId } from '@/features/characters/useCharacterRouteId'
 import { ERROR_COPY } from '@/features/errors'
 import { THEME_COLORS } from '@/lib/theme'
+import { useEndCombat } from '@/features/combat/useEndCombat'
 import { canEndCombat } from './combat'
 import type { Session } from './sessions.api'
 import { useActiveSession, useSetCombat } from './sessions.queries'
@@ -28,6 +29,7 @@ export function CombatBadgeView({ campaignId, session }: { campaignId: string | 
   const gmId = useCampaign(campaignId).data?.gm_id
   const { user } = useAuth()
   const setCombat = useSetCombat(campaignId ?? '')
+  const endCombat = useEndCombat(campaignId ?? '')
   const [confirming, setConfirming] = useState(false)
 
   if (!session) return null
@@ -35,8 +37,8 @@ export function CombatBadgeView({ campaignId, session }: { campaignId: string | 
   // mutateAsync, not mutate's per-call onError: that callback is dropped if this badge unmounts
   // first, which it does when a poll finds the session ended while the call is still in flight.
   const change = (inCombat: boolean) => {
-    setCombat
-      .mutateAsync({ sessionId: session.id, inCombat })
+    // Ending goes through useEndCombat so the round and XP are captured first and the summary shows after.
+    ;(inCombat ? setCombat.mutateAsync({ sessionId: session.id, inCombat }) : endCombat(session.id))
       .catch((e) => showToast(e instanceof Error ? e.message : ERROR_COPY.save_failed))
   }
 
