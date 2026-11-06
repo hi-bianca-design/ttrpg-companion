@@ -9,7 +9,7 @@ import { adjustPool, applyPoolChange, setTemp } from '@/systems/resources'
 import { getSystem } from '@/systems/registry'
 import type { PoolValue } from '@/systems/types'
 
-export type PlayerCombatHp = {
+type PlayerCombatHp = {
   damage: (n: number) => void
   heal: (n: number) => void
   temp: (n: number) => void
