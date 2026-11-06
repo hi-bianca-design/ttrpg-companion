@@ -13,6 +13,7 @@ import { PartyList } from '@/features/party/PartyList'
 import { CampaignSessionStatus } from '@/features/sessions/CampaignSessionStatus'
 import { SessionControls } from '@/features/sessions/SessionControls'
 import { TurnControls } from '@/features/sessions/TurnControls'
+import { useSessionRealtime } from '@/features/sessions/useSessionRealtime'
 import { useCampaign } from '@/features/campaigns/campaigns.queries'
 import { THEME_COLORS } from '@/lib/theme'
 import { systemName } from '@/systems/registry'
@@ -22,6 +23,7 @@ export default function CampaignDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { user } = useAuth()
   const { data, isLoading, isError, refetch } = useCampaign(id)
+  useSessionRealtime(data?.id)
   const [inviteOpen, setInviteOpen] = useState(false)
 
   if (isLoading) {
