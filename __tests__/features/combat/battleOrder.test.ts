@@ -31,6 +31,13 @@ describe('buildPlayerOrder', () => {
     expect(Object.keys(goblin).sort()).toEqual(['id', 'initiative', 'isCurrent', 'kind', 'name'])
   })
 
+  test('the same enemy with card fields still yields only the player-safe keys', () => {
+    const wolf = enemy({ id: 'e2', name: 'Goblin 1', defense_label: 'AC', attacks: [{ name: 'Bite', toHit: '+4', damage: '1d4' }], xp: 50, conditions: ['prone'], initiative: 12, position: 2 })
+    const projected = orderRow({ id: wolf.id, kind: 'enemy', name: wolf.name, initiative: wolf.initiative, position: wolf.position })
+    const row = buildPlayerOrder({ combat: combat(), order: [projected], party, userId: 'u1' }).rows[0]
+    expect(Object.keys(row).sort()).toEqual(['id', 'initiative', 'isCurrent', 'kind', 'name'])
+  })
+
   test('hostile extra columns on an order row never reach an enemy row', () => {
     const hostile = { ...order[0], hp: 7, max_hp: 7, ac: 13, notes: 'secret', hidden: true } as never
     const out = buildPlayerOrder({ combat: combat(), order: [hostile], party, userId: 'u1' })
@@ -79,6 +86,21 @@ describe('buildGmOrder', () => {
     const [, goblin, ogre] = out.rows as [unknown, GmEnemyRow, GmEnemyRow]
     expect(goblin).toMatchObject({ isDown: true, hp: 0, maxHp: 7, groupId: 'grp', hidden: false })
     expect(ogre).toMatchObject({ hidden: true, tempHp: 5, ac: 11, notes: 'weak to fire', isDown: false, isCurrent: false })
+  })
+
+  test('an enemy row carries its card fields: defense label, attacks, xp and conditions', () => {
+    const attacks = [{ name: 'Bite', toHit: '+4', damage: '2d4+2' }]
+    const wolf = enemy({ id: 'w1', name: 'Wolf', defense_label: 'AC', attacks, xp: 50, conditions: ['prone'] })
+    const [row] = buildGmOrder({ combat: combat(), entries: [wolf], party, userId: 'gm' }).rows as GmEnemyRow[]
+    expect(row.defenseLabel).toBe('AC')
+    expect(row.attacks).toEqual(attacks)
+    expect(row.xp).toBe(50)
+    expect(row.conditions).toEqual(['prone'])
+  })
+
+  test('an enemy with no card fields set maps to null, empty and empty', () => {
+    const [, goblin] = buildGmOrder({ combat: combat(), entries, party, userId: 'gm' }).rows as GmEnemyRow[]
+    expect([goblin.defenseLabel, goblin.attacks, goblin.xp, goblin.conditions]).toEqual([null, [], null, []])
   })
 
   test('a player row is the same PlayerRow the players see, with no edit fields', () => {

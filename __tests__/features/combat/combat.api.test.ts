@@ -44,7 +44,21 @@ describe('combat rpc wrappers', () => {
     await expect(addEnemies('cb1', { name: 'Goblin', count: 2, maxHp: 7, initiative: 15, ac: 13, notes: null, hidden: true })).resolves.toEqual(['e1', 'e2'])
     expect(supabase.rpc).toHaveBeenCalledWith('add_enemies', {
       p_combat_id: 'cb1', p_name: 'Goblin', p_count: 2, p_max_hp: 7, p_initiative: 15, p_ac: 13, p_notes: null, p_hidden: true,
+      p_defense_label: undefined, p_attacks: undefined, p_xp: undefined,
     })
+  })
+
+  it('addEnemies passes the card fields: defense label, attacks and xp', async () => {
+    ;(supabase.rpc as jest.Mock).mockResolvedValue({ data: ['e1'], error: null })
+    const attacks = [{ name: 'Bite', toHit: '+4', damage: '2d4+2' }]
+    await addEnemies('cb1', { name: 'Wolf', count: 1, maxHp: 11, initiative: null, ac: 13, notes: null, hidden: false, defenseLabel: 'AC', attacks, xp: 50 })
+    expect(supabase.rpc).toHaveBeenCalledWith('add_enemies', expect.objectContaining({ p_defense_label: 'AC', p_attacks: attacks, p_xp: 50 }))
+  })
+
+  it('updateEnemy passes the card fields through as the patch', async () => {
+    ;(supabase.rpc as jest.Mock).mockResolvedValue({ data: combat, error: null })
+    await updateEnemy('e1', { xp: 75, conditions: ['prone'] })
+    expect(supabase.rpc).toHaveBeenCalledWith('update_enemy', { p_entry_id: 'e1', p_patch: { xp: 75, conditions: ['prone'] } })
   })
 
   it('applyEnemyHp returns the batch id', async () => {

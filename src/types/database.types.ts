@@ -301,9 +301,12 @@ export type Database = {
       combat_entries: {
         Row: {
           ac: number | null
+          attacks: Json
           campaign_id: string
           character_id: string | null
           combat_id: string
+          conditions: string[]
+          defense_label: string | null
           group_id: string | null
           hidden: boolean
           hp: number | null
@@ -320,12 +323,16 @@ export type Database = {
           prev_temp: number | null
           temp_hp: number
           user_id: string | null
+          xp: number | null
         }
         Insert: {
           ac?: number | null
+          attacks?: Json
           campaign_id: string
           character_id?: string | null
           combat_id: string
+          conditions?: string[]
+          defense_label?: string | null
           group_id?: string | null
           hidden?: boolean
           hp?: number | null
@@ -342,12 +349,16 @@ export type Database = {
           prev_temp?: number | null
           temp_hp?: number
           user_id?: string | null
+          xp?: number | null
         }
         Update: {
           ac?: number | null
+          attacks?: Json
           campaign_id?: string
           character_id?: string | null
           combat_id?: string
+          conditions?: string[]
+          defense_label?: string | null
           group_id?: string | null
           hidden?: boolean
           hp?: number | null
@@ -364,6 +375,7 @@ export type Database = {
           prev_temp?: number | null
           temp_hp?: number
           user_id?: string | null
+          xp?: number | null
         }
         Relationships: [
           {
@@ -841,13 +853,16 @@ export type Database = {
       add_enemies: {
         Args: {
           p_ac: number
+          p_attacks?: Json
           p_combat_id: string
           p_count: number
+          p_defense_label?: string
           p_hidden: boolean
           p_initiative: number
           p_max_hp: number
           p_name: string
           p_notes: string
+          p_xp?: number
         }
         Returns: string[]
       }
