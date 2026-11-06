@@ -13,6 +13,10 @@ import { BulkBar } from './BulkBar'
 import { cardWidthFor, columnsFor } from './cardsLayout'
 import type { Combat, EnemyPatch } from './combat.api'
 import { useCombatEntries, useRemoveEntry, useUpdateEnemy } from './combat.queries'
+import { SearchPanel } from '@/features/search/SearchPanel'
+import { useSearchIndex } from '@/features/search/useSearchIndex'
+import { useHotkey } from '@/lib/useHotkey'
+import { SEARCH_BUTTON_LABEL } from './copy'
 import { EnemyCard } from './EnemyCard'
 import { InitiativeStrip } from './InitiativeStrip'
 import { PlayerRowCard } from './PlayerRowCard'
@@ -35,9 +39,14 @@ export function GmCombatScreen({ campaign, combat, party }: { campaign: Campaign
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set())
   const [adding, setAdding] = useState(false)
   const [gridWidth, setGridWidth] = useState(0)
+  const [searching, setSearching] = useState(false)
+  const search = useSearchIndex(campaign.system_id, campaign.id, true)
+  // Only while this screen is mounted; Cmd/Ctrl+K opens search from anywhere on it.
+  useHotkey('mod+k', () => setSearching(true), true)
 
   // The window sets the column count; a narrower measured container (a side panel, a padded page) can only lower it.
   const windowColumns = columnsFor(useWindowDimensions().width)
+  const overlay = windowColumns === 1
   const columns = gridWidth > 0 ? (Math.min(windowColumns, columnsFor(gridWidth)) as typeof windowColumns) : windowColumns
   const cardWidth = cardWidthFor(gridWidth, columns)
   const conditionOptions = SYSTEMS.find((s) => s.id === campaign.system_id)?.conditions ?? []
@@ -62,12 +71,16 @@ export function GmCombatScreen({ campaign, combat, party }: { campaign: Campaign
   const cell = columns === 1 ? { className: 'w-full' } : { style: { width: cardWidth } }
 
   return (
-    <View testID="gm-combat" className="gap-4" onLayout={(e: LayoutChangeEvent) => setGridWidth(e.nativeEvent.layout.width)}>
+    <View className="flex-row items-start gap-4">
+    <View testID="gm-combat" className="flex-1 gap-4" onLayout={(e: LayoutChangeEvent) => setGridWidth(e.nativeEvent.layout.width)}>
       <View className="flex-row flex-wrap items-center gap-3">
         {/* Only where kill XP is awarded: some enemy carries an XP value. */}
         <View className="flex-1">
           {enemies.some((e) => e.xp !== null) ? <Text variant="subhead" tone="muted">{`XP earned: ${xpEarned(enemies)}`}</Text> : null}
         </View>
+        <Button variant="outline" accessibilityLabel={SEARCH_BUTTON_LABEL} onPress={() => setSearching(true)}>
+          <Text>{SEARCH_BUTTON_LABEL}</Text>
+        </Button>
         <Button variant="outline" onPress={() => setAdding(true)}>
           <Text>Add enemy</Text>
         </Button>
@@ -116,6 +129,8 @@ export function GmCombatScreen({ campaign, combat, party }: { campaign: Campaign
       ) : null}
 
       <AddEnemySheet campaignId={campaign.id} combatId={combat.id} enemies={enemies} open={adding} onOpenChange={setAdding} />
+    </View>
+    <SearchPanel open={searching} onClose={() => setSearching(false)} items={search.items} overlay={overlay} />
     </View>
   )
 }

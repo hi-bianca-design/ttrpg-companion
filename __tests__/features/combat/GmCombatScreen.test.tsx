@@ -16,6 +16,8 @@ import { character, combat, enemy, entry } from '../../helpers/combat'
 
 jest.mock('@/lib/supabase', () => ({ supabase: { from: jest.fn(), rpc: jest.fn(), auth: { getSession: jest.fn() } } }))
 jest.mock('@/features/combat/combat.api')
+jest.mock('@/features/content/content.api', () => ({ listContent: jest.fn().mockResolvedValue([]) }))
+jest.mock('@/features/encounters/encounters.api', () => ({ listEncounters: jest.fn().mockResolvedValue([]) }))
 jest.mock('@/components/ui/toast', () => ({ showToast: jest.fn() }))
 
 jest.setTimeout(30000) // a 20-card grid re-renders on every tap, which is slow on a loaded machine
@@ -360,5 +362,17 @@ describe('turns', () => {
     expect(screen.getByText('Round 2')).toBeTruthy()
     expect(screen.getAllByTestId(/^chip-/)).toHaveLength(8)
     expect(screen.getByRole('button', { name: 'Next turn' })).toBeTruthy()
+  })
+})
+
+describe('search', () => {
+  test('the header button opens the search panel, its Close button closes it, and the cards stay', () => {
+    setup()
+    expect(screen.queryByTestId('search-panel')).toBeNull()
+    fireEvent.press(screen.getByRole('button', { name: 'Search' }))
+    expect(screen.getByTestId('search-panel')).toBeTruthy()
+    expect(screen.getAllByTestId(/^card-/).length).toBeGreaterThan(0)
+    fireEvent.press(screen.getByRole('button', { name: 'Close search' }))
+    expect(screen.queryByTestId('search-panel')).toBeNull()
   })
 })
