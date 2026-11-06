@@ -38,6 +38,20 @@ export function buildDraft(input: { party: CharacterFull[]; encounters: Encounte
   return rows
 }
 
+/**
+ * Adds any party member missing from the draft (a party that loaded late, or a late joiner) right after
+ * the last player row, or first when there is none. Rows already in the draft keep their order; with
+ * nobody missing the same array is returned.
+ */
+export function withParty(rows: DraftRow[], party: CharacterFull[]): DraftRow[] {
+  const keys = new Set(rows.map((r) => r.key))
+  const missing = buildDraft({ party: party.filter((c) => !keys.has(`player:${c.id}`)), encounters: [] })
+  if (missing.length === 0) return rows
+  let at = 0
+  rows.forEach((r, i) => { if (r.kind === 'player') at = i + 1 })
+  return [...rows.slice(0, at), ...missing, ...rows.slice(at)]
+}
+
 /** Moves a row to a 0-based index, clamped to the list. Returns a new array; an unknown key changes nothing. */
 export function moveRow(rows: DraftRow[], key: string, toIndex: number): DraftRow[] {
   const from = rows.findIndex((r) => r.key === key)

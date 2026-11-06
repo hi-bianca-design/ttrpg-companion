@@ -32,3 +32,30 @@ test('does not fetch for a non-GM', () => {
   expect(listContent).not.toHaveBeenCalled()
   expect(listEncounters).not.toHaveBeenCalled()
 })
+
+test('items keep their identity across re-renders while the data is unchanged', async () => {
+  const { result, rerender } = renderHook(() => useSearchIndex('dnd5e-2024', 'camp1', true), { wrapper: wrap() })
+  await waitFor(() => expect(result.current.ready).toBe(true))
+  const first = result.current.items
+  rerender({})
+  rerender({})
+  expect(result.current.items).toBe(first)
+})
+
+test('a re-render with unchanged data does not walk the SRD rows again', async () => {
+  // Counts reads of the loaded rows: only flattening them (combine) or indexing them reads an element.
+  let reads = 0
+  const rows = new Proxy([{ id: 's1', kind: 'spell', name: 'Fireball', description: 'Boom', summary: null }], {
+    get: (target, key, receiver) => {
+      if (typeof key === 'string' && /^\d+$/.test(key)) reads++
+      return Reflect.get(target, key, receiver)
+    },
+  })
+  ;(listContent as jest.Mock).mockImplementation(async ({ kind }: { kind: string }) => (kind === 'spell' ? rows : []))
+  const { result, rerender } = renderHook(() => useSearchIndex('dnd5e-2024', 'camp1', true), { wrapper: wrap() })
+  await waitFor(() => expect(result.current.ready).toBe(true))
+  const before = reads
+  rerender({})
+  rerender({})
+  expect(reads).toBe(before)
+})

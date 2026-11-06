@@ -128,6 +128,28 @@ test('the Hidden toggle flips an enemy and is sent on launch; players have none'
   expect(launch.mock.calls[0][1].hiddenKeys).toEqual(['enemy:b1:1', 'enemy:w1:1', 'enemy:w1:2'])
 })
 
+test('a party that loads after the screen opens joins the draft, after the players and before the enemies', async () => {
+  client = makeTestQueryClient()
+  client.setQueryData(qk.encounters('camp1'), [ambush, bare])
+  const view = (p: typeof party) => (
+    <QueryClientProvider client={client}>
+      <ReviewScreen campaign={campaign} party={p} sessionId="s1" initialEncounterId="e1" onBack={jest.fn()} />
+      <PortalHost />
+    </QueryClientProvider>
+  )
+  const { rerender } = render(view([]))
+  expect(names()).toEqual(['draft-enemy:b1:1', 'draft-enemy:w1:1', 'draft-enemy:w1:2'])
+  fireEvent.press(screen.getByRole('button', { name: 'Move down: Goblin Boss' }))
+  rerender(view(party))
+  expect(names()).toEqual(['draft-player:c1', 'draft-player:c2', 'draft-enemy:w1:1', 'draft-enemy:b1:1', 'draft-enemy:w1:2'])
+  // A late joiner lands after the existing players; nobody already in the draft moves or repeats.
+  rerender(view([...party, character('c3', 'Tam')]))
+  expect(names()).toEqual(['draft-player:c1', 'draft-player:c2', 'draft-player:c3', 'draft-enemy:w1:1', 'draft-enemy:b1:1', 'draft-enemy:w1:2'])
+  fireEvent.press(screen.getByRole('button', { name: 'Enter combat' }))
+  await waitFor(() => expect(launch).toHaveBeenCalled())
+  expect(launch.mock.calls[0][1].order).toEqual(['player:c1', 'player:c2', 'player:c3', 'enemy:w1:1', 'enemy:b1:1', 'enemy:w1:2'])
+})
+
 test('Enter combat with no encounter launches a party-only draft', async () => {
   setup()
   fireEvent.press(screen.getByRole('button', { name: 'Enter combat' }))

@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
-import { useQueries } from '@tanstack/react-query'
+import { useQueries, type UseQueryResult } from '@tanstack/react-query'
+import type { ContentRow } from '@/features/content/content.api'
 import { useEncounters } from '@/features/encounters/encounters.queries'
 import { qk } from '@/lib/query-client'
 import type { SystemId } from '@/systems/types'
@@ -9,6 +10,14 @@ export const SEARCH_KINDS = ['spell', 'magic_item', 'item', 'feat', 'class', 'sp
 
 /** Loaded once per system and kept a day, so search keeps working from the cache (persisted later). */
 const STALE_TIME = 24 * 60 * 60 * 1000
+
+/** Module scope, so the query library reuses the combined value (and `items`) until a source changes. */
+function combineSources(results: UseQueryResult<ContentRow[]>[]) {
+  return {
+    rows: results.flatMap((r) => r.data ?? []),
+    settled: results.every((r) => r.isSuccess || r.isError),
+  }
+}
 
 /**
  * Everything the GM can search: the official content of the kinds above plus the campaign's saved
@@ -27,10 +36,7 @@ export function useSearchIndex(systemId: string, campaignId: string, isGm: boole
         return listContent({ systemId: systemId as SystemId, kind, scope: 'official' })
       },
     })),
-    combine: (results) => ({
-      rows: results.flatMap((r) => r.data ?? []),
-      settled: results.every((r) => r.isSuccess || r.isError),
-    }),
+    combine: combineSources,
   })
 
   const items = useMemo<SearchResult[]>(

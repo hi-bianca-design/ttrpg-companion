@@ -17,7 +17,7 @@ import { THEME_COLORS } from '@/lib/theme'
 import { reorderTarget } from './battleOrder'
 import { useStartPreparedCombat } from './combat.queries'
 import { EncounterPicker } from './EncounterPicker'
-import { buildDraft, launchInput, moveBy, moveRow, toggleHidden, type DraftRow } from './reviewDraft'
+import { buildDraft, launchInput, moveBy, moveRow, toggleHidden, withParty, type DraftRow } from './reviewDraft'
 
 const FALLBACK_ROW_HEIGHT = 56
 
@@ -98,6 +98,11 @@ export function ReviewScreen({ campaign, party, sessionId, initialEncounterId, o
   const [pickedIds, setPickedIds] = useState<string[]>([])
   const [picking, setPicking] = useState(false)
   const busy = useRef(false)
+  // The party may load after the screen opens (a reload during a rolling combat), or someone joins late:
+  // every member must be in the draft, or the launch would silently put them last.
+  useEffect(() => {
+    setRows((r) => withParty(r, party))
+  }, [party])
 
   const addEncounter = (id: string) => {
     const found = encounters?.find((e) => e.id === id)

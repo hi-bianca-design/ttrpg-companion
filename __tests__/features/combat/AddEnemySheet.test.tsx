@@ -154,6 +154,18 @@ describe('blank', () => {
     expect(mockAdd).toHaveBeenCalledTimes(1)
     await act(async () => { release(['id1']) })
   })
+  test('two presses in the same frame send one add', async () => {
+    let release: (ids: string[]) => void = () => {}
+    mockAdd.mockReturnValue(new Promise<string[]>((r) => { release = r }))
+    setup()
+    set('Name', 'Goblin')
+    set('Max HP', '7')
+    act(() => { submit(); submit() })
+    await waitFor(() => expect(mockAdd).toHaveBeenCalled())
+    await act(async () => {})
+    expect(mockAdd).toHaveBeenCalledTimes(1)
+    await act(async () => { release(['id1']) })
+  })
 })
 
 describe('copy', () => {

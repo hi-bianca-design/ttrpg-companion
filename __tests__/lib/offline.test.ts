@@ -155,6 +155,24 @@ describe('restore', () => {
   })
 })
 
+describe('a user change on the same client (defence in depth behind AuthProvider)', () => {
+  test('the previous user’s cache and queue are dropped before the new user persists', async () => {
+    await setOfflineUser('u1')
+    fillGmCache(client)
+    act(() => onlineManager.setOnline(false))
+    client.getMutationCache().build(client, { mutationKey: combatMutationKey('applyHp') })
+      .execute({ campaignId: 'camp1', combatId: 'cb1', entryIds: ['g1'], mode: 'damage', amount: 3, batch: 'b-1' }).catch(() => {})
+    await waitFor(async () => expect((await stored('u1'))?.clientState.mutations.length).toBe(1))
+    await setOfflineUser('u2')
+    expect(client.getQueryCache().getAll()).toEqual([])
+    expect(client.getMutationCache().getAll()).toEqual([])
+    client.setQueryData(qk.encounters('camp9'), [{ id: 'enc9' }])
+    await waitFor(async () => expect(await stored('u2')).not.toBeNull())
+    expect((await stored('u2'))!.clientState.queries.map((q) => q.queryKey)).toEqual([qk.encounters('camp9')])
+    expect((await stored('u2'))!.clientState.mutations).toEqual([])
+  })
+})
+
 describe('sign-out while a restore is still reading storage', () => {
   test('nothing of the old user lands in the cache or under the next user’s key', async () => {
     await setOfflineUser('u1')

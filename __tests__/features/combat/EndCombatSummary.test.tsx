@@ -79,6 +79,19 @@ describe('All enemies down prompt', () => {
     expect(mutateAsync).not.toHaveBeenCalled()
   })
 
+  test('two presses of End combat in the same frame send one end call', async () => {
+    let release: (v: unknown) => void = () => {}
+    mutateAsync.mockReturnValue(new Promise((r) => { release = r }))
+    setEntries([...players, enemy({ id: 'g1', hp: 0 })])
+    render(screenUi())
+    await screen.findByText('All enemies down. End combat?')
+    const end = screen.getByRole('button', { name: 'End combat' })
+    act(() => { fireEvent.press(end); fireEvent.press(end) })
+    await act(async () => {})
+    expect(mutateAsync).toHaveBeenCalledTimes(1)
+    await act(async () => { release({}) })
+  })
+
   test('is absent while an enemy is still up', async () => {
     setEntries([...players, enemy({ id: 'g1', name: 'Goblin', hp: 0 }), enemy({ id: 'g2', name: 'Ogre', hp: 3 })])
     render(screenUi())

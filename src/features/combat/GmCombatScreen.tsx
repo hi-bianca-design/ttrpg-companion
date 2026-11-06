@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useWindowDimensions, View, type LayoutChangeEvent } from 'react-native'
 import { Button } from '@/components/ui/button'
 import { Text } from '@/components/ui/text'
@@ -86,6 +86,17 @@ export function GmCombatScreen({ campaign, combat, party }: { campaign: Campaign
   // Offline the edit is already on the card and queued, so the caller does not wait for the server.
   const patch = (entryId: string) => (p: EnemyPatch) => run(() => sentOrQueued(update.mutateAsync({ entryId, patch: p })))
   const copy = (row: GmEnemyRow) => run(() => copyEnemy(row))
+  // Two taps in one frame send one end call.
+  const ending = useRef(false)
+  const end = async () => {
+    if (ending.current) return
+    ending.current = true
+    try {
+      await run(() => endCombat(combat.session_id))
+    } finally {
+      ending.current = false
+    }
+  }
 
   // One column fills the width; otherwise every card has the same fixed width for this window.
   const cell = columns === 1 ? { className: 'w-full' } : { style: { width: cardWidth } }
@@ -112,7 +123,7 @@ export function GmCombatScreen({ campaign, combat, party }: { campaign: Campaign
           <Button variant="outline" accessibilityLabel="Not now" onPress={() => setDismissedAllDown(true)}>
             <Text>Not now</Text>
           </Button>
-          <Button variant="destructive" accessibilityLabel="End combat" onPress={() => run(() => endCombat(combat.session_id))}>
+          <Button variant="destructive" accessibilityLabel="End combat" onPress={end}>
             <Text>End combat</Text>
           </Button>
         </View>

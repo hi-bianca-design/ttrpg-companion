@@ -106,8 +106,13 @@ export async function setOfflineUser(userId: string | null): Promise<void> {
   const target = installed
   if (!target || active?.userId === userId) return
   if (userId === null) return detach()
-  if (active) await clearPersistedCombat()
-  else {
+  if (active) {
+    // Defence in depth (AuthProvider clears first): the previous user's cache and queue must never be
+    // written under this user's key. Detaching (synchronous) comes first so the clear is not saved either.
+    const cleared = clearPersistedCombat()
+    target.client.clear()
+    await cleared
+  } else {
     detach()
     await removeKeys((k) => k === persistKey(userId))
   }

@@ -77,6 +77,8 @@ export function AddEnemySheet({ campaignId, combatId, enemies, open, onOpenChang
   const [hidden, setHidden] = useState(false)
   const [count, setCount] = useState('1')
   const [busy, setBusy] = useState(false)
+  // The ref is the guard (two taps in one frame both see the old state); the state only disables the buttons.
+  const inFlight = useRef(false)
 
   const path: Path = chosen ?? (enemies.length > 0 ? 'copy' : 'blank')
   const copies = toInt(count) ?? 1
@@ -89,7 +91,8 @@ export function AddEnemySheet({ campaignId, combatId, enemies, open, onOpenChang
 
   // One guard and one toast for all three paths.
   const guarded = async (fn: () => Promise<unknown>): Promise<boolean> => {
-    if (busy) return false
+    if (inFlight.current) return false
+    inFlight.current = true
     setBusy(true)
     try {
       await fn()
@@ -98,6 +101,7 @@ export function AddEnemySheet({ campaignId, combatId, enemies, open, onOpenChang
       showToast(e instanceof Error ? e.message : ERROR_COPY.save_failed)
       return false
     } finally {
+      inFlight.current = false
       setBusy(false)
     }
   }
