@@ -22,7 +22,7 @@ Monetization features (packs, DM Pro, shop) are described in the [strategy](../s
 ## Still to write
 
 - [ ] **Feature status matrix**: every feature and whether it is shipped, in progress, or planned, in one table
-- [ ] **Backlog and priorities**: what's next and the reason for the order
+- [x] **Backlog and priorities**: [backlog.html](backlog.html), a running list of fixes and follow-ups by priority. Open it straight from disk in any browser; the list lives in its `ITEMS` array
 - [ ] **Release notes**: what changed, in plain language, per release
 - [ ] **User feedback log**: what people say, where it came from, what we did
 - [ ] **Personas and key journeys**: DM and player, in a page each (see [Go to market](../business/go-to-market.md))
