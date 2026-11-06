@@ -84,7 +84,10 @@ export function GmCombatScreen({ campaign, combat, party }: { campaign: Campaign
     <View testID="gm-combat" className="gap-4" onLayout={(e: LayoutChangeEvent) => setGridWidth(e.nativeEvent.layout.width)}>
       <View className="flex-row flex-wrap items-center gap-3">
         <Text variant="heading" accessibilityRole="header">{`Round ${round}`}</Text>
-        <Text variant="subhead" tone="muted" className="flex-1">{`XP earned: ${xpEarned(enemies)}`}</Text>
+        {/* Only where kill XP is awarded: some enemy carries an XP value. */}
+        <View className="flex-1">
+          {enemies.some((e) => e.xp !== null) ? <Text variant="subhead" tone="muted">{`XP earned: ${xpEarned(enemies)}`}</Text> : null}
+        </View>
         <Button variant="outline" onPress={() => setAdding(true)}>
           <Text>Add enemy</Text>
         </Button>

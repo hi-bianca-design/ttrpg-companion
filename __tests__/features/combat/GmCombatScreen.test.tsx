@@ -182,6 +182,11 @@ describe('XP', () => {
     expect(await screen.findByText('XP earned: 250')).toBeTruthy()
   })
 
+  test('the header has no XP total when no enemy carries XP', () => {
+    setup([enemy({ id: 'a', name: 'Goblin', xp: null, hp: 0, position: 1 }), enemy({ id: 'b', name: 'Wolf', xp: null, position: 2 })])
+    expect(screen.queryByText(/XP earned/)).toBeNull()
+  })
+
   test('healing a downed enemy takes its XP back out', async () => {
     setup([enemy({ id: 'a', name: 'Goblin Boss', xp: 200, hp: 0, max_hp: 21, position: 1 })])
     expect(screen.getByText('XP earned: 200')).toBeTruthy()

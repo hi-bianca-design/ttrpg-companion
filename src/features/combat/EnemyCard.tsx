@@ -70,11 +70,12 @@ export function EnemyCard({ row, selected, onToggleSelect, hp, conditionOptions,
           <Pressable
             className="min-h-11 flex-1 flex-row items-center gap-2"
             accessibilityRole="button"
-            accessibilityLabel={`Show ${row.name}`}
+            accessibilityLabel={`Show ${row.name}${row.isCurrent ? ', current turn' : ''}`}
             accessibilityHint={spoken}
             onPress={() => setShowDowned(true)}
           >
             <Text variant="subhead" tone="muted" className="flex-1" numberOfLines={1}>{row.name}</Text>
+            {row.isCurrent ? <CurrentMark /> : null}
             <Text variant="label">Down</Text>
             {row.xp !== null ? <Text variant="label" tone="muted">{xpText(row.xp)}</Text> : null}
           </Pressable>

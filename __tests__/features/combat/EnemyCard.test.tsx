@@ -128,6 +128,20 @@ describe('a downed enemy', () => {
     expect(screen.queryByRole('button', { name: /Full stat block/ })).toBeNull()
   })
 
+  test('holding the turn, it says Current in text, a ▶ marker and in its accessibility label', () => {
+    setup(rowOf({ hp: 0, is_current: true }))
+    expect(screen.getByText('Current')).toBeTruthy()
+    expect(screen.getByText('▶')).toBeTruthy()
+    expect(screen.getByLabelText(/current turn/)).toBeTruthy()
+  })
+
+  test('not holding the turn, it has no marker', () => {
+    setup(rowOf({ hp: 0 }))
+    expect(screen.queryByText('Current')).toBeNull()
+    expect(screen.queryByText('▶')).toBeNull()
+    expect(screen.queryByLabelText(/current turn/)).toBeNull()
+  })
+
   test('offers Undo when its last change can be undone', () => {
     const p = setup(rowOf({ hp: 0 }), {}, true)
     fireEvent.press(screen.getByRole('button', { name: 'Undo' }))
