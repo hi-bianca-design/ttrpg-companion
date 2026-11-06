@@ -4,7 +4,7 @@
 begin;
 set local client_min_messages to warning;
 create extension if not exists pgtap with schema extensions;
-select plan(53);
+select plan(30);
 
 create temp table k (name text primary key, id uuid not null default gen_random_uuid());
 insert into k (name) values ('gm'), ('p1'), ('p2'), ('gm2'), ('pB'), ('ch1'), ('ch2'), ('chB'), ('campA'), ('campB'), ('mark');
@@ -156,17 +156,21 @@ select is((select round - 1 from pg_temp.ro where label = 'B_after'), (select ro
 select is((select pointer from pg_temp.ro where label = 'B_after'), public.t_beid('PB'), 'and puts the pointer on the first row');
 
 -- ---- anon: no access to any combat table or function
-select ok(not has_function_privilege('anon', p.oid, 'execute'), p.oid::regprocedure::text || ' is not executable by anon')
-  from pg_proc p join pg_namespace n on n.oid = p.pronamespace
- where n.nspname = 'public'
-   and (p.proname like 'combat\_%' or p.proname in ('lock_combat', 'refresh_combat', 'start_combat', 'set_initiative', 'move_entry', 'next_turn',
-        'end_my_turn', 'set_current_entry', 'delay_turn', 'add_enemies', 'update_enemy', 'remove_entry', 'apply_enemy_hp', 'undo_enemy_hp',
-        'set_combat', 'end_session'))
- order by p.oid::regprocedure::text;
-select cmp_ok((select count(*)::int from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-  where n.nspname = 'public' and (p.proname like 'combat\_%' or p.proname in ('lock_combat', 'refresh_combat', 'start_combat', 'set_initiative', 'move_entry', 'next_turn',
-        'end_my_turn', 'set_current_entry', 'delay_turn', 'add_enemies', 'update_enemy', 'remove_entry', 'apply_enemy_hp', 'undo_enemy_hp',
-        'set_combat', 'end_session'))), '>=', 25, 'the anon check covered every combat function');
+-- One aggregate assertion (lists any offender), so new combat functions never change the plan.
+create function public.t_combat_fns() returns setof oid language sql security definer set search_path = '' as $$
+  select p.oid from pg_catalog.pg_proc p join pg_catalog.pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public'
+     and (p.proname like 'combat\_%' or p.proname in ('lock_combat', 'refresh_combat', 'start_combat', 'set_initiative', 'move_entry', 'next_turn',
+          'end_my_turn', 'set_current_entry', 'delay_turn', 'add_enemies', 'update_enemy', 'remove_entry', 'apply_enemy_hp', 'undo_enemy_hp',
+          'set_combat', 'end_session', 'start_prepared_combat', 'add_encounter_enemies'))
+$$;
+select is((select coalesce(array_agg(f::regprocedure::text order by f::regprocedure::text), '{}') from public.t_combat_fns() f
+            where has_function_privilege('anon', f, 'execute')),
+          '{}'::text[], 'no combat function is executable by anon');
+select cmp_ok((select count(*)::int from public.t_combat_fns()), '>=', 28, 'the anon check covered every combat function');
+select is((select array_agg(p.proname::text order by p.proname) from public.t_combat_fns() f join pg_catalog.pg_proc p on p.oid = f
+            where p.proname in ('start_prepared_combat', 'add_encounter_enemies')),
+          array['add_encounter_enemies', 'start_prepared_combat'], 'the check includes start_prepared_combat and add_encounter_enemies');
 set local role anon;
 select cmp_ok(public.t_anon_count(t), '<=', 0, 'anon reads no rows of ' || t) from (values ('combats'), ('combat_order'), ('combat_entries'), ('combat_hp_batches')) v (t);
 reset role;
