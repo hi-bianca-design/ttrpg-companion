@@ -30,13 +30,17 @@ h1 { font-size: 1.7rem; margin: 0 0 4px; color: var(--mint); letter-spacing: .02
 h2 { font-size: 1.15rem; margin: 0; }
 .sub { color: var(--muted); margin: 0 0 16px; }
 .hint {
-  background: var(--panel); border: 1px solid var(--edge); border-left: 4px solid var(--gold);
-  border-radius: 8px; padding: 10px 14px; margin: 0 0 16px; color: var(--muted); font-size: .92rem;
+  border: 1px solid var(--edge); border-radius: 8px; padding: 0 14px; margin: 0 0 16px;
+  color: var(--muted); font-size: .92rem;
 }
-.hint strong { color: var(--ink); }
+.hint summary { cursor: pointer; min-height: 40px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 4px 0; }
+.hint summary strong { color: var(--ink); font-weight: 600; }
+.hint summary::after { content: "\25BE"; margin-left: auto; color: var(--gold); }
+.hint[open] summary::after { content: "\25B4"; }
+.hint p { margin: 0 0 12px; }
 .panel { background: var(--panel); border: 1px solid var(--edge); border-radius: 10px; padding: 12px; margin-bottom: 16px; }
 .controls { display: grid; gap: 10px; grid-template-columns: 1fr; }
-@media (min-width: 640px) { .controls { grid-template-columns: 2fr 1fr 1fr; } }
+@media (min-width: 640px) { .controls { grid-template-columns: 2fr 1fr auto; align-items: end; } }
 label { display: block; font-size: .8rem; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .06em; }
 input[type=search], input[type=text], select, textarea {
   width: 100%; min-height: 40px; padding: 8px 10px; border-radius: 8px;
@@ -53,11 +57,16 @@ button.danger { color: var(--plum); }
 button[aria-pressed=true] { background: var(--mint); color: var(--on-accent); border-color: var(--mint); }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.seg { display: flex; gap: 6px; flex-wrap: wrap; }
+.seg { display: flex; gap: 6px; }
+.seg button { flex: 1; }
 .actions { margin-top: 12px; }
-#status { min-height: 1.5em; margin: 8px 0 0; color: var(--moss); font-size: .92rem; }
+#status { margin: 0; color: var(--moss); font-size: .92rem; }
+#status:not(:empty) { margin-top: 10px; }
 #status.err { color: var(--plum); }
-details.add summary { cursor: pointer; min-height: 40px; display: flex; align-items: center; color: var(--mint); font-weight: 700; }
+details.add summary { cursor: pointer; min-height: 40px; display: flex; align-items: center; gap: 8px; color: var(--mint); font-weight: 700; list-style: none; }
+details.add summary::-webkit-details-marker { display: none; }
+details.add summary::before { content: "+"; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 1.5px solid var(--mint); border-radius: 50%; line-height: 1; }
+details.add[open] summary::before { content: "\2212"; }
 .addgrid { display: grid; gap: 10px; grid-template-columns: 1fr; margin-top: 8px; }
 @media (min-width: 640px) { .addgrid { grid-template-columns: 1fr 1fr; } .addgrid .full { grid-column: 1 / -1; } }
 .group { margin-bottom: 20px; }
@@ -65,19 +74,26 @@ details.add summary { cursor: pointer; min-height: 40px; display: flex; align-it
 .ghead .count { color: var(--muted); font-size: .9rem; }
 .p1 h2 { color: var(--plum); } .p2 h2 { color: var(--gold); } .p3 h2 { color: var(--mint); } .p4 h2 { color: var(--moss); }
 ul.items { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-li.item { display: grid; grid-template-columns: 40px 1fr; gap: 8px; background: var(--panel); border: 1px solid var(--edge); border-radius: 10px; padding: 8px 12px 8px 4px; }
-li.item.done .title { text-decoration: line-through; color: var(--muted); }
-li.item.done { opacity: .75; }
-.tick { display: flex; align-items: flex-start; justify-content: center; }
-.tick input { width: 40px; height: 40px; margin: 0; padding: 0; accent-color: var(--mint); cursor: pointer; }
+li.item { --stripe: var(--mint); display: grid; grid-template-columns: 40px 1fr; gap: 8px; background: var(--panel); border: 1px solid var(--edge); border-left: 4px solid var(--stripe); border-radius: 10px; padding: 8px 12px 8px 2px; }
+li.item.p1 { --stripe: var(--plum); } li.item.p2 { --stripe: var(--gold); } li.item.p3 { --stripe: var(--mint); } li.item.p4 { --stripe: var(--moss); }
+li.item.done { --stripe: var(--edge); }
+li.item.done .title { text-decoration: line-through; color: var(--muted); font-weight: 400; }
+.tick { position: relative; width: 40px; height: 40px; }
+.tick input { position: absolute; inset: 0; width: 40px; height: 40px; margin: 0; opacity: 0; cursor: pointer; }
+.tick .box { position: absolute; left: 8px; top: 8px; width: 24px; height: 24px; border: 2px solid var(--mint); border-radius: 6px; background: var(--bg); pointer-events: none; }
+.tick input:checked + .box { background: var(--mint); }
+.tick input:checked + .box::after { content: ""; position: absolute; left: 7px; top: 2px; width: 6px; height: 12px; border: solid var(--on-accent); border-width: 0 3px 3px 0; transform: rotate(45deg); }
+.tick input:focus-visible + .box { outline: 3px solid var(--focus); outline-offset: 2px; }
 .title { font-weight: 700; overflow-wrap: anywhere; }
 .notes { color: var(--muted); margin: 4px 0 0; font-size: .92rem; overflow-wrap: anywhere; }
 .meta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-top: 8px; font-size: .8rem; color: var(--muted); }
 .chip { border: 1px solid var(--edge); border-radius: 999px; padding: 2px 10px; }
 .chip.local { border-color: var(--gold); color: var(--gold); }
 .meta select { width: auto; min-height: 40px; }
+@media (min-width: 640px) { .meta select { margin-left: auto; } }
 .meta .src { overflow-wrap: anywhere; }
-.empty { color: var(--muted); padding: 12px; }
+.meta code { opacity: .85; }
+.empty { color: var(--muted); padding: 12px; text-align: center; }
 #fallback { display: none; margin-top: 10px; }
 code { font-family: ui-monospace, Menlo, monospace; font-size: .88em; }
 </style>
@@ -87,7 +103,10 @@ code { font-family: ui-monospace, Menlo, monospace; font-size: .88em; }
   <h1>Session Zero backlog</h1>
   <p class="sub">Fixes and follow-ups in one place, in priority order. <span id="summary"></span></p>
 
-  <p class="hint"><strong>Edits made here are local to this browser.</strong> Ticking, re-prioritising and added items live in this browser's storage only. To make them permanent, press <em>Copy local changes as JSON</em> and paste it to Claude, who folds it into the <code>ITEMS</code> list in <code>docs/product/backlog.html</code>. Then press <em>Reset local changes</em>.</p>
+  <details class="hint">
+    <summary><strong>Edits made here stay in this browser.</strong> How to make them permanent</summary>
+    <p>Ticks, priority changes and added items are stored in this browser only. Press <em>Copy local changes as JSON</em> and paste it to Claude, who folds it into the <code>ITEMS</code> list in <code>docs/product/backlog.html</code>. Then press <em>Reset local changes</em>.</p>
+  </details>
 
   <section class="panel" aria-label="Filters">
     <div class="controls">
@@ -296,9 +315,9 @@ const ITEMS = [
     var opts = [1, 2, 3, 4].map(function (p) {
       return '<option value="' + p + '"' + (p === i.priority ? " selected" : "") + ">" + PNAME[p] + "</option>";
     }).join("");
-    return '<li class="item' + (i.done ? " done" : "") + '">' +
+    return '<li class="item p' + i.priority + (i.done ? " done" : "") + '">' +
       '<div class="tick"><input type="checkbox" data-done="' + esc(i.id) + '"' + (i.done ? " checked" : "") +
-      ' aria-label="Mark done: ' + esc(i.title) + '"></div>' +
+      ' aria-label="Mark done: ' + esc(i.title) + '"><span class="box" aria-hidden="true"></span></div>' +
       '<div><div class="title">' + esc(i.title) + "</div>" +
       (i.notes ? '<p class="notes">' + esc(i.notes) + "</p>" : "") +
       '<div class="meta"><span class="chip">' + esc(i.area) + "</span>" +
@@ -317,10 +336,12 @@ const ITEMS = [
     var html = "";
     [1, 2, 3, 4].forEach(function (p) {
       var g = shown.filter(function (i) { return i.priority === p; });
+      if (!g.length) return;
       html += '<section class="group p' + p + '" aria-labelledby="g' + p + '"><div class="ghead"><h2 id="g' + p + '">' +
         PNAME[p] + '</h2><span class="count">' + g.length + (g.length === 1 ? " item" : " items") + "</span></div>" +
-        (g.length ? '<ul class="items">' + g.map(itemHtml).join("") + "</ul>" : '<p class="empty">Nothing here.</p>') + "</section>";
+        '<ul class="items">' + g.map(itemHtml).join("") + "</ul></section>";
     });
+    if (!html) html = '<p class="empty">No items match these filters.</p>';
     $("list").innerHTML = html;
   }
 
