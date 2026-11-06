@@ -69,7 +69,7 @@ export function PartyCard({ character }: { character: CharacterFull }) {
         ) : null}
         {open && summary && summary.more.length > 0 ? (
           <View className="flex-row flex-wrap gap-1">
-            {summary.more.map((m) => <Badge key={m.key}>{`${m.label} ${m.value}`}</Badge>)}
+            {summary.more.map((m) => <Badge key={m.key} className="max-w-full">{`${m.label} ${m.value}`}</Badge>)}
           </View>
         ) : null}
       </Card>

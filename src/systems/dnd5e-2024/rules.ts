@@ -5,6 +5,7 @@ import type {
 import type { ChoiceKey } from './classChoices'
 import { ABILITY_KEYS, ABILITY_LABELS, type AbilityKey } from './definition'
 import { featuresFor, grownFeatures, rechargedFeature } from './features'
+import { characterLanguages } from './languages'
 
 export function getAbilityModifier(score: number): number {
   return Math.floor((score - 10) / 2)
@@ -251,17 +252,28 @@ export function darkvisionRange(picks: PickRecord[]): number | null {
   return null
 }
 
-/** The party card: AC, Passive and Speed at a glance; passive Insight and Investigation, darkvision and inspiration on expand. */
+/**
+ * The party card: AC, Passive and Speed at a glance; on expand, passive Insight and Investigation, darkvision,
+ * spell save DC (one per casting class), languages and inspiration. A character with no recorded languages shows "Not set".
+ */
 export function partySummary(c: CharacterRecord, picks: PickRecord[]): PartySummary {
   const d = derived(c, picks)
   const show = (key: string, label: string): SummaryItem => ({ key, label, value: String(d.find((v) => v.key === key)?.value ?? '—') })
   const darkvision = darkvisionRange(picks)
+  const saveDCs = spellSaveDCs(c, picks)
+  const languages = characterLanguages(c)
   return {
     glance: [show('ac', 'AC'), show('passive_perception', 'Passive'), show('speed', 'Speed')],
     more: [
       show('passive_insight', 'Insight'),
       show('passive_investigation', 'Investigation'),
       ...(darkvision !== null ? [{ key: 'darkvision', label: 'Darkvision', value: `${darkvision} ft` }] : []),
+      ...saveDCs.map((s) => ({
+        key: saveDCs.length > 1 ? `spell_save_dc_${s.className.toLowerCase()}` : 'spell_save_dc',
+        label: saveDCs.length > 1 ? `Spell save DC (${s.className})` : 'Spell save DC',
+        value: String(s.dc),
+      })),
+      { key: 'languages', label: 'Languages', value: languages && languages.length > 0 ? languages.join(', ') : 'Not set' },
       ...(c.details.inspiration === true ? [{ key: 'inspiration', label: 'Inspiration', value: 'Inspired' }] : []),
     ],
   }
