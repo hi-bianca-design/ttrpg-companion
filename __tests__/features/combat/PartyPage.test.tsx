@@ -91,6 +91,16 @@ test('no combat, as the GM with a live session: the picker, and picking opens th
   expect(screen.getByText('picker')).toBeTruthy()
 })
 
+test('after Enter combat from the picker path the review closes and the GM order shows', () => {
+  const { rerender } = setup('gm1', null)
+  fireEvent.press(screen.getByLabelText('pick e1'))
+  expect(screen.getByText('review s1 e1')).toBeTruthy()
+  ;(useActiveCombat as jest.Mock).mockReturnValue({ data: combat({ status: 'active' }) })
+  rerender(<PartyPage campaign={campaign} />)
+  expect(screen.getByText('gm order')).toBeTruthy()
+  expect(screen.queryByText(/^review/)).toBeNull()
+})
+
 test('no combat, as the GM with no live session: no picker', () => {
   setup('gm1', null, undefined, null)
   expect(screen.queryByText('Run a fight')).toBeNull()

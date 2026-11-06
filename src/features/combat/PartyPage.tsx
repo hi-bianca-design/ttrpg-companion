@@ -48,7 +48,14 @@ export function PartyPage({ campaign }: { campaign: CampaignFull }) {
   const encounters = useEncounters(campaign.id, isGm).data ?? []
   const [reviewing, setReviewing] = useState<{ encounterId?: string } | null>(null)
   const [leftRolling, setLeftRolling] = useState(false)
-  const review = isGm && !!sessionId ? reviewing ?? (status === 'rolling' && !leftRolling ? {} : null) : null
+  const review = isGm && !!sessionId && status !== 'active' ? reviewing ?? (status === 'rolling' && !leftRolling ? {} : null) : null
+  // Once the fight is live the review is over: forget it so the next fight starts clean.
+  useEffect(() => {
+    if (status === 'active') {
+      setReviewing(null)
+      setLeftRolling(false)
+    }
+  }, [status])
   const closeReview = () => {
     setReviewing(null)
     if (status === 'rolling') setLeftRolling(true)
