@@ -7,20 +7,18 @@ import type { CampaignFull } from '@/features/campaigns/campaigns.api'
 import type { CharacterFull } from '@/features/characters/characters.api'
 import { ERROR_COPY } from '@/features/errors'
 import { SYSTEMS } from '@/systems/registry'
-import { AddEnemyForm } from './AddEnemyForm'
+import { AddEnemySheet } from './AddEnemySheet'
 import { buildGmOrder, selectGroup, toggleSelected, type GmEnemyRow, type PlayerRow } from './battleOrder'
 import { BulkBar } from './BulkBar'
 import { cardWidthFor, columnsFor } from './cardsLayout'
 import type { Combat, EnemyPatch } from './combat.api'
-import { useAddEnemies, useCombatEntries, useRemoveEntry, useUpdateEnemy } from './combat.queries'
+import { useCombatEntries, useRemoveEntry, useUpdateEnemy } from './combat.queries'
 import { EnemyCard } from './EnemyCard'
 import { InitiativeStrip } from './InitiativeStrip'
 import { PlayerRowCard } from './PlayerRowCard'
+import { useCopyEnemy } from './useCopyEnemy'
 import { useEnemyHp } from './useEnemyHp'
 import { xpEarned } from './xp'
-
-/** "Goblin 3" → "Goblin": a copy is named by the server from the stem, like any other add. */
-const nameStem = (name: string) => name.replace(/\s+\d+$/, '') || name
 
 /**
  * The GM's combat screen: a header (XP earned, Add enemy), the initiative strip (round, order, Next turn), every enemy as a fixed-width card in a
@@ -33,7 +31,7 @@ export function GmCombatScreen({ campaign, combat, party }: { campaign: Campaign
   const hp = useEnemyHp(campaign.id, combat.id)
   const update = useUpdateEnemy(campaign.id, combat.id)
   const remove = useRemoveEntry(campaign.id, combat.id)
-  const add = useAddEnemies(campaign.id, combat.id)
+  const copyEnemy = useCopyEnemy(campaign.id, combat.id)
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set())
   const [adding, setAdding] = useState(false)
   const [gridWidth, setGridWidth] = useState(0)
@@ -58,11 +56,7 @@ export function GmCombatScreen({ campaign, combat, party }: { campaign: Campaign
     }
   }
   const patch = (entryId: string) => (p: EnemyPatch) => run(() => update.mutateAsync({ entryId, patch: p }))
-  const copy = (row: GmEnemyRow) =>
-    run(() => add.mutateAsync({
-      name: nameStem(row.name), count: 1, maxHp: row.maxHp, initiative: null, ac: row.ac, notes: row.notes, hidden: row.hidden,
-      defenseLabel: row.defenseLabel, attacks: row.attacks, xp: row.xp,
-    }))
+  const copy = (row: GmEnemyRow) => run(() => copyEnemy(row))
 
   // One column fills the width; otherwise every card has the same fixed width for this window.
   const cell = columns === 1 ? { className: 'w-full' } : { style: { width: cardWidth } }
@@ -121,7 +115,7 @@ export function GmCombatScreen({ campaign, combat, party }: { campaign: Campaign
         </View>
       ) : null}
 
-      <AddEnemyForm campaignId={campaign.id} combatId={combat.id} open={adding} onOpenChange={setAdding} />
+      <AddEnemySheet campaignId={campaign.id} combatId={combat.id} enemies={enemies} open={adding} onOpenChange={setAdding} />
     </View>
   )
 }
