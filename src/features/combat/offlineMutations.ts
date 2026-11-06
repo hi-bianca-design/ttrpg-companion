@@ -1,6 +1,6 @@
 import { onlineManager, type MutationOptions, type QueryClient } from '@tanstack/react-query'
 import { showToast } from '@/components/ui/toast'
-import { ERROR_COPY } from '@/features/errors'
+import { AppError, ERROR_COPY } from '@/features/errors'
 import { qk } from '@/lib/query-client'
 import {
   applyEnemyHp, moveEntry, nextTurn, setCurrentEntry, updateEnemy,
@@ -18,7 +18,8 @@ import { nextEntryLocal } from './turnLocal'
  * and a stale Next turn is a server no-op. A failed replay refetches (which rolls the cards back) and toasts.
  */
 
-type Ids = { campaignId: string; combatId: string }
+/** `queued`: made while offline. It rides in the variables so it survives a reload with the mutation. */
+type Ids = { campaignId: string; combatId: string; queued?: boolean }
 export type QueuedCombatVars = {
   applyHp: Ids & { entryIds: string[]; mode: HpMode; amount: number; batch: string }
   nextTurn: Ids & { expectedEntryId: string }
@@ -32,6 +33,17 @@ type Ctx = { queued: boolean }
 
 const NAMES: readonly QueuedCombatName[] = ['applyHp', 'nextTurn', 'updateEnemy', 'setCurrent', 'move']
 const HEAD = 'combat'
+/**
+ * A queued edit whose replay hits a network failure (flaky Wi-Fi, a captive portal, a laptop waking) is
+ * retried a bounded number of times with backoff, pausing while offline, instead of dropping the queue;
+ * replays are safe (HP batches are idempotent, a stale turn is a no-op). A coded server error is final at
+ * once, and an online tap is not retried (its caller is waiting and shows the error, as before).
+ */
+const NETWORK_RETRIES = 5
+const retryable = new WeakSet<object>()
+const isNetworkError = (e: unknown) => e instanceof AppError && e.code === 'network'
+const retryDelay = (failures: number) => Math.min(500 * 2 ** failures, 8000)
+
 /** One scope: queued edits run one after another, in the order the GM made them. */
 const SCOPE = 'gm-combat'
 
@@ -114,13 +126,18 @@ export function combatMutationOptions<N extends QueuedCombatName>(
 ): MutationOptions<QueuedCombatData[N], Error, QueuedCombatVars[N], Ctx> {
   return {
     mutationKey: combatMutationKey(name),
-    mutationFn: (v) => send[name](v),
+    mutationFn: (v) =>
+      send[name](v).catch((e: unknown) => {
+        if (v.queued && isNetworkError(e)) retryable.add(e as object)
+        throw e
+      }),
     // 'online': offline, the call is not attempted at all; the mutation pauses and resumes on reconnect.
     networkMode: 'online',
-    retry: 0,
+    retry: (failures, e) => retryable.has(e) && failures < NETWORK_RETRIES,
+    retryDelay,
     scope: { id: SCOPE },
     onMutate: async (v) => {
-      const queued = !onlineManager.isOnline()
+      const queued = v.queued ?? !onlineManager.isOnline()
       if (queued) {
         await client.cancelQueries({ queryKey: qk.combatEntries(v.combatId) })
         local[name](client, v)

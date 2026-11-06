@@ -1,13 +1,14 @@
 import { Platform } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { onlineManager, type Query, type QueryClient } from '@tanstack/react-query'
+import { hydrate, onlineManager, type Query, type QueryClient } from '@tanstack/react-query'
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister'
-import { persistQueryClientRestore, persistQueryClientSubscribe } from '@tanstack/react-query-persist-client'
+import { persistQueryClientSubscribe, type PersistedClient } from '@tanstack/react-query-persist-client'
 import { showToast } from '@/components/ui/toast'
 import type { CharacterFull } from '@/features/characters/characters.api'
 import { isQueuedCombatMutation, registerCombatMutationDefaults } from '@/features/combat/offlineMutations'
 import { SEARCH_KINDS } from '@/features/search/useSearchIndex'
 import type { PoolValue } from '@/systems/types'
+import { setOfflineRestoring } from './offlineRestore'
 import { qk } from './query-client'
 
 /**
@@ -29,6 +30,7 @@ const ENTRIES = qk.combatEntries('')[0]
 const ENCOUNTERS = qk.encounters('')[0]
 const CONTENT = qk.content('dnd5e-2024', '', 'official')[0]
 const PARTY = qk.party('')[0]
+const CAMPAIGN = qk.campaign('')[0]
 
 const hasData = (q: Query | undefined) => q?.state.data !== undefined && q.state.data !== null
 
@@ -41,9 +43,10 @@ function isGmDevice(client: QueryClient): boolean {
 /**
  * The allow-list. Entries and encounters are GM-only by row-level security. The combat row and the order
  * are kept only beside that combat's entries (so a player's device keeps nothing), and search content only
- * on a GM's device, for the kinds the search index loads.
+ * on a GM's device, for the kinds the search index loads. A campaign record only when `userId` runs it,
+ * so the campaign screen can open after a reload while offline; a campaign the user plays in never is.
  */
-function shouldPersist(client: QueryClient, query: Query): boolean {
+function shouldPersist(client: QueryClient, query: Query, userId: string): boolean {
   if (query.state.status !== 'success') return false
   const [head, a, b, c] = query.queryKey as unknown[]
   const cache = client.getQueryCache()
@@ -52,6 +55,8 @@ function shouldPersist(client: QueryClient, query: Query): boolean {
     case ENTRIES:
     case ENCOUNTERS:
       return true
+    case CAMPAIGN:
+      return (query.state.data as { gm_id?: string } | null)?.gm_id === userId
     case COMBAT:
       return entriesOf((query.state.data as { id?: string } | null)?.id)
     case ORDER:
@@ -76,6 +81,7 @@ const storage = {
 
 function detach() {
   generation++
+  setOfflineRestoring(false)
   active?.stop()
   active = null
 }
@@ -108,18 +114,29 @@ export async function setOfflineUser(userId: string | null): Promise<void> {
   const gen = ++generation
   const key = persistKey(userId)
   const persister = createAsyncStoragePersister({ storage, key, throttleTime: target.throttleMs })
+  // Read, then hydrate only if nothing changed meanwhile: a sign-out (or another user) while storage was
+  // being read must never put this user's GM data back into a cache that was just cleared.
+  // A newer call (sign-out, another user) bumps the generation, which also ends the restoring flag.
+  setOfflineRestoring(true)
+  let saved: PersistedClient | undefined
   try {
-    await persistQueryClientRestore({ queryClient: target.client, persister, maxAge: PERSIST_MAX_AGE, buster: BUSTER })
+    saved = await persister.restoreClient()
   } catch {
-    // An unreadable entry is discarded by the restore itself; start fresh.
+    // Unreadable: discard it and start fresh.
+    await AsyncStorage.removeItem(key).catch(() => {})
   }
+  if (gen !== generation || installed !== target) return
+  const fresh = !!saved?.timestamp && Date.now() - saved.timestamp <= PERSIST_MAX_AGE && saved.buster === BUSTER
+  if (saved && fresh) hydrate(target.client, saved.clientState)
+  setOfflineRestoring(false)
+  if (saved && !fresh) await AsyncStorage.removeItem(key).catch(() => {})
   if (gen !== generation || installed !== target) return
   const stop = persistQueryClientSubscribe({
     queryClient: target.client,
     persister,
     buster: BUSTER,
     dehydrateOptions: {
-      shouldDehydrateQuery: (q) => shouldPersist(target.client, q),
+      shouldDehydrateQuery: (q) => shouldPersist(target.client, q, userId),
       shouldDehydrateMutation: (m) => m.state.isPaused && isQueuedCombatMutation(m.options.mutationKey),
     },
   })

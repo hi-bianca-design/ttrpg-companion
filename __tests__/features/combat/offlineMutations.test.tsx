@@ -183,6 +183,33 @@ describe('a failed replay', () => {
     expect(keys).toEqual(expect.arrayContaining([qk.combat('camp1'), qk.combatOrder('cb1'), qk.combatEntries('cb1')]))
   })
 
+  test('a replay that hits a network error is retried and the edit is still sent, once successfully', async () => {
+    m.hp.mockRejectedValueOnce(new AppError('network'))
+    const { wrapper } = setup()
+    const { result } = renderHook(() => useApplyEnemyHp('camp1', 'cb1'), { wrapper })
+    act(() => onlineManager.setOnline(false))
+    act(() => { result.current.mutate({ entryIds: ['g1'], mode: 'damage', amount: 7, batch: 'b-1' }) })
+    await waitFor(() => expect(byId('g1').hp).toBe(15))
+    act(() => onlineManager.setOnline(true))
+    await waitFor(() => expect(m.hp).toHaveBeenCalledTimes(2), { timeout: 5000 })
+    expect(m.hp.mock.calls[1]).toEqual(['cb1', ['g1'], 'damage', 7, 'b-1'])
+    await waitFor(() => expect(client.getMutationCache().getAll()[0].state.status).toBe('success'))
+    expect(showToast).not.toHaveBeenCalled()
+  })
+
+  test('a coded server error is not retried', async () => {
+    m.hp.mockRejectedValue(new AppError('no_active_combat'))
+    const { wrapper } = setup()
+    const { result } = renderHook(() => useApplyEnemyHp('camp1', 'cb1'), { wrapper })
+    act(() => onlineManager.setOnline(false))
+    act(() => { result.current.mutate({ entryIds: ['g1'], mode: 'damage', amount: 7, batch: 'b-1' }) })
+    await waitFor(() => expect(byId('g1').hp).toBe(15))
+    act(() => onlineManager.setOnline(true))
+    await waitFor(() => expect(showToast).toHaveBeenCalledWith(ERROR_COPY.no_active_combat))
+    await new Promise((r) => setTimeout(r, 700))
+    expect(m.hp).toHaveBeenCalledTimes(1)
+  })
+
   test('an online failure is left to the caller (one toast, not two)', async () => {
     m.hp.mockRejectedValue(new AppError('network'))
     const { wrapper } = setup()

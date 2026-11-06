@@ -14,6 +14,7 @@ import { CampaignSessionStatus } from '@/features/sessions/CampaignSessionStatus
 import { SessionControls } from '@/features/sessions/SessionControls'
 import { useSessionRealtime } from '@/features/sessions/useSessionRealtime'
 import { useCampaign } from '@/features/campaigns/campaigns.queries'
+import { useOfflineRestoring } from '@/lib/offlineRestore'
 import { THEME_COLORS } from '@/lib/theme'
 import { systemName } from '@/systems/registry'
 import { ERROR_COPY } from '@/features/errors'
@@ -21,11 +22,14 @@ import { ERROR_COPY } from '@/features/errors'
 export default function CampaignDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { user } = useAuth()
-  const { data, isLoading, isError, refetch } = useCampaign(id)
+  const { data, isLoading, isError, fetchStatus, refetch } = useCampaign(id)
+  const restoring = useOfflineRestoring()
   useSessionRealtime(data?.id)
   const [inviteOpen, setInviteOpen] = useState(false)
 
-  if (isLoading) {
+  // Offline (the fetch is paused) or while the GM's persisted cache is still being read, no data yet means
+  // loading, not a failure: a reload while offline restores the campaign from the device.
+  if (isLoading || (!data && (fetchStatus === 'paused' || restoring))) {
     return (
       <ScreenBackground>
         <View className="gap-2" accessibilityLabel="Loading campaign">

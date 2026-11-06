@@ -19,7 +19,7 @@ jest.mock('@/features/combat/combat.api', () => ({
 }))
 jest.mock('@/components/ui/toast', () => ({ showToast: jest.fn() }))
 
-const ALLOWED_HEADS = ['combat', 'combat-order', 'combat-entries', 'encounters', 'content']
+const ALLOWED_HEADS = ['campaign', 'combat', 'combat-order', 'combat-entries', 'encounters', 'content']
 
 type Stored = { timestamp: number; buster: string; clientState: { queries: { queryKey: unknown[] }[]; mutations: { mutationKey?: unknown[] }[] } }
 async function stored(userId: string): Promise<Stored | null> {
@@ -94,6 +94,25 @@ describe('what is persisted', () => {
     expect((await stored('u1'))!.clientState.mutations[0].mutationKey).toEqual(combatMutationKey('applyHp'))
   })
 
+  test('the GM’s own campaign record is persisted; a campaign someone else runs is not', async () => {
+    await setOfflineUser('u1')
+    fillGmCache(client)
+    client.setQueryData(qk.campaign('camp1'), { id: 'camp1', gm_id: 'u1', members: [] })
+    client.setQueryData(qk.campaign('camp2'), { id: 'camp2', gm_id: 'someone-else', members: [] })
+    await waitFor(async () => expect((await stored('u1'))?.clientState.queries.length).toBe(6))
+    const keys = (await stored('u1'))!.clientState.queries.map((q) => q.queryKey)
+    expect(keys).toContainEqual(qk.campaign('camp1'))
+    expect(keys).not.toContainEqual(qk.campaign('camp2'))
+  })
+
+  test('a player (not the GM) never has a campaign persisted', async () => {
+    await setOfflineUser('player1')
+    client.setQueryData(qk.campaign('camp1'), { id: 'camp1', gm_id: 'gm', members: [{ user_id: 'player1' }] })
+    client.setQueryData(qk.combat('camp1'), combat({ id: 'cb1' }))
+    await waitFor(async () => expect(await stored('player1')).not.toBeNull())
+    expect((await stored('player1'))!.clientState.queries).toEqual([])
+  })
+
   test('nothing is persisted before a user is known', async () => {
     fillGmCache(client)
     await new Promise((r) => setTimeout(r, 10))
@@ -133,6 +152,43 @@ describe('restore', () => {
     await setOfflineUser('u2')
     expect(client.getQueryData(qk.combatEntries('cb1'))).toBeUndefined()
     expect(await stored('u1')).toBeNull()
+  })
+})
+
+describe('sign-out while a restore is still reading storage', () => {
+  test('nothing of the old user lands in the cache or under the next user’s key', async () => {
+    await setOfflineUser('u1')
+    fillGmCache(client)
+    client.setQueryData(qk.campaign('camp1'), { id: 'camp1', gm_id: 'u1', members: [] })
+    await waitFor(async () => expect((await stored('u1'))?.clientState.queries.length).toBe(6))
+    const raw = (await AsyncStorage.getItem(persistKey('u1')))!
+    offline.dispose()
+
+    // A reload: the restore's storage read is held open.
+    client = makeTestQueryClient()
+    offline = installOffline(client, { throttleMs: 0 })
+    let release!: (v: string) => void
+    // The storage mock's getItem is already a jest.fn: hold just the next call open.
+    const getItem = AsyncStorage.getItem as jest.Mock
+    getItem.mockImplementationOnce(() => new Promise<string | null>((r) => { release = r }))
+    getItem.mockClear()
+    const restoring = setOfflineUser('u1')
+    await waitFor(() => expect(getItem).toHaveBeenCalled())
+
+    // Signed out meanwhile (AuthProvider's order), then the read completes.
+    await clearPersistedCombat()
+    client.clear()
+    release(raw)
+    await restoring
+    expect(client.getQueryCache().getAll()).toEqual([])
+    expect(client.getMutationCache().getAll()).toEqual([])
+
+    // The next user signs in; nothing of u1 is ever written under their key.
+    await setOfflineUser('u2')
+    client.setQueryData(qk.encounters('camp9'), [{ id: 'enc9' }])
+    await waitFor(async () => expect(await stored('u2')).not.toBeNull())
+    const json = JSON.stringify(await stored('u2'))
+    expect(json).not.toMatch(/cb1|camp1|enc1|fireball/)
   })
 })
 

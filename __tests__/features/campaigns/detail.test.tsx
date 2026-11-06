@@ -1,14 +1,20 @@
 import '@testing-library/jest-native/extend-expect'
 import { PortalHost } from '@rn-primitives/portal'
-import { QueryClientProvider } from '@tanstack/react-query'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { QueryClientProvider, onlineManager, type QueryClient } from '@tanstack/react-query'
 import { makeTestQueryClient } from '../../helpers/queryClient'
-import { fireEvent, render, screen } from '@testing-library/react-native'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import CampaignDetailScreen from '../../../app/(app)/campaigns/[id]'
 import { getActiveSession } from '@/features/sessions/sessions.api'
 import { getCampaign, getCharacterCampaign } from '@/features/campaigns/campaigns.api'
 import { ERROR_COPY } from '@/features/errors'
 import { systemName } from '@/systems/registry'
 import { variantOf } from '../../helpers/button'
+import { installOffline, persistKey, setOfflineUser } from '@/lib/offline'
+import { setOfflineRestoring } from '@/lib/offlineRestore'
+import { qk } from '@/lib/query-client'
+
+jest.mock('@react-native-async-storage/async-storage', () => require('@react-native-async-storage/async-storage/jest/async-storage-mock'))
 
 jest.mock('@/features/sessions/useSessionRealtime', () => ({ useSessionRealtime: jest.fn() }))
 jest.mock('@/lib/supabase', () => ({ supabase: { from: jest.fn(), rpc: jest.fn(), auth: { getSession: jest.fn() } } }))
@@ -74,5 +80,49 @@ describe('no Back arrow (Home on the bar replaces it)', () => {
     expect(screen.queryByRole('button', { name: 'Back' })).toBeNull()
     await screen.findByText(ERROR_COPY.load_failed)
     expect(screen.queryByRole('button', { name: 'Back' })).toBeNull()
+  })
+})
+
+describe('reload while offline', () => {
+  const show = (client: QueryClient) => render(<QueryClientProvider client={client}><CampaignDetailScreen /><PortalHost /></QueryClientProvider>)
+  afterEach(() => {
+    act(() => onlineManager.setOnline(true))
+    act(() => setOfflineRestoring(false))
+  })
+
+  test('shows loading (not the error) until the persisted GM campaign is restored, then the screen', async () => {
+    await AsyncStorage.clear()
+    // The page before the reload persisted the GM's campaign.
+    const before = makeTestQueryClient()
+    let offline = installOffline(before, { throttleMs: 0 })
+    await setOfflineUser('gm1')
+    before.setQueryData(qk.campaign('camp1'), campaign)
+    await waitFor(async () => expect(await AsyncStorage.getItem(persistKey('gm1'))).toContain('Odd Game'))
+    offline.dispose()
+
+    // Reload with no connection.
+    ;(getCampaign as jest.Mock).mockClear()
+    act(() => onlineManager.setOnline(false))
+    const client = makeTestQueryClient()
+    offline = installOffline(client, { throttleMs: 0 })
+    show(client)
+    expect(screen.getByLabelText('Loading campaign')).toBeTruthy()
+    expect(screen.queryByText(ERROR_COPY.load_failed)).toBeNull()
+    await act(() => setOfflineUser('gm1'))
+    expect(await screen.findByText('Odd Game')).toBeTruthy()
+    expect(getCampaign).not.toHaveBeenCalled()
+    offline.dispose()
+  })
+
+  test('a restore still in progress shows loading, not the error state', async () => {
+    ;(getCampaign as jest.Mock).mockRejectedValue(new Error('boom'))
+    act(() => setOfflineRestoring(true))
+    const client = makeTestQueryClient()
+    show(client)
+    await waitFor(() => expect(client.getQueryState(qk.campaign('camp1'))?.status).toBe('error'))
+    expect(screen.getByLabelText('Loading campaign')).toBeTruthy()
+    expect(screen.queryByText(ERROR_COPY.load_failed)).toBeNull()
+    act(() => setOfflineRestoring(false))
+    expect(await screen.findByText(ERROR_COPY.load_failed)).toBeTruthy()
   })
 })

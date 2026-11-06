@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { onlineManager, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '@/lib/query-client'
 import {
   addEncounterEnemies, addEnemies, delayTurn, endMyTurn, getActiveCombat, getCombatEntries, getCombatOrder,
@@ -73,7 +73,8 @@ export const useSetInitiative = (campaignId: string, combatId: string | undefine
 function useQueuedCombatMutation<N extends QueuedCombatName>(name: N, campaignId: string, combatId: string | undefined) {
   const qc = useQueryClient()
   const m = useMutation(combatMutationOptions(qc, name))
-  const withIds = (v: Omit<QueuedCombatVars[N], 'campaignId' | 'combatId'>) => ({ ...v, campaignId, combatId: combatId ?? '' }) as QueuedCombatVars[N]
+  const withIds = (v: Omit<QueuedCombatVars[N], 'campaignId' | 'combatId'>) =>
+    ({ ...v, campaignId, combatId: combatId ?? '', queued: !onlineManager.isOnline() }) as QueuedCombatVars[N]
   return {
     ...m,
     mutate: (v: Omit<QueuedCombatVars[N], 'campaignId' | 'combatId'>) => m.mutate(withIds(v)),
