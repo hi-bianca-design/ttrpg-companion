@@ -10,7 +10,7 @@ import { PartyList } from '@/features/party/PartyList'
 import { usePartyCharacters } from '@/features/party/party.queries'
 import { usePartyRealtime } from '@/features/party/usePartyRealtime'
 import { CombatStarting } from './CombatStarting'
-import { GmBattleOrder } from './GmBattleOrder'
+import { GmCombatScreen } from './GmCombatScreen'
 import { PlayerBattleOrder } from './PlayerBattleOrder'
 import { EncounterPicker } from './EncounterPicker'
 import { ReviewScreen } from './ReviewScreen'
@@ -81,7 +81,7 @@ export function PartyPage({ campaign }: { campaign: CampaignFull }) {
     )
   } else if (status === 'active') {
     body = isGm
-      ? <GmBattleOrder campaign={campaign} combat={combat!} party={characters} />
+      ? <GmCombatScreen campaign={campaign} combat={combat!} party={characters} />
       : <PlayerBattleOrder campaign={campaign} combat={combat!} party={characters} />
   } else {
     body = (

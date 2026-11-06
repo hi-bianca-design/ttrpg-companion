@@ -35,7 +35,7 @@ jest.mock('@/features/combat/EncounterPicker', () => ({
   },
 }))
 jest.mock('@/features/combat/CombatStarting', () => ({ CombatStarting: () => { const { Text } = require('react-native'); return <Text>Combat is starting</Text> } }))
-jest.mock('@/features/combat/GmBattleOrder', () => ({ GmBattleOrder: () => { const { Text } = require('react-native'); return <Text>gm order</Text> } }))
+jest.mock('@/features/combat/GmCombatScreen', () => ({ GmCombatScreen: () => { const { Text } = require('react-native'); return <Text>gm order</Text> } }))
 jest.mock('@/features/combat/PlayerBattleOrder', () => ({ PlayerBattleOrder: () => { const { Text } = require('react-native'); return <Text>player order</Text> } }))
 let mockUser = 'gm1'
 jest.mock('@/features/auth/useAuth', () => ({ useAuth: () => ({ user: { id: mockUser } }) }))

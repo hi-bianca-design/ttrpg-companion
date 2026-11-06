@@ -16,10 +16,8 @@ export function CurrentMark() {
   )
 }
 
-export const initText = (n: number | null) => (n === null ? 'init –' : `init ${n}`)
-
 /**
- * A party member in the battle order: name, class and level, initiative, hit points as text and a bar,
+ * A party member in the battle order: name, class and level, hit points as text and a bar,
  * conditions. Read-only unless the caller passes `onPress` and children (the player's own row mounts its
  * HP entry that way). Hit points come from the party cache via the view model, never from the order.
  */
@@ -31,19 +29,15 @@ export function PlayerRowCard({ row, onPress, expanded, children }: { row: Playe
     row.isMine ? 'you' : null,
     hp ? `${hp.current} of ${hp.max} hit points${hp.temp > 0 ? `, ${hp.temp} temporary` : ''}` : null,
     down ? 'down' : null,
-    row.initiative === null ? null : `initiative ${row.initiative}`,
     row.conditions.length > 0 ? row.conditions.join(', ') : null,
     row.isCurrent ? 'current turn' : null,
   ].filter(Boolean).join(', ')
 
   const summary = (
     <View className="gap-2">
-      <View className="flex-row items-center gap-2">
-        <View className="flex-1 gap-1">
-          <Text variant="subhead" numberOfLines={1}>{row.name}</Text>
-          {row.subtitle ? <Text variant="body-sm" tone="muted" numberOfLines={1}>{row.subtitle}</Text> : null}
-        </View>
-        <Text variant="label" tone="muted">{initText(row.initiative)}</Text>
+      <View className="gap-1">
+        <Text variant="subhead" numberOfLines={1}>{row.name}</Text>
+        {row.subtitle ? <Text variant="body-sm" tone="muted" numberOfLines={1}>{row.subtitle}</Text> : null}
       </View>
       {row.isCurrent ? <CurrentMark /> : null}
       {hp ? (
