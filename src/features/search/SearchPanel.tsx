@@ -21,7 +21,7 @@ const PANEL_WIDTH = 384
 const LIST_MAX_HEIGHT = 384
 const kindLabel = (kind: string) => KIND_LABELS[kind] ?? kind
 
-type FocusableLike = { focus?: () => void }
+type FocusableLike = { focus?: () => void; isConnected?: boolean }
 type KeyListener = (e: { key: string }) => void
 type DocLike = { activeElement?: FocusableLike | null; addEventListener: (t: string, l: KeyListener) => void; removeEventListener: (t: string, l: KeyListener) => void }
 const webDocument = (): DocLike | null => (Platform.OS === 'web' && typeof document !== 'undefined' ? (document as unknown as DocLike) : null)
@@ -43,12 +43,20 @@ export function SearchPanel({ open, onClose, items, onPick, overlay = false }: {
   const onCloseRef = useRef(onClose)
   onCloseRef.current = onClose
 
-  // Remember the focused element on open and give it back on close. On native there is nothing to restore.
+  // Remember the focused element in the render where `open` flips to true: that is before commit, so
+  // before the input's autoFocus takes focus. Giving it back on close happens in the effect cleanup, and
+  // only if the element is still in the document. On native there is nothing to restore.
+  const wasOpen = useRef(false)
+  const openedFrom = useRef<FocusableLike | null>(null)
+  if (open && !wasOpen.current) openedFrom.current = webDocument()?.activeElement ?? null
+  wasOpen.current = open
   useEffect(() => {
     if (!open) return
-    const doc = webDocument()
-    const previous = doc?.activeElement ?? null
-    return () => previous?.focus?.()
+    return () => {
+      const el = openedFrom.current
+      openedFrom.current = null
+      if (el && el.isConnected !== false) el.focus?.()
+    }
   }, [open])
 
   // On web Escape works wherever focus sits in the panel; native keyboards use the input's onKeyPress.
