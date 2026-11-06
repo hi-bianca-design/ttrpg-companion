@@ -157,3 +157,19 @@ describe('the round', () => {
     await waitFor(() => expect(announce).toHaveBeenCalledWith('Round 4'))
   })
 })
+
+describe('a big fight', () => {
+  test('20 rows are one horizontal scroll container, not a wrapping block, and every chip is present', () => {
+    const many = [
+      entry({ id: 'p0', user_id: 'u0', character_id: 'c1', position: 1, is_current: true }),
+      ...Array.from({ length: 19 }, (_, i) => enemy({ id: `e${i}`, name: `Orc ${i + 1}`, position: i + 2 })),
+    ]
+    setup(many)
+    const scroll = screen.getByTestId('strip-scroll')
+    expect(scroll.props.horizontal).toBe(true)
+    expect(screen.getAllByTestId('strip-scroll')).toHaveLength(1)
+    expect(within(scroll).getAllByTestId(/^chip-/)).toHaveLength(20)
+    expect(screen.getByRole('button', { name: 'Next turn' })).toBeTruthy()
+    expect(screen.getByText('Round 3')).toBeTruthy()
+  })
+})
