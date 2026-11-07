@@ -56,6 +56,7 @@ describe('toAppError', () => {
       invalid_initiative: 'Initiative must be a whole number from -20 to 99.',
       invalid_position: "That spot isn't in the order.",
       invalid_enemy: 'Check the enemy details: a name up to 60 characters, at least 1 hit point, armor class 0 to 40, up to 20 copies.',
+      invalid_encounter: 'Check the encounter: a name up to 80 characters, and story notes up to 1000 characters each.',
       invalid_patch: 'Something went wrong. Please try again.',
       invalid_batch: 'Something went wrong. Please try again.',
     })
@@ -69,5 +70,13 @@ describe('qk', () => {
     expect(qk.characters).toEqual(['characters'])
     expect(qk.campaigns).toEqual(['campaigns'])
     expect(qk.campaign('x')).toEqual(['campaign', 'x'])
+  })
+})
+
+describe('invalid_encounter', () => {
+  it('maps the P0001 message from save_encounter to its own copy', () => {
+    const e = toAppError({ code: 'P0001', message: 'invalid_encounter' })
+    expect(e.code).toBe('invalid_encounter')
+    expect(e.message).toBe(ERROR_COPY.invalid_encounter)
   })
 })
