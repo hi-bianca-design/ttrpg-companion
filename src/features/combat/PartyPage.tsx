@@ -13,7 +13,7 @@ import { CombatStarting } from './CombatStarting'
 import { GmCombatScreen } from './GmCombatScreen'
 import { PlayerBattleOrder } from './PlayerBattleOrder'
 import { EndCombatSummaryHost } from './EndCombatSummaryHost'
-import { EncounterPicker } from './EncounterPicker'
+import { GmEncounterList } from './GmEncounterList'
 import { ReviewScreen } from './ReviewScreen'
 import { useActiveCombat } from './combat.queries'
 import { useCombatRealtime } from './useCombatRealtime'
@@ -91,7 +91,7 @@ export function PartyPage({ campaign }: { campaign: CampaignFull }) {
         {isGm && sessionId && status !== 'active' ? (
           <View className="gap-2">
             <Text variant="subhead" accessibilityRole="header">Run a fight</Text>
-            <EncounterPicker encounters={encounters} onPick={(id) => setReviewing({ encounterId: id })} />
+            <GmEncounterList campaignId={campaign.id} encounters={encounters} onPick={(id) => setReviewing({ encounterId: id })} />
           </View>
         ) : null}
       </View>

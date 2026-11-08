@@ -1,7 +1,7 @@
-import { listEncounters } from '@/features/encounters/encounters.api'
+import { deleteEncounter, listEncounters, saveEncounter, type EncounterInput } from '@/features/encounters/encounters.api'
 
 jest.mock('@/lib/supabase', () => ({
-  supabase: { from: jest.fn() },
+  supabase: { from: jest.fn(), rpc: jest.fn() },
 }))
 
 import { supabase } from '@/lib/supabase'
@@ -13,6 +13,11 @@ function mockSelect(result: { data: unknown; error: unknown }) {
   chain.order = jest.fn(() => Promise.resolve(result))
   ;(supabase.from as jest.Mock).mockReturnValue(chain)
   return chain
+}
+
+const input: EncounterInput = {
+  name: 'Ambush', storyBefore: 'b', storyWhy: null, storyAfter: null,
+  enemies: [{ name: 'Wolf', count: 2, max_hp: 11, defense_label: 'AC', ac: 13, xp: null, notes: null, hidden: false, attacks: [] }],
 }
 
 beforeEach(() => jest.clearAllMocks())
@@ -41,5 +46,40 @@ describe('listEncounters', () => {
   it('throws through unwrap on a database error', async () => {
     mockSelect({ data: null, error: { message: 'boom', code: 'XX000', details: '', hint: '' } })
     await expect(listEncounters('camp1')).rejects.toBeDefined()
+  })
+})
+
+describe('saveEncounter', () => {
+  it('creates through save_encounter with a null encounter id and returns the new id', async () => {
+    ;(supabase.rpc as jest.Mock).mockResolvedValue({ data: 'enc1', error: null })
+    await expect(saveEncounter('camp1', input)).resolves.toBe('enc1')
+    expect(supabase.rpc).toHaveBeenCalledWith('save_encounter', {
+      p_campaign_id: 'camp1', p_encounter_id: null, p_name: 'Ambush',
+      p_story_before: 'b', p_story_why: null, p_story_after: null, p_enemies: input.enemies,
+    })
+  })
+  it('replaces by passing the encounter id', async () => {
+    ;(supabase.rpc as jest.Mock).mockResolvedValue({ data: 'enc9', error: null })
+    await saveEncounter('camp1', input, 'enc9')
+    expect(supabase.rpc).toHaveBeenCalledWith('save_encounter', expect.objectContaining({ p_encounter_id: 'enc9' }))
+  })
+  it.each(['not_allowed', 'invalid_encounter', 'invalid_enemy'])('maps P0001 %s to an AppError', async (message) => {
+    ;(supabase.rpc as jest.Mock).mockResolvedValue({ data: null, error: { code: 'P0001', message } })
+    await expect(saveEncounter('camp1', input)).rejects.toMatchObject({ name: 'AppError', code: message })
+  })
+})
+
+describe('deleteEncounter', () => {
+  it('deletes the row by id', async () => {
+    const eq = jest.fn().mockResolvedValue({ error: null })
+    const del = jest.fn(() => ({ eq }))
+    ;(supabase.from as jest.Mock).mockReturnValue({ delete: del })
+    await deleteEncounter('enc1')
+    expect(supabase.from).toHaveBeenCalledWith('encounters')
+    expect(eq).toHaveBeenCalledWith('id', 'enc1')
+  })
+  it('throws the mapped error', async () => {
+    ;(supabase.from as jest.Mock).mockReturnValue({ delete: () => ({ eq: () => Promise.resolve({ error: { message: 'Failed to fetch' } }) }) })
+    await expect(deleteEncounter('enc1')).rejects.toMatchObject({ code: 'network' })
   })
 })
