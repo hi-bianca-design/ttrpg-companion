@@ -62,11 +62,12 @@ test('extra keys a hostile server adds to an order row are never rendered', () =
   for (const leak of ['4321', '4999', 'ogre-secret-note', 'AC 77', '77']) expect(dump).not.toContain(leak)
 })
 
-test('enemy rows show only a name and an initiative', () => {
+test('enemy rows show only a name: no initiative, AC, hit points, XP or attacks', () => {
   setup()
   const goblin = within(row('g1'))
   expect(goblin.getByText('Goblin 1')).toBeTruthy()
-  expect(goblin.getByText('init 15')).toBeTruthy()
+  expect(goblin.queryByText(/AC|XP|HP/)).toBeNull()
+  expect(goblin.queryByLabelText(/initiative|armor|hit points|XP/i)).toBeNull()
   expect(goblin.queryByText(/\d+\/\d+/)).toBeNull()
   expect(goblin.queryByLabelText('Amount')).toBeNull()
   expect(goblin.queryByRole('button')).toBeNull()
@@ -82,6 +83,20 @@ test('teammates are read-only with hit points as text; the viewer’s own row is
   fireEvent.press(within(row('p1')).getByRole('button'))
   expect(screen.getAllByLabelText('Amount')).toHaveLength(1)
   expect(within(row('p1')).getByLabelText('Amount')).toBeTruthy()
+})
+
+test('no initiative number is rendered for anyone, in text or in a label', () => {
+  setup()
+  expect(screen.queryByText(/init/i)).toBeNull()
+  expect(screen.queryByLabelText(/initiative/i)).toBeNull()
+  for (const n of ['18', '15', '12']) expect(screen.queryByText(n)).toBeNull()
+})
+
+test('an enemy carrying stats on a hostile order row renders none of AC, HP, XP or attacks', () => {
+  const hostile = { ...baseOrder()[1], ac: 77, hp: 4321, max_hp: 4999, xp: 9876, attacks: [{ name: 'Sickle-secret', toHit: '+44', damage: '9d9+9' }], defense_label: 'Evasion-secret' }
+  setup(combat(), [baseOrder()[0], hostile as never])
+  const dump = JSON.stringify(screen.toJSON())
+  for (const leak of ['77', '4321', '4999', '9876', 'Sickle-secret', '9d9+9', 'Evasion-secret', 'XP ', 'AC ']) expect(dump).not.toContain(leak)
 })
 
 test('conditions render on a row', () => {

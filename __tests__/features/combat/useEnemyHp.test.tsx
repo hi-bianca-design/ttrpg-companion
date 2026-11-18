@@ -1,4 +1,4 @@
-import { QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider, onlineManager } from '@tanstack/react-query'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
 import { applyEnemyHp, newBatchId, undoEnemyHp } from '@/features/combat/combat.api'
 import { useEnemyHp } from '@/features/combat/useEnemyHp'
@@ -119,4 +119,30 @@ test('undoFor an id with no batch does nothing', async () => {
   const { result } = setup()
   await act(() => result.current.undoFor('zzz'))
   expect(mockUndo).not.toHaveBeenCalled()
+})
+
+describe('offline', () => {
+  afterEach(() => act(() => onlineManager.setOnline(true)))
+
+  test('apply resolves true once queued, sends nothing, and the next tap is not blocked', async () => {
+    const { result } = setup()
+    act(() => onlineManager.setOnline(false))
+    let ok: boolean | undefined
+    await act(async () => { ok = await result.current.apply(['a'], 'damage', 7) })
+    expect(ok).toBe(true)
+    await act(async () => { ok = await result.current.apply(['a'], 'damage', 3) })
+    expect(ok).toBe(true)
+    expect(mockApply).not.toHaveBeenCalled()
+    expect(result.current.pending).toBe(false)
+  })
+
+  test('undo is not offered offline and comes back with the connection', async () => {
+    const { result } = setup()
+    act(() => onlineManager.setOnline(false))
+    await act(async () => { await result.current.apply(['a'], 'damage', 7) })
+    expect(result.current.canUndo('a')).toBe(false)
+    act(() => onlineManager.setOnline(true))
+    await waitFor(() => expect(mockApply).toHaveBeenCalledWith('cb1', ['a'], 'damage', 7, 'client-batch'))
+    expect(result.current.canUndo('a')).toBe(true)
+  })
 })

@@ -1,11 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { onlineManager, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '@/lib/query-client'
 import {
-  addEncounterEnemies, addEnemies, applyEnemyHp, delayTurn, endMyTurn, getActiveCombat, getCombatEntries, getCombatOrder,
-  moveEntry, newBatchId, nextTurn, removeEntry, setCurrentEntry, setInitiative, startCombat, startPreparedCombat,
-  undoEnemyHp, updateEnemy,
-  type Combat, type EnemyPatch, type HpMode, type NewEnemy, type PreparedLaunch,
+  addEncounterEnemies, addEnemies, delayTurn, endMyTurn, getActiveCombat, getCombatEntries, getCombatOrder,
+  newBatchId, removeEntry, setInitiative, startCombat, startPreparedCombat, undoEnemyHp,
+  type Combat, type HpMode, type NewEnemy, type PreparedLaunch,
 } from './combat.api'
+import { combatMutationOptions, type QueuedCombatName, type QueuedCombatVars } from './offlineMutations'
 
 /** The campaign's live (rolling or active) combat, or null. Realtime on `combats` invalidates it. */
 export function useActiveCombat(campaignId: string | undefined) {
@@ -64,17 +64,32 @@ export const useStartCombat = (campaignId: string, combatId: string | undefined)
 export const useSetInitiative = (campaignId: string, combatId: string | undefined) =>
   useCombatMutation(campaignId, combatId, (_id, v: { entryId: string; initiative: number | null }) => setInitiative(v.entryId, v.initiative))
 
-export const useMoveEntry = (campaignId: string, combatId: string | undefined) =>
-  useCombatMutation(campaignId, combatId, (_id, v: { entryId: string; toPosition: number }) => moveEntry(v.entryId, v.toPosition))
+/**
+ * One of the GM's edits that keep working offline (see offlineMutations): same refetch rules as
+ * useCombatMutation, plus a local copy on the cards and a queue while the connection is down. The caller
+ * passes only its own fields; the campaign and combat ids ride in the variables so a mutation restored
+ * after a reload still knows its fight.
+ */
+function useQueuedCombatMutation<N extends QueuedCombatName>(name: N, campaignId: string, combatId: string | undefined) {
+  const qc = useQueryClient()
+  const m = useMutation(combatMutationOptions(qc, name))
+  const withIds = (v: Omit<QueuedCombatVars[N], 'campaignId' | 'combatId'>) =>
+    ({ ...v, campaignId, combatId: combatId ?? '', queued: !onlineManager.isOnline() }) as QueuedCombatVars[N]
+  return {
+    ...m,
+    mutate: (v: Omit<QueuedCombatVars[N], 'campaignId' | 'combatId'>) => m.mutate(withIds(v)),
+    mutateAsync: (v: Omit<QueuedCombatVars[N], 'campaignId' | 'combatId'>) => m.mutateAsync(withIds(v)),
+  }
+}
 
-export const useNextTurn = (campaignId: string, combatId: string | undefined) =>
-  useCombatMutation(campaignId, combatId, (id, v: { expectedEntryId: string }) => nextTurn(id, v.expectedEntryId))
+export const useMoveEntry = (campaignId: string, combatId: string | undefined) => useQueuedCombatMutation('move', campaignId, combatId)
+
+export const useNextTurn = (campaignId: string, combatId: string | undefined) => useQueuedCombatMutation('nextTurn', campaignId, combatId)
 
 export const useEndMyTurn = (campaignId: string, combatId: string | undefined) =>
   useCombatMutation(campaignId, combatId, (id, v: { expectedRound: number }) => endMyTurn(id, v.expectedRound))
 
-export const useSetCurrentEntry = (campaignId: string, combatId: string | undefined) =>
-  useCombatMutation(campaignId, combatId, (_id, v: { entryId: string }) => setCurrentEntry(v.entryId))
+export const useSetCurrentEntry = (campaignId: string, combatId: string | undefined) => useQueuedCombatMutation('setCurrent', campaignId, combatId)
 
 export const useDelayTurn = (campaignId: string, combatId: string | undefined) =>
   useCombatMutation(campaignId, combatId, (id, v: { expectedEntryId: string }) => delayTurn(id, v.expectedEntryId))
@@ -82,14 +97,19 @@ export const useDelayTurn = (campaignId: string, combatId: string | undefined) =
 export const useAddEnemies = (campaignId: string, combatId: string | undefined) =>
   useCombatMutation(campaignId, combatId, (id, v: NewEnemy) => addEnemies(id, v))
 
-export const useUpdateEnemy = (campaignId: string, combatId: string | undefined) =>
-  useCombatMutation(campaignId, combatId, (_id, v: { entryId: string; patch: EnemyPatch }) => updateEnemy(v.entryId, v.patch))
+export const useUpdateEnemy = (campaignId: string, combatId: string | undefined) => useQueuedCombatMutation('updateEnemy', campaignId, combatId)
 
 export const useRemoveEntry = (campaignId: string, combatId: string | undefined) =>
   useCombatMutation(campaignId, combatId, (_id, v: { entryId: string }) => removeEntry(v.entryId))
 
-export const useApplyEnemyHp = (campaignId: string, combatId: string | undefined) =>
-  useCombatMutation(campaignId, combatId, (id, v: { entryIds: string[]; mode: HpMode; amount: number; batch?: string }) => applyEnemyHp(id, v.entryIds, v.mode, v.amount, v.batch ?? newBatchId()))
+type HpInput = { entryIds: string[]; mode: HpMode; amount: number; batch?: string }
+
+/** The batch id is fixed before the call is queued, so a replay after a reconnect or reload is the same batch. */
+export function useApplyEnemyHp(campaignId: string, combatId: string | undefined) {
+  const m = useQueuedCombatMutation('applyHp', campaignId, combatId)
+  const withBatch = (v: HpInput) => ({ ...v, batch: v.batch ?? newBatchId() })
+  return { ...m, mutate: (v: HpInput) => m.mutate(withBatch(v)), mutateAsync: (v: HpInput) => m.mutateAsync(withBatch(v)) }
+}
 
 export const useUndoEnemyHp = (campaignId: string, combatId: string | undefined) =>
   useCombatMutation(campaignId, combatId, (id, v: { batch: string }) => undoEnemyHp(id, v.batch))

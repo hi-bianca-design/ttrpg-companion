@@ -9,7 +9,7 @@ import { buildPlayerOrder, type PlayerRow, type PlayerSideEnemyRow } from './bat
 import type { Combat } from './combat.api'
 import { useCombatOrder } from './combat.queries'
 import { HpEntryBar } from './HpEntryBar'
-import { CurrentMark, initText, PlayerRowCard } from './PlayerRowCard'
+import { CurrentMark, PlayerRowCard } from './PlayerRowCard'
 import { usePlayerCombatHp } from './usePlayerCombatHp'
 
 /** A teammate's row is read-only; the viewer's own row opens the HP entry, wired to their own character only. */
@@ -25,16 +25,13 @@ function OwnRow({ row, character, campaignId }: { row: PlayerRow; character: Cha
   )
 }
 
-/** An enemy as a player sees it: a name and a place in the order, nothing else. */
+/** An enemy as a player sees it: a name and a place in the order (a sequence, no initiative number), nothing else. */
 function EnemyOrderRow({ row }: { row: PlayerSideEnemyRow }) {
-  const spoken = [row.name, row.initiative === null ? null : `initiative ${row.initiative}`, row.isCurrent ? 'current turn' : null].filter(Boolean).join(', ')
+  const spoken = [row.name, row.isCurrent ? 'current turn' : null].filter(Boolean).join(', ')
   return (
     <View accessible accessibilityLabel={spoken}>
       <Card compact tone={row.isCurrent ? 'selected' : 'default'} className="gap-1">
-        <View className="flex-row items-center gap-2">
-          <Text variant="subhead" className="flex-1" numberOfLines={1}>{row.name}</Text>
-          <Text variant="label" tone="muted">{initText(row.initiative)}</Text>
-        </View>
+        <Text variant="subhead" numberOfLines={1}>{row.name}</Text>
         {row.isCurrent ? <CurrentMark /> : null}
       </Card>
     </View>

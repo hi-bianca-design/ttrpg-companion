@@ -20,6 +20,7 @@ import { Inter_400Regular, Inter_600SemiBold } from '@expo-google-fonts/inter'
 import { IBMPlexMono_500Medium } from '@expo-google-fonts/ibm-plex-mono'
 import { NAV_THEME } from '@/lib/theme'
 import { installAppFocus } from '@/lib/app-focus'
+import { installOffline } from '@/lib/offline'
 import { queryClient } from '@/lib/query-client'
 import { AuthProvider } from '@/features/auth/AuthProvider'
 import { BootOverlay } from '@/features/auth/BootOverlay'
@@ -27,6 +28,9 @@ import { RootRedirect } from '@/features/auth/RootRedirect'
 
 SplashScreen.preventAutoHideAsync()
 installAppFocus()
+// Before the provider mounts the client: queued GM combat edits, reconnect sync, and (once AuthProvider names
+// the user) the persisted combat cache.
+installOffline(queryClient)
 
 // Cap system font scaling at 2x so layouts hold; the smallest type role (label, 11px)
 // is never scaled below spec because maxFontSizeMultiplier only limits enlarging.

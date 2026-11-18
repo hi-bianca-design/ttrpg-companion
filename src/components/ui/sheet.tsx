@@ -51,10 +51,10 @@ function SheetTitle({
 // (on web it is an unsized div), so a percentage or flex-1 height cannot bound it.
 const BODY_MAX_SHARE = 0.4
 
-function SheetBody({ className, children }: { className?: string; children: React.ReactNode }) {
+function SheetBody({ className, children, maxShare = BODY_MAX_SHARE }: { className?: string; children: React.ReactNode; maxShare?: number }) {
   const { height } = useWindowDimensions()
   return (
-    <ScrollView style={{ maxHeight: height * BODY_MAX_SHARE }} contentContainerClassName={cn('gap-2', className)}>
+    <ScrollView style={{ maxHeight: height * maxShare }} contentContainerClassName={cn('gap-2', className)}>
       {children}
     </ScrollView>
   )
