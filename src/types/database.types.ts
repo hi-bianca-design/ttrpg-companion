@@ -1272,6 +1272,18 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      save_encounter: {
+        Args: {
+          p_campaign_id: string
+          p_encounter_id: string | null
+          p_enemies: Json
+          p_name: string
+          p_story_after: string | null
+          p_story_before: string | null
+          p_story_why: string | null
+        }
+        Returns: string
+      }
       set_combat: {
         Args: { p_in_combat: boolean; p_session_id: string }
         Returns: {
